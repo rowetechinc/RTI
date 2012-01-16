@@ -1,4 +1,4 @@
-ï»¿/*
+/*
  * Copyright 2011, Rowe Technology Inc. 
  * All rights reserved.
  * http://www.rowetechinc.com
@@ -248,8 +248,8 @@ namespace RTI
             kMountingRef = 10,              // 10 - type UInt8
             kUserCalStableCheck = 11,       // 11 - type boolean
             kUserCalNumPoints = 12,         // 12 - type UInt32
-            kUserCalAutoSampling = 13,      // 13 â€“ type boolean
-            kBaudRate = 14,                 // 14 â€“ UInt8
+            kUserCalAutoSampling = 13,      // 13 – type boolean
+            kBaudRate = 14,                 // 14 – UInt8
             
             // Mounting Reference IDs
             kMountedStandard = 1,   // 1

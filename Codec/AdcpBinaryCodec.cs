@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2011, Rowe Technology Inc. 
  * All rights reserved.
  * http://www.rowetechinc.com

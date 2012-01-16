@@ -1,4 +1,4 @@
-﻿RTI Changelog
+RTI Changelog
 
 RTI-1.13
  - Changed version number.

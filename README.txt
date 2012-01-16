@@ -1,4 +1,4 @@
-﻿RTI README
+RTI README
 
 This code will help a customer decode data collected
 by a Rowe Technology Inc ADCP.  It also includes 

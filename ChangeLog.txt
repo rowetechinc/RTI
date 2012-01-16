@@ -1,0 +1,31 @@
+﻿RTI Changelog
+
+RTI-1.13
+ - Changed version number.
+ - Added README.txt.
+
+RTI-1.12
+ - Changed version number.
+ - Fixed bug in NmeaDataSet where a negative ChecksumLoc could be used as index to remove bad NMEA strings.
+ - Removed Pulse Database stuff from DbCommon.
+ - Added indexes to Project database.
+ - Merged Ensemble table and Bottom Track table in database.
+ - Use GPS speed if Bottom Track speed not good to remove ship speed.
+
+RTI-1.11
+ - Changed version number
+ - Added version number for RTI and a version number for Pulse.
+ - Remove ErrorLog added log4net.dll.
+ - Check if a project is selected before trying to buffer incoming data in AdcpBinaryWriter.
+ - Added Commons for RTI to set version number.
+ - Added events to DVL Codec.
+ - Broke unit test for DVL codec when changing to events.  RecorderManager's constructor is not being called to create event.
+ - Changed name of AdcpDataSet to Ensemble.
+ - Added creating the project database file in the Project constructor.
+ - Fixed DVL Codec test using DVL Codec events.
+ - In DVL Codec, added _prevBuffer to prevent StackOverflowException.
+ - Create the project directory in the Project constructor.  ID is gotten later when passed as reference.
+ - Added method in BottomTrackDataSet to determine if Earth Velocity is good.
+ - Added method in Project for project image path.
+ - Added MathHelper class.
+ - Added Documentation project that creates a SandCastle help file.

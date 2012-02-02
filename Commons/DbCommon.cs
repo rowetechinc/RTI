@@ -44,6 +44,7 @@
  * 12/30/2011      RC          1.11       Removed getting project db full path.  Now in project.
  * 01/11/2012      RC          1.12       Removed Pulse specific code.  
  *                                         Used Using arounnd connections to dispose.
+ * 01/20/2012      RC          1.14       Added column names for Firmware versions and Subsystem.
  * 
  */
 
@@ -388,6 +389,35 @@ namespace RTI
         /// (TEXT)
         /// </summary>
         public const string COL_ENS_FIRMWARE = "Firmware";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Firmware Major version.
+        /// (TINYINT)
+        /// </summary>
+        public const string COL_ENS_FIRMWARE_MAJOR = "FirmwareMajor";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Firmware Minor version.
+        /// (TINYINT)
+        /// </summary>
+        public const string COL_ENS_FIRMWARE_MINOR = "FirmwareMinor";
+
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Firmware Revision.
+        /// (TINYINT)
+        /// </summary>
+        public const string COL_ENS_FIRMWARE_REVISION = "FirmwareRevision";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Sub-System.  Describes which sub-system the ensemble is associated with.
+        /// (TINYINT)
+        /// </summary>
+        public const string COL_ENS_SUBSYSTEM_INDEX = "SubsystemIndex";
 
         #endregion
 

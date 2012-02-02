@@ -38,7 +38,9 @@
  * 10/05/2011      RC                     Round number when displaying.
  * 10/25/2011      RC                     Added new constructor that takes no data and made CreateBinList public.
  * 12/07/2011      RC          1.08       Remove BinList     
- *       
+ * 01/19/2012      RC          1.14       Added Encode() to create a byte array of data.
+ *                                         Removed "private set".
+ *                                         Rename Decode methods to Decode().
  * 
  */
 
@@ -57,7 +59,7 @@ namespace RTI
             /// <summary>
             /// Store all the Correlation data for the ADCP.
             /// </summary>
-            public float[,] CorrelationData { get; private set; }
+            public float[,] CorrelationData { get; set; }
 
             /// <summary>
             /// This value will be used when there will be multiple transducers
@@ -67,7 +69,7 @@ namespace RTI
             /// This may not be necessary and additional datatypes may be created instead
             /// for each transducer orientation.
             /// </summary>
-            public BaseDataSet.BeamOrientation Orientation { get; private set; }
+            public BaseDataSet.BeamOrientation Orientation { get; set; }
 
             /// <summary>
             /// Create an Correlation data set.
@@ -109,7 +111,7 @@ namespace RTI
                 Orientation = BeamOrientation.DOWN;
 
                 // Decode the byte array for Correlation data
-                DecodeCorrelationData(correlationData);
+                Decode(correlationData);
             }
 
             /// <summary>
@@ -133,7 +135,7 @@ namespace RTI
                 Orientation = BeamOrientation.DOWN;
 
                 // Decode the byte array for Correlation data
-                DecodeCorrelationData(correlationData);
+                Decode(correlationData);
             }
 
             /// <summary>
@@ -142,7 +144,7 @@ namespace RTI
             /// I changed the order from what the data is stored as and now make it Bin Bin Beams.
             /// </summary>
             /// <param name="dataType">Byte array containing the Correlation data type.</param>
-            private void DecodeCorrelationData(byte[] dataType)
+            private void Decode(byte[] dataType)
             {
                 int index = 0;
                 for (int beam = 0; beam < ElementsMultiplier; beam++)
@@ -161,7 +163,7 @@ namespace RTI
             /// I changed the order from what the data is stored as and now make it Bin and Beams.
             /// </summary>
             /// <param name="dataTable">DataTable containing the Correlation data type.</param>
-            private void DecodeCorrelationData(DataTable dataTable)
+            private void Decode(DataTable dataTable)
             {
                 // Go through the result settings the ranges
                 foreach (DataRow r in dataTable.Rows)
@@ -171,6 +173,43 @@ namespace RTI
                     float value = Convert.ToSingle(r[DbCommon.COL_BV_CORR].ToString());
                     CorrelationData[bin, beam] = value;
                 }
+            }
+
+            /// <summary>
+            /// Generate a byte array representing the
+            /// dataset.  The byte array is in the binary format.
+            /// The format can be found in the RTI ADCP User Guide.
+            /// It contains a header and payload.  This byte array 
+            /// will be combined with the other dataset byte arrays
+            /// to form an ensemble.
+            /// </summary>
+            /// <returns>Byte array of the ensemble.</returns>
+            public byte[] Encode()
+            {
+                // Calculate the payload size
+                int payloadSize = (NumElements * ElementsMultiplier * Ensemble.BYTES_IN_FLOAT);
+
+                // The size of the array is the header of the dataset
+                // and the binxbeams value with each value being a float.
+                byte[] result = new byte[GetBaseDataSize(NameLength) + payloadSize];
+
+                // Add the header to the byte array
+                byte[] header = GenerateHeader(NumElements);
+                System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+
+                // Add the payload to the results
+                int index = 0;
+                for (int beam = 0; beam < ElementsMultiplier; beam++)
+                {
+                    for (int bin = 0; bin < NumElements; bin++)
+                    {
+                        // Get the index for the next element and add to the array
+                        index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
+                        System.Buffer.BlockCopy(Converters.FloatToByteArray(CorrelationData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
+                    }
+                }
+
+                return result;
             }
 
             /// <summary>

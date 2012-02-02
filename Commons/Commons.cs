@@ -35,6 +35,7 @@
  * 12/29/2011      RC          1.11       Initial coding
  * 12/30/2011      RC          1.11       Added Namespace Core to sepreate between Pulse and this.
  * 01/16/2012      RC          1.13       Changed version number.
+ * 01/16/2012      RC          1.14       Changed version number.
  * 
  * 
  */
@@ -61,7 +62,7 @@ namespace RTI
             /// <summary>
             /// Application Minor version number.
             /// </summary>
-            public const int RTI_VERSION_MINOR = 13;
+            public const int RTI_VERSION_MINOR = 14;
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any

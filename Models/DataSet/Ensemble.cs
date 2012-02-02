@@ -50,11 +50,17 @@
  * 12/27/2011      RC          1.10       Added index for Earth and Instrument beams.
  * 12/30/2011      RC          1.11       Renamed to Ensemble.
  * 01/13/2012      RC          1.12       Merged Ensemble table and Bottom Track table in database.
+ * 01/18/2012      RC          1.14       Added Encode() to create byte array of the ensemble.
+ *                                         Changed name of MAX_HEADER_COUNT to HEADER_START_COUNT.
+ *                                         Changed name of DATASET_HEADER_LEN to ENSEMBLE_HEADER_LEN.
+ *                                         Added EnsembleNumber property.
+ *                                         
  *       
  * 
  */
 
 using System.Data;
+using System.Collections.Generic;
 
 namespace RTI
 {
@@ -141,9 +147,9 @@ namespace RTI
             public const int MAX_NUM_DATA_SETS = 20;
 
             /// <summary>
-            /// Number of bytes in the Data Set Header.
+            /// Number of bytes in the ensemble Header.
             /// </summary>
-            public const int DATASET_HEADER_LEN = 32;
+            public const int ENSEMBLE_HEADER_LEN = 32;
             
 
             /// <summary>
@@ -204,7 +210,7 @@ namespace RTI
             /// <summary>
             /// Number of 0x80 for header.
             /// </summary>
-            public const int MAX_HEADER_COUNT = 16;
+            public const int HEADER_START_COUNT = 16;
 
             /// <summary>
             /// Each payload contains a header with DataType, 
@@ -293,7 +299,13 @@ namespace RTI
             /// Place holder for bad velocity.
             /// </summary>
             public const string BAD_VELOCITY_PLACEHOLDER = "-";
-            
+
+            /// <summary>
+            /// Ensemble number.  This is a unique number for
+            /// the data.
+            /// </summary>
+            public int EnsembleNumber { get; private set; }
+
             /// <summary>
             /// Set if the Beam velocity data set is available for this data set
             /// </summary>
@@ -431,6 +443,9 @@ namespace RTI
             /// </summary>
             public Ensemble()
             {
+                // Set ensemble number
+                //EnsembleNumber = ensNum;
+
                 // Initialize all ranges
                 IsBeamVelocityAvail = false;
                 IsInstrVelocityAvail = false;
@@ -1171,7 +1186,7 @@ namespace RTI
             /// <returns>Total size of the ensemble including header, payload and checksum.</returns>
             public static int CalculateEnsembleSize(int payloadSize)
             {
-                return payloadSize + DataSet.Ensemble.DATASET_HEADER_LEN + DataSet.Ensemble.CHECKSUM_SIZE;
+                return payloadSize + DataSet.Ensemble.ENSEMBLE_HEADER_LEN + DataSet.Ensemble.CHECKSUM_SIZE;
             }
 
             /// <summary>
@@ -1186,7 +1201,7 @@ namespace RTI
                 ushort crc = 0;
 
                 // Do not include the checksum to calculate the checksum
-                for (int i = DataSet.Ensemble.DATASET_HEADER_LEN; i < ensemble.Length - DataSet.Ensemble.CHECKSUM_SIZE; i++)
+                for (int i = DataSet.Ensemble.ENSEMBLE_HEADER_LEN; i < ensemble.Length - DataSet.Ensemble.CHECKSUM_SIZE; i++)
                 {
                     crc = (ushort)((byte)(crc >> 8) | (crc << 8));
                     crc ^= ensemble[i];
@@ -1213,7 +1228,7 @@ namespace RTI
                 int payloadSize = 0;
 
                 // Add 8 to header to take into account the ensemble number and 1's compliment
-                int i = DataSet.Ensemble.MAX_HEADER_COUNT + 8;
+                int i = DataSet.Ensemble.HEADER_START_COUNT + 8;
                 payloadSize = ensemble[i++];
                 payloadSize += ensemble[i++] << 8;
                 payloadSize += ensemble[i++] << 16;
@@ -1230,26 +1245,237 @@ namespace RTI
 
                 // Add the ensemble to the result
                 // Subtract 4 to not include the checksum
-                System.Buffer.BlockCopy(ensemble, 0, result, 0, ensemble.Length - 4);
+                System.Buffer.BlockCopy(ensemble, 0, result, 0, ensemble.Length - BYTES_IN_INT);
 
                 // Replace the new payload and 1's compliment
                 byte[] payloadSizeByte = Converters.IntToByteArray(payloadSize);
                 byte[] payloadSizeNotByte = Converters.IntToByteArray(payloadSizeNot);
-                System.Buffer.BlockCopy(payloadSizeByte, 0, result, DataSet.Ensemble.MAX_HEADER_COUNT + 8, 4);
-                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, DataSet.Ensemble.MAX_HEADER_COUNT + 8 + 4, 4);
+                System.Buffer.BlockCopy(payloadSizeByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
+                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
 
                 // Add the new dataset to the ensemble overlapping on checksum
                 // Subtract 4 to not include the checksum
-                System.Buffer.BlockCopy(dataset, 0, result, ensemble.Length - 4, dataset.Length);
+                System.Buffer.BlockCopy(dataset, 0, result, ensemble.Length - BYTES_IN_INT, dataset.Length);
 
                 // Create new checksum 
                 long checksum = Ensemble.CalculateEnsembleChecksum(result);
                 
                 // Add checksum to the end of the datatype
                 byte[] checksumByte = Converters.IntToByteArray((int)checksum);
-                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - 4, 4);
+                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT, BYTES_IN_INT);
 
                 return result;
+            }
+
+            /// <summary>
+            /// Create a byte array of the ensemble.
+            /// This will include the header, payload and
+            /// checksum.  The payload will contain all the
+            /// data.  The definition of the ensemble can be
+            /// found in the RDI ADCP User Guide.
+            /// </summary>
+            /// <returns>Byte array of the ensemble.</returns>
+            public byte[] Encode( )
+            {
+                // Get all the datasets as a byte array
+                byte[] payload = GetAllDataSets();
+
+                // Create a new array for the new dataset including new dataset
+                byte[] result = new byte[ENSEMBLE_HEADER_LEN + payload.Length + CHECKSUM_SIZE];
+
+                // Add the Header to the result array
+                byte[] header = GenerateStubHeader(EnsembleNumber);
+                System.Buffer.BlockCopy(header, 0, result, 0, ENSEMBLE_HEADER_LEN);
+
+                // Add the payload to the ensemble
+                System.Buffer.BlockCopy(payload, 0, result, ENSEMBLE_HEADER_LEN, payload.Length);
+
+                // Set the payload size and 1's compliment
+                byte[] payloadSizeByte = Converters.IntToByteArray(payload.Length);
+                byte[] payloadSizeNotByte = Converters.IntToByteArray(~payload.Length);
+                System.Buffer.BlockCopy(payloadSizeByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
+                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
+
+                // Create new checksum 
+                long checksum = Ensemble.CalculateEnsembleChecksum(result);
+
+                // Add checksum to the end of the datatype
+                byte[] checksumByte = Converters.IntToByteArray((int)checksum);
+                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT, BYTES_IN_INT);
+
+                return result;
+            }
+
+            /// <summary>
+            /// Generate a stub header for the ensemble.
+            /// This will include the 16 0x80 and the 
+            /// ensemble number and its 1's compliment.  The
+            /// Payload and its 1's compliment is left blank.
+            /// </summary>
+            /// <param name="ensembleNum">Ensemble number.</param>
+            /// <returns>Byte array for the ensemble header.</returns>
+            private byte[] GenerateStubHeader(int ensembleNum)
+            {
+                // Create an array that will contain:
+                // 0x80 - 16 bytes
+                // Ensemble Number - 4 bytes
+                // ~Ensemble Number - 4 bytes
+                // Payload size - 4 bytes
+                // ~Payload size - 4 bytes
+                // We will leave the payload and ~payload blank
+                byte[] header = new byte[ENSEMBLE_HEADER_LEN];
+                
+                // Add 0x80
+                for (int x = 0; x < HEADER_START_COUNT; x++)
+                {
+                    header[x] = 0x80;
+                }
+
+                // Add ensemble number
+                byte[] ensNum = Converters.IntToByteArray(ensembleNum);
+                System.Buffer.BlockCopy(ensNum, 0, header, HEADER_START_COUNT, BYTES_IN_INT);
+
+                byte[] notEnsNum = Converters.IntToByteArray(~ensembleNum);
+                System.Buffer.BlockCopy(notEnsNum, 0, header, HEADER_START_COUNT + BYTES_IN_INT, BYTES_IN_INT);
+
+                return header;
+            }
+
+            /// <summary>
+            /// Get a list of all the datasets as byte arrays.
+            /// Then combine them into 1 byte array and return the
+            /// result.
+            /// </summary>
+            /// <returns>Byte array of all the datasets.</returns>
+            private byte[] GetAllDataSets()
+            {
+                // Create a list of all the dataset byte arrays
+                // Calculate the size
+                int size = 0;
+                List<byte[]> datasetList = new List<byte[]>();
+
+                // Beam Velocity DataSet
+                if (IsBeamVelocityAvail)
+                {
+                    byte[] beamDataSet = BeamVelocityData.Encode();
+                    datasetList.Add(beamDataSet);
+                    size += beamDataSet.Length;
+                }
+
+                // Earth Velocity DataSet
+                if (IsEarthVelocityAvail)
+                {
+                    byte[] earthDataSet = EarthVelocityData.Encode();
+                    datasetList.Add(earthDataSet);
+                    size += earthDataSet.Length;
+                }
+
+                // Instrument Velocity DataSet
+                if (IsInstrVelocityAvail)
+                {
+                    byte[] instrDataSet = InstrVelocityData.Encode();
+                    datasetList.Add(instrDataSet);
+                    size += instrDataSet.Length;
+                }
+
+                // Amplitude DataSet
+                if (IsAmplitudeAvail)
+                {
+                    byte[] ampDataSet = AmplitudeData.Encode();
+                    datasetList.Add(ampDataSet);
+                    size += ampDataSet.Length;
+                }
+
+                // Correlation DataSet
+                if (IsCorrelationAvail)
+                {
+                    byte[] corrDataSet = CorrelationData.Encode();
+                    datasetList.Add(corrDataSet);
+                    size += corrDataSet.Length;
+                }
+
+                // Good Beam Dataset
+                if (IsGoodBeamAvail)
+                {
+                    byte[] goodBeamDataSet = GoodBeamData.Encode();
+                    datasetList.Add(goodBeamDataSet);
+                    size += goodBeamDataSet.Length;
+                }
+
+                // Good Earth DataSet
+                if (IsGoodEarthAvail)
+                {
+                    byte[] goodEarthDataSet = GoodEarthData.Encode();
+                    datasetList.Add(goodEarthDataSet);
+                    size += goodEarthDataSet.Length;
+                }
+
+                // Ensemble DataSet
+                if (IsEnsembleAvail)
+                {
+                    byte[] ensembleDataSet = EnsembleData.Encode();
+                    datasetList.Add(ensembleDataSet);
+                    size += ensembleDataSet.Length; 
+                }
+
+                // Ancillary DataSet
+                if (IsAncillaryAvail)
+                {
+                    byte[] ancillaryDataSet = AncillaryData.Encode();
+                    datasetList.Add(ancillaryDataSet);
+                    size += ancillaryDataSet.Length; 
+                }
+
+                // Bottom Track DataSet
+                if (IsBottomTrackAvail)
+                {
+                    byte[] btDataSet = BottomTrackData.Encode();
+                    datasetList.Add(btDataSet);
+                    size += btDataSet.Length; 
+                }
+
+                // NMEA dataset
+                if (IsNmeaAvail)
+                {
+                    byte[] nmeaDataSet = NmeaData.Encode();
+                    datasetList.Add(nmeaDataSet);
+                    size += nmeaDataSet.Length;
+                }
+
+                return CombineDataSets(size, datasetList);
+            }
+
+            /// <summary>
+            /// Combine the datasets into one byte array.
+            /// This will go through the list combining 
+            /// each dataset byte array into one large byte array.
+            /// This will be the payload for an ensemble.
+            /// </summary>
+            /// <param name="size">Size of all the byte arrays combined.</param>
+            /// <param name="datasetList">List of all the byte arrays for the ensemble.</param>
+            /// <returns>Byte array of all the ensembles combined.</returns>
+            private byte[] CombineDataSets(int size, List<byte[]> datasetList)
+            {
+                // If datasets exist, combine them and return
+                // the result
+                if (size > 0)
+                {
+                    // Create an array to hold all the datasets
+                    byte[] result = new byte[size];
+
+                    // Go throught the list combining the datasets
+                    int index = 0;
+                    for (int x = 0; x < datasetList.Count; x++)
+                    {
+                        System.Buffer.BlockCopy(datasetList[x], BEAM_0_INDEX, result, index, datasetList[x].Length);
+                        index += datasetList[x].Length;
+                    }
+
+                    return result;
+                }
+
+                // If bad, return an empty byte array
+                return new byte[1];
             }
         }
     }

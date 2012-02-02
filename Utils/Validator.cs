@@ -30,9 +30,10 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 10/17/2011      RC          Initial coding
+ * 10/17/2011      RC                     Initial coding
+ * 02/01/2012      RC          1.14       Added string validate that also returns a bool.
  *       
  * 
  */
@@ -150,6 +151,26 @@ namespace RTI
             if (string.IsNullOrEmpty(value))
             {
                 result = "Value is empty";
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Validate a string that it is not
+        /// empty or null.
+        /// </summary>
+        /// <param name="value">String to validate.</param>
+        /// <param name="isGood">Give output if the string was good.</param>
+        /// <returns>Good = Empty string / Bad Value = Error message.</returns>
+        public static string ValidateString(string value, out bool isGood)
+        {
+            isGood = true;
+            string result = "";
+            if (string.IsNullOrEmpty(value))
+            {
+                result = "Value is empty";
+                isGood = false;
             }
 
             return result;

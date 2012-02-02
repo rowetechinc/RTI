@@ -42,6 +42,9 @@
  * 12/07/2011      RC          1.08       Remove BinList     
  * 12/09/2011      RC          1.09       Make orientation a parameter with a default value.
  * 12/28/2011      RC          1.10       Added GetVelocityVectors() to create array of vectores for velocity.
+ * 01/19/2012      RC          1.14       Added Encode() to create a byte array of data.
+ *                                         Removed "private set".
+ *                                         Rename Decode methods to Decode().
  * 
  */
 
@@ -60,7 +63,7 @@ namespace RTI
             /// <summary>
             /// Store all the EarthVelocity velocity data for the ADCP.
             /// </summary>
-            public float[,] EarthVelocityData { get; private set; }
+            public float[,] EarthVelocityData { get; set; }
 
             /// <summary>
             /// This value will be used when there will be multiple transducers
@@ -70,7 +73,23 @@ namespace RTI
             /// This may not be necessary and additional datatypes may be created instead
             /// for each transducer orientation.
             /// </summary>
-            public BaseDataSet.BeamOrientation Orientation { get; private set; }
+            public BaseDataSet.BeamOrientation Orientation { get; set; }
+
+            /// <summary>
+            /// Flag if the Velocity Vector Array is available.  This 
+            /// array is created if screening is turned on and an array
+            /// was created during the screening process.
+            /// </summary>
+            public bool IsVelocityVectorAvail { get; set; }
+
+            /// <summary>
+            /// Velocity Vector.  This is an array of VelocityVectors.
+            /// The VelocityVector holds the magnitude and direciton for the 
+            /// water velocity in a bin.  Each bin will have a VelocityVector.
+            /// During screening this array can be created.  The screening
+            /// will also remove the ship speed before creating the vector.
+            /// </summary>
+            public VelocityVector[] VV { get; set; }
 
             /// <summary>
             /// Create an Earth Velocity data set.
@@ -86,6 +105,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
+                IsVelocityVectorAvail = false;
                 EarthVelocityData = new float[NumElements, ElementsMultiplier];
 
                 // Default orientation value is DOWN
@@ -108,13 +128,14 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
+                IsVelocityVectorAvail = false;
                 EarthVelocityData = new float[NumElements, ElementsMultiplier];
 
                 // Default orientation value is DOWN
                 Orientation = orientation;
 
                 // Decode the byte array for velocity data
-                DecodeEarthVelocityData(velocityData);
+                Decode(velocityData);
             }
 
             /// <summary>
@@ -133,13 +154,14 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
+                IsVelocityVectorAvail = false;
                 EarthVelocityData = new float[NumElements, ElementsMultiplier];
 
                 // Default orientation value is DOWN
                 Orientation = orientation;
 
                 // Decode the byte array for velocity data
-                DecodeEarthVelocityData(velocityData);
+                Decode(velocityData);
             }
 
             /// <summary>
@@ -148,7 +170,7 @@ namespace RTI
             /// I changed the order from what the data is stored as and now make it Bin y Beams.
             /// </summary>
             /// <param name="dataType">Byte array containing the Earth Velocity data type.</param>
-            private void DecodeEarthVelocityData(byte[] dataType)
+            private void Decode(byte[] dataType)
             {
                 int index = 0;
 
@@ -168,7 +190,7 @@ namespace RTI
             /// I changed the order from what the data is stored as and now make it Bin y Beams.
             /// </summary>
             /// <param name="dataTable">DataTable containing the Earth Velocity data type.</param>
-            private void DecodeEarthVelocityData(DataTable dataTable)
+            private void Decode(DataTable dataTable)
             {
                 // Go through the result settings the ranges
                 foreach (DataRow r in dataTable.Rows)
@@ -181,102 +203,60 @@ namespace RTI
             }
 
             /// <summary>
-            /// Calculate the Magnitude given the North, East and Vertical velocity.
+            /// Generate a byte array representing the
+            /// dataset.  The byte array is in the binary format.
+            /// The format can be found in the RTI ADCP User Guide.
+            /// It contains a header and payload.  This byte array 
+            /// will be combined with the other dataset byte arrays
+            /// to form an ensemble.
             /// </summary>
-            /// <param name="east">East Velocity.</param>
-            /// <param name="north">North Velocity.</param>
-            /// <param name="vertical">Vertical Velocity.</param>
-            /// <returns>Magnitude of the velocities given.</returns>
-            private double CalculateMagnitude(double east, double north, double vertical)
+            /// <returns>Byte array of the ensemble.</returns>
+            public byte[] Encode()
             {
-                return Math.Sqrt((east * east) + (north * north) + (vertical * vertical));
+                // Calculate the payload size
+                int payloadSize = (NumElements * ElementsMultiplier * Ensemble.BYTES_IN_FLOAT);
+
+                // The size of the array is the header of the dataset
+                // and the binxbeams value with each value being a float.
+                byte[] result = new byte[GetBaseDataSize(NameLength) + payloadSize];
+
+                // Add the header to the byte array
+                byte[] header = GenerateHeader(NumElements);
+                System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+
+                // Add the payload to the results
+                int index = 0;
+                for (int beam = 0; beam < ElementsMultiplier; beam++)
+                {
+                    for (int bin = 0; bin < NumElements; bin++)
+                    {
+                        // Get the index for the next element and add to the array
+                        index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
+                        System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocityData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
+                    }
+                }
+
+                return result;
             }
 
             /// <summary>
-            /// Calculate the Direction of the velocities given.
-            /// Value will be returned in degrees.
+            /// Override the ToString to return all the velocity data as a string.
             /// </summary>
-            /// <param name="y">Y axis velocity value.</param>
-            /// <param name="x">X axis velocity value.</param>
-            /// <returns>Direction of the velocity return in degrees.</returns>
-            private double CalculateDirection(double y, double x)
+            /// <returns></returns>
+            public override string ToString()
             {
-                return (Math.Atan2(y, x)) * (180 / Math.PI);
-            }
-
-            /// <summary>
-            /// Given the bin, calculate the magnitude of the
-            /// velocity by removing the Bottom Track velocity
-            /// from the velocity.  If any of the Bottom Track
-            /// velocities are bad, it will return BAD_VELOCITY.
-            /// If any of the velocities are bad, it will
-            /// return BAD_VELOCITY.
-            /// </summary>
-            /// <param name="btEast">Bottom Track East Velocity.</param>
-            /// <param name="btNorth">Bottom Track North Velocity.</param>
-            /// <param name="btVertical">Bottom Track Vertical Velocity.</param>
-            /// <param name="gpsSpeed">Ship speed from the GPS.</param>
-            /// <returns>Velocity magnitude with Bottom Track speed removed.  If any values are bad, it will return BAD_VELOCITY.</returns>
-            public VelocityVector[] GetVelocityVectors(float btEast, float btNorth, float btVertical, double gpsSpeed)
-            {
-                // Create array to store all the vectors
-                VelocityVector[] vv = new VelocityVector[this.NumElements];
-
-                // If any of the Bottom Track velocities are bad, then do not remove Bottom Track velocities.
-                if (btEast == DataSet.Ensemble.BAD_VELOCITY || btNorth == DataSet.Ensemble.BAD_VELOCITY || btVertical == DataSet.Ensemble.BAD_VELOCITY)
+                string s = "";
+                for (int bin = 0; bin < NumElements; bin++)
                 {
-                    btEast = 0;
-                    btNorth = 0;
-                    btVertical = 0;
-
-                    // Check if GPS speed can be used
-                    if (gpsSpeed == DataSet.Ensemble.BAD_VELOCITY)
+                    s += "E Bin: " + bin + "\t";
+                    for (int beam = 0; beam < ElementsMultiplier; beam++)
                     {
-                        gpsSpeed = 0;
+                        s += "\t" + beam + ": " + EarthVelocityData[bin, beam];
                     }
-                }
-                else
-                {
-                    // Bottom Track speed was good,
-                    // do not use GPS speed
-                    gpsSpeed = 0;
+                    s += "\n";
                 }
 
-                // Create a vector for each bin
-                for (int bin = 0; bin < this.NumElements; bin++)
-                {
-                    // Get the velocity values
-                    float east = this.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX];
-                    float north = this.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX];
-                    float vertical = this.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX];
-
-                    // If any of the velocities are bad, then set bad velocities for the vector and move to the next bin
-                    if(east == DataSet.Ensemble.BAD_VELOCITY || north == DataSet.Ensemble.BAD_VELOCITY || vertical == DataSet.Ensemble.BAD_VELOCITY)
-                    {
-                        vv[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
-                        vv[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
-                        vv[bin].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
-                        break;
-                    }
-
-                    // Remove Bottom Track velocity
-                    // Bottom Track velocity is inverted
-                    // So add bottom track velocity to remove velocity
-                    east += btEast;
-                    north += btNorth;
-                    vertical += btVertical;
-
-                    // If bottom track velocity was bad, try to remove 
-                    // boat speed with gps speed
-                    // Both Bottom Track and GPS speed cannot be used together
-                    double mag = CalculateMagnitude(east, north, vertical) - gpsSpeed;
-
-                    vv[bin].Magnitude = mag;
-                    vv[bin].DirectionXNorth = CalculateDirection(east, north);
-                    vv[bin].DirectionYNorth = CalculateDirection(north, east);
-                }
-
-                return vv;
+                return s;
             }
 
             /// <summary>
@@ -294,7 +274,7 @@ namespace RTI
                         (EarthVelocityData[bin, 1] != Ensemble.BAD_VELOCITY) &&
                         (EarthVelocityData[bin, 2] != Ensemble.BAD_VELOCITY))
                     {
-                        return (CalculateMagnitude(EarthVelocityData[bin, 0], EarthVelocityData[bin, 1], EarthVelocityData[bin, 2]));
+                        return (MathHelper.CalculateMagnitude(EarthVelocityData[bin, 0], EarthVelocityData[bin, 1], EarthVelocityData[bin, 2]));
                     }
                     else
                     {
@@ -328,12 +308,12 @@ namespace RTI
                         if (isYNorth)
                         {
                             //return (Math.Atan2(EarthVelocityData[Bin, 1], EarthVelocityData[Bin, 0])) * (180 / Math.PI);
-                            return CalculateDirection(EarthVelocityData[bin, 1], EarthVelocityData[bin, 0]);
+                            return MathHelper.CalculateDirection(EarthVelocityData[bin, 1], EarthVelocityData[bin, 0]);
                         }
                         else
                         {
                             //return (Math.Atan2(EarthVelocityData[Bin, 0], EarthVelocityData[Bin, 1])) * (180 / Math.PI);
-                            return CalculateDirection(EarthVelocityData[bin, 0], EarthVelocityData[bin, 1]);
+                            return MathHelper.CalculateDirection(EarthVelocityData[bin, 0], EarthVelocityData[bin, 1]);
                         }
                     }
                     else
@@ -347,26 +327,6 @@ namespace RTI
                     // the number of bins could change and then it could select out of range.
                     return -1;
                 }
-            }
-
-            /// <summary>
-            /// Override the ToString to return all the velocity data as a string.
-            /// </summary>
-            /// <returns></returns>
-            public override string ToString()
-            {
-                string s = "";
-                for (int bin = 0; bin < NumElements; bin++)
-                {
-                    s += "E Bin: " + bin + "\t";
-                    for (int beam = 0; beam < ElementsMultiplier; beam++)
-                    {
-                        s += "\t" + beam + ": " + EarthVelocityData[bin, beam];
-                    }
-                    s += "\n";
-                }
-
-                return s;
             }
         }
     }

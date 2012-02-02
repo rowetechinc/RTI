@@ -30,9 +30,10 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 11/29/2011      RC          Initial coding
+ * 11/29/2011      RC                     Initial coding.
+ * 01/19/2012      RC          1.14       Added Encode().
  * 
  */
 
@@ -503,6 +504,115 @@ namespace RTI
 
             #endregion
 
+        }
+
+        /// <summary>
+        /// Return a NMEA sentence with all the values set.
+        /// The format for the NMEA sentence is given in the
+        /// RTI ADCP User Guide.
+        /// </summary>
+        /// <returns>NMEA sentence of this object.</returns>
+        public string Encode()
+        {
+            // Use a string builder to create the sentence text
+            StringBuilder builder = new StringBuilder(128);
+
+            #region Append the command word
+
+            // Append the command word
+            builder.Append("$");
+            builder.Append(CMD_WORD_PRTI02);
+
+            #endregion Append the command word
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Sample time
+
+            builder.Append(_startTime);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Sample Number
+
+            builder.Append(_sampleNumber);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Temperature
+
+            builder.Append(_temperature);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Bottom Track Velocity
+
+            builder.Append(_btVelocityEast.ToMillimetersPerSecond().Value);
+            builder.Append(',');
+            builder.Append(_btVelocityNorth.ToMillimetersPerSecond().Value);
+            builder.Append(',');
+            builder.Append(_btVelocityUp.ToMillimetersPerSecond().Value);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Depth below transducer
+
+            builder.Append(_depth.ToMillimeters().Value);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Water Mass Velocity
+
+            builder.Append(_wmVelocityEast.ToMillimetersPerSecond().Value);
+            builder.Append(',');
+            builder.Append(_wmVelocityNorth.ToMillimetersPerSecond().Value);
+            builder.Append(',');
+            builder.Append(_wmVelocityUp.ToMillimetersPerSecond().Value);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Depth of water mass measurement
+
+            builder.Append(_wmDepth.ToMillimeters().Value);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Status
+
+            builder.Append(_status.Value);
+
+            #endregion
+
+            // Set this object's sentence
+            // This will also set the checksum
+            SetSentence(builder.ToString());
+
+            // Finally, append the checksum
+            AppendChecksum();
+
+            return Sentence;
         }
 
         /// <summary>

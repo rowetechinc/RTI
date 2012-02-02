@@ -1,5 +1,32 @@
 RTI Changelog
 
+RTI-1.14
+ - Changed version number.
+ - Added dependencies to the README.txt file.
+ - Removed "private set" to all the properties in the datasets.
+ - Added Encode() to create byte array of the ensemble.
+ - Changed name of MAX_HEADER_COUNT to HEADER_START_COUNT in Ensemble.
+ - Changed name of DATASET_HEADER_LEN to ENSEMBLE_HEADER_LEN in Ensemble.
+ - Added EnsembleNumber property to Ensemble.
+ - Added Rev E changes to EnsembleDataSet (Firmware size).
+ - Changed BottomTrackData.Beams to NumBeams.
+ - Fix bug in BaseDataSet::GenerateHeader() where ValueType was hard coded to Byte.
+ - Fix bug in BaseDataSet::GetDataSetSize() where Float case statement used wrong variable.
+ - Created Subsystem, SerialNumber and Firmware objects.
+ - Write and read subsystem and firmware version to databases.
+ - Removed Rounded properties in Ancillary to methods to reduce memory footprint.
+ - Fixed bug in Subsystem converting a string to hex byte.
+ - Put try/catch in AdcpDatabaseCodec::ParseDataTables() if error parsing.
+ - Used variables to create query strings.
+ - Fixed bug with SysSerialNumber being written to the database.
+ - Store the Subsystem in the database as a byte.
+ - Added Serial number to the project properties.
+ - Changed the list in SerialNumber to a dictioanry to keep track of index of subsystem.
+ - Changed subsystem in firmware to subsystem index.
+ - Added a method EnsembleDataSet::GetSubSystem() to get the subsystem for the ensemble.
+ - SerialNumber changed the size of the spare and subsystem.
+ - Added AdcpSubsystemCommands to handle commands based off each subsystem.
+
 RTI-1.13
  - Changed version number.
  - Added README.txt.

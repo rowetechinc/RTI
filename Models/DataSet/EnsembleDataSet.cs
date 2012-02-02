@@ -44,6 +44,11 @@
  * 12/06/2011      RC          1.08       Added ToString() for UniqueId.  
  * 12/09/2011      RC          1.09       Do not make NumBins/NumBeams and NumElements and ElementsMultiplier match.
  * 12/19/2011      RC          1.10       Added SysSerialNumber and Firmware.  Check revision when setting values.
+ * 01/17/2012      RC          1.14       Removed the "private set" from all the properties.
+ * 01/24/2012      RC          1.14       Created a blank Serial number and Firmware for PRTI creation.
+ * 01/26/2012      RC          1.14       Convert subsystem to a byte instead of a string.
+ * 01/30/2012      RC          1.14       Changed decoding Firmware::Subsystem to an UInt16 subsystem index.
+ *                                         Added a method to get the subsystem for this ensemble.
  *       
  * 
  */
@@ -66,7 +71,6 @@ namespace RTI
             /// </summary>
             public const int NUM_DATA_ELEMENTS_REV_C = 13;
 
-
             /// <summary>
             /// NUmber of elements as of User Guide Rev D.
             /// </summary>
@@ -76,6 +80,22 @@ namespace RTI
             /// Number of elements within this data set
             /// </summary>
             public const int NUM_DATA_ELEMENTS = NUM_DATA_ELEMENTS_REV_D;
+
+            /// <summary>
+            /// Number of bytes in the serial number for 
+            /// revision D.
+            /// </summary>
+            public const int SERIAL_NUM_INT_REV_D = 8;
+
+            /// <summary>
+            /// Number of bytes in the serial number.
+            /// </summary>
+            public const int SERIAL_NUM_INT = SERIAL_NUM_INT_REV_D;
+
+            /// <summary>
+            /// Number of bytes in the firmware.
+            /// </summary>
+            public const int FIRMWARE_NUM_INT = 1;
 
             /// <summary>
             /// Status value for Hardware timeout.
@@ -91,37 +111,37 @@ namespace RTI
             /// Ensemble number.  Unique number for each ensemble during 
             /// a deployment.
             /// </summary>
-            public int EnsembleNumber { get; private set; }
+            public int EnsembleNumber { get; set; }
 
             /// <summary>
             /// Number of Bin within the ensemble.
             /// </summary>
-            public int NumBins { get; private set; }
+            public int NumBins { get; set; }
 
             /// <summary>
             /// Number of beams on the system.
             /// </summary>
-            public int NumBeams { get; private set; }
+            public int NumBeams { get; set; }
 
             /// <summary>
             /// Desired number of pings within a single ensemble.
             /// </summary>
-            public int DesiredPingCount { get; private set; }
+            public int DesiredPingCount { get; set; }
 
             /// <summary>
             /// Actual number of pings within a single ensemble.
             /// </summary>
-            public int ActualPingCount { get; private set; }
+            public int ActualPingCount { get; set; }
 
             /// <summary>
             /// System Serial number.
             /// </summary>
-            public string SysSerialNumber { get; private set; }
+            public SerialNumber SysSerialNumber { get; set; }
 
             /// <summary>
             /// System Firmware number.
             /// </summary>
-            public string Firmware { get; private set; }
+            public Firmware SysFirmware { get; set; }
 
             /// <summary>
             /// Status of the system.
@@ -141,7 +161,7 @@ namespace RTI
             public int Status 
             {
                 get { return _status; } 
-                private set
+                set
                 {
                     _status = value;
                 }
@@ -183,44 +203,44 @@ namespace RTI
             /// <summary>
             /// Year for ensemble.
             /// </summary>
-            public int Year { get; private set; }
+            public int Year { get; set; }
 
             /// <summary>
             /// Month for ensemble.
             /// </summary>
-            public int Month { get; private set; }
+            public int Month { get; set; }
 
             /// <summary>
             /// Day for ensemble.
             /// </summary>
-            public int Day { get; private set; }
+            public int Day { get; set; }
 
             /// <summary>
             /// Hour for ensemble.
             /// </summary>
-            public int Hour { get; private set; }
+            public int Hour { get; set; }
 
             /// <summary>
             /// Minute for ensemble.
             /// </summary>
-            public int Minute { get; private set; }
+            public int Minute { get; set; }
 
             /// <summary>
             /// Seconds for ensemble.
             /// </summary>
-            public int Second { get; private set; }
+            public int Second { get; set; }
 
             /// <summary>
             /// Hundreth of a Second for ensemble.
             /// </summary>
-            public int HSec { get; private set; }
+            public int HSec { get; set; }
 
             /// <summary>
             /// Date and time of the ensemble.
             /// If the Year, Month or Day are not set, then this will
             /// return the current date and time.
             /// </summary>
-            public DateTime EnsDateTime { get; private set; }
+            public DateTime EnsDateTime { get; set; }
 
             /// <summary>
             /// Return the Date as a string.
@@ -260,7 +280,7 @@ namespace RTI
                 // Initialize ranges
 
                 // Decode the information
-                DecodeEnsembleData(ensembleData);
+                Decode(ensembleData);
             }
 
             /// <summary>
@@ -280,7 +300,7 @@ namespace RTI
                 // Initialize ranges
 
                 // Decode the information
-                DecodeEnsembleData(ensembleData);
+                Decode(ensembleData);
             }
 
             /// <summary>
@@ -305,6 +325,10 @@ namespace RTI
 
                 // Use default value for beams
                 NumBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM;
+
+                // Create blank serial number and firmware
+                SysSerialNumber = new SerialNumber();
+                SysFirmware = new Firmware();
 
                 // No bin data
                 NumBins = 0;
@@ -333,6 +357,10 @@ namespace RTI
                 // Use default value for beams
                 NumBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM;
 
+                // Create blank serial number and firmware
+                SysSerialNumber = new SerialNumber();
+                SysFirmware = new Firmware();
+
                 // No bin data
                 NumBins = 0;
             }
@@ -341,7 +369,7 @@ namespace RTI
             /// Get all the information about the Ensemble.
             /// </summary>
             /// <param name="data">Byte array containing the Ensemble data type.</param>
-            private void DecodeEnsembleData(byte[] data)
+            private void Decode(byte[] data)
             {
                 EnsembleNumber = Converters.ByteArrayToInt(data, GenerateIndex(0));
                 NumBins = Converters.ByteArrayToInt(data, GenerateIndex(1));
@@ -358,22 +386,25 @@ namespace RTI
                 HSec = Converters.ByteArrayToInt(data, GenerateIndex(12));
 
                 // Revision D additions
-                if (NumElements == NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D)
+                if (NumElements >= NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D * Ensemble.BYTES_IN_INT)
                 {
-                    // Get the System Serial Number
-                    // Start at byte 13
-                    // The serial number has 8 elements
-                    // BitConvert adds a - between each byte so remove
-                    SysSerialNumber = BitConverter.ToString(data, 13, 8);
-                    SysSerialNumber = SysSerialNumber.Replace("-", "");
+                    // Get the System Serial Num
+                    // Start at index 13
+                    byte[] serial = new byte[SERIAL_NUM_INT * Ensemble.BYTES_IN_INT];
+                    System.Buffer.BlockCopy(data, GenerateIndex(13), serial, 0, SERIAL_NUM_INT * Ensemble.BYTES_IN_INT);
+                    SysSerialNumber = new SerialNumber(serial);
 
                     // Get the firmware number 
-                    Firmware = BitConverter.ToString(data, 21, 1);
+                    //Firmware = BitConverter.ToString(data, 21, FIRMWARE_NUM_INT);
+                    //Firmware = Firmware.Replace("-", "");
+                    byte[] firmware = new byte[FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT];
+                    System.Buffer.BlockCopy(data, GenerateIndex(21), firmware, 0, FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT);
+                    SysFirmware = new Firmware(firmware);
                 }
                 else
                 {
-                    SysSerialNumber = "";
-                    Firmware = "";
+                    SysSerialNumber = new SerialNumber();
+                    SysFirmware = new Firmware();
                 }
 
                 // Set the time and date
@@ -381,6 +412,52 @@ namespace RTI
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+            }
+
+            /// <summary>
+            /// Generate a byte array representing the
+            /// dataset.  The byte array is in the binary format.
+            /// The format can be found in the RTI ADCP User Guide.
+            /// It contains a header and payload.  This byte array 
+            /// will be combined with the other dataset byte arrays
+            /// to form an ensemble.
+            /// </summary>
+            /// <returns>Byte array of the ensemble.</returns>
+            public byte[] Encode()
+            {
+                int index = 0;
+                
+                // Get the length
+                byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_INT];
+                System.Buffer.BlockCopy(Converters.IntToByteArray(EnsembleNumber), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(NumBins), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(DesiredPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Status), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Year), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Month), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Day), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Hour), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Minute), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(Second), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(Converters.IntToByteArray(HSec), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(SysSerialNumber.Encode(), 0, payload, GeneratePayloadIndex(index), SerialNumber.NUM_BYTES);
+                System.Buffer.BlockCopy(SysFirmware.Encode(), 0, payload, GeneratePayloadIndex(index) + (SERIAL_NUM_INT * Ensemble.BYTES_IN_INT), Firmware.NUM_BYTES);
+
+                // Generate header for the dataset
+                byte[] header = this.GenerateHeader(NumElements);
+
+                // Create the array to hold the dataset
+                byte[] result = new byte[payload.Length + header.Length];
+
+                // Copy the header to the array
+                System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+
+                // Copy the Nmea data to the array
+                System.Buffer.BlockCopy(payload, 0, result, header.Length, payload.Length);
+
+                return result;
             }
 
             /// <summary>
@@ -394,12 +471,21 @@ namespace RTI
                 return GetBaseDataSize(NameLength) + (index * Ensemble.BYTES_IN_INT);
             }
 
+            /// <summary>
+            /// Generate a index within a payload byte array.
+            /// </summary>
+            /// <param name="index">Element number within the payload.</param>
+            /// <returns>Start location within the payload.</returns>
+            private int GeneratePayloadIndex(int index)
+            {
+                return index * Ensemble.BYTES_IN_INT;
+            }
 
             /// <summary>
             /// Get all the information about the Ensemble.
             /// </summary>
             /// <param name="data">DataRow containing the Ensemble data type.</param>
-            private void DecodeEnsembleData(DataRow data)
+            private void Decode(DataRow data)
             {
                 // Go through the result settings
                 EnsembleNumber = Convert.ToInt32(data[DbCommon.COL_ENS_ENS_NUM].ToString());
@@ -419,16 +505,26 @@ namespace RTI
                 // Check if Rev D columns exist
                 if (data.Table.Columns.Contains(DbCommon.COL_ENS_SYS_SERIAL))
                 {
-                    SysSerialNumber = (data[DbCommon.COL_ENS_SYS_SERIAL].ToString());
-                    Firmware = (data[DbCommon.COL_ENS_FIRMWARE].ToString());
+
+                    SysSerialNumber = new SerialNumber(data[DbCommon.COL_ENS_SYS_SERIAL].ToString());
+
+                    UInt16 firmMjr = 0;
+                    UInt16 firmMnr = 0;
+                    UInt16 firmRev = 0;
+                    UInt16 subSysIndex = 0; 
+                    firmMjr = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_MAJOR]));
+                    firmMnr = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_MINOR]));
+                    firmRev = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_REVISION]));
+                    subSysIndex = (Convert.ToUInt16(data[DbCommon.COL_ENS_SUBSYSTEM_INDEX]));
+                    SysFirmware = new Firmware(subSysIndex, firmMjr, firmMnr, firmRev);
 
                     // Set NumElements
                     NumElements = NUM_DATA_ELEMENTS_REV_D;
                 }
                 else
                 {
-                    SysSerialNumber = "";
-                    Firmware = "";
+                    SysSerialNumber = new SerialNumber();
+                    SysFirmware = new Firmware();
 
                     // Set NumElements
                     NumElements = NUM_DATA_ELEMENTS_REV_C;
@@ -476,6 +572,17 @@ namespace RTI
             }
 
             /// <summary>
+            /// This is used to quickly get the subsystem.
+            /// The subsystem is obtained by a combination 
+            /// of the serial number and firmware number.
+            /// </summary>
+            /// <returns>Subsystem for this ensemble.</returns>
+            public Subsystem GetSubSystem( )
+            {
+                return SysSerialNumber.GetSubsystem(SysFirmware.SubsystemIndex);
+            }
+
+            /// <summary>
             /// Override the ToString to return all the Ensemble data as a string.
             /// </summary>
             /// <returns></returns>
@@ -483,8 +590,9 @@ namespace RTI
             {
                 string s = "";
                 s += "Ensemble: "  + EnsembleNumber + "\n";
-                s += "Serial: " + SysSerialNumber + "\n";
-                s += "Firmware: " + Firmware + "\n";
+                s += "Serial: " + SysSerialNumber.ToString() + "\n";
+                s += "Firmware: " + SysFirmware.ToString() + "\n";
+                s += "SubSystem: " + SysFirmware.SubsystemIndex.ToString();
                 s += EnsDateTime.ToString() + "\n";
                 s += "Bins: " + NumBins + " Beams: " + NumBeams + "\n";
                 s += "Pings Desired: " + DesiredPingCount + " actual: " + ActualPingCount + "\n";

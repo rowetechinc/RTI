@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 11/22/2011      RC          Initial coding
  * 11/28/2011      RC          Changed ToString() to display text.
+ * 01/31/2012      RC          Added new errors from User Guide Rev F.
  * 
  */
 
@@ -41,28 +42,47 @@
 namespace RTI
 {
     /// <summary>
-    /// Status of the ensemble.
+    /// Status of the Ensemble Data
+    /// ---------------------------
     /// Final value is a logical OR of each status bit.
-    /// Good Status = 0x0000
-    /// Hardware Timeout = 08000
+    /// 
+    /// Good Status                             = 0x0000
+    /// 
+    /// Hardware Timeout =                      = 0x8000
     ///   The hardware did not respond to the ping request
     /// 
-    /// Status of the Bottom Track.
-    /// Final ranges logical OR of each bit below.
-    /// Good Status = 0x0000
+    /// Status of the Bottom Track
+    /// ---------------------------
+    /// Final value is a logical OR of each bit below.
+    /// 
+    /// Good Status                             = 0x0000
+    /// 
     /// Water Track 3 Beam Solution (DVL only)  = 0x0001
     ///    3 or 4 beams have a valid signal
+    ///    
     /// Bottom Track 3 Beam Solution            = 0x0002
     ///    3 or 4 beams located the bottom
+    ///    
     /// Bottom Track Hold (not searching yet)   = 0x0004
     ///    Holding the search to last known Depth
+    ///    
     /// Bottom Track Searching                  = 0x0008
     ///    Actively searching for the bottom
+    ///    
     /// Hardware Timeout                        = 0x8000
     ///    The hardware did not respond to the ping request
+    /// 
+    /// STATUS_DATAERROR                        = 0x4000
+    /// 
+    /// STATUS_TEMPERATURE_ERROR                = 0x2000
+    /// 
+    /// STATUS_RTC_ERROR                        = 0x1000
+    /// 
     /// </summary>
     public class Status
     {
+        #region Variables
+
         /// <summary>
         /// Water Track 3 Beam solution STATUS value (DVL only).
         /// </summary>
@@ -88,13 +108,32 @@ namespace RTI
         /// </summary>
         public const int HDWR_TIMEOUT = 0x8000;
 
+        /// <summary>
+        /// Data error.
+        /// </summary>
+        public const int DATAERROR = 0x400;
 
+        /// <summary>
+        /// Temperature error.
+        /// </summary>
+        public const int TEMPERATURE_ERROR = 0x2000;
+
+        /// <summary>
+        /// Real Time Clock error.
+        /// </summary>
+        public const int RTC_ERROR = 0x1000;
+
+        #endregion
+
+        #region Properties
 
         /// <summary>
         /// Status value stored
         /// </summary>
         public int Value { get; set; }
-        
+
+        #endregion
+
         /// <summary>
         /// Initialize the status value
         /// </summary>
@@ -103,6 +142,8 @@ namespace RTI
         {
             Value = status;
         }
+
+        #region Methods
 
         /// <summary>
         /// Check whether status bit set for
@@ -155,6 +196,36 @@ namespace RTI
         }
 
         /// <summary>
+        /// Check whether status bit set for
+        /// Data Error.
+        /// </summary>
+        /// <returns>TRUE = Data Error.</returns>
+        public bool IsDataError()
+        {
+            return (Value & DATAERROR) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for
+        /// Temperature Error.
+        /// </summary>
+        /// <returns>TRUE = Temperature Error.</returns>
+        public bool IsTemperatureError()
+        {
+            return (Value & TEMPERATURE_ERROR) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for
+        /// Real Time Clock Error.
+        /// </summary>
+        /// <returns>TRUE = Real time clock error.</returns>
+        public bool IsRealTimeClockError()
+        {
+            return (Value & RTC_ERROR) > 0;
+        }
+
+        /// <summary>
         /// Return a string representing the
         /// status.  This could be multiple statuses
         /// values in the string.
@@ -162,9 +233,16 @@ namespace RTI
         /// <returns>Status value as a string.</returns>
         public override string ToString()
         {
-
             // No errors, return good
-            if (!IsWaterTrack3BeamSolution() && !IsBottomTrack3BeamSolution() && !IsBottomTrackHold() && !IsBottomTrackSearching() && !IsHardwareTimeout())
+            if (!IsWaterTrack3BeamSolution() && 
+                !IsBottomTrack3BeamSolution() && 
+                !IsBottomTrackHold() && 
+                !IsBottomTrackSearching() && 
+                !IsHardwareTimeout() && 
+                !IsDataError() && 
+                !IsTemperatureError() && 
+                !IsRealTimeClockError()
+                )
             {
                 return "Good";
             }
@@ -191,10 +269,24 @@ namespace RTI
             {
                 result += "Hardware Timeout";
             }
+            if (IsDataError())
+            {
+                result += "Data Error";
+            }
+            if (IsTemperatureError())
+            {
+                result += "Temperature Error";
+            }
+            if (IsRealTimeClockError())
+            {
+                result += "RTC Error";
+            }
 
             //return Value.ToString();
             return result;
         }
+
+        #endregion
     }
 
 }

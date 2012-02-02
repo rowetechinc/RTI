@@ -40,6 +40,9 @@
  * 12/08/2011      RC          1.09       Fixed bug with setting ID for PRTI01/02 constructor.
  * 12/19/2011      RC          1.10       Added variable for bad Temp.  
  *                                         In SysTempRounded, if system temp is bad, do not display anything.
+ * 01/18/2012      RC          1.14       Added Encode() to convert to byte array.
+ *                                         Removed "private set".
+ * 01/24/2012      RC          1.14       Removed Rounded properties to methods to reduce memory footprint.
  *       
  * 
  */
@@ -56,6 +59,8 @@ namespace RTI
         /// </summary>
         public class AncillaryDataSet : BaseDataSet
         {
+            #region Variables
+
             /// <summary>
             /// Number of elements within this data set
             /// </summary>
@@ -66,149 +71,78 @@ namespace RTI
             /// </summary>
             public const int BAD_SYS_TEMP = -99999;
 
+            #endregion
+
+            #region Properties
+
             /// <summary>
             /// Range of the first Bin from the transducer in meters.
             /// </summary>
-            public float FirstBinRange { get; private set; }
-
-            /// <summary>
-            /// Round version of the range of the first Bin from the transducer in meters.
-            /// </summary>
-            public string FirstBinRangeRounded { get { return FirstBinRange.ToString("0.000"); } }
+            public float FirstBinRange { get; set; }
 
             /// <summary>
             /// Size of a Bin in meters.
             /// </summary>
-            public float BinSize { get; private set; }
-
-            /// <summary>
-            /// Round version of Size of a Bin in meters.
-            /// </summary>
-            public string BinSizeRounded { get { return BinSize.ToString("0.000"); } }
+            public float BinSize { get; set; }
 
             /// <summary>
             /// First Profile Ping Time in seconds.
             /// </summary>
-            public float FirstPingTime { get; private set; }
-
-            /// <summary>
-            /// Round version of First Profile ping time in seconds.
-            /// </summary>
-            public string FirstPingTimeRounded { get { return FirstPingTime.ToString("0.00"); } }
+            public float FirstPingTime { get; set; }
 
             /// <summary>
             /// Last Profile Ping Time in seconds.
             /// </summary>
-            public float LastPingTime { get; private set; }
-
-            /// <summary>
-            /// Round version of Last Profile ping time in seconds
-            /// </summary>
-            public string LastPingTimeRounded { get { return LastPingTime.ToString("0.00"); ; } }
+            public float LastPingTime { get; set; }
 
             /// <summary>
             /// Heading in degrees.
             /// </summary>
-            public float Heading { get; private set; }
-
-            /// <summary>
-            /// Round version of Heading in degrees.
-            /// </summary>
-            public string HeadingRounded { get { return Heading.ToString("0.000"); } }
+            public float Heading { get; set; }
 
             /// <summary>
             /// Pitch in degrees.
             /// </summary>
-            public float Pitch { get; private set; }
-
-            /// <summary>
-            /// Round version of Pitch in degrees.
-            /// </summary>
-            public string PitchRounded { get { return Pitch.ToString("0.000"); } }
+            public float Pitch { get; set; }
 
             /// <summary>
             /// Roll in degrees.
             /// </summary>
-            public float Roll { get; private set; }
-
-            /// <summary>
-            /// Round version of Roll in degrees.
-            /// </summary>
-            public string RollRounded { get { return Roll.ToString("0.000"); } }
+            public float Roll { get; set; }
 
             /// <summary>
             /// Water Temperature in degrees.  Used in Speed of Sound.
             /// </summary>
-            public float WaterTemp { get; private set; }
-
-            /// <summary>
-            /// Round version of the Water temperature in degrees. 
-            /// </summary>
-            public string WaterTempRounded { get { return WaterTemp.ToString("0.000"); } }
+            public float WaterTemp { get; set; }
 
             /// <summary>
             /// System (board) temperature in degrees.
             /// </summary>
-            public float SystemTemp { get; private set; }
-
-            /// <summary>
-            /// Round version of the system temperature in degrees.
-            /// If the temperature is bad, do not display anything.
-            /// </summary>
-            public string SystemTempRounded 
-            { 
-                get 
-                {
-                    if (SystemTemp == BAD_SYS_TEMP)
-                    {
-                        return "";
-                    }
-
-                    return SystemTemp.ToString("0.000"); 
-                } 
-            }
+            public float SystemTemp { get; set; }
 
             /// <summary>
             /// Salinity in parts per thousand (ppt).
             /// Used in Speed of Sound.
             /// </summary>
-            public float Salinity { get; private set; }
-
-            /// <summary>
-            /// Round version of Salinity in parts per thousand.
-            /// </summary>
-            public string SalinityRounded { get { return Salinity.ToString("0.000"); } }
+            public float Salinity { get; set; }
 
             /// <summary>
             /// Pressure in Pascal.
             /// </summary>
-            public float Pressure { get; private set; }
-
-            /// <summary>
-            /// Round version of Pressure in pascal.
-            /// </summary>
-            public string PressureRounded { get { return Pressure.ToString("0.000"); } }
+            public float Pressure { get; set; }
 
             /// <summary>
             /// Depth of the transducer into the water in meters.
             /// Used in Speed of Sound.
             /// </summary>
-            public float TransducerDepth { get; private set; }
-
-            /// <summary>
-            /// Round version of Depth of the tranducer into the water in meters.
-            /// </summary>
-            public string TransducerDepthRounded { get { return TransducerDepth.ToString("0.000"); } }
+            public float TransducerDepth { get; set; }
 
             /// <summary>
             /// Speed of Sound in meters/sec.
             /// </summary>
-            public float SpeedOfSound { get; private set; }
+            public float SpeedOfSound { get; set; }
 
-            /// <summary>
-            /// Round version of the Speed of Sound in meters/sec.
-            /// </summary>
-            public string SpeedOfSoundRounded { get { return SpeedOfSound.ToString("0.000"); } }
+            #endregion
 
             /// <summary>
             /// Create a Ancillary data set.  Includes all the information
@@ -225,7 +159,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Decode the information
-                DecodeAncillaryData(ancData);
+                Decode(ancData);
             }
 
             /// <summary>
@@ -243,7 +177,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Decode the information
-                DecodeAncillaryData(ancData);
+                Decode(ancData);
             }
 
             /// <summary>
@@ -274,7 +208,7 @@ namespace RTI
             /// Get all the information about the Ancillary data.
             /// </summary>
             /// <param name="data">Byte array containing the Ancillary data type.</param>
-            private void DecodeAncillaryData(byte[] data)
+            private void Decode(byte[] data)
             {
                 FirstBinRange = Converters.ByteArrayToFloat(data, GenerateIndex(0));
                 BinSize = Converters.ByteArrayToFloat(data, GenerateIndex(1));
@@ -292,8 +226,52 @@ namespace RTI
             }
 
             /// <summary>
+            /// Generate a byte array representing the
+            /// dataset.  The byte array is in the binary format.
+            /// The format can be found in the RTI ADCP User Guide.
+            /// It contains a header and payload.  This byte array 
+            /// will be combined with the other dataset byte arrays
+            /// to form an ensemble.
+            /// </summary>
+            /// <returns>Byte array of the ensemble.</returns>
+            public byte[] Encode()
+            {
+                int index = 0;
+
+                // Get the length
+                byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(FirstBinRange), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BinSize), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Heading), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pitch), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Roll), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(WaterTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SystemTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Salinity), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pressure), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(TransducerDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                // Generate header for the dataset
+                byte[] header = this.GenerateHeader(NumElements);
+
+                // Create the array to hold the dataset
+                byte[] result = new byte[payload.Length + header.Length];
+
+                // Copy the header to the array
+                System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+
+                // Copy the Nmea data to the array
+                System.Buffer.BlockCopy(payload, 0, result, header.Length, payload.Length);
+
+                return result;
+            }
+
+            /// <summary>
             /// Move pass the base data of the Ancillary.  Then based
-            /// off the xAxis, move to the correct location.
+            /// off the index, move to the correct location.
             /// </summary>
             /// <param name="index">PlaybackIndex of the order of the data.</param>
             /// <returns>PlaybackIndex for the given xAxis.  Start of the data</returns>
@@ -303,15 +281,22 @@ namespace RTI
             }
 
             /// <summary>
+            /// Generate a index within a payload byte array.
+            /// </summary>
+            /// <param name="index">Element number within the payload.</param>
+            /// <returns>Start location within the payload.</returns>
+            private int GeneratePayloadIndex(int index)
+            {
+                return index * Ensemble.BYTES_IN_FLOAT;
+            }
+
+            /// <summary>
             /// Get all the information about the Ancillary data.
             /// </summary>
             /// <param name="dataRow">DataTable containing the Ancillary data type.</param>
-            private void DecodeAncillaryData(DataRow dataRow)
+            private void Decode(DataRow dataRow)
             {
                 // Go through the result settings the settings
-                // If more than 1 result is found, return the first one found
-                //foreach (DataRow r in dataTable.Rows)
-                //{
                 FirstBinRange = Convert.ToSingle(dataRow[DbCommon.COL_ENS_FIRST_BIN_RANGE].ToString());
                 BinSize = Convert.ToSingle(dataRow[DbCommon.COL_ENS_BIN_SIZE].ToString());
                 FirstPingTime = Convert.ToSingle(dataRow[DbCommon.COL_ENS_FIRST_PING_TIME].ToString());
@@ -325,7 +310,6 @@ namespace RTI
                 Pressure = Convert.ToSingle(dataRow[DbCommon.COL_ENS_PRESSURE].ToString());
                 TransducerDepth = Convert.ToSingle(dataRow[DbCommon.COL_ENS_XDCR_DEPTH].ToString());
                 SpeedOfSound = Convert.ToSingle(dataRow[DbCommon.COL_ENS_SOS].ToString());
-                //}
             }
 
 

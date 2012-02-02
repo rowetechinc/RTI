@@ -30,15 +30,19 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 10/06/2011      RC          Initial coding
- * 10/11/2011      RC          Adding ToString for send to ADCP
- *                              Removed IDataErrorInfo
- * 11/17/2011      RC          Added GetCommandList().
- * 11/18/2011      RC          Removed CR from end of GetTimeCommand().
- * 11/21/2011      RC          Added ==, !=, HashCode and Equal to TimeValue for unit test. 
- * 12/05/2011      RC          Added min/max Hundredth of a second.
+ * 10/06/2011      RC                     Initial coding
+ * 10/11/2011      RC                     Adding ToString for send to ADCP
+ *                                         Removed IDataErrorInfo
+ * 11/17/2011      RC                     Added GetCommandList().
+ * 11/18/2011      RC                     Removed CR from end of GetTimeCommand().
+ * 11/21/2011      RC                     Added ==, !=, HashCode and Equal to TimeValue for unit test. 
+ * 12/05/2011      RC                     Added min/max Hundredth of a second.
+ * 01/31/2012      RC          1.14       Added new commands for User Guide Rev F.
+ * 02/01/2012      RC          1.14       Moved some Enums and class outside this class but in the namespace.
+ *                                         Removed WP, BT and WT to a AdcpSubsystemCommands.
+ *                                         Take serial number in constructor to know subsystems.
  * 
  */
 
@@ -50,14 +54,235 @@ namespace RTI
 {
     namespace Commands
     {
+        #region Classes and Enums
+
+        /// <summary>
+        /// Enum to handle commands that pass a 0 or 1 for enable for disable.
+        /// </summary>
+        public enum EnableDisable
+        {
+            /// <summary>
+            /// Disable.
+            /// </summary>
+            DISABLE = 0,
+
+            /// <summary>
+            /// Enable.
+            /// </summary>
+            ENABLE = 1
+        };
+
+        /// <summary>
+        /// Baud rate options for C232B and C485B.
+        /// </summary>
+        public enum Baudrate
+        {
+            /// <summary>
+            /// 2400 Baudrate.
+            /// </summary>
+            BAUD_2400 = 2400,
+
+            /// <summary>
+            /// 4800 Baudrate.
+            /// </summary>
+            BAUD_4800 = 4800,
+
+            /// <summary>
+            /// 9600 Baudrate.
+            /// </summary>
+            BAUD_9600 = 9600,
+
+            /// <summary>
+            /// 19200 Baudrate.
+            /// </summary>
+            BAUD_19200 = 19200,
+
+            /// <summary>
+            /// 38400 Baudrate.
+            /// </summary>
+            BAUD_38400 = 38400,
+
+            /// <summary>
+            /// 115200 Baudrate.
+            /// </summary>
+            BAUD_115200 = 115200
+        };
+
+        /// <summary>
+        /// Heading source options.
+        /// </summary>
+        public enum HeadingSrc
+        {
+            /// <summary>
+            /// Internal Heading source.
+            /// Internal (PNI) compass.
+            /// </summary>
+            INTERNAL = 1,
+
+            /// <summary>
+            /// External Heading source.
+            /// GPS HDT strings via serial port.
+            /// </summary>
+            SERIAL = 2
+        };
+
+        /// <summary>
+        /// TimeValue used to send command CWPAI.
+        /// </summary>
+        public class TimeValue
+        {
+            /// <summary>
+            /// Hours.
+            /// </summary>
+            public UInt16 Hour { get; set; }
+
+            /// <summary>
+            /// Minutes.
+            /// </summary>
+            public UInt16 Minute { get; set; }
+
+            /// <summary>
+            /// Seconds.
+            /// </summary>
+            public UInt16 Second { get; set; }
+
+            /// <summary>
+            /// Hundredths of a second.
+            /// </summary>
+            public UInt16 HunSec { get; set; }
+
+            /// <summary>
+            /// Default value is all zeros.
+            /// </summary>
+            public TimeValue()
+            {
+                Hour = 0;
+                Minute = 0;
+                Second = 0;
+                HunSec = 0;
+            }
+
+            /// <summary>
+            /// Set the time.
+            /// </summary>
+            /// <param name="hour">Hour value</param>
+            /// <param name="minute">Minute value</param>
+            /// <param name="second">Second value</param>
+            /// <param name="hunSec">Hundreth of second value</param>
+            public TimeValue(UInt16 hour, UInt16 minute, UInt16 second, UInt16 hunSec)
+            {
+                Hour = hour;
+                Minute = minute;
+                Second = second;
+                HunSec = hunSec;
+            }
+
+            /// <summary>
+            /// Return the string version of this class.
+            /// </summary>
+            /// <returns>String version of this class.  HH:MM:SS.hh</returns>
+            public override string ToString()
+            {
+                return Hour.ToString("00") + ":" + Minute.ToString("00") + ":" + Second.ToString("00") + "." + HunSec.ToString("00");
+            }
+
+            /// <summary>
+            /// Create an equal operator to check if the
+            /// given is equal to each other.
+            /// </summary>
+            /// <param name="a">Timevalue to compare.</param>
+            /// <param name="b">Timevalue to compare.</param>
+            /// <returns>TRUE if hour, minute, second and hunsec equal.</returns>
+            public static bool operator ==(TimeValue a, TimeValue b)
+            {
+                // If both are null, or both are same instance, return true.
+                if (System.Object.ReferenceEquals(a, b))
+                {
+                    return true;
+                }
+
+                // If one is null, but not both, return false.
+                if (((object)a == null) || ((object)b == null))
+                {
+                    return false;
+                }
+
+                if (a.Hour == b.Hour &&
+                    a.Minute == b.Minute &&
+                    a.Second == b.Second &&
+                    a.HunSec == b.HunSec)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            /// <summary>
+            /// Check if the 2 time values are not equal.
+            /// </summary>
+            /// <param name="a">First time value to compare.</param>
+            /// <param name="b">Second time value to compare.</param>
+            /// <returns>TRUE if not equal.</returns>
+            public static bool operator !=(TimeValue a, TimeValue b)
+            {
+                return !(a == b);
+            }
+
+            /// <summary>
+            /// Create a hashcode for the object.
+            /// </summary>
+            /// <returns>Hashcode for the object.</returns>
+            public override int GetHashCode()
+            {
+                return this.Hour ^ this.Minute ^ this.Second ^ this.HunSec;
+            }
+
+            /// <summary>
+            /// Check if the object is equal to the given object.
+            /// </summary>
+            /// <param name="obj">Object to compare.</param>
+            /// <returns>TRUE if they are equal.</returns>
+            public override bool Equals(object obj)
+            {
+                // If parameter cannot be cast to ThreeDPoint return false:
+                TimeValue p = obj as TimeValue;
+                if ((object)p == null)
+                {
+                    return false;
+                }
+
+                if (this.Hour == p.Hour &&
+                    this.Minute == p.Minute &&
+                    this.Second == p.Second &&
+                    this.HunSec == p.HunSec)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Commands handled by the ADCP.
         /// </summary>
         public class AdcpCommands
         {
+            /// <summary>
+            /// Serial number to know how many 
+            /// subsystem exist in the current 
+            /// ADCP.
+            /// </summary>
+            private SerialNumber _serialNumber;
+
             #region Commands
 
             //public const char CR = '\r';
+
+            #region Pinging
 
             /// <summary>
             /// Command: Start pinging.
@@ -78,6 +303,10 @@ namespace RTI
             /// </summary>
             public const string CMD_HELP = "Help";
 
+            #endregion
+
+            #region Modes
+
             /// <summary>
             /// Command: DVL Mode
             /// Parameter: 
@@ -97,79 +326,9 @@ namespace RTI
             /// </summary>
             public const string CMD_CPROFILE = "CPROFILE";
 
-            /// <summary>
-            /// Water Profile Command: On/Off
-            /// Paramater: N = 0 to 1
-            /// 0=Disable 1=Enable. 
-            /// Enables or disables water profile pings.
-            /// </summary>
-            public const string CMD_CWPON = "CWPON";
+            #endregion
 
-            /// <summary>
-            /// Water Profile Command: Broadband On/Off
-            /// Parameter: N = 0 to 1
-            /// 0=Disable 1=Enable. 
-            /// Enables or disables Water Profile boardband processing. 
-            /// Narrowband processing is used when broadband disabled
-            /// </summary>
-            public const string CMD_CWPBB = "CWPBB";
-
-            /// <summary>
-            /// Water Profile Command: Blank
-            /// Parameter: n.nn = 0.00 to 100 (meters)  
-            /// Sets the vertical range from the face of the transducer 
-            /// to the first sample of the first Bin.
-            /// </summary>
-            public const string CMD_CWPBL = "CWPBL"; 
-
-            /// <summary>
-            /// Water Profile Command: Bin Size
-            /// Parameter: n.nn = 0.01 to 100 (meters)  
-            /// n.nn sets the vertical Bin size.
-            /// </summary>
-            public const string CMD_CWPBS = "CWPBS";
- 
-            /// <summary>
-            /// Water Profile Command: Trasmit
-            /// Parameter: n.nn = 0.00 to 100 (meters)
-            /// n.nn sets the vertical transmit size.  
-            /// A value of 0.00 will cause the system to 
-            /// set transmit to the same length as the cell size.
-            /// </summary>
-            public const string CMD_CWPX = "CWPX";
-
-            /// <summary>
-            /// Water Profile Command: Number of bins
-            /// Parameter: N = 1 to 200.  
-            /// Sets the number of bins that will be processed and output.
-            /// </summary>
-            public const string CMD_CWPBN = "CWPBN";
-
-            /// <summary>
-            /// Water Profile Command: Number of Pings
-            /// Parameter: N = 0 to 10,000
-            /// Sets the number of pings that will be averaged together during the ensemble.
-            /// If CWPAI is set equal to 00:00:00.00.
-            /// </summary>
-            public const string CMD_CWPP = "CWPP";
-
-            /// <summary>
-            /// Water Profile Command: Averaging Interval
-            /// Parameter: HH:MM:SS.hh 
-            /// Sets the interval over which the profile pings are 
-            /// evenly spread.  To determine the number of pings in 
-            /// the ensemble CWPAI is divided by CWPTBP.  If CWPAI 
-            /// is set equal to 00:00:00.00 sets the number of pings 
-            /// in the ensemble.
-            /// </summary>
-            public const string CMD_CWPAI = "CWPAI";
-
-            /// <summary>
-            /// Water Profile Command: Time between Pings
-            /// Parameter: n.nn = 0.00 to 86400 (seconds) 
-            /// Sets the time between profile pings.
-            /// </summary>
-            public const string CMD_CWPTBP = "CWPTBP";
+            #region Ensemble
 
             /// <summary>
             /// Ensemble Command: Ensemble Interval
@@ -177,85 +336,42 @@ namespace RTI
             /// Sets the time interval that system will output the 
             /// averaged profile/bottom track data. 
             /// </summary>
-            public const string CMD_CEI = "CEI"; 
+            public const string CMD_CEI = "CEI";
 
             /// <summary>
-            /// Bottom Track Command: On/Off
-            /// Parameter: N = 0 to 1
-            /// 0=Disable 1=Enable.  
-            /// Enables or disables bottom track pings. 
+            /// Ensemble Command: Ensemble Time of First Ping
+            /// Parameter: YYYY/MM/DD,HH:mm:SS.hh
+            /// Sets the time that the system will awaken and start pinging. 
             /// </summary>
-            public const string CMD_CBTON = "CBTON";
+            public const string CMD_CETFP = "CETFP";
 
             /// <summary>
-            /// Bottom Track Command: Broadband On/Off
-            /// Parameter: N = 0 to 1
-            /// 0=Disable 1=Enable.  
-            /// Enables or disables bottom track boardband processing.  
-            /// Narrowband processing is used when boardband is disabled
+            /// Ensemble Command: Ensemble Recording
+            /// Parameter: 0=disable, 1=enable
+            /// When recording is enabled the ADCP searches for the next available 
+            /// file number to record to. The ensemble file name starts with the 
+            /// letter “A” followed by a 7 digit number and ending with the 
+            /// extension “.ens”. For example: The first ensemble file will 
+            /// be named “A0000001.ens”. During deployment as each ensemble 
+            /// is completed the data is appended to the current file. The 7 
+            /// digit number following the “A” is incremented each time the 
+            /// system is (re)started or when the file size exceeds 16777216 
+            /// bytes. 
             /// </summary>
-            public const string CMD_CBTBB = "CBTBB";
+            public const string CMD_CERECORD = "CERECORD";
 
             /// <summary>
-            /// Bottom Track Command: Blank
-            /// Parameter: n.nn = 0 to 10 (meters)  
-            /// Sets the vertical distance from the face of the transducer 
-            /// at which the bottom dectection algorithm begins search for the bottom
+            /// Ensemble Command: Ensemble Ping Order
+            /// Parameter: cccccccccccccccc
+            /// Sets the order in which the various subsystems will be pinged. 
+            /// Note: a space and at least one subsystem code must follow 
+            /// the CEPO command or the system will reject the command.
             /// </summary>
-            public const string CMD_CBTBL = "CBTBL";
+            public const string CMD_CEPO = "CEPO";
 
-            /// <summary>
-            /// Bottom Track Command: Max Depth
-            /// Parameter: n.nn = 5 to 10,000 (meters)  
-            /// Sets the maximum range over which the bottom track algorithm 
-            /// will search for the bottom.  A large value will slow acquistion time
-            /// </summary>
-            public const string CMD_CBTMX = "CBTMX";
+            #endregion
 
-            /// <summary>
-            /// Bottom Track Command: Time Between Pings
-            /// Parameter: n.nn = 0.00 to 86400 (seconds) 
-            /// Sets the time between bottom pings
-            /// </summary>
-            public const string CMD_CBTTBP = "CBTTBP";
-
-            /// <summary>
-            /// Water Track Command: On/Off
-            /// Parameter: N = 0 to 1
-            /// 0=Disable 1=Enable.  
-            /// Enable or diable water track
-            /// </summary>
-            public const string CMD_CWTON = "CWTON";
-
-            /// <summary>
-            /// Water Track Command: Broadband On/Off
-            /// Parameter: N = 0 to 1
-            /// 0=Disable 1=Enable.  
-            /// Enable or diable water track broadband processing
-            /// </summary>
-            public const string CMD_CWTBB = "CWTBB";
-
-            /// <summary>
-            /// Water Track Command: Blank
-            /// Paramter: n.nn = 0.00 to 100 (meters)  
-            /// Sets the vertical range from the face of the 
-            /// transducer to the first sample of the Bin.
-            /// </summary>
-            public const string CMD_CWTBL = "CWTBL";
-
-            /// <summary>
-            /// Water Track Command: Bin Size
-            /// Parameter: n.nn = 0.05 to 64 (meters) 
-            /// Sets the vertical Bin size.
-            /// </summary>
-            public const string CMD_CWTBS = "CWTBS";
-
-            /// <summary>
-            /// Water Track Command: Time Between Pings
-            /// Parameter: N = 0.00 to 86400 (seconds)
-            /// Sets the time between bottom pings.
-            /// </summary>
-            public const string CMD_CWTTBP = "CWTTBP"; 
+            #region Environmental
 
             /// <summary>
             /// Environmental Command: Salinity
@@ -302,6 +418,10 @@ namespace RTI
             /// </summary>
             public const string CMD_CHS = "CHS";
 
+            #endregion
+
+            #region COMM Port
+
             /// <summary>
             /// Serial Communication Command: RS-232 Baudrate
             /// Parameter: n = 2400, 4800, 9600, 19200, 38400, 115200
@@ -315,6 +435,17 @@ namespace RTI
             /// The ADCP contains a RS-485 port.  Set its baudrate.
             /// </summary>
             public const string CMD_C485B = "C485B";
+
+            /// <summary>
+            /// Serial Communication Command: RS-422 Baudrate
+            /// Parameter: n = 2400, 4800, 9600, 19200, 38400, 115200
+            /// The ADCP contains a RS-422 port.  Set its baudrate.
+            /// </summary>
+            public const string CMD_C422B = "C422B";
+
+            #endregion
+
+            #region System Config
 
             /// <summary>
             /// System Config Command: Load Config File
@@ -344,6 +475,10 @@ namespace RTI
             /// </summary>
             public const string CMD_CDEFAULT = "CDEFAULT";
 
+            #endregion
+
+            #region Firmware
+
             /// <summary>
             /// Firmware Command: Show Firmware Version
             /// Parameter: 
@@ -368,6 +503,10 @@ namespace RTI
             //public const string CMD_START = "START";            /// Start pinging continously.  Once started the system will only respond to the STOP command
             //public const string CMD_STOP = "STOP";              /// Stop pinging
 
+            #endregion
+
+            #region Deployment
+
             /// <summary>
             /// Deployment Command: Power Down System
             /// Parameter:
@@ -380,7 +519,11 @@ namespace RTI
             /// Parameter: "yyyy/MM/dd,HH:mm:ss"
             /// Set or Display system time.
             /// </summary>
-            public const string CMD_STIME = "STIME"; 
+            public const string CMD_STIME = "STIME";
+
+            #endregion
+
+            #region Data Storage
 
             /// <summary>
             /// Data Storage Command: Receive a File.
@@ -425,6 +568,10 @@ namespace RTI
             /// </summary>
             public const string CMD_DSSHOW = "DSSHOW";
 
+            #endregion
+
+            #region Diagnostic
+
             /// <summary>
             /// Diagnostic Command: Compass Pass Thru
             /// Parameter:
@@ -444,6 +591,10 @@ namespace RTI
             /// 16 consecutive X's (XXXXXXXXXXXXXXXX) to the system.
             /// </summary>
             public const string CMD_DIAGCPT_DISCONNECT = "XXXXXXXXXXXXXXXX";
+
+            #endregion
+
+            #region Engineering Commands
 
             /// <summary>
             /// Engineering Command: Ping Once
@@ -549,6 +700,8 @@ namespace RTI
 
             #endregion
 
+            #endregion
+
             #region Default Values
 
             /// <summary>
@@ -560,6 +713,11 @@ namespace RTI
             /// Default RS-485 Baudrate.
             /// </summary>
             public const Baudrate DEFAULT_C485B = Baudrate.BAUD_115200;
+
+            /// <summary>
+            /// Default RS-422 Baudrate.
+            /// </summary>
+            public const Baudrate DEFAULT_C422B = Baudrate.BAUD_115200;
 
             /// <summary>
             /// Default ADCP mode.
@@ -607,486 +765,63 @@ namespace RTI
             public const HeadingSrc DEFAULT_CHS = HeadingSrc.INTERNAL;
 
             /// <summary>
-            /// Default Bottom Track On.
-            /// </summary>
-            public const bool DEFAULT_CBTON = true;
-
-            /// <summary>
-            /// Default Water On.
-            /// </summary>
-            public const bool DEFAULT_CWTON = false;
-
-            /// <summary>
-            /// Default Water Profile On.
-            /// </summary>
-            public const bool DEFAULT_CWPON = true;
-
-            /// <summary>
-            /// Default Bottom Track Broadband.
-            /// </summary>
-            public const bool DEFAULT_CBTBB = true;
-
-            /// <summary>
-            /// Default Water Track Broadband.
-            /// </summary>
-            public const bool DEFAULT_CWTBB = true;
-
-            /// <summary>
-            /// Default Water Profile Broadband.
-            /// </summary>
-            public const bool DEFAULT_CWPBB = true;
-
-            /// <summary>
-            /// Default flag if CWPAI enabled.
-            /// </summary>
-            public const bool DEFAULT_ENABLE_CWPAI = false;
-
-            /// <summary>
-            /// Default Averaging Interval.
-            /// 0 seconds.
-            /// </summary>
-            public TimeValue DEFAULT_CWPAI = new TimeValue();
-
-            /// <summary>
             /// Default Ensemble interval.
             /// 1 second.
             /// </summary>
             public TimeValue DEFAULT_CEI = new TimeValue(0, 0, 1, 0);
 
-            #region Default 40khz
-            
             /// <summary>
-            /// Default 40khz Bottom Track Time between pings (2 seconds).
+            /// Default Year to start pinging.
+            /// 2012
             /// </summary>
-            public const float DEFAULT_40_CBTTBP = 2.0f;
+            public const UInt16 DEFAULT_CETFP_YEAR = 12;
 
             /// <summary>
-            /// Default 40khz Water Track Time between pings (4 seconds).
+            /// Default Month to start pinging.
+            /// Janurary.
             /// </summary>
-            public const float DEFAULT_40_CWTTBP = 4.0f;
+            public const UInt16 DEFAULT_CETFP_MONTH = 1;
 
             /// <summary>
-            /// Default 40khz Water Profile Time between pings (4 seconds).
+            /// Default Day to start pinging.
+            /// 1
             /// </summary>
-            public const float DEFAULT_40_CWPTBP = 4.0f;
+            public const UInt16 DEFAULT_CETFP_DAY = 1;
 
             /// <summary>
-            /// Default 40khz Bottom Track Blank (2 meters).
+            /// Default Hour to start pinging.
             /// </summary>
-            public const float DEFAULT_40_CBTBL = 2.0f;
+            public const UInt16 DEFAULT_CETFP_HOUR = 1;
 
             /// <summary>
-            /// Default 40khz Bottom Track Maximum Depth (2000 meters).
+            /// Default Minute to start pinging.
             /// </summary>
-            public const float DEFAULT_40_CBTMX = 2000.0f;
+            public const UInt16 DEFAULT_CETFP_MINUTE = 0;
 
             /// <summary>
-            /// Default 40khz Water Track Blank (32 meters).
+            /// Default Second to start pinging.
             /// </summary>
-            public const float DEFAULT_40_CWTBL = 32.0f;
+            public const UInt16 DEFAULT_CETFP_SECOND = 0;
 
             /// <summary>
-            /// Default 40khz Water Track Bin size (32 meters).
+            /// Default Hundredth of Second to start pinging.
             /// </summary>
-            public const float DEFAULT_40_CWTBS = 32.0f;
+            public const UInt16 DEFAULT_CETFP_HUNSEC = 0;
 
             /// <summary>
-            /// Default 40khz Water Profile Blank (32 meters).
+            /// Default whethere to record on the system.
             /// </summary>
-            public const float DEFAULT_40_CWPBL = 32.0f;
+            public const bool DEFAULT_CERECORD = false;
 
             /// <summary>
-            /// Default 40khz Water Profile Bin size (32 meters).
+            /// Default subsystem order to ping.
+            /// At least have a value.  So choose 0.
             /// </summary>
-            public const float DEFAULT_40_CWPBS = 32.0f;
-
-            /// <summary>
-            /// Default 40khz Water Profile Transmit (0.00 = Same as cell size).
-            /// </summary>
-            public const float DEFAULT_40_CWPX = 0.00f;
-
-            /// <summary>
-            /// Default 40khz Water Profile Number of bins (30 bins).
-            /// </summary>
-            public const int DEFAULT_40_CWPBN = 30;
-
-            /// <summary>
-            /// Default 40khz Water Profile Number of pings (2 pings averaged per ensemble).
-            /// </summary>
-            public const int DEFAULT_40_CWPP = 2;
-            #endregion
-
-            #region Default 80khz
-            /// <summary>
-            /// Default 80khz Bottom Track Time between pings (1 seconds).
-            /// </summary>
-            public const float DEFAULT_80_CBTTBP = 1.0f;
-
-            /// <summary>
-            /// Default 80khz Water Track Time between pings (2 seconds).
-            /// </summary>
-            public const float DEFAULT_80_CWTTBP = 2.0f;
-
-            /// <summary>
-            /// Default 80khz Water Profile Time between pings (2 seconds).
-            /// </summary>
-            public const float DEFAULT_80_CWPTBP = 2.0f;
-
-            /// <summary>
-            /// Default 80khz Bottom Track Blank (1 meters).
-            /// </summary>
-            public const float DEFAULT_80_CBTBL = 1.0f;
-
-            /// <summary>
-            /// Default 80khz Bottom Track Maximum Depth (1000 meters).
-            /// </summary>
-            public const float DEFAULT_80_CBTMX = 1000.0f;
-
-            /// <summary>
-            /// Default 80khz Water Track Blank (16 meters).
-            /// </summary>
-            public const float DEFAULT_80_CWTBL = 16.0f;
-
-            /// <summary>
-            /// Default 80khz Water Track Bin size (16 meters).
-            /// </summary>
-            public const float DEFAULT_80_CWTBS = 16.0f;
-
-            /// <summary>
-            /// Default 80khz Water Profile Blank (16 meters).
-            /// </summary>
-            public const float DEFAULT_80_CWPBL = 16.0f;
-            
-            /// <summary>
-            /// Default 80khz Water Profile Bin size (16 meters).
-            /// </summary>
-            public const float DEFAULT_80_CWPBS = 16.0f;
-
-            /// <summary>
-            /// Default 80khz Water Profile Transmit (0.00 = Same as cell size).
-            /// </summary>
-            public const float DEFAULT_80_CWPX = 0.00f;
-
-            /// <summary>
-            /// Default 80khz Water Profile Number of bins (30 bins).
-            /// </summary>
-            public const int DEFAULT_80_CWPBN = 30;
-
-            /// <summary>
-            /// Default 80khz Water Profile Number of pings (2 pings averaged per ensemble).
-            /// </summary>
-            public const int DEFAULT_80_CWPP = 2;
-            #endregion
-
-            #region Default 160khz
-            /// <summary>
-            /// Default 160khz Bottom Track Time between pings (0.5 seconds).
-            /// </summary>
-            public const float DEFAULT_160_CBTTBP = 0.5f;
-
-            /// <summary>
-            /// Default 160khz Water Track Time between pings (1 seconds).
-            /// </summary>
-            public const float DEFAULT_160_CWTTBP = 1.0f;
-
-            /// <summary>
-            /// Default 160khz Water Profile Time between pings (1 seconds).
-            /// </summary>
-            public const float DEFAULT_160_CWPTBP = 1.0f;
-
-            /// <summary>
-            /// Default 160khz Bottom Track Blank (0.5 meters).
-            /// </summary>
-            public const float DEFAULT_160_CBTBL = 0.5f;
-
-            /// <summary>
-            /// Default 160khz Bottom Track Maximum Depth (500 meters).
-            /// </summary>
-            public const float DEFAULT_160_CBTMX = 500.0f;
-
-            /// <summary>
-            /// Default 160khz Water Track Blank (8 meters).
-            /// </summary>
-            public const float DEFAULT_160_CWTBL = 8.0f;
-
-            /// <summary>
-            /// Default 160khz Water Track Bin size (8 meters).
-            /// </summary>
-            public const float DEFAULT_160_CWTBS = 8.0f;
-
-            /// <summary>
-            /// Default 160khz Water Profile Blank (8 meters).
-            /// </summary>
-            public const float DEFAULT_160_CWPBL = 8.0f;
-
-            /// <summary>
-            /// Default 160khz Water Profile Bin size (8 meters).
-            /// </summary>
-            public const float DEFAULT_160_CWPBS = 8.0f;
-
-            /// <summary>
-            /// Default 160khz Water Profile Transmit (0.00 = Same as cell size).
-            /// </summary>
-            public const float DEFAULT_160_CWPX = 0.00f;
-
-            /// <summary>
-            /// Default 160khz Water Profile Number of bins (30 bins).
-            /// </summary>
-            public const int DEFAULT_160_CWPBN = 30;
-
-            /// <summary>
-            /// Default 160khz Water Profile Number of pings (2 pings averaged per ensemble).
-            /// </summary>
-            public const int DEFAULT_160_CWPP = 2;
-            #endregion
-
-            #region Default 320khz
-            /// <summary>
-            /// Default 320khz Bottom Track Time between pings (0.25 seconds).
-            /// </summary>
-            public const float DEFAULT_320_CBTTBP = 0.25f;
-
-            /// <summary>
-            /// Default 320khz Water Track Time between pings (0.5 seconds).
-            /// </summary>
-            public const float DEFAULT_320_CWTTBP = 0.5f;
-
-            /// <summary>
-            /// Default 320khz Water Profile Time between pings (0.5 seconds).
-            /// </summary>
-            public const float DEFAULT_320_CWPTBP = 0.5f;
-
-            /// <summary>
-            /// Default 320khz Bottom Track Blank (0.25 meters).
-            /// </summary>
-            public const float DEFAULT_320_CBTBL = 0.25f;
-
-            /// <summary>
-            /// Default 320khz Bottom Track Maximum Depth (250 meters).
-            /// </summary>
-            public const float DEFAULT_320_CBTMX = 250.0f;
-
-            /// <summary>
-            /// Default 320khz Water Track Blank (4 meters).
-            /// </summary>
-            public const float DEFAULT_320_CWTBL = 4.0f;
-
-            /// <summary>
-            /// Default 320khz Water Track Bin size (4 meters).
-            /// </summary>
-            public const float DEFAULT_320_CWTBS = 4.0f;
-
-            /// <summary>
-            /// Default 320khz Water Profile Blank (4 meters).
-            /// </summary>
-            public const float DEFAULT_320_CWPBL = 4.0f;
-
-            /// <summary>
-            /// Default 320khz Water Profile Bin size (4 meters).
-            /// </summary>
-            public const float DEFAULT_320_CWPBS = 4.0f;
-
-            /// <summary>
-            /// Default 320khz Water Profile Transmit (0.00 = Same as cell size).
-            /// </summary>
-            public const float DEFAULT_320_CWPX = 0.00f;
-
-            /// <summary>
-            /// Default 320khz Water Profile Number of bins (30 bins).
-            /// </summary>
-            public const int DEFAULT_320_CWPBN = 30;
-
-            /// <summary>
-            /// Default 320khz Water Profile Number of pings (2 pings averaged per ensemble).
-            /// </summary>
-            public const int DEFAULT_320_CWPP = 2;
-            #endregion
-
-            #region Default 640khz
-            /// <summary>
-            /// Default 640khz Bottom Track Time between pings (0.125 seconds).
-            /// </summary>
-            public const float DEFAULT_640_CBTTBP = 0.125f;
-
-            /// <summary>
-            /// Default 640khz Water Track Time between pings (0.25 seconds).
-            /// </summary>
-            public const float DEFAULT_640_CWTTBP = 0.25f;
-
-            /// <summary>
-            /// Default 640khz Water Profile Time between pings (0.25 seconds).
-            /// </summary>
-            public const float DEFAULT_640_CWPTBP = 0.25f;
-
-            /// <summary>
-            /// Default 640khz Bottom Track Blank (0.125 meters).
-            /// </summary>
-            public const float DEFAULT_640_CBTBL = 0.125f;
-
-            /// <summary>
-            /// Default 640khz Bottom Track Maximum Depth (150 meters).
-            /// </summary>
-            public const float DEFAULT_640_CBTMX = 150.0f;
-
-            /// <summary>
-            /// Default 640khz Water Track Blank (2 meters).
-            /// </summary>
-            public const float DEFAULT_640_CWTBL = 2.0f;
-
-            /// <summary>
-            /// Default 640khz Water Track Bin size (2 meters).
-            /// </summary>
-            public const float DEFAULT_640_CWTBS = 2.0f;
-
-            /// <summary>
-            /// Default 640khz Water Profile Blank (2 meters).
-            /// </summary>
-            public const float DEFAULT_640_CWPBL = 2.0f;
-
-            /// <summary>
-            /// Default 640khz Water Profile Bin size (2 meters).
-            /// </summary>
-            public const float DEFAULT_640_CWPBS = 2.0f;
-
-            /// <summary>
-            /// Default 640khz Water Profile Transmit (0.00 = Same as cell size).
-            /// </summary>
-            public const float DEFAULT_640_CWPX = 0.00f;
-
-            /// <summary>
-            /// Default 640khz Water Profile Number of bins (30 bins).
-            /// </summary>
-            public const int DEFAULT_640_CWPBN = 30;
-
-            /// <summary>
-            /// Default 640khz Water Profile Number of pings (2 pings averaged per ensemble).
-            /// </summary>
-            public const int DEFAULT_640_CWPP = 2;
-            #endregion
+            public const string DEFAULT_CEPO = "0";
 
             #endregion
 
             #region Min/Max Values
-
-            /// <summary>
-            /// Minimum BT Time Between Ping.
-            /// </summary>
-            public const double MIN_CBTTBP = 0.0;
-
-            /// <summary>
-            /// Maximum BT Time Between Ping.
-            /// </summary>
-            public const double MAX_CBTTBP = 86400.0;
-            
-            /// <summary>
-            /// Minimum Water Track Time Between Ping.
-            /// </summary>
-            public const double MIN_CWTTBP = 0.0;
-
-            /// <summary>
-            /// Maximum Water Track Time Between Ping.
-            /// </summary>
-            public const double MAX_CWTTBP = 86400.0;
-            
-            /// <summary>
-            /// Minimum Water Profile Time Between Ping.
-            /// </summary>
-            public const double MIN_CWPTBP = 0.0;
-
-            /// <summary>
-            /// Maximum Water Profile Time Between Ping.
-            /// </summary>
-            public const double MAX_CWPTBP = 86400.0;
-            
-            /// <summary>
-            /// Minimum BT Blank.
-            /// </summary>
-            public const double MIN_CBTBL = 0.0;
-
-            /// <summary>
-            /// Maximum BT Blank.
-            /// </summary>
-            public const double MAX_CBTBL = 10.0;
-            
-            /// <summary>
-            /// Minimum WT Blank.
-            /// </summary>
-            public const double MIN_CWTBL = 0.0;
-
-            /// <summary>
-            /// Maximum WT Blank.
-            /// </summary>
-            public const double MAX_CWTBL = 100.0;
-            
-            /// <summary>
-            /// Minimum WP Blank.
-            /// </summary>
-            public const double MIN_CWPBL = 0.0;
-
-            /// <summary>
-            /// Maximum WP Blank.
-            /// </summary>
-            public const double MAX_CWPBL = 100.0;
-            
-            /// <summary>
-            /// Minimum BT maximum Depth.
-            /// </summary>
-            public const double MIN_CBTMX = 5.0;
-
-            /// <summary>
-            /// Maximum BT maximum Depth.
-            /// </summary>
-            public const double MAX_CBTMX = 10000;
-            
-            /// <summary>
-            /// Minimum Water Track Bin size.
-            /// </summary>
-            public const double MIN_CWTBS = 0.05;
-
-            /// <summary>
-            /// Maximum Water Track Bin size.
-            /// </summary>
-            public const double MAX_CWTBS = 64.0;
-            
-            /// <summary>
-            /// Minimum Water Profile Bin size.
-            /// </summary>
-            public const double MIN_CWPBS = 0.01;
-
-            /// <summary>
-            /// Maximum Water Profile Bin size.
-            /// </summary>
-            public const double MAX_CWPBS = 100.0;
-            
-            /// <summary>
-            /// Minimum Water Profile Number of bins.
-            /// </summary>
-            public const int MIN_CWPBN = 0;
-
-            /// <summary>
-            /// Maximum Water Profile Number of bins.
-            /// </summary>
-            public const int MAX_CWPBN = 200;
-            
-            /// <summary>
-            /// Minimum Water Profile Number of pings averaged per ensemble.
-            /// </summary>
-            public const int MIN_CWPP = 0;
-
-            /// <summary>
-            /// Maximum Water Profile Number of pings averaged per ensemble.
-            /// </summary>
-            public const int MAX_CWPP = 10000;
-            
-            /// <summary>
-            /// Minimum Water Profile Transmit (Use cell size).
-            /// </summary>
-            public const double MIN_CWPX = 0.0;
-
-            /// <summary>
-            /// Maximum Water Profile Transmit.
-            /// </summary>
-            public const double MAX_CWPX = 100.0;
             
             /// <summary>
             /// Minimum heading offset.
@@ -1107,7 +842,39 @@ namespace RTI
             /// Maximum IP value.
             /// </summary>
             public const int MAX_IP = 255;
-                
+
+            /// <summary>
+            /// Minimum value for the year.
+            /// This will be 2000.
+            /// </summary>
+            public const int MIN_YEAR = 0;
+
+            /// <summary>
+            /// Maximum value for the year.
+            /// This will be 2099.
+            /// </summary>
+            public const int MAX_YEAR = 99;
+
+            /// <summary>
+            /// Minimum Month.
+            /// </summary>
+            public const int MIN_MONTH = 1;
+
+            /// <summary>
+            /// Maximum month.
+            /// </summary>
+            public const int MAX_MONTH = 12;
+
+            /// <summary>
+            /// Minimum Day.
+            /// </summary>
+            public const int MIN_DAY = 1;
+
+            /// <summary>
+            /// Maximum day.
+            /// </summary>
+            public const int MAX_DAY = 31;
+
             /// <summary>
             /// Minimum Hours.
             /// </summary>                           
@@ -1189,218 +956,17 @@ namespace RTI
                 Freq_640Khz = 640,
 
                 /// <summary>
+                /// 1.2 MHz ADCP
+                /// </summary>
+                Freq_1_2MHz = 1200,
+
+                /// <summary>
                 /// Other ADCP.
                 /// </summary>
                 Freq_Other = 0
             };
 
-            /// <summary>
-            /// Enum to handle commands that pass a 0 or 1 for enable for disable.
-            /// </summary>
-            public enum EnableDisable
-            {
-                /// <summary>
-                /// Disable.
-                /// </summary>
-                DISABLE = 0,
-
-                /// <summary>
-                /// Enable.
-                /// </summary>
-                ENABLE = 1
-            };
-
-            /// <summary>
-            /// Baud rate options for C232B and C485B.
-            /// </summary>
-            public enum Baudrate
-            {
-                /// <summary>
-                /// 2400 Baudrate.
-                /// </summary>
-                BAUD_2400 = 2400,
-
-                /// <summary>
-                /// 4800 Baudrate.
-                /// </summary>
-                BAUD_4800 = 4800,
-
-                /// <summary>
-                /// 9600 Baudrate.
-                /// </summary>
-                BAUD_9600 = 9600,
-
-                /// <summary>
-                /// 19200 Baudrate.
-                /// </summary>
-                BAUD_19200 = 19200,
-
-                /// <summary>
-                /// 38400 Baudrate.
-                /// </summary>
-                BAUD_38400 = 38400,
-
-                /// <summary>
-                /// 115200 Baudrate.
-                /// </summary>
-                BAUD_115200 = 115200
-            };
-
-            /// <summary>
-            /// Heading source options.
-            /// </summary>
-            public enum HeadingSrc
-            {
-                /// <summary>
-                /// Internal Heading source.
-                /// Internal (PNI) compass.
-                /// </summary>
-                INTERNAL = 1,
-
-                /// <summary>
-                /// External Heading source.
-                /// GPS HDT strings via serial port.
-                /// </summary>
-                SERIAL = 2
-            };
-
-            /// <summary>
-            /// TimeValue used to send command CWPAI.
-            /// </summary>
-            public class TimeValue
-            {
-                /// <summary>
-                /// Hours.
-                /// </summary>
-                public UInt16 Hour { get; set; }
-                
-                /// <summary>
-                /// Minutes.
-                /// </summary>
-                public UInt16 Minute { get; set; }
-                
-                /// <summary>
-                /// Seconds.
-                /// </summary>
-                public UInt16 Second { get; set; }
-                
-                /// <summary>
-                /// Hundredths of a second.
-                /// </summary>
-                public UInt16 HunSec { get; set; }
-
-                /// <summary>
-                /// Default value is all zeros.
-                /// </summary>
-                public TimeValue()
-                {
-                    Hour = 0;
-                    Minute = 0;
-                    Second = 0;
-                    HunSec = 0;
-                }
-
-                /// <summary>
-                /// Set the time.
-                /// </summary>
-                /// <param name="hour">Hour value</param>
-                /// <param name="minute">Minute value</param>
-                /// <param name="second">Second value</param>
-                /// <param name="hunSec">Hundreth of second value</param>
-                public TimeValue(UInt16 hour, UInt16 minute, UInt16 second, UInt16 hunSec)
-                {
-                    Hour = hour;
-                    Minute = minute;
-                    Second = second;
-                    HunSec = hunSec;
-                }
-
-                /// <summary>
-                /// Return the string version of this class.
-                /// </summary>
-                /// <returns>String version of this class.  HH:MM:SS.hh</returns>
-                public override string ToString()
-                {
-                    return Hour.ToString("00") + ":" + Minute.ToString("00") + ":" + Second.ToString("00") + "." + HunSec.ToString("00");
-                }
-
-                /// <summary>
-                /// Create an equal operator to check if the
-                /// given is equal to each other.
-                /// </summary>
-                /// <param name="a">Timevalue to compare.</param>
-                /// <param name="b">Timevalue to compare.</param>
-                /// <returns>TRUE if hour, minute, second and hunsec equal.</returns>
-                public static bool operator ==(TimeValue a, TimeValue b)
-                {
-                    // If both are null, or both are same instance, return true.
-                    if (System.Object.ReferenceEquals(a, b))
-                    {
-                        return true;
-                    }
-
-                    // If one is null, but not both, return false.
-                    if (((object)a == null) || ((object)b == null))
-                    {
-                        return false;
-                    }
-
-                    if(a.Hour == b.Hour &&
-                        a.Minute == b.Minute &&
-                        a.Second == b.Second &&
-                        a.HunSec == b.HunSec )
-                    {
-                        return true;
-                    }
-
-                    return false;
-                }
-
-                /// <summary>
-                /// Check if the 2 time values are not equal.
-                /// </summary>
-                /// <param name="a">First time value to compare.</param>
-                /// <param name="b">Second time value to compare.</param>
-                /// <returns>TRUE if not equal.</returns>
-                public static bool operator !=(TimeValue a, TimeValue b)
-                {
-                    return !(a == b);
-                }
-
-                /// <summary>
-                /// Create a hashcode for the object.
-                /// </summary>
-                /// <returns>Hashcode for the object.</returns>
-                public override int GetHashCode()
-                {
-                    return this.Hour ^ this.Minute ^ this.Second ^ this.HunSec;
-                }
-
-                /// <summary>
-                /// Check if the object is equal to the given object.
-                /// </summary>
-                /// <param name="obj">Object to compare.</param>
-                /// <returns>TRUE if they are equal.</returns>
-                public override bool Equals(object obj)
-                {
-                    // If parameter cannot be cast to ThreeDPoint return false:
-                    TimeValue p = obj as TimeValue;
-                    if ((object)p == null)
-                    {
-                        return false;
-                    }
-
-                    if (this.Hour == p.Hour &&
-                        this.Minute == p.Minute &&
-                        this.Second == p.Second &&
-                        this.HunSec == p.HunSec)
-                    {
-                        return true;
-                    }
-
-                    return false;
-                }
-            }
+ 
 
             #endregion
 
@@ -1449,296 +1015,10 @@ namespace RTI
             /// </summary>
             public Frequencies Frequency { get; set; }
 
-            #region Water Profile Properties
-
-            /// <summary>
-            /// Water Profile Pings On. 
-            /// Enables or disables water profile pings.
-            /// 
-            /// Command: CWPON N \r
-            /// Range: N = 0 or 1
-            /// 0=Disable 
-            /// 1=Enable. 
-            /// </summary>
-            public bool CWPON { get; set; }
-
-            /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
-            /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CWPON_ToString()
-            {
-                if (CWPON)
-                {
-                    return "1";
-                }
-
-                return "0";
-            }
-
-            /// <summary>
-            /// Water Profile Broad Band. 
-            /// Enables or disables Water Profile boardband processing. 
-            /// Narrowband processing is used when broadband disabled
-            /// 
-            /// Command: CWPBB N \r
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
-            /// </summary>
-            public bool CWPBB { get; set; }
-
-            /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
-            /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CWPBB_ToString()
-            {
-                if (CWPBB)
-                {
-                    return "1";
-                }
-
-                return "0";
-            }
-
-            /// <summary>
-            /// Water Profile Blank. 
-            /// Sets the vertical range from the face of the 
-            /// transducer to the first sample of the first Bin.
-            /// 
-            /// Command: CWPBL n.nn \r
-            /// Scale: meters
-            /// Range: 0.00 to 100.00
-            /// </summary>
-            public float CWPBL { get; set; }
-
-            /// <summary>
-            /// Water Profile Bin Size 
-            /// n.nn sets the vertical Bin size.
-            /// 
-            /// Command CWPBS n.nnn \r
-            /// Scale: meters
-            /// Range: 0.01 to 64.00
-            /// </summary>
-            public float CWPBS { get; set; }
-
-            /// <summary>
-            /// Water Profile Tramist 
-            /// n.nn sets the vertical transmit size.  
-            /// 
-            /// A value of 0.00 will cause the system to 
-            /// set transmit to the same length as the cell size.
-            /// 
-            /// Command: CWPX n.nn \r
-            /// Scale: meters
-            /// Range: 0.00 to 100.0 
-            /// </summary>
-            public float CWPX { get; set; }
-
-            /// <summary>
-            /// Water Profile Number of Bins
-            /// Sets the number of bins that will be processed and output.
-            /// 
-            /// Command: CWPBN N \r
-            /// Scale: Number of bins
-            /// Range: 1 to 200 
-            /// </summary>
-            public UInt16 CWPBN { get; set; }
-
-            /// <summary>
-            /// Water Profile Number of Pings
-            /// Sets the number of pings that will 
-            /// be averaged together during the ensemble.
-            /// 
-            /// If CWPAI is set equal to 00:00:00.00
-            /// 
-            /// Command: CWPP N \r
-            /// Scale: Number of Pings
-            /// Range: 0 to 10,000 
-            /// </summary>
-            public UInt16 CWPP { get; set; }
-
-
-            /// <summary>
-            /// Water Profile Averaging Interval
-            /// Sets the interval over which the 
-            /// profile pings are evenly spread.  
-            /// To determine the number of pings 
-            /// in the ensemble CWPAI is divided 
-            /// by CWPTBP.  
-            /// 
-            /// If CWPAI is set equal to 00:00:00.00 
-            /// sets the number of pings in the ensemble.
-            /// 
-            /// Total time cannot exceed 86400 seconds(1 day).
-            /// 
-            /// There is no SET.  The SET is done using
-            /// the CWPAI_Hour and ...
-            /// 
-            /// Command: CWPAI HH:MM:SS.hh \r
-            /// Scale: HH:MM:SS.hh
-            /// Range: 0 to 86400 seconds
-            /// </summary>
-            public TimeValue CWPAI { get; set; }
-
-            /// <summary>
-            /// Return a string representation of CWPAI.
-            /// </summary>
-            /// <returns>String representation of CWPAI</returns>
-            public string CWPAI_ToString()
-            {
-                return CWPAI_Hour.ToString("00") + ":" + CWPAI_Minute.ToString("00") + ":" + CWPAI_Second.ToString("00") + "." + CWPAI_HunSec.ToString("00");
-            }
-
-            /// <summary>
-            /// Hours for CWPAI.
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Hours
-            /// Range: 0 to 23
-            /// </summary>
-            private UInt16 _cwpai_hour;
-
-            /// <summary>
-            /// Hours for CWPAI.
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Hours
-            /// Range: 0 to 23
-            /// </summary>
-            public UInt16 CWPAI_Hour 
-            {
-                get { return _cwpai_hour; }
-                set
-                {
-                    _cwpai_hour = value;
-                    CWPAI.Hour = value;
-                }
-            }
-
-            /// <summary>
-            /// Minutes in CWPAI
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Minutes
-            /// Range: 0 to 59
-            /// </summary>
-            private UInt16 _cwpai_minute;
-            /// <summary>
-            /// Minutes in CWPAI
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Minutes
-            /// Range: 0 to 59
-            /// </summary>
-            public UInt16 CWPAI_Minute
-            {
-                get { return _cwpai_minute; }
-                set
-                {
-                    _cwpai_minute = value;
-                    CWPAI.Minute = value;
-                }
-            }
-            
-            /// <summary>
-            /// Seconds in CWPAI
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Seconds
-            /// Range: 0 to 59
-            /// </summary>
-            private UInt16 _cwpai_second;
-            /// <summary>
-            /// Seconds in CWPAI
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Seconds
-            /// Range: 0 to 59
-            /// </summary>
-            public UInt16 CWPAI_Second
-            {
-                get { return _cwpai_second; }
-                set
-                {
-                    _cwpai_second = value;
-                    CWPAI.Second = value;
-                }
-            }
-
-            /// <summary>
-            /// Hundredth of seconds in CWPAI.
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Hundredth of Second
-            /// Range: 0 to 59.
-            /// </summary>
-            private UInt16 _cwpai_hunSec;
-            /// <summary>
-            /// Hundredth of seconds in CWPAI.
-            /// Limit to 2 digits.
-            /// 
-            /// When setting the value, if the
-            /// value is valid, set it to the
-            /// TimeValue for CWPAI.
-            /// 
-            /// Scale: Hundredth of Second
-            /// Range: 0 to 59.
-            /// </summary>
-            public UInt16 CWPAI_HunSec
-            {
-                get { return _cwpai_hunSec; }
-                set
-                {
-                    _cwpai_hunSec = value;
-                    CWPAI.HunSec = value;
-                }
-            }
-
-            /// <summary>
-            /// Water Profile Time between Pings
-            /// Sets the time between profile pings
-            /// 
-            /// Command: CWPTBP n.nn \r
-            /// Scale: seconds
-            /// Range: 0.00 to 86400.0 
-            /// </summary>
-            public float CWPTBP { get; set; }
-
-            #endregion // Water Profile
-
             #region Ensemble Properties
 
+            #region CEI
+ 
             /// <summary>
             /// Ensemble interval 
             /// Sets the time interval that 
@@ -1891,123 +1171,113 @@ namespace RTI
                     CEI.HunSec = value;
                 }
             }
-            
+
             #endregion
 
-            #region Bottom Track Properties
+            #region CETFP
 
             /// <summary>
-            /// Bottom Track ON
-            /// Enables or disables bottom track pings. 
-            /// 
-            /// Command: CBTON N[cr] 
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
+            /// Return a string representation of CETFP.
             /// </summary>
-            public bool CBTON { get; set; }
-
-            /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
-            /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CBTON_ToString()
+            /// <returns>String representation of CETFP</returns>
+            public string CETFP_ToString()
             {
-                if (CBTON)
-                {
-                    return "1";
-                }
-
-                return "0";
+                return "20" + CETFP_Year.ToString("00") + "/" + CETFP_Month.ToString("00") + "/" + CETFP_Day.ToString("00") + "," + CETFP_Hour.ToString("00") + ":" + CETFP_Minute.ToString("00") + ":" + CETFP_Second.ToString("00") + "." + CETFP_HunSec.ToString("00");
             }
 
             /// <summary>
-            /// Bottom Track Broadband
-            /// Enables or disables bottom track 
-            /// boardband processing.  Narrowband 
-            /// processing is used when boardband is disabled.
+            /// Years in CETFP.
+            /// This starts at 2000.
+            /// Limit to 2 digits.
             /// 
-            /// Command: CBTBB N[cr] 
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
+            /// Scale: Years in 2000.
+            /// Range: 0 to 99.
             /// </summary>
-            public bool CBTBB { get; set; }
+            public UInt16 CETFP_Year { get; set; }
 
             /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
+            /// Month in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Months
+            /// Range: 1 to 12.
             /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CBTBB_ToString()
-            {
-                if (CBTBB)
-                {
-                    return "1";
-                }
-
-                return "0";
-            }
+            public UInt16 CETFP_Month { get; set; }
 
             /// <summary>
-            /// Bottom Track Blank 
-            /// Sets the vertical distance 
-            /// from the face of the transducer 
-            /// at which the bottom dectection 
-            /// algorithm begins search for the bottom.
+            /// Day in CETFP.
+            /// Limit to 2 digits.
             /// 
-            /// Command: CBTBL n.nn[cr]
-            /// Scale: meters
-            /// Range: 0.0 to 10.0
+            /// Scale: Days
+            /// Range: 1 to 31.
             /// </summary>
-            public float CBTBL { get; set; }
+            public UInt16 CETFP_Day { get; set; }
 
             /// <summary>
-            /// Bottom Track Max Depth
-            /// Sets the maximum range over 
-            /// which the bottom track 
-            /// algorithm will search for the 
-            /// bottom.  
+            /// Hours in CETFP.
+            /// Limit to 2 digits.
             /// 
-            /// A large value will slow acquistion time.
-            /// 
-            /// Command: CBTMX n.nn[cr]
-            /// Scale: Meters
-            /// Range: 5.0 to 10,000.0 
+            /// Scale: Hours
+            /// Range: 0 to 23.
             /// </summary>
-            public float CBTMX { get; set; }
+            public UInt16 CETFP_Hour { get; set; }
 
             /// <summary>
-            /// Bottom Track Time Between Pings 
-            /// Sets the time between bottom pings.
+            /// Minutes in CETFP.
+            /// Limit to 2 digits.
             /// 
-            /// Command: CBTTBP n.nn[cr]
-            /// Scale: seconds
-            /// Range: 0.00 to 86400.0
+            /// Scale: Minutes
+            /// Range: 0 to 59.
             /// </summary>
-            public float CBTTBP { get; set; }
-            
+            public UInt16 CETFP_Minute { get; set; }
+
+            /// <summary>
+            /// Seconds in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Second
+            /// Range: 0 to 59.
+            /// </summary>
+            public UInt16 CETFP_Second { get; set; }
+
+            /// <summary>
+            /// Hundredth of seconds in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Hundredth of Second
+            /// Range: 0 to 59.
+            /// </summary>
+            public UInt16 CETFP_HunSec {get; set;}
+
             #endregion
 
-            #region Water Track Properties
-
             /// <summary>
-            /// Water Track ON
-            /// Enable or disable water track
+            /// Ensemble Recording
+            /// When recording is enabled the ADCP searches for the next 
+            /// available file number to record to. The ensemble file 
+            /// name starts with the letter “A” followed by a 7 digit 
+            /// number and ending with the extension “.ens”. For example: 
+            /// The first ensemble file will be named “A0000001.ens”. 
+            /// During deployment as each ensemble is completed the data 
+            /// is appended to the current file. The 7 digit number 
+            /// following the “A” is incremented each time the 
+            /// system is (re)started or when the file size exceeds 
+            /// 16777216 bytes.
             /// 
-            /// Command: CWTON N[cr] 
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
+            /// Command: CERECORD n[cr]
+            /// Scale: 0=disable, 1=enable.
+            /// Range:
             /// </summary>
-            public bool CWTON { get; set; }
+            public bool CERECORD { get; set; }
 
             /// <summary>
             /// Return a string of whether
-            /// the it is enabled or disabled.
+            /// CERECORD is enabled or disabled.
             /// </summary>
             /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CWTON_ToString()
+            public string CERECORD_ToString()
             {
-                if (CWTON)
+                if (CERECORD)
                 {
                     return "1";
                 }
@@ -2016,61 +1286,16 @@ namespace RTI
             }
 
             /// <summary>
-            /// Water Track Boardband
-            /// Enable or diable water track broadband processing
+            /// Ensemble Ping Order
+            /// Sets the order in which the various subsystems will be pinged. 
+            /// Note: a space and at least one subsystem code must follow the 
+            /// CEPO command or the system will reject the command.
             /// 
-            /// Command: CWTON N[cr] 
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
+            /// Command: CEPO cccccccccccccccc[cr]
+            /// Scale: Subsystem
+            /// Range: (at least 1 subsystem)
             /// </summary>
-            public bool CWTBB { get; set; }
-
-            /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
-            /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CWTBB_ToString()
-            {
-                if (CWTBB)
-                {
-                    return "1";
-                }
-
-                return "0";
-            }
-
-            /// <summary>
-            /// Water Track Blank
-            /// Sets the vertical range from 
-            /// the face of the transducer to 
-            /// the first sample of the Bin.
-            /// 
-            /// Command: CWTBL n.nn[cr]
-            /// Scale: meters
-            /// Range: 0.00 to 100.0 
-            /// </summary>
-            public float CWTBL { get; set; }
-
-            /// <summary>
-            /// Water Track Bin Size 
-            /// Sets the vertical Bin size.
-            /// 
-            /// Command: CWTBS n.nn[cr]
-            /// Scale: meters
-            /// Range: 0.05 to 64.0 
-            /// </summary>
-            public float CWTBS { get; set; }
-
-            /// <summary>
-            /// Water Track Time Between Pings 
-            /// Sets the time between bottom pings.
-            /// 
-            /// Command: CWTTBP n.nn 
-            /// Scale: seconds
-            /// Range: 0.00 to 86400.0 
-            /// </summary>
-            public float CWTTBP { get; set; }
+            public string CEPO { get; set; }
 
             #endregion
 
@@ -2177,6 +1402,15 @@ namespace RTI
             /// </summary>
             public Baudrate C485B { get; set; }
 
+            /// <summary>
+            /// RS422 Baud rate
+            /// 
+            /// Command: C422B N[cr]
+            /// Scale: N
+            /// Range: 2400, 4800, 9600, 19200, 38400, 115200
+            /// </summary>
+            public Baudrate C422B { get; set; }
+
             #endregion
 
             #endregion // Properties
@@ -2186,22 +1420,14 @@ namespace RTI
             /// 
             /// Initialize the ranges to there default value.
             /// </summary>
-            public AdcpCommands()
-            {
-                // Initialize ranges
-                
+            public AdcpCommands(SerialNumber serialNum)
+            {                
+                // Set the serial number
+                _serialNumber = serialNum;
+
                 // Set default ranges
                 Mode = DEFAULT_MODE;
                 Frequency = DEFAULT_FREQ;
-
-                // Water Profile defaults
-                CWPON = DEFAULT_CWPON;
-                CWPBB = DEFAULT_CWPBB;
-                CWPAI = DEFAULT_CWPAI;
-                CWPAI_Hour = CWPAI.Hour;
-                CWPAI_Minute = CWPAI.Minute;
-                CWPAI_Second = CWPAI.Second;
-                CWPAI_HunSec = CWPAI.HunSec;
 
                 // Ensemble defaults
                 CEI = DEFAULT_CEI;
@@ -2210,13 +1436,32 @@ namespace RTI
                 CEI_Second = CEI.Second;
                 CEI_HunSec = CEI.HunSec;
 
-                // Bottom Track defaults
-                CBTON = DEFAULT_CBTON;
-                CBTBB = DEFAULT_CBTBB;
-                
-                // Water Track defaults
-                CWTON = DEFAULT_CWTON;
-                CWTBB = DEFAULT_CWTBB;
+                // Time of First ping default
+                // Use the current time
+                DateTime timeNow = DateTime.Now;
+                CETFP_Year = (UInt16)(timeNow.Year - 2000);
+                CETFP_Month = (UInt16)timeNow.Month;
+                CETFP_Day = (UInt16)timeNow.Day;
+                CETFP_Hour = (UInt16)timeNow.Hour;
+                CETFP_Minute = (UInt16)timeNow.Minute;
+                CETFP_Second = (UInt16)timeNow.Second;
+                CETFP_HunSec = DEFAULT_CETFP_HUNSEC;
+
+                CERECORD = DEFAULT_CERECORD;
+
+                // Only display the Actual codes and not the additional 0's
+                string subsysStr = "";
+                for (int x = 0; x < serialNum.SubSystems.Length; x++)
+                {
+                    
+                    string serialNumSubSystemsSubstring = serialNum.SubSystems.Substring(x, 1);
+                    if (serialNumSubSystemsSubstring != "0")
+                    {
+                        subsysStr += serialNumSubSystemsSubstring;
+                    }
+                }
+                CEPO = subsysStr;
+
 
                 // Environmental defaults
                 CWS = DEFAULT_CWS;
@@ -2229,10 +1474,7 @@ namespace RTI
                 // Serial Comm defaults
                 C232B = DEFAULT_C232B;
                 C485B = DEFAULT_C485B;
-
-                // Set the default ranges that are
-                // based off frequency
-                SetFrequencyDefaults();
+                C422B = DEFAULT_C422B;
             }
 
             #region Methods
@@ -2249,104 +1491,6 @@ namespace RTI
             }
 
             /// <summary>
-            /// Set the default value based off the
-            /// frequency.
-            /// </summary>
-            public void SetFrequencyDefaults()
-            {
-                if (Frequency == Frequencies.Freq_40Khz)
-                {
-                    CWPBL = DEFAULT_40_CWPBL;
-                    CWPBS = DEFAULT_40_CWPBS;
-                    CWPX = DEFAULT_40_CWPX;
-                    CWPBN = DEFAULT_40_CWPBN;
-                    CWPP = DEFAULT_40_CWPP;
-                    CWPTBP = DEFAULT_40_CWPTBP;
-
-                    CBTBL = DEFAULT_40_CBTBL;
-                    CBTMX = DEFAULT_40_CBTMX;
-                    CBTTBP = DEFAULT_40_CBTTBP;
-
-                    CWTBL = DEFAULT_40_CWTBL;
-                    CWTBS = DEFAULT_40_CWTBS;
-                    CWTTBP = DEFAULT_40_CWTTBP;
-                    
-                }
-                else if (Frequency == Frequencies.Freq_80Khz)
-                {
-                    CWPBL = DEFAULT_80_CWPBL;
-                    CWPBS = DEFAULT_80_CWPBS;
-                    CWPX = DEFAULT_80_CWPX;
-                    CWPBN = DEFAULT_80_CWPBN;
-                    CWPP = DEFAULT_80_CWPP;
-                    CWPTBP = DEFAULT_80_CWPTBP;
-
-                    CBTBL = DEFAULT_80_CBTBL;
-                    CBTMX = DEFAULT_80_CBTMX;
-                    CBTTBP = DEFAULT_80_CBTTBP;
-
-                    CWTBL = DEFAULT_80_CWTBL;
-                    CWTBS = DEFAULT_80_CWTBS;
-                    CWTTBP = DEFAULT_80_CWTTBP;
-                }
-                else if (Frequency == Frequencies.Freq_160Khz)
-                {
-                    CWPBL = DEFAULT_160_CWPBL;
-                    CWPBS = DEFAULT_160_CWPBS;
-                    CWPX = DEFAULT_160_CWPX;
-                    CWPBN = DEFAULT_160_CWPBN;
-                    CWPP = DEFAULT_160_CWPP;
-                    CWPTBP = DEFAULT_160_CWPTBP;
-
-                    CBTBL = DEFAULT_160_CBTBL;
-                    CBTMX = DEFAULT_160_CBTMX;
-                    CBTTBP = DEFAULT_160_CBTTBP;
-
-                    CWTBL = DEFAULT_160_CWTBL;
-                    CWTBS = DEFAULT_160_CWTBS;
-                    CWTTBP = DEFAULT_160_CWTTBP;
-                }
-                else if (Frequency == Frequencies.Freq_320Khz)
-                {
-                    CWPBL = DEFAULT_320_CWPBL;
-                    CWPBS = DEFAULT_320_CWPBS;
-                    CWPX = DEFAULT_320_CWPX;
-                    CWPBN = DEFAULT_320_CWPBN;
-                    CWPP = DEFAULT_320_CWPP;
-                    CWPTBP = DEFAULT_320_CWPTBP;
-
-                    CBTBL = DEFAULT_320_CBTBL;
-                    CBTMX = DEFAULT_320_CBTMX;
-                    CBTTBP = DEFAULT_320_CBTTBP;
-
-                    CWTBL = DEFAULT_320_CWTBL;
-                    CWTBS = DEFAULT_320_CWTBS;
-                    CWTTBP = DEFAULT_320_CWTTBP;
-                }
-                else if (Frequency == Frequencies.Freq_640Khz)
-                {
-                    CWPBL = DEFAULT_640_CWPBL;
-                    CWPBS = DEFAULT_640_CWPBS;
-                    CWPX = DEFAULT_640_CWPX;
-                    CWPBN = DEFAULT_640_CWPBN;
-                    CWPP = DEFAULT_640_CWPP;
-                    CWPTBP = DEFAULT_640_CWPTBP;
-
-                    CBTBL = DEFAULT_640_CBTBL;
-                    CBTMX = DEFAULT_640_CBTMX;
-                    CBTTBP = DEFAULT_640_CBTTBP;
-
-                    CWTBL = DEFAULT_640_CWTBL;
-                    CWTBS = DEFAULT_640_CWTBS;
-                    CWTTBP = DEFAULT_640_CWTTBP;
-                }
-                else if (Frequency == Frequencies.Freq_Other)
-                {
-
-                }
-            }
-
-            /// <summary>
             /// Create a list of all the commands and there value.
             /// Add all the commands to the list and there value.
             /// </summary>
@@ -2355,30 +1499,11 @@ namespace RTI
             {
                 List<string> list = new List<string>();
                 list.Add(String.Format("{0}", Mode_ToString()));                        // Mode
-                list.Add(string.Format("{0}", GetTimeCommand()));                                                     // Time
+                list.Add(string.Format("{0}", GetTimeCommand()));                       // Time
                 list.Add(String.Format("{0} {1}", CMD_CEI, CEI_ToString()));            // CEI
-
-                list.Add(String.Format("{0} {1}", CMD_CWPON, CWPON_ToString()));        // CWPON
-                list.Add(String.Format("{0} {1}", CMD_CWPBB, CWPBB_ToString()));        // CWBB
-                list.Add(String.Format("{0} {1}", CMD_CWPBL, CWPBL));                   // CWPBL
-                list.Add(String.Format("{0} {1}", CMD_CWPBS, CWPBS));                   // CWPBS
-                list.Add(String.Format("{0} {1}", CMD_CWPX, CWPX));                     // CWPX
-                list.Add(String.Format("{0} {1}", CMD_CWPBN, CWPBN));                   // CWPBN
-                list.Add(String.Format("{0} {1}", CMD_CWPP, CWPP));                     // CWPP
-                list.Add(String.Format("{0} {1}", CMD_CWPAI, CWPAI_ToString()));        // CWPAI
-                list.Add(String.Format("{0} {1}", CMD_CWPTBP, CWPTBP));                 // CWPTBP
-
-                list.Add(String.Format("{0} {1}", CMD_CBTON, CBTON_ToString()));        // CBTON
-                list.Add(String.Format("{0} {1}", CMD_CBTBB, CBTBB_ToString()));        // CBTBB
-                list.Add(String.Format("{0} {1}", CMD_CBTBL, CBTBL));                   // CBTBL
-                list.Add(String.Format("{0} {1}", CMD_CBTMX, CBTMX));                   // CBTMX
-                list.Add(String.Format("{0} {1}", CMD_CBTTBP, CBTTBP));                 // CBTTBP
-
-                list.Add(String.Format("{0} {1}", CMD_CWTON, CWTON_ToString()));        // CWTON
-                list.Add(String.Format("{0} {1}", CMD_CWTBB, CWTBB_ToString()));        // CWTBB
-                list.Add(String.Format("{0} {1}", CMD_CWTBL, CWTBL));                   // CWTBL
-                list.Add(String.Format("{0} {1}", CMD_CWTBS, CWTBS));                   // CWTBS
-                list.Add(String.Format("{0} {1}", CMD_CWTTBP, CWTTBP));                 // CWTTBP
+                list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));        // CETFP
+                list.Add(String.Format("{0} {1}", CMD_CERECORD, CERECORD_ToString()));  // CERECORD
+                list.Add(String.Format("{0} {1}", CMD_CEPO, CEPO));                     // CEPO
 
                 list.Add(String.Format("{0} {1}", CMD_CWS, CWS));                       // CWS
                 list.Add(String.Format("{0} {1}", CMD_CWT, CWT));                       // CWT
@@ -2389,6 +1514,7 @@ namespace RTI
 
                 list.Add(String.Format("{0} {1}", CMD_C232B, ((int)C232B).ToString())); // C232B
                 list.Add(String.Format("{0} {1}", CMD_C485B, ((int)C485B).ToString())); // C485B
+                list.Add(String.Format("{0} {1}", CMD_C422B, ((int)C422B).ToString())); // C485B
 
                 return list;
             }
@@ -2405,41 +1531,21 @@ namespace RTI
             {
                 string s = "";
 
-                s += Mode_ToString();
-                s += GetTimeCommand();
-                s += CMD_CEI + " " + CEI_ToString();
+                s += Mode_ToString() + "\n";
+                s += GetTimeCommand() + "\n";
+                s += CMD_CEI + " " + CEI_ToString() + "\n";
 
-                s += CMD_CWPON + " " + CWPON_ToString();
-                s += CMD_CWPBB + " " + CWPBB_ToString();
-                s += CMD_CWPBL + " " + CWPBL;
-                s += CMD_CWPBS + " " + CWPBS;
-                s += CMD_CWPX + " " + CWPX;
-                s += CMD_CWPBN + " " + CWPBN;
-                s += CMD_CWPP + " " + CWPP;
-                s += CMD_CWPAI + " " + CWPAI_ToString();
-                s += CMD_CWPTBP + " " + CWPTBP;
+                s += CMD_CWS + " " + CWS + "\n";
+                s += CMD_CWT + " " + CWT + "\n";
+                s += CMD_CTD + " " + CTD + "\n";
+                s += CMD_CWSS + " " + CWSS + "\n";
+                s += CMD_CHS + " " + CHS_ToString() + "\n";
+                s += CMD_CHO + " " + CHO + "\n";
 
-                s += CMD_CBTON + " " + CBTON_ToString();
-                s += CMD_CBTBB + " " + CBTBB_ToString();
-                s += CMD_CBTBL + " " + CBTBL;
-                s += CMD_CBTMX + " " + CBTMX;
-                s += CMD_CBTTBP + " " + CBTTBP;
+                s += CMD_C232B + " " + ((int)C232B).ToString() + "\n";
+                s += CMD_C485B + " " + ((int)C485B).ToString() + "\n"; 
 
-                s += CMD_CWTON + " " + CWTON_ToString();
-                s += CMD_CWTBB + " " + CWTBB_ToString();
-                s += CMD_CWTBL + " " + CWTBL;
-                s += CMD_CWTBS + " " + CWTBS;
-                s += CMD_CWTTBP + " " + CWTTBP;
-
-                s += CMD_CWS + " " + CWS;
-                s += CMD_CWT + " " + CWT;
-                s += CMD_CTD + " " + CTD;
-                s += CMD_CWSS + " " + CWSS;
-                s += CMD_CHS + " " + CHS_ToString();
-                s += CMD_CHO + " " + CHO;
-
-                s += CMD_C232B + " " + ((int)C232B).ToString();
-                s += CMD_C485B + " " + ((int)C485B).ToString(); 
+                // Add the subsystem commands
 
                 return s;
             }

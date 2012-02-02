@@ -37,6 +37,9 @@
  * 12/08/2011      RC          1.09        Added EMPTY_VELOCITY.  
  * 12/12/2011      RC          1.09        Removed BYTES_PER_FLOAT AND BYTES_PER_INT.
  *                                          Moved BAD_VELOCITY and EMPTY_VELOCITY to AdcpDataSet.
+ * 01/19/2012      RC          1.14        Added NUM_DATASET_HEADER_ELEMENTS. Used variable in GetBaseDataSize().
+ *                                          Fix bug in GetDataSetSize(), wrong case statement variable for float.
+ *                                          Fix bug in GenerateHeader(), ValueType hard coded to BYTE.
  *       
  * 
  */
@@ -51,7 +54,14 @@ namespace RTI
         /// this data set.  It contains the data set information.
         /// </summary>
         public class BaseDataSet
-        {                                                                                                                
+        {
+            /// <summary>
+            /// This is number of elements in the header of a dataset.
+            /// Each element is a byte except the NAME.  Its size varies
+            /// and is given by NameLength.
+            /// </summary>
+            public const int NUM_DATASET_HEADER_ELEMENTS = 6;
+                                                                                    
             /// <summary>
             /// All the possible combinations for a beam
             /// to be pointed.  This is seperate multiple transducers
@@ -136,7 +146,8 @@ namespace RTI
             {
                 // Name length gives length of name
                 // The rest are 4 bytes for each item
-                return nameLength + (Ensemble.BYTES_IN_INT * 5);
+                // 1 is subtracted because Name's size is given with NameLength.
+                return nameLength + (Ensemble.BYTES_IN_INT * (NUM_DATASET_HEADER_ELEMENTS - 1));
             }
 
             /// <summary>
@@ -163,7 +174,7 @@ namespace RTI
                     case Ensemble.DATATYPE_INT:
                         dataType = Ensemble.BYTES_IN_INT;
                         break;
-                    case Ensemble.BYTES_IN_FLOAT:
+                    case Ensemble.DATATYPE_FLOAT:
                         dataType = Ensemble.BYTES_IN_FLOAT;
                         break;
                     default:
@@ -202,18 +213,18 @@ namespace RTI
             /// [HEADER][PAYLOAD]
             /// Header = 28 bytes.  
             /// </summary>
-            /// <param name="payloadSize">Size of the payload.</param>
+            /// <param name="numElments">Number of elements in the dataset.  For NMEA its the payload size.</param>
             /// <returns>Byte array of the header for the the dataset.</returns>
-            protected byte[] GenerateHeader(int payloadSize)
+            protected byte[] GenerateHeader(int numElments)
             {
                 byte[] result = new byte[DataSet.Ensemble.PAYLOAD_HEADER_LEN];
 
                 // Add Data Type (Byte)
-                byte[] dataType = Converters.IntToByteArray(DataSet.Ensemble.DATATYPE_BYTE);
+                byte[] dataType = Converters.IntToByteArray(ValueType);
                 System.Buffer.BlockCopy(dataType, 0, result, 0, 4);
 
                 // Add Bins or data length
-                byte[] len = Converters.IntToByteArray(payloadSize);
+                byte[] len = Converters.IntToByteArray(numElments);
                 System.Buffer.BlockCopy(len, 0, result, 4, 4);
 
                 // Add Beams (1 for Ensemble, Ancillary and Nmea, 4 for all other data sets.  )

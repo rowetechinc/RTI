@@ -51,6 +51,11 @@
  * 12/28/2011      RC          1.10       Use Ensemble's row id instead of number for foreign key for tblBottomTrack and tblBeam.
  * 12/29/2011      RC          1.11       Adding log and removing RecorderManager.
  * 01/13/2012      RC          1.12       Merged Ensemble table and Bottom Track table in database.
+ * 01/20/2012      RC          1.14       Added writing Firmware version and subsystem to ensemble table.
+ * 01/24/2012      RC          1.14       Used variables to create query strings.
+ *                                         Fixed bug with SysSerialNumber being written to the database.
+ * 01/26/2012      RC          1.14       Store Subsystem as a byte.
+ * 01/30/2012      RC          1.14       Changed subsystem in firmware to subsystem index.
  * 
  * 
  */
@@ -63,6 +68,7 @@ using System.Data.SQLite;
 using System.Data.Common;
 using System.Diagnostics;
 using log4net;
+using System.Text;
 
 namespace RTI
 {
@@ -297,12 +303,6 @@ namespace RTI
                     {
                         WriteBeamToDatabase(dataset, cnn, ensId);
                     }
-
-                    //// Check if bottom track data is available
-                    //if (dataset.IsBottomTrackAvail)
-                    //{
-                    //    WriteBottomTrackToDatabase(dataset, cnn, ensId);
-                    //}
                 }
             }
         }
@@ -326,9 +326,132 @@ namespace RTI
                     using (DbCommand cmd = cnn.CreateCommand())
                     {
                         // Create the statement
-                        cmd.CommandText = "INSERT INTO tblEnsemble(EnsembleNum, NumBins, NumBeams, DesiredPingCount, ActualPingCount, Status, Year, Month, Day, Hour, Minute, Second, HundSec, DateTime, FirstBinRange, BinSize, ProfileFirstPingTime, ProfileLastPingTime, Heading, Pitch, Roll, WaterTemp, SysTemp, Salinity, Pressure, TransducerDepth, SpeedOfSound, DbTime, IsBeamVelAvail, IsInstrVelAvail, IsEarthVelAvail, IsAmpAvail, IsCorrAvail, IsGoodBeamAvail, IsGoodEarthAvail, IsAncillaryAvail, IsBottomTrackAvail, IsNmeaAvail, NmeaData, SysSerialNum, Firmware, BTFirstPingTime, BTLastPingTime, BTHeading, BTPitch, BTRoll, BTWaterTemp, BTSysTemp, BTSalinity, BTPressure, BTSpeedOfSound, BTStatus, BTActualPingCount, BTRangeBeam0, BTRangeBeam1, BTRangeBeam2, BTRangeBeam3, BTSNRBeam0, BTSNRBeam1, BTSNRBeam2, BTSNRBeam3, BTAmpBeam0, BTAmpBeam1, BTAmpBeam2, BTAmpBeam3, BTCorrBeam0, BTCorrBeam1, BTCorrBeam2, BTCorrBeam3, BTBeamVelBeam0, BTBeamVelBeam1, BTBeamVelBeam2, BTBeamVelBeam3, BTBeamGoodBeam0, BTBeamGoodBeam1, BTBeamGoodBeam2, BTBeamGoodBeam3, BTInstrVelBeam0, BTInstrVelBeam1, BTInstrVelBeam2, BTInstrVelBeam3, BTInstrGoodBeam0, BTInstrGoodBeam1, BTInstrGoodBeam2, BTInstrGoodBeam3, BTEarthVelBeam0, BTEarthVelBeam1, BTEarthVelBeam2, BTEarthVelBeam3, BTEarthGoodBeam0, BTEarthGoodBeam1, BTEarthGoodBeam2, BTEarthGoodBeam3) VALUES(@ensembleNum, @numBins, @numBeams, @desiredPingCount, @actualPingCount, @status, @year, @month, @day, @hour, @minute, @second, @hundSec, @dateTime, @firstBinRange, @binSize, @profileFirstPingTime, @profileLastPingTime, @heading, @pitch, @roll, @waterTemp, @sysTemp, @salinity, @pressure, @Depth, @sos, @dbTime, @isBeamVelAvail, @isInstrVelAvail, @isEarthVelAvail, @isAmpAvail, @isCorrAvail, @isGoodBeamAvail, @isGoodEarthAvail, @isAncillaryAvail, @isBottomTrackAvail, @isNmeaAvail, @nmeaData, @sysSerialNum, @firmware, @btFirstPingTime, @btLastPingTime, @btHeading, @btPitch, @btRoll, @btWaterTemp, @btSysTemp, @btSalinity, @btPressure, @btSos, @btStatus, @btActualPingCount, @btRangeB0, @btRangeB1, @btRangeB2, @btRangeB3, @btSnrB0, @btSnrB1, @btSnrB2, @btSnrB3, @btAmpB0, @btAmpB1, @btAmpB2, @btAmpB3, @btCorrB0, @btCorrB1, @btCorrB2, @btCorrB3, @btBeamVelB0, @btBeamVelB1, @btBeamVelB2, @btBeamVelB3, @btBeamGoodB0, @btBeamGoodB1, @btBeamGoodB2, @btBeamGoodB3, @btInstrVelB0, @btInstrVelB1, @btInstrVelB2, @btInstrVelB3, @btInstrGoodB0, @btInstrGoodB1, @btInstrGoodB2, @btInstrGoodB3, @btEarthVelB0, @btEarthVelB1, @btEarthVelB2, @btEarthVelB3, @btEarthGoodB0, @btEarthGoodB1, @btEarthGoodB2, @btEarthGoodB3); SELECT last_insert_rowid();";
+                        StringBuilder builder = new StringBuilder();
+                        builder.Append("INSERT INTO tblEnsemble("); 
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_ENS_NUM));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_NUM_BIN));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_NUM_BEAM));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DES_PING_COUNT));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_ACT_PING_COUNT));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_STATUS));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_YEAR));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_MONTH));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DAY));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_HOUR));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_MINUTE));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SECOND));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_HUN_SECOND));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DATETIME));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRST_BIN_RANGE));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_BIN_SIZE));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRST_PING_TIME));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_LAST_PING_TIME));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_HEADING));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_PITCH));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_ROLL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_TEMP_WATER));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_TEMP_SYS));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SALINITY));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_PRESSURE));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_XDCR_DEPTH));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SOS));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DB_TIME));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_BEAM_VEL_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_INSTR_VEL_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_EARTH_VEL_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_AMP_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_CORR_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_GB_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_GE_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_ANCIL_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_BT_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_NMEA_AVAIL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_NMEA_DATA));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SYS_SERIAL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_MAJOR));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_MINOR));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_REVISION));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYSTEM_INDEX));
 
-                        // Add all the parameters
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_FIRST_PING_TIME));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_LAST_PING_TIME));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_HEADING));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_PITCH));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_ROLL));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_TEMP_WATER));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_TEMP_SYS));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SALINITY));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_PRESSURE));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SOS));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_STATUS));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_ACTUAL_PING_COUNT));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B2));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B3));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_GOOD_B0));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_GOOD_B1));
+                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_GOOD_B2));
+                        builder.Append(string.Format("{0}", DbCommon.COL_BT_EARTH_GOOD_B3));
+                        builder.Append(") ");
+                        builder.Append("VALUES(");
+                        builder.Append("@ensembleNum, @numBins, @numBeams, @desiredPingCount, @actualPingCount, @status, ");
+                        builder.Append("@year, @month, @day, @hour, @minute, @second, @hundSec, @dateTime, ");
+                        builder.Append("@firstBinRange, @binSize, @profileFirstPingTime, @profileLastPingTime, @heading, @pitch, @roll, ");
+                        builder.Append("@waterTemp, @sysTemp, @salinity, @pressure, @Depth, @sos, @dbTime, ");
+                        builder.Append("@isBeamVelAvail, @isInstrVelAvail, @isEarthVelAvail, @isAmpAvail, @isCorrAvail, @isGoodBeamAvail, @isGoodEarthAvail, @isAncillaryAvail, @isBottomTrackAvail, @isNmeaAvail, ");
+                        builder.Append("@nmeaData, @sysSerialNum, @firmwareMajor, @firmwareMinor, @firmwareRevision, @subsystem, ");
+                        
+                        builder.Append("@btFirstPingTime, @btLastPingTime, @btHeading, @btPitch, @btRoll, @btWaterTemp, @btSysTemp, ");
+                        builder.Append("@btSalinity, @btPressure, @btSos, @btStatus, @btActualPingCount, ");
+                        builder.Append("@btRangeB0, @btRangeB1, @btRangeB2, @btRangeB3, ");
+                        builder.Append("@btSnrB0, @btSnrB1, @btSnrB2, @btSnrB3, ");
+                        builder.Append("@btAmpB0, @btAmpB1, @btAmpB2, @btAmpB3, ");
+                        builder.Append("@btCorrB0, @btCorrB1, @btCorrB2, @btCorrB3, ");
+                        builder.Append("@btBeamVelB0, @btBeamVelB1, @btBeamVelB2, @btBeamVelB3, ");
+                        builder.Append("@btBeamGoodB0, @btBeamGoodB1, @btBeamGoodB2, @btBeamGoodB3, ");
+                        builder.Append("@btInstrVelB0, @btInstrVelB1, @btInstrVelB2, @btInstrVelB3, ");
+                        builder.Append("@btInstrGoodB0, @btInstrGoodB1, @btInstrGoodB2, @btInstrGoodB3, ");
+                        builder.Append("@btEarthVelB0, @btEarthVelB1, @btEarthVelB2, @btEarthVelB3, ");
+                        builder.Append("@btEarthGoodB0, @btEarthGoodB1, @btEarthGoodB2, @btEarthGoodB3");
+                        builder.Append("); ");
+                        builder.Append("SELECT last_insert_rowid();");
+
+                        cmd.CommandText = builder.ToString();
+
+                        //// Add all the parameters
                         cmd.Parameters.Add(new SQLiteParameter("@ensembleNum", System.Data.DbType.Int32) { Value = dataset.EnsembleData.EnsembleNumber });
                         cmd.Parameters.Add(new SQLiteParameter("@numBins", System.Data.DbType.Int32) { Value = dataset.EnsembleData.NumBins });
                         cmd.Parameters.Add(new SQLiteParameter("@numBeams", System.Data.DbType.Int32) { Value = dataset.EnsembleData.NumBeams });
@@ -367,11 +490,15 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@isAncillaryAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsAncillaryAvail) });
                         cmd.Parameters.Add(new SQLiteParameter("@isBottomTrackAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsBottomTrackAvail) });
                         cmd.Parameters.Add(new SQLiteParameter("@isNmeaAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsNmeaAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@sysSerialNum", System.Data.DbType.String) { Value = dataset.EnsembleData.SysSerialNumber });
-                        cmd.Parameters.Add(new SQLiteParameter("@firmware", System.Data.DbType.String) { Value = dataset.EnsembleData.Firmware });
+                        // NMEA data below
+                        cmd.Parameters.Add(new SQLiteParameter("@sysSerialNum", System.Data.DbType.String) { Value = dataset.EnsembleData.SysSerialNumber.ToString() });
+                        cmd.Parameters.Add(new SQLiteParameter("@firmwareMajor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMajor });
+                        cmd.Parameters.Add(new SQLiteParameter("@firmwareMinor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMinor });
+                        cmd.Parameters.Add(new SQLiteParameter("@firmwareRevision", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareRevsion });
+                        cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.SubsystemIndex });
 
                         // Bottom Track parameters
-                        if(dataset.IsBottomTrackAvail)
+                        if (dataset.IsBottomTrackAvail)
                         {
                             cmd.Parameters.Add(new SQLiteParameter("@btFirstPingTime", System.Data.DbType.Single) { Value = dataset.BottomTrackData.FirstPingTime });
                             cmd.Parameters.Add(new SQLiteParameter("@btLastPingTime", System.Data.DbType.Single) { Value = dataset.BottomTrackData.LastPingTime });
@@ -456,7 +583,7 @@ namespace RTI
         /// <param name="dataset">Dataset to write to the database.</param>
         /// <param name="cnn">Connection to the database.</param>
         /// <param name="ensembleRowId">Row ID withing the ensemble.</param>
-        private void WriteBeamToDatabase(DataSet.Ensemble dataset, SQLiteConnection cnn, int ensembleRowId)
+        private void WriteBeamToDatabase1(DataSet.Ensemble dataset, SQLiteConnection cnn, int ensembleRowId)
         {
             try
             {
@@ -467,37 +594,111 @@ namespace RTI
                         using (DbCommand cmd = cnn.CreateCommand())
                         {
                             // Create the statement
-                            cmd.CommandText = "INSERT INTO tblBeam(EnsembleId, BinNum, BeamNum, BeamVel, EarthVel, InstrVel, Amplitude, Correlation, GoodBeam, GoodEarth, Orientation) VALUES(@ensembleId, @binNum, @beamNum, @beamVel, @earthVel, @instrVel, @amp, @corr, @goodBeam, @goodEarth, @orient);";
-
-                            // Create all the parameters
-                            DbParameter paramEnsId = new SQLiteParameter("@ensembleId", System.Data.DbType.UInt32) { Value = ensembleRowId };
-                            DbParameter paramBinNum = new SQLiteParameter("@binNum", System.Data.DbType.UInt32) { Value = bin };
-                            DbParameter paramBeamNum = new SQLiteParameter("@beamNum", System.Data.DbType.UInt16) { Value = beam };
-                            DbParameter paramBeamVel = new SQLiteParameter("@beamVel", System.Data.DbType.Single) { Value = dataset.BeamVelocityData.BeamVelocityData[bin, beam] };
-                            DbParameter paramEarthVel = new SQLiteParameter("@earthVel", System.Data.DbType.Single) { Value = dataset.EarthVelocityData.EarthVelocityData[bin, beam] };
-                            DbParameter paramInstrVel = new SQLiteParameter("@instrVel", System.Data.DbType.Single) { Value = dataset.InstrVelocityData.InstrumentVelocityData[bin, beam] };
-                            DbParameter paramAmp = new SQLiteParameter("@amp", System.Data.DbType.Single) { Value = dataset.AmplitudeData.AmplitudeData[bin, beam] };
-                            DbParameter paramCorr = new SQLiteParameter("@corr", System.Data.DbType.Single) { Value = dataset.CorrelationData.CorrelationData[bin, beam] };
-                            DbParameter paramGoodBeam = new SQLiteParameter("@goodBeam", System.Data.DbType.UInt16) { Value = dataset.GoodBeamData.GoodBeamData[bin, beam] };
-                            DbParameter paramGoodEarth = new SQLiteParameter("@goodEarth", System.Data.DbType.UInt16) { Value = dataset.GoodEarthData.GoodEarthData[bin, beam] };
-                            DbParameter paramOrient = new SQLiteParameter("@orient", System.Data.DbType.UInt16) { Value = dataset.BeamVelocityData.Orientation };
+                            StringBuilder builder = new StringBuilder();
+                            builder.Append("INSERT INTO tblBeam(");
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_ENS_ID));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_BIN_NUM));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_BEAM_NUM));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_BEAM));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_EARTH));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_INSTR));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_AMP));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_CORR));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_BEAM));
+                            builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_EARTH));
+                            builder.Append(string.Format("{0}", DbCommon.COL_BV_ORIENT));
+                            builder.Append(") ");
+                            builder.Append("VALUES(");
+                            builder.Append("@ensembleId, @binNum, @beamNum,");
+                            builder.Append("@beamVel, @earthVel, @instrVel,");
+                            builder.Append("@amp, @corr, @goodBeam, @goodEarth, @orient");
+                            builder.Append(");");
+                            cmd.CommandText = builder.ToString();
 
                             // Add all the parameters
-                            cmd.Parameters.Add(paramEnsId);
-                            cmd.Parameters.Add(paramBinNum);
-                            cmd.Parameters.Add(paramBeamNum);
-                            cmd.Parameters.Add(paramBeamVel);
-                            cmd.Parameters.Add(paramEarthVel);
-                            cmd.Parameters.Add(paramInstrVel);
-                            cmd.Parameters.Add(paramAmp);
-                            cmd.Parameters.Add(paramCorr);
-                            cmd.Parameters.Add(paramGoodBeam);
-                            cmd.Parameters.Add(paramGoodEarth);
-                            cmd.Parameters.Add(paramOrient);
+                            cmd.Parameters.Add(new SQLiteParameter("@ensembleId", System.Data.DbType.UInt32) { Value = ensembleRowId });
+                            cmd.Parameters.Add(new SQLiteParameter("@binNum", System.Data.DbType.UInt32) { Value = bin });
+                            cmd.Parameters.Add(new SQLiteParameter("@beamNum", System.Data.DbType.UInt16) { Value = beam });
+                            cmd.Parameters.Add(new SQLiteParameter("@beamVel", System.Data.DbType.Single) { Value = dataset.BeamVelocityData.BeamVelocityData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@earthVel", System.Data.DbType.Single) { Value = dataset.EarthVelocityData.EarthVelocityData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@instrVel", System.Data.DbType.Single) { Value = dataset.InstrVelocityData.InstrumentVelocityData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@amp", System.Data.DbType.Single) { Value = dataset.AmplitudeData.AmplitudeData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@corr", System.Data.DbType.Single) { Value = dataset.CorrelationData.CorrelationData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@goodBeam", System.Data.DbType.UInt16) { Value = dataset.GoodBeamData.GoodBeamData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@goodEarth", System.Data.DbType.UInt16) { Value = dataset.GoodEarthData.GoodEarthData[bin, beam] });
+                            cmd.Parameters.Add(new SQLiteParameter("@orient", System.Data.DbType.UInt16) { Value = dataset.BeamVelocityData.Orientation });
 
                             cmd.ExecuteNonQuery();
                         }
                     }
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error("Error adding Beam BeamVelocity data to database.", e);
+            }
+        }
+
+        /// <summary>
+        /// Write the Beam data to the project database.
+        /// </summary>
+        /// <param name="dataset">Dataset to write to the database.</param>
+        /// <param name="cnn">Connection to the database.</param>
+        /// <param name="ensembleRowId">Row ID withing the ensemble.</param>
+        private void WriteBeamToDatabase(DataSet.Ensemble dataset, SQLiteConnection cnn, int ensembleRowId)
+        {
+            try
+            {
+                using (DbTransaction dbTrans = cnn.BeginTransaction())
+                {
+                    for (int bin = 0; bin < dataset.EnsembleData.NumBins; bin++)
+                    {
+                        for (int beam = 0; beam < dataset.EnsembleData.NumBeams; beam++)
+                        {
+                            using (DbCommand cmd = cnn.CreateCommand())
+                            {
+                                // Create the statement
+                                // Create the statement
+                                StringBuilder builder = new StringBuilder();
+                                builder.Append("INSERT INTO tblBeam(");
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_ENS_ID));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_BIN_NUM));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_BEAM_NUM));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_BEAM));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_EARTH));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_INSTR));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_AMP));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_CORR));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_BEAM));
+                                builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_EARTH));
+                                builder.Append(string.Format("{0}", DbCommon.COL_BV_ORIENT));
+                                builder.Append(") ");
+                                builder.Append("VALUES(");
+                                builder.Append("@ensembleId, @binNum, @beamNum,");
+                                builder.Append("@beamVel, @earthVel, @instrVel,");
+                                builder.Append("@amp, @corr, @goodBeam, @goodEarth, @orient");
+                                builder.Append(");");
+                                cmd.CommandText = builder.ToString();
+
+                                // Add all the parameters
+                                cmd.Parameters.Add(new SQLiteParameter("@ensembleId", System.Data.DbType.UInt32) { Value = ensembleRowId });
+                                cmd.Parameters.Add(new SQLiteParameter("@binNum", System.Data.DbType.UInt32) { Value = bin });
+                                cmd.Parameters.Add(new SQLiteParameter("@beamNum", System.Data.DbType.UInt16) { Value = beam });
+                                cmd.Parameters.Add(new SQLiteParameter("@beamVel", System.Data.DbType.Single) { Value = dataset.BeamVelocityData.BeamVelocityData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@earthVel", System.Data.DbType.Single) { Value = dataset.EarthVelocityData.EarthVelocityData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@instrVel", System.Data.DbType.Single) { Value = dataset.InstrVelocityData.InstrumentVelocityData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@amp", System.Data.DbType.Single) { Value = dataset.AmplitudeData.AmplitudeData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@corr", System.Data.DbType.Single) { Value = dataset.CorrelationData.CorrelationData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@goodBeam", System.Data.DbType.UInt16) { Value = dataset.GoodBeamData.GoodBeamData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@goodEarth", System.Data.DbType.UInt16) { Value = dataset.GoodEarthData.GoodEarthData[bin, beam] });
+                                cmd.Parameters.Add(new SQLiteParameter("@orient", System.Data.DbType.UInt16) { Value = dataset.BeamVelocityData.Orientation });
+
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    dbTrans.Commit();
                 }
             }
             catch (SQLiteException e)

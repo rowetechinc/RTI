@@ -47,6 +47,9 @@
  * 12/15/2011      RC          1.09       Return 0 instead of -1 for bad velocities in GetVelocityMagnitude() 
  * 01/04/2012      RC          1.11       Added a method to check if the Earth Velocity is good.
  * 01/13/2012      RC          1.12       Merged Ensemble table and Bottom Track table in database.
+ * 01/18/2012      RC          1.14       Added Encode() to convert to byte array.
+ *                                         Changed Beams to NumBeams.
+ *                                         Removed "private set".
  * 
  */
 
@@ -95,7 +98,7 @@ namespace RTI
             /// <summary>
             /// First Bottom Track Ping Time in seconds.
             /// </summary>
-            public float FirstPingTime { get; private set; }
+            public float FirstPingTime { get; set; }
 
             /// <summary>
             /// Round version of First Bottom Track Ping time in seconds.
@@ -105,7 +108,7 @@ namespace RTI
             /// <summary>
             /// Last Bottom Track Ping Time in seconds.
             /// </summary>
-            public float LastPingTime { get; private set; }
+            public float LastPingTime { get; set; }
 
             /// <summary>
             /// Round version of Last Ping Time in seconds.
@@ -115,7 +118,7 @@ namespace RTI
             /// <summary>
             /// Heading in degrees.
             /// </summary>
-            public float Heading { get; private set; }
+            public float Heading { get; set; }
 
             /// <summary>
             /// Round version of Heading in degrees.
@@ -125,7 +128,7 @@ namespace RTI
             /// <summary>
             /// Pitch in degrees.
             /// </summary>
-            public float Pitch { get; private set; }
+            public float Pitch { get; set; }
 
             /// <summary>
             /// Round version of Pitch in degrees. 
@@ -135,7 +138,7 @@ namespace RTI
             /// <summary>
             /// Roll in degrees.
             /// </summary>
-            public float Roll { get; private set; }
+            public float Roll { get; set; }
 
             /// <summary>
             /// Round version of Roll in degrees. 
@@ -145,7 +148,7 @@ namespace RTI
             /// <summary>
             /// Water Temperature in degrees.  Used in Speed of Sound.
             /// </summary>
-            public float WaterTemp { get; private set; }
+            public float WaterTemp { get; set; }
 
             /// <summary>
             /// Round version of Water Temperature in degrees.
@@ -155,7 +158,7 @@ namespace RTI
             /// <summary>
             /// System (board) temperature in degrees.
             /// </summary>
-            public float SystemTemp { get; private set; }
+            public float SystemTemp { get; set; }
 
             /// <summary>
             /// Round version of System Temperature in degrees.
@@ -166,7 +169,7 @@ namespace RTI
             /// Salinity in parts per thousand (ppt).
             /// Used in Speed of Sound.
             /// </summary>
-            public float Salinity { get; private set; }
+            public float Salinity { get; set; }
 
             /// <summary>
             /// Round version of Salinity in parts per thousand.
@@ -176,7 +179,7 @@ namespace RTI
             /// <summary>
             /// Pressure in Pascal.
             /// </summary>
-            public float Pressure { get; private set; }
+            public float Pressure { get; set; }
 
             /// <summary>
             /// Round version of Pressure in pascal.
@@ -187,7 +190,7 @@ namespace RTI
             /// Transducer Depth in meters.
             /// Used in Speed of Sound.
             /// </summary>
-            public float TransducerDepth { get; private set; }
+            public float TransducerDepth { get; set; }
 
             /// <summary>
             /// Round version of Tranducer Depth in meters.
@@ -197,7 +200,7 @@ namespace RTI
             /// <summary>
             /// Speed of Sound in meters/sec.
             /// </summary>
-            public float SpeedOfSound { get; private set; }
+            public float SpeedOfSound { get; set; }
 
             /// <summary>
             /// Round version of Speed Of Sound in meter/sec.
@@ -238,7 +241,7 @@ namespace RTI
             public int Status
             {
                 get { return _status; }
-                private set
+                set
                 {
                     _status = value;
                     if (_status != 0)
@@ -317,45 +320,45 @@ namespace RTI
             /// 3 or 4 beams have a valid signal.
             /// This value is set based off the Status.
             /// </summary>
-            public bool IsWaterTrack3BeamSolution { get; private set; }
+            public bool IsWaterTrack3BeamSolution { get; set; }
 
             /// <summary>
             /// Set flag if Bottom Track is 3 Beam solution.
             /// 3 or 4 beams located the bottom.
             /// This value is set based off the Status.
             /// </summary>
-            public bool IsBottomTrack3BeamSolution { get; private set; }
+            public bool IsBottomTrack3BeamSolution { get; set; }
 
             /// <summary>
             /// Set flag if Bottom Track is holding.
             /// Holding the search to last known Depth.
             /// This value is set based off the Status.
             /// </summary>
-            public bool IsBottomTrackHold { get; private set; }
+            public bool IsBottomTrackHold { get; set; }
 
             /// <summary>
             /// Set flag if Bottom Track is searching.
             /// Actively searching for the bottom.
             /// This value is set based off the Status.
             /// </summary>
-            public bool IsBottomTrackSearching { get; private set; }
+            public bool IsBottomTrackSearching { get; set; }
 
             /// <summary>
             /// Set flag if there is a hardware timeout.
             /// The hardware did not respond to the ping request.
             /// This value is set based off the Status.
             /// </summary>
-            public bool IsHardwareTimeout { get; private set; }
+            public bool IsHardwareTimeout { get; set; }
 
             /// <summary>
             /// Number of beams.
             /// </summary>
-            public float Beams { get; private set; }
+            public float NumBeams { get; set; }
 
             /// <summary>
             /// Number of pings in the sample.
             /// </summary>
-            public float ActualPingCount { get; private set; }
+            public float ActualPingCount { get; set; }
 
             /// <summary>
             /// Round version of actual number of pings in samples.
@@ -365,52 +368,52 @@ namespace RTI
             /// <summary>
             /// Bottom Track Range ranges for each beam in meters.
             /// </summary>
-            public float[] Range { get; private set; }
+            public float[] Range { get; set; }
 
             /// <summary>
             /// Bottom Track Signal to Noise ratio in counts.
             /// </summary>
-            public float[] SNR { get; private set; }
+            public float[] SNR { get; set; }
 
             /// <summary>
             /// Bottom Track Amplitude ranges in counts.
             /// </summary>
-            public float[] Amplitude { get; private set; }
+            public float[] Amplitude { get; set; }
 
             /// <summary>
             /// Bottom Track Correlation.  0.5 = 50%
             /// </summary>
-            public float[] Correlation { get; private set; }
+            public float[] Correlation { get; set; }
 
             /// <summary>
             /// Bottom Track velocity in Beam form in meters/second.
             /// </summary>
-            public float[] BeamVelocity { get; private set; }
+            public float[] BeamVelocity { get; set; }
 
             /// <summary>
             /// Number of pings averaged in Beam form.
             /// </summary>
-            public float[] BeamGood { get; private set; }
+            public float[] BeamGood { get; set; }
 
             /// <summary>
             /// Bottom Track velocity in InstrumentVelocity form in meters/second.
             /// </summary>
-            public float[] InstrumentVelocity { get; private set; }
+            public float[] InstrumentVelocity { get; set; }
 
             /// <summary>
             /// Number of pings averaged together in InstrumentVelocity form.
             /// </summary>
-            public float[] InstrumentGood { get; private set; }
+            public float[] InstrumentGood { get; set; }
 
             /// <summary>
             /// Bottom Track velocity in EarthVelocity form in meters/second.
             /// </summary>
-            public float[] EarthVelocity { get; private set; }
+            public float[] EarthVelocity { get; set; }
 
             /// <summary>
             /// Number of pings averaged together in EarthVelocity form.
             /// </summary>
-            public float[] EarthGood { get; private set; }
+            public float[] EarthGood { get; set; }
 
 
             /// <summary>
@@ -446,7 +449,7 @@ namespace RTI
                 IsHardwareTimeout = false;
 
                 // Decode the information
-                DecodeBottomTrackData(ancData);
+                Decode(ancData);
             }
 
             /// <summary>
@@ -482,7 +485,7 @@ namespace RTI
                 IsHardwareTimeout = false;
 
                 // Decode the information
-                DecodeBottomTrackData(btData);
+                Decode(btData);
             }
 
             /// <summary>
@@ -560,7 +563,7 @@ namespace RTI
             /// Get all the information about the Bottom Track data.
             /// </summary>
             /// <param name="data">Byte array containing the Bottom Track data type.</param>
-            private void DecodeBottomTrackData(byte[] data)
+            private void Decode(byte[] data)
             {
                 FirstPingTime = Converters.ByteArrayToFloat(data, GenerateIndex(0));
                 LastPingTime = Converters.ByteArrayToFloat(data, GenerateIndex(1));
@@ -576,7 +579,7 @@ namespace RTI
                 SpeedOfSound = Converters.ByteArrayToFloat(data, GenerateIndex(10));
 
                 Status = (int)Converters.ByteArrayToFloat(data, GenerateIndex(11));
-                Beams = Converters.ByteArrayToFloat(data, GenerateIndex(12));
+                NumBeams = Converters.ByteArrayToFloat(data, GenerateIndex(12));
                 ActualPingCount = Converters.ByteArrayToFloat(data, GenerateIndex(13));
 
                 Range[0] = Converters.ByteArrayToFloat(data, GenerateIndex(14));
@@ -633,6 +636,103 @@ namespace RTI
             }
 
             /// <summary>
+            /// Generate a byte array representing the
+            /// dataset.  The byte array is in the binary format.
+            /// The format can be found in the RTI ADCP User Guide.
+            /// It contains a header and payload.  This byte array 
+            /// will be combined with the other dataset byte arrays
+            /// to form an ensemble.
+            /// </summary>
+            /// <returns>Byte array of the ensemble.</returns>
+            public byte[] Encode()
+            {
+                int index = 0;
+
+                // Get the length
+                byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Heading), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pitch), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Roll), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(WaterTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SystemTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Salinity), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pressure), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(TransducerDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Status), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                // Generate header for the dataset
+                byte[] header = this.GenerateHeader(NumElements);
+
+                // Create the array to hold the dataset
+                byte[] result = new byte[payload.Length + header.Length];
+
+                // Copy the header to the array
+                System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+
+                // Copy the Nmea data to the array
+                System.Buffer.BlockCopy(payload, 0, result, header.Length, payload.Length);
+
+                return result;
+            }
+
+            /// <summary>
             /// Move pass the Base data of the Bottom Track.  Then based
             /// off the xAxis, move to the correct location.
             /// </summary>
@@ -644,12 +744,22 @@ namespace RTI
             }
 
             /// <summary>
+            /// Generate a index within a payload byte array.
+            /// </summary>
+            /// <param name="index">Element number within the payload.</param>
+            /// <returns>Start location within the payload.</returns>
+            private int GeneratePayloadIndex(int index)
+            {
+                return index * Ensemble.BYTES_IN_FLOAT;
+            }
+
+            /// <summary>
             /// Get all the information about the Bottom Track data.
             /// Data is passed in as a DataRow from a database.  The
             /// data is then extracted and added to the properties.
             /// </summary>
             /// <param name="dataRow">DataRow containing the Bottom Track data type.</param>
-            private void DecodeBottomTrackData(DataRow dataRow)
+            private void Decode(DataRow dataRow)
             {
                 try
                 {
@@ -668,7 +778,7 @@ namespace RTI
                     SpeedOfSound = Convert.ToSingle(dataRow[DbCommon.COL_BT_SOS].ToString());
 
                     Status = Convert.ToInt32(dataRow[DbCommon.COL_BT_STATUS].ToString());
-                    Beams = Convert.ToSingle(dataRow[DbCommon.COL_ENS_NUM_BEAM].ToString());
+                    NumBeams = Convert.ToSingle(dataRow[DbCommon.COL_ENS_NUM_BEAM].ToString());
                     ActualPingCount = Convert.ToSingle(dataRow[DbCommon.COL_BT_ACTUAL_PING_COUNT].ToString());
 
                     Range[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_RANGE_B0].ToString());
@@ -944,42 +1054,42 @@ namespace RTI
                 string s = "";
 
                 s += "Heading " + Heading.ToString("0.00") + "\t\tWtemp    " + WaterTemp.ToString("0.00")  + "\tPings    " + ActualPingCount.ToString("0") + "\n";
-                s += "Pitch   " + Pitch.ToString("0.00")   + "\t\tBtemp    " + SystemTemp.ToString("0.00") + "\tBeams    " + Beams.ToString("0") + "\n";
+                s += "Pitch   " + Pitch.ToString("0.00")   + "\t\tBtemp    " + SystemTemp.ToString("0.00") + "\tBeams    " + NumBeams.ToString("0") + "\n";
                 s += "Roll    " + Roll.ToString("0.00")    + "\t\tSalinity " + Salinity.ToString("0.00")   + "\tPressure " + Pressure.ToString("0.00") + "\n";
                 s += "Status  " + Status.ToString("0")     + "\t\t\tSOS    " + SpeedOfSound.ToString("0.00")    + "\n";
                 s += "1st Ping  (s)" + FirstPingTime.ToString("0.000") + "\n";
                 s += "Last Ping (s)" + LastPingTime.ToString("0.000") + "\n";
                 s += "Beam  Vel ";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += BeamVelocity[i].ToString("0.000") + " ";
                 s += "Bm Good  ";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += BeamGood[i].ToString("0") + " ";
                 s += "\n";
                 s += "Instr Vel ";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += InstrumentVelocity[i].ToString("0.000") + " ";
                 s += "In Good  ";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += InstrumentGood[i].ToString("0") + " ";
                 s += "\n";
                 s += "EarthVelocity Vel ";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += EarthVelocity[i].ToString("0.000") + " ";
                 s += "Ea Good  ";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += EarthGood[i].ToString("0") + " ";
                 s += "\n";
                 s += "SNR\t\t\t";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += SNR[i].ToString("0") + "\t";
                 s += "\n";
                 s += "Amplitude\t";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += Amplitude[i].ToString("0") + "\t";
                 s += "\n";
                 s += "Range\t\t";
-                for (i = 0; i < Beams; i++)
+                for (i = 0; i < NumBeams; i++)
                     s += Range[i].ToString("0.000") + "\t";
                 s += "\n";
                 s += "Status Errors:" + "\n";

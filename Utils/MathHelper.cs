@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 01/05/2012      RC          1.11       Initial coding
+ * 01/16/2012      RC          1.14       Added Calculate Magnitude and direction.
  * 
  */
 
@@ -109,5 +110,30 @@ namespace RTI
             //double variance = Math.Pow(v1 - avg, 2) + Math.Pow(v2 - avg, 2) + Math.Pow(v3 - avg, 2) + Math.Pow(v4 - avg, 2);
             return Math.Sqrt(variance);
         }
+
+        /// <summary>
+        /// Calculate the Magnitude given the North, East and Vertical velocity.
+        /// </summary>
+        /// <param name="east">East Velocity.</param>
+        /// <param name="north">North Velocity.</param>
+        /// <param name="vertical">Vertical Velocity.</param>
+        /// <returns>Magnitude of the velocities given.</returns>
+        public static double CalculateMagnitude(double east, double north, double vertical)
+        {
+            return Math.Sqrt((east * east) + (north * north) + (vertical * vertical));
+        }
+
+        /// <summary>
+        /// Calculate the Direction of the velocities given.
+        /// Value will be returned in degrees.
+        /// </summary>
+        /// <param name="y">Y axis velocity value.</param>
+        /// <param name="x">X axis velocity value.</param>
+        /// <returns>Direction of the velocity return in degrees.</returns>
+        public static double CalculateDirection(double y, double x)
+        {
+            return (Math.Atan2(y, x)) * (180 / Math.PI);
+        }
+
     }
 }

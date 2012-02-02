@@ -46,6 +46,7 @@
  * 12/28/2011      RC          1.10       Remove passing paramater as Ref.
  *                                         Use Ensemble's row id instead of number for foreign key for tblBottomTrack and tblBeam.
  * 01/13/2012      RC          1.12       Merged Ensemble table and Bottom Track table in database.
+ * 01/24/2012      RC          1.14       Put try/catch in ParseDataTables() if error parsing.
  * 
  */
 
@@ -128,183 +129,191 @@ namespace RTI
         /// <returns>DataSet of ensemble.</returns>
         public DataSet.Ensemble ParseDataTables(Project project, DataRow ensembleDataRow)
         {
-            // Need to get a couple ranges
-            // Initialize all ranges
-            bool IsBeamVelocityAvail = false;
-            bool IsInstrVelocityAvail = false;
-            bool IsEarthVelocityAvail = false;
-            bool IsAmplitudeAvail = false;
-            bool IsCorrelationAvail = false;
-            bool IsGoodBeamAvail = false;
-            bool IsGoodEarthAvail = false;
-            bool IsAncillaryAvail = false;
-            bool IsBottomTrackAvail = false;
-            bool IsNmeaAvail = false;
-            int numBeams = 0;
-            int numBins = 0;
-            int ensId = 0;
+            // Create an ensemble
+            DataSet.Ensemble ensemble = new DataSet.Ensemble();
 
-            // Number of bins and beams and which dataset exist
-            // If more than 1 result is found, return the first one found
-            IsBeamVelocityAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_BEAM_VEL_AVAIL];
-            IsInstrVelocityAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_INSTR_VEL_AVAIL];
-            IsEarthVelocityAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_EARTH_VEL_AVAIL];
-            IsAmplitudeAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_AMP_AVAIL];
-            IsCorrelationAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_CORR_AVAIL];
-            IsGoodBeamAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_GB_AVAIL];
-            IsGoodEarthAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_GE_AVAIL];
-            IsAncillaryAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_ANCIL_AVAIL];
-            IsBottomTrackAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_BT_AVAIL];
-            IsNmeaAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_NMEA_AVAIL];
-            numBeams = Convert.ToInt32(ensembleDataRow[DbCommon.COL_ENS_NUM_BEAM].ToString());
-            numBins = Convert.ToInt32(ensembleDataRow[DbCommon.COL_ENS_NUM_BIN].ToString());
-            ensId = Convert.ToInt32(ensembleDataRow[DbCommon.COL_ENS_ID]);
-
-            // Get the Beam DataTable
-            // Less then BinNum is used to ensure if duplicate 
-            // ensemble numbers are used, if files are combined, 
-            // there will not be an index out of range error
-            string queryBeam = String.Format("SELECT * FROM {0} WHERE {1}={2} AND {3}<{4};", DbCommon.TBL_ENS_BEAM, DbCommon.COL_BV_ENS_ID, ensId, DbCommon.COL_BV_BIN_NUM, numBins);
-            DataTable beamDT = DbCommon.GetDataTableFromProjectDb(project, queryBeam);
-
-            // Get the Bottom Track DataTable
-            //string queryBT = String.Format("SELECT * FROM {0} WHERE {1}={2};", DbCommon.TBL_ENS_BOTTOMTRACK, DbCommon.COL_BT_ENS_ID, ensId);
-            //DataTable btDT = DbCommon.GetDataTableFromProjectDb(project, queryBT);
-
-            DataSet.Ensemble dataset = new DataSet.Ensemble();
-            dataset.AddEnsembleData(DataSet.Ensemble.DATATYPE_INT,
-                                        DataSet.EnsembleDataSet.NUM_DATA_ELEMENTS,
-                                        numBeams,
-                                        DataSet.Ensemble.DEFAULT_IMAG,
-                                        DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                        DataSet.Ensemble.EnsembleDataID,
-                                        ensembleDataRow);
-
-            // Ancillary data
-            if (IsAncillaryAvail)
+            try
             {
-                dataset.AddAncillaryData(DataSet.Ensemble.DATATYPE_FLOAT,
-                            DataSet.AncillaryDataSet.NUM_DATA_ELEMENTS,
-                            numBeams,
-                            DataSet.Ensemble.DEFAULT_IMAG,
-                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                            DataSet.Ensemble.AncillaryID,
-                            ensembleDataRow);
+                // Need to get a couple ranges
+                // Initialize all ranges
+                bool IsBeamVelocityAvail = false;
+                bool IsInstrVelocityAvail = false;
+                bool IsEarthVelocityAvail = false;
+                bool IsAmplitudeAvail = false;
+                bool IsCorrelationAvail = false;
+                bool IsGoodBeamAvail = false;
+                bool IsGoodEarthAvail = false;
+                bool IsAncillaryAvail = false;
+                bool IsBottomTrackAvail = false;
+                bool IsNmeaAvail = false;
+                int numBeams = 0;
+                int numBins = 0;
+                int ensId = 0;
+
+                // Number of bins and beams and which dataset exist
+                // If more than 1 result is found, return the first one found
+                IsBeamVelocityAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_BEAM_VEL_AVAIL];
+                IsInstrVelocityAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_INSTR_VEL_AVAIL];
+                IsEarthVelocityAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_EARTH_VEL_AVAIL];
+                IsAmplitudeAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_AMP_AVAIL];
+                IsCorrelationAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_CORR_AVAIL];
+                IsGoodBeamAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_GB_AVAIL];
+                IsGoodEarthAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_GE_AVAIL];
+                IsAncillaryAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_ANCIL_AVAIL];
+                IsBottomTrackAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_BT_AVAIL];
+                IsNmeaAvail = (bool)ensembleDataRow[DbCommon.COL_ENS_IS_NMEA_AVAIL];
+                numBeams = Convert.ToInt32(ensembleDataRow[DbCommon.COL_ENS_NUM_BEAM].ToString());
+                numBins = Convert.ToInt32(ensembleDataRow[DbCommon.COL_ENS_NUM_BIN].ToString());
+                ensId = Convert.ToInt32(ensembleDataRow[DbCommon.COL_ENS_ID]);
+
+                // Get the Beam DataTable
+                // Less then BinNum is used to ensure if duplicate 
+                // ensemble numbers are used, if files are combined, 
+                // there will not be an index out of range error
+                string queryBeam = String.Format("SELECT * FROM {0} WHERE {1}={2} AND {3}<{4};", DbCommon.TBL_ENS_BEAM, DbCommon.COL_BV_ENS_ID, ensId, DbCommon.COL_BV_BIN_NUM, numBins);
+                DataTable beamDT = DbCommon.GetDataTableFromProjectDb(project, queryBeam);
+
+                // Ensemble data
+                ensemble.AddEnsembleData(DataSet.Ensemble.DATATYPE_INT,
+                                            DataSet.EnsembleDataSet.NUM_DATA_ELEMENTS,
+                                            numBeams,
+                                            DataSet.Ensemble.DEFAULT_IMAG,
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                            DataSet.Ensemble.EnsembleDataID,
+                                            ensembleDataRow);
+
+                // Ancillary data
+                if (IsAncillaryAvail)
+                {
+                    ensemble.AddAncillaryData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                DataSet.AncillaryDataSet.NUM_DATA_ELEMENTS,
+                                numBeams,
+                                DataSet.Ensemble.DEFAULT_IMAG,
+                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                DataSet.Ensemble.AncillaryID,
+                                ensembleDataRow);
+                }
+
+                // Bottom track data
+                if (IsBottomTrackAvail)
+                {
+                    ensemble.AddBottomTrackData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                numBins,
+                                numBeams,
+                                DataSet.Ensemble.DEFAULT_IMAG,
+                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                DataSet.Ensemble.BottomTrackID,
+                                ensembleDataRow);
+                }
+
+                // NMEA data
+                if (IsNmeaAvail)
+                {
+                    ensemble.AddNmeaData(ensembleDataRow[DbCommon.COL_ENS_NMEA_DATA].ToString());
+                }
+
+
+                // Add all the Beam data at once
+                if (IsAmplitudeAvail && IsBeamVelocityAvail && IsEarthVelocityAvail && IsInstrVelocityAvail && IsCorrelationAvail && IsGoodBeamAvail && IsGoodEarthAvail)
+                {
+                    // Add all the beam data in one loop
+                    AddBeamData(beamDT, ensemble, numBins, numBeams);
+                }
+                else
+                {
+                    // Amplitude data
+                    if (IsAmplitudeAvail)
+                    {
+                        ensemble.AddAmplitudeData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.AmplitudeID,
+                                    beamDT);
+                    }
+
+                    // Beam Velocity data
+                    if (IsBeamVelocityAvail)
+                    {
+                        ensemble.AddBeamVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.VelocityID,
+                                    beamDT);
+                    }
+
+                    // Instrument Velocity data
+                    if (IsInstrVelocityAvail)
+                    {
+                        ensemble.AddInstrVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.InstrumentID,
+                                    beamDT);
+                    }
+
+                    // Earth Velocity data
+                    if (IsEarthVelocityAvail)
+                    {
+                        ensemble.AddEarthVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.EarthID,
+                                    beamDT);
+                    }
+
+                    // Correlation data
+                    if (IsCorrelationAvail)
+                    {
+                        ensemble.AddCorrelationData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.CorrelationID,
+                                    beamDT);
+                    }
+
+                    // Good Beam data
+                    if (IsGoodBeamAvail)
+                    {
+                        ensemble.AddGoodBeamData(DataSet.Ensemble.DATATYPE_INT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.GoodBeamID,
+                                    beamDT);
+                    }
+
+                    // Good Earth data
+                    if (IsGoodEarthAvail)
+                    {
+                        ensemble.AddGoodEarthData(DataSet.Ensemble.DATATYPE_INT,
+                                    numBins,
+                                    numBeams,
+                                    DataSet.Ensemble.DEFAULT_IMAG,
+                                    DataSet.Ensemble.DEFAULT_NAME_LENGTH,
+                                    DataSet.Ensemble.GoodEarthID,
+                                    beamDT);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // If there was a error parsing
+                // Return what could be parsed.
+                return ensemble;
             }
 
-            // Bottom track data
-            if (IsBottomTrackAvail)
-            {
-                dataset.AddBottomTrackData(DataSet.Ensemble.DATATYPE_FLOAT,
-                            numBins,
-                            numBeams,
-                            DataSet.Ensemble.DEFAULT_IMAG,
-                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                            DataSet.Ensemble.BottomTrackID,
-                            ensembleDataRow);
-            }
-
-            // NMEA data
-            if (IsNmeaAvail)
-            {
-                dataset.AddNmeaData(ensembleDataRow[DbCommon.COL_ENS_NMEA_DATA].ToString());
-            }
-
-
-            // Add all the Beam data at once
-            if (IsAmplitudeAvail && IsBeamVelocityAvail && IsEarthVelocityAvail && IsInstrVelocityAvail && IsCorrelationAvail && IsGoodBeamAvail && IsGoodEarthAvail)
-            {
-                // Add all the beam data in one loop
-                AddBeamData(beamDT, dataset, numBins, numBeams);
-            }
-            else
-            {
-                // Amplitude data
-                if (IsAmplitudeAvail)
-                {
-                    dataset.AddAmplitudeData(DataSet.Ensemble.DATATYPE_FLOAT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.AmplitudeID,
-                                beamDT);
-                }
-
-                // Beam Velocity data
-                if (IsBeamVelocityAvail)
-                {
-                    dataset.AddBeamVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.VelocityID,
-                                beamDT);
-                }
-
-                // Instrument Velocity data
-                if (IsInstrVelocityAvail)
-                {
-                    dataset.AddInstrVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.InstrumentID,
-                                beamDT);
-                }
-
-                // Earth Velocity data
-                if (IsEarthVelocityAvail)
-                {
-                    dataset.AddEarthVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.EarthID,
-                                beamDT);
-                }
-
-                // Correlation data
-                if (IsCorrelationAvail)
-                {
-                    dataset.AddCorrelationData(DataSet.Ensemble.DATATYPE_FLOAT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.CorrelationID,
-                                beamDT);
-                }
-
-                // Good Beam data
-                if (IsGoodBeamAvail)
-                {
-                    dataset.AddGoodBeamData(DataSet.Ensemble.DATATYPE_INT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.GoodBeamID,
-                                beamDT);
-                }
-
-                // Good Earth data
-                if (IsGoodEarthAvail)
-                {
-                    dataset.AddGoodEarthData(DataSet.Ensemble.DATATYPE_INT,
-                                numBins,
-                                numBeams,
-                                DataSet.Ensemble.DEFAULT_IMAG,
-                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,
-                                DataSet.Ensemble.GoodEarthID,
-                                beamDT);
-                }
-            }
-
-            return dataset;
+            return ensemble;
         }
 
         /// <summary>

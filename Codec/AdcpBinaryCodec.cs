@@ -141,7 +141,7 @@ namespace RTI
             _incomingDataBuffer = new List<Byte>();
 
             // Initialize the ensemble size to at least the HDRLEN
-            _currentEnsembleSize = DataSet.Ensemble.DATASET_HEADER_LEN;
+            _currentEnsembleSize = DataSet.Ensemble.ENSEMBLE_HEADER_LEN;
 
             // Initialize the thread
             _continue = true;
@@ -286,7 +286,7 @@ namespace RTI
             SearchForHeaderStart();
 
             // Verify the incoming data can at least fit the header
-            if (_incomingDataBuffer.Count > DataSet.Ensemble.DATASET_HEADER_LEN)
+            if (_incomingDataBuffer.Count > DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
             {
                 // If found 16 bytes of 0x80
                 // Continue forward
@@ -360,7 +360,7 @@ namespace RTI
         {
             // Keep track where in the packet
             // we are currently decoding
-            int packetPointer = DataSet.Ensemble.DATASET_HEADER_LEN;
+            int packetPointer = DataSet.Ensemble.ENSEMBLE_HEADER_LEN;
             int type = 0;
             int numElements = 0;
             int elementMultiplier = 0;
@@ -640,7 +640,7 @@ namespace RTI
             lock (_bufferLock)
             {
                 // Verify 16 bytes of 0x80
-                for (int x = 0; x < DataSet.Ensemble.MAX_HEADER_COUNT; x++)
+                for (int x = 0; x < DataSet.Ensemble.HEADER_START_COUNT; x++)
                 {
                     if (_incomingDataBuffer[x] == 0x80)
                     {
@@ -649,7 +649,7 @@ namespace RTI
                 }
             }
 
-            if (countHdrStart == DataSet.Ensemble.MAX_HEADER_COUNT)
+            if (countHdrStart == DataSet.Ensemble.HEADER_START_COUNT)
             {
                 return true;
             }
@@ -673,7 +673,7 @@ namespace RTI
             long NotEnsNum = 1;
             int payloadSize = 0;
             long NotEnsSiz = 1;
-            int i = DataSet.Ensemble.MAX_HEADER_COUNT;
+            int i = DataSet.Ensemble.HEADER_START_COUNT;
 
             lock (_bufferLock)
             {

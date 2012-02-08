@@ -1,0 +1,16 @@
+﻿Update GitHub
+-----------------------
+Use Git Bash
+ - git commit
+ - git push origin master (it will ask for password)
+ - git tag -a vX.X -m 'Version X.XX'  (replace X with the version number)
+ - git push --tags
+
+
+
+Create a Git Repository
+------------------------
+git remote add origin git@github.com:rowetechinc/RTI.git
+ - this will create a repository on github.  
+ - origin is the local repository.  
+ - RTI.git is the repository git file for the remote repository.

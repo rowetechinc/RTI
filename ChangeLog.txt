@@ -1,0 +1,77 @@
+RTI Changelog
+
+RTI-2.01
+ - Changed the version number.
+ - Added Break command to the serial port.
+ - Added Start and Stop ping command to the ADCP serial port.
+ - Added Compass and Compass calibration commands to the ADCP serial port.
+ - Added Save Configuration to the ADCP serial port.
+ - Removed "Time of First Ping" from the AdcpCommands::GetCommandList().
+ - Added GetDeploymentCommandList() to AdcpCommands to send deployment commands.
+ - Changed default command values to match Adcp User Guide Rev F and CDEFAULT in firmware v0.2.04.
+
+RTI-2.00
+ - Changed version number
+ - Added additional baudrate options.
+ - Fix bug in Setting View by improving the performance of limiting the size of a serial port ReceiveBufferString.
+ - Set defaults for AdcpCommands and AdcpSubsystemCommands.
+ - Changed to a while loop in the process thread in AdcpBinaryCodec to parse the data.
+
+RTI-1.14
+ - Changed version number.
+ - Added dependencies to the README.txt file.
+ - Removed "private set" to all the properties in the datasets.
+ - Added Encode() to create byte array of the ensemble.
+ - Changed name of MAX_HEADER_COUNT to HEADER_START_COUNT in Ensemble.
+ - Changed name of DATASET_HEADER_LEN to ENSEMBLE_HEADER_LEN in Ensemble.
+ - Added EnsembleNumber property to Ensemble.
+ - Added Rev E changes to EnsembleDataSet (Firmware size).
+ - Changed BottomTrackData.Beams to NumBeams.
+ - Fix bug in BaseDataSet::GenerateHeader() where ValueType was hard coded to Byte.
+ - Fix bug in BaseDataSet::GetDataSetSize() where Float case statement used wrong variable.
+ - Created Subsystem, SerialNumber and Firmware objects.
+ - Write and read subsystem and firmware version to databases.
+ - Removed Rounded properties in Ancillary to methods to reduce memory footprint.
+ - Fixed bug in Subsystem converting a string to hex byte.
+ - Put try/catch in AdcpDatabaseCodec::ParseDataTables() if error parsing.
+ - Used variables to create query strings.
+ - Fixed bug with SysSerialNumber being written to the database.
+ - Store the Subsystem in the database as a byte.
+ - Added Serial number to the project properties.
+ - Changed the list in SerialNumber to a dictioanry to keep track of index of subsystem.
+ - Changed subsystem in firmware to subsystem index.
+ - Added a method EnsembleDataSet::GetSubSystem() to get the subsystem for the ensemble.
+ - SerialNumber changed the size of the spare and subsystem.
+ - Added AdcpSubsystemCommands to handle commands based off each subsystem.
+
+RTI-1.13
+ - Changed version number.
+ - Added README.txt.
+ - Changed License to FreeBSD to all files.
+ - Removed Cache, LruCache and MagDir.
+
+RTI-1.12
+ - Changed version number.
+ - Fixed bug in NmeaDataSet where a negative ChecksumLoc could be used as index to remove bad NMEA strings.
+ - Removed Pulse Database stuff from DbCommon.
+ - Added indexes to Project database.
+ - Merged Ensemble table and Bottom Track table in database.
+ - Use GPS speed if Bottom Track speed not good to remove ship speed.
+
+RTI-1.11
+ - Changed version number
+ - Added version number for RTI and a version number for Pulse.
+ - Remove ErrorLog added log4net.dll.
+ - Check if a project is selected before trying to buffer incoming data in AdcpBinaryWriter.
+ - Added Commons for RTI to set version number.
+ - Added events to DVL Codec.
+ - Broke unit test for DVL codec when changing to events.  RecorderManager's constructor is not being called to create event.
+ - Changed name of AdcpDataSet to Ensemble.
+ - Added creating the project database file in the Project constructor.
+ - Fixed DVL Codec test using DVL Codec events.
+ - In DVL Codec, added _prevBuffer to prevent StackOverflowException.
+ - Create the project directory in the Project constructor.  ID is gotten later when passed as reference.
+ - Added method in BottomTrackDataSet to determine if Earth Velocity is good.
+ - Added method in Project for project image path.
+ - Added MathHelper class.
+ - Added Documentation project that creates a SandCastle help file.

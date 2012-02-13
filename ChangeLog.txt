@@ -1,6 +1,6 @@
 RTI Changelog
 
-RTI-2.01
+RTI-2.02
  - Changed the version number.
  - Added Break command to the serial port.
  - Added Start and Stop ping command to the ADCP serial port.

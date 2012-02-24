@@ -1,4 +1,4 @@
-﻿Update GitHub
+Update GitHub
 -----------------------
 Use Git Bash
  - Change directory to TRUNK/RTI

@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RTI</RootNamespace>
+    <AssemblyName>RTI</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\RTI.XML</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Minimal Build|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Minimal Build\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=1.2.11.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.1.2.11\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+      <HintPath>..\packages\SQLite.1.0.79.0\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Codec\AdcpBinaryCodec.cs" />
+    <Compile Include="Codec\AdcpDatabaseCodec.cs" />
+    <Compile Include="Codec\AdcpDvlCodec.cs" />
+    <Compile Include="Codec\ICodec.cs" />
+    <Compile Include="Codec\PniPrimeCompassBinaryCodec.cs" />
+    <Compile Include="Commons\Commons.cs" />
+    <Compile Include="Commons\DbCommon.cs" />
+    <Compile Include="Communications\AdcpSerialPort.cs" />
+    <Compile Include="Communications\GpsSerialPort.cs" />
+    <Compile Include="Communications\SerialConnection.cs" />
+    <Compile Include="Communications\SerialOptions.cs" />
+    <Content Include="GitHubUpdate.txt" />
+    <Compile Include="Models\AdcpCommands.cs" />
+    <Compile Include="Models\AdcpSubsystemCommands.cs" />
+    <Compile Include="Models\DataSet\Ensemble.cs" />
+    <Compile Include="Models\DataSet\AmplitudeDataSet.cs" />
+    <Compile Include="Models\DataSet\AncillaryDataSet.cs" />
+    <Compile Include="Models\DataSet\BaseDataSet.cs" />
+    <Compile Include="Models\DataSet\BeamVelocityDataSet.cs" />
+    <Compile Include="Models\DataSet\BottomTrackDataSet.cs" />
+    <Compile Include="Models\DataSet\CorrelationDataSet.cs" />
+    <Compile Include="Models\DataSet\EarthVelocityDataSet.cs" />
+    <Compile Include="Models\DataSet\EarthWaterMassDataSet.cs" />
+    <Compile Include="Models\DataSet\EnsembleDataSet.cs" />
+    <Compile Include="Models\Firmware.cs" />
+    <Compile Include="Models\DataSet\GoodBeamDataSet.cs" />
+    <Compile Include="Models\DataSet\GoodEarthDataSet.cs" />
+    <Compile Include="Models\DataSet\InstrumentWaterMassDataSet.cs" />
+    <Compile Include="Models\DataSet\InstrVelocityDataSet.cs" />
+    <Compile Include="Models\DataSet\NmeaDataSet.cs" />
+    <Compile Include="Models\SerialNumber.cs" />
+    <Compile Include="Models\Status.cs" />
+    <Compile Include="Models\Subsystem.cs" />
+    <Compile Include="Models\UniqueID.cs" />
+    <Compile Include="Models\VelocityVector.cs" />
+    <Compile Include="Models\DVL\Interfaces.cs" />
+    <Compile Include="Models\DVL\Prti01Sentence.cs" />
+    <Compile Include="Models\DVL\Prti02Sentence.cs" />
+    <Compile Include="Models\Project.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Screen\ReferenceLayerAverage.cs" />
+    <Compile Include="Screen\RemoveShipSpeed.cs" />
+    <Compile Include="Screen\ScreenBottomTrackRange.cs" />
+    <Compile Include="Utils\Converters.cs" />
+    <Compile Include="Utils\MathHelper.cs" />
+    <Compile Include="Utils\Validator.cs" />
+    <Compile Include="Writer\AdcpBinaryWriter.cs" />
+    <Compile Include="Writer\AdcpDatabaseWriter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DotSpatial\DotSpatial.csproj">
+      <Project>{514FAA1F-D18F-44EC-863F-7FF7AB363053}</Project>
+      <Name>DotSpatial</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ChangeLog.txt" />
+    <Content Include="License.txt" />
+    <Content Include="README.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

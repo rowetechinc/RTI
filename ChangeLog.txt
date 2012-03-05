@@ -1,5 +1,16 @@
 RTI Changelog
 
+RTI-2.04
+ - Changed the version number.
+ - Added try/catch in ReferenceLayerAverage::AverageEnsembles() to prevent exception when jumping around in ensembles.
+ - In ReferenceLayerAverage, update FirstPingTime with first ensemble in average when averaging.
+ - Return 0 in AdcpDatabaseCodec::GetNumberOfEnsembles() if no project is given.
+ - In EnsembleDataSet, set the Status for the constructor that take PRTI01 or PRTI02 sentences.
+ - Set any empty serial number string to all 0's (32 digits).
+ - Created a special serial number for DVL ensembles.
+ - Added a try/catch block in AdcpSerialPort::ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
+ - Added a try/catch block in GpsSerialPort::ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
+
 RTI-2.03
  - Changed the version number.
  - Create the method clone in Ensemble.cs to make a deep copy of the ensemble.

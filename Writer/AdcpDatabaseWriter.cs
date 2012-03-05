@@ -297,7 +297,7 @@ namespace RTI
                 // Everything keys off the ensemble number
                 if (dataset.IsEnsembleAvail)
                 {
-                    int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Ensemble data !!!THIS MUST BE WRITTEN FIRST FOR FOREIGN KEY
+                   int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Ensemble data !!!THIS MUST BE WRITTEN FIRST FOR FOREIGN KEY
 
                     // Check if Beam velocity data is available
                     if (dataset.IsBeamVelocityAvail)

@@ -38,12 +38,14 @@
  *                                         Record incoming data to RecorderManager.
  * 12/13/2011      RC          1.09       Added IsEnabled property.
  * 12/29/2011      RC          1.11       Added event for GPS serial data.
+ * 02/29/2012      RC          2.04       Added a try/catch block in ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
  *       
  * 
  */
 
 
 using System.Diagnostics;
+using System;
 
 namespace RTI
 {
@@ -81,16 +83,24 @@ namespace RTI
         {
             if (rcvData.Length > 0 && IsEnabled)
             {
-                string nmeaStrings = System.Text.ASCIIEncoding.ASCII.GetString(rcvData);
-
-                // Add data to the display
-                SetReceiveBuffer(nmeaStrings);
-
-                // Send data to RecorderManager to add to dataset
-                //_recorderMgr.ParseNmeaData(nmeaStrings);
-                if (this.ReceiveGpsSerialDataEvent != null)
+                try
                 {
-                    this.ReceiveGpsSerialDataEvent(nmeaStrings);
+
+                    string nmeaStrings = System.Text.ASCIIEncoding.ASCII.GetString(rcvData);
+
+                    // Add data to the display
+                    SetReceiveBuffer(nmeaStrings);
+
+                    // Send data to RecorderManager to add to dataset
+                    //_recorderMgr.ParseNmeaData(nmeaStrings);
+                    if (this.ReceiveGpsSerialDataEvent != null)
+                    {
+                        this.ReceiveGpsSerialDataEvent(nmeaStrings);
+                    }
+                }
+                catch(Exception)
+                {
+                    // Do nothing
                 }
             }
         }

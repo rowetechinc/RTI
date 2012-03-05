@@ -51,6 +51,8 @@
  *                                         Added a method to get the subsystem for this ensemble.
  * 02/16/2012      RC          2.03       Added UpdateAverageEnsemble() to update averaged ensembles.
  * 02/23/2012      RC          2.03       Changed Status to status object.
+ * 02/29/2012      RC          2.04       Set the Status for the constructor that take PRTI01 or PRTI02 sentences.
+ *                                         Created a special serial number for the DVL constructors.
  *       
  * 
  */
@@ -68,6 +70,8 @@ namespace RTI
         /// </summary>
         public class EnsembleDataSet : BaseDataSet
         {
+            #region Variables
+
             /// <summary>
             /// NUmber of elements as of User Guide Rev C.
             /// </summary>
@@ -103,6 +107,10 @@ namespace RTI
             /// Status value for Hardware timeout.
             /// </summary>
             public const int HDWR_TIMEOUT = 0x8000;
+
+            #endregion
+
+            #region Properties
 
             /// <summary>
             /// A unique ID for the dataset.
@@ -213,6 +221,9 @@ namespace RTI
                     return EnsDateTime.ToLongTimeString();
                 }
             }
+
+            #endregion
+
             /// <summary>
             /// Create a Ensemble data set.  Includes all the information
             /// about the current Ensemble.
@@ -276,9 +287,14 @@ namespace RTI
                 // Use default value for beams
                 NumBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM;
 
-                // Create blank serial number and firmware
-                SysSerialNumber = new SerialNumber();
+                // Use the special serial number for a DVL
+                SysSerialNumber = SerialNumber.DVL;
+
+                // Create blank firmware
                 SysFirmware = new Firmware();
+
+                // Get the status from the sentence
+                Status = sentence.SystemStatus;
 
                 // No bin data
                 NumBins = 0;
@@ -307,9 +323,14 @@ namespace RTI
                 // Use default value for beams
                 NumBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM;
 
-                // Create blank serial number and firmware
-                SysSerialNumber = new SerialNumber();
+                // Use the special serial number for a DVL
+                SysSerialNumber = SerialNumber.DVL;
+
+                // Create blank firmware
                 SysFirmware = new Firmware();
+
+                // Get the status from the sentence
+                Status = sentence.SystemStatus;
 
                 // No bin data
                 NumBins = 0;

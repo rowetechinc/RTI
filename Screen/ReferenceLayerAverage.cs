@@ -36,6 +36,8 @@
  * 02/16/2012      RC          2.03       Added Min and Max layer.
  *                                         Added Event for averaged ensemble.
  *                                         Average the data using running or every X samples.
+ * 02/29/2012      RC          2.04       Added try/catch in AverageEnsembles() to prevent exception when jumping around in ensembles.
+ *                                         Update FirstPingTime with first ensemble in average when averaging.
  * 
  */
 
@@ -43,6 +45,7 @@
 using System.Collections.Generic;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 namespace RTI
 {
 
@@ -443,30 +446,42 @@ namespace RTI
             /// </summary>
             private void AverageEnsembles()
             {
-                // Get the current last node
-                // This will take the ensembles between the first and
-                // last node in the list.  The last node is determine now 
-                // at the start of this method, so if more ensembles are
-                // added to the list, it will not cause issues.
-                LinkedListNode<DataSet.Ensemble> lastEnsembleNode = _accumEns.Last;
-                LinkedListNode<float[]> lastRefLayerNode = _accumRefLayerAvg.Last;
+                try
+                {
+                    // Get the current last node
+                    // This will take the ensembles between the first and
+                    // last node in the list.  The last node is determine now 
+                    // at the start of this method, so if more ensembles are
+                    // added to the list, it will not cause issues.
+                    LinkedListNode<DataSet.Ensemble> lastEnsembleNode = _accumEns.Last;
+                    LinkedListNode<float[]> lastRefLayerNode = _accumRefLayerAvg.Last;
 
-                // Clone the last ensemble, this will get us the lastest settings
-                // We will then set the time and date to the ensemble for the time
-                // the data was averaged.  Set the number of ensembles averaged.
-                DataSet.Ensemble avgEnsemble = CreateAverageEnsemble(lastEnsembleNode.Value);
+                    // Clone the last ensemble, this will get us the lastest settings
+                    // We will then set the time and date to the ensemble for the time
+                    // the data was averaged.  Set the number of ensembles averaged.
+                    DataSet.Ensemble avgEnsemble = CreateAverageEnsemble(lastEnsembleNode.Value);
 
-                // Average the ensembles in the accumulator
-                AverageEnsemblesAccum(ref avgEnsemble, lastEnsembleNode);
+                    // Average the ensembles in the accumulator
+                    AverageEnsemblesAccum(ref avgEnsemble, lastEnsembleNode);
 
-                // Average the reference layers velocities in the accumulator
-                float[] avgRefLayer = AverageRefLayerAccum(lastRefLayerNode);
+                    // Average the reference layers velocities in the accumulator
+                    float[] avgRefLayer = AverageRefLayerAccum(lastRefLayerNode);
 
-                // Add in the reference layer average
-                AddRefLayerAvgToEnsemble(ref avgEnsemble, avgRefLayer);
+                    // Add in the reference layer average
+                    AddRefLayerAvgToEnsemble(ref avgEnsemble, avgRefLayer);
 
-                // Publish the average ensemble to all subscribers
-                PublishAveragedEnsemble(avgEnsemble);
+                    // Publish the average ensemble to all subscribers
+                    PublishAveragedEnsemble(avgEnsemble);
+                }
+                catch (NullReferenceException)
+                {
+                    // This exception occurs when clearing the list while averaging
+                    // or make a large jump in ensembles while averaging
+                }
+                catch (Exception)
+                {
+
+                }
             }
 
             /// <summary>
@@ -601,7 +616,7 @@ namespace RTI
                 {
                     // Bad node
                     // List changed and the node are no longer valid
-                    // Caused when clearing the list when setting change
+                    // Caused when clearing the list or large jumps
                     if (nodeEns != null)
                     {
                         break;
@@ -692,6 +707,9 @@ namespace RTI
                 
                 // Update the ensemble with the number of samples
                 avgEnsemble.EnsembleData.UpdateAverageEnsemble(_numSamples);
+
+                // Update the first ping time with the first ensemble in the accumulators first ping time
+                avgEnsemble.AncillaryData.FirstPingTime = _accumEns.First.Value.AncillaryData.FirstPingTime;
 
                 return avgEnsemble;
             }

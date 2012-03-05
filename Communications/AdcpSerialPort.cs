@@ -36,12 +36,14 @@
  * 10/04/2011      RC                     Removed Codec and put in RecorderManager.
  * 12/29/2011      RC          1.11       Added event for ADCP serial data.
  * 02/10/2012      RC          2.02       Added common commands to the ADCP.
+ * 02/29/2012      RC          2.04       Added a try/catch block in ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
  *       
  * 
  */
 
 using System.IO;
 using System.Threading;
+using System;
 
 namespace RTI
 {
@@ -111,24 +113,31 @@ namespace RTI
         {
             if (rcvData.Length > 0)
             {
-                // Add data to the display
-                SetReceiveBuffer(System.Text.ASCIIEncoding.ASCII.GetString(rcvData));
-
-                if (Mode == AdcpSerialModes.ADCP)
+                try
                 {
-                    // Parse the ADCP data
-                    if (this.ReceiveAdcpSerialDataEvent != null)
+                    // Add data to the display
+                    SetReceiveBuffer(System.Text.ASCIIEncoding.ASCII.GetString(rcvData));
+
+                    if (Mode == AdcpSerialModes.ADCP)
                     {
-                        this.ReceiveAdcpSerialDataEvent(rcvData);
+                        // Parse the ADCP data
+                        if (this.ReceiveAdcpSerialDataEvent != null)
+                        {
+                            this.ReceiveAdcpSerialDataEvent(rcvData);
+                        }
+                    }
+                    else if (Mode == AdcpSerialModes.COMPASS)
+                    {
+                        // Parse the Compass data
+                        if (this.ReceiveCompassSerialDataEvent != null)
+                        {
+                            this.ReceiveCompassSerialDataEvent(rcvData);
+                        }
                     }
                 }
-                else if (Mode == AdcpSerialModes.COMPASS)
+                catch (Exception)
                 {
-                    // Parse the Compass data
-                    if (this.ReceiveCompassSerialDataEvent != null)
-                    {
-                        this.ReceiveCompassSerialDataEvent(rcvData);
-                    }
+                    // Do nothing on exception
                 }
             }
         }

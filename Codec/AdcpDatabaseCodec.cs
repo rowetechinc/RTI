@@ -47,6 +47,7 @@
  *                                         Use Ensemble's row id instead of number for foreign key for tblBottomTrack and tblBeam.
  * 01/13/2012      RC          1.12       Merged Ensemble table and Bottom Track table in database.
  * 01/24/2012      RC          1.14       Put try/catch in ParseDataTables() if error parsing.
+ * 02/29/2012      RC          2.04       Return 0 in GetNumberOfEnsembles() if no project is given.
  * 
  */
 
@@ -97,7 +98,7 @@ namespace RTI
             }
             else
             {
-                return -1;
+                return 0;
             }
         }
 

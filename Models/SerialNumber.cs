@@ -39,6 +39,8 @@
  * 01/31/2012      RC          1.14       Changed Subystem size and spares size.
  * 02/07/2012      RC          2.00       Added method SubsystemsString().
  * 02/14/2012      RC          2.03       Check if serial numbers are equal and hashcode.
+ * 02/29/2012      RC          2.04       Set any empty serial number string to all 0's (32 digits).
+ *                                         Made a special serial number for a DVL message.
  *
  */
 
@@ -54,6 +56,16 @@ namespace RTI
     public class SerialNumber
     {
         #region Variables
+
+        /// <summary>
+        /// String for an empty serial number.
+        /// </summary>
+        public const string EMPTY_SERIAL_NUM_STRING = "00000000000000000000000000000000";
+
+        /// <summary>
+        /// Serial number for an empty serial number.
+        /// </summary>
+        public const int EMPTY_SERIAL_NUM = 0;
 
         #region Sizes
 
@@ -157,12 +169,19 @@ namespace RTI
         public static readonly SerialNumber Empty = new SerialNumber();
 
         /// <summary>
+        /// Create a special serial number for a DVL message.
+        /// The subsystem will use the spare H.  The serial number
+        /// will be 999999.
+        /// </summary>
+        public static readonly SerialNumber DVL = new SerialNumber("01H00000000000000000000000999999");
+
+        /// <summary>
         /// This constructor creates a blank serial number with nothing set.
         /// </summary>
         public SerialNumber()
         {
-            _serialNumberString = "";
-            SystemSerialNumber = 0;
+            _serialNumberString = EMPTY_SERIAL_NUM_STRING;
+            SystemSerialNumber = EMPTY_SERIAL_NUM;
             Spare = "";
             BaseHardware = "";
             SubSystems = "";
@@ -199,8 +218,8 @@ namespace RTI
             }
             else
             {
-                _serialNumberString = "";
-                SystemSerialNumber = 0;
+                _serialNumberString = EMPTY_SERIAL_NUM_STRING;
+                SystemSerialNumber = EMPTY_SERIAL_NUM;
                 Spare = "";
                 BaseHardware = "";
                 SubSystems = "";

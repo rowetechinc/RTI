@@ -35,3 +35,7 @@ git config --global github.token "75046587e3304265be9e90af4479f270"  (GitHub acc
 git pull origin master
 FIX ANY MERGE issues
 Update Github (above)
+
+TroubleShooting
+------------------------
+Look at the file .git/config

@@ -51,6 +51,7 @@
  *                                         Changed Beams to NumBeams.
  *                                         Removed "private set".
  * 02/23/2012      RC          2.03       Changed Status to a Status object.
+ * 03/06/2012      RC          2.05       Modified GetAverageRange() to check for bad values.
  * 
  */
 
@@ -818,18 +819,25 @@ namespace RTI
             /// This will calculate the average range value.
             /// If a value is bad, it will not include the value.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>Average range to the bottom.</returns>
             public double GetAverageRange()
             {
                 int count = 0;
                 double result = 0;
                 for (int beam = 0; beam < ElementsMultiplier; beam++)
                 {
-                    if (Range[beam] > 0)
+                    if (Range[beam] > DataSet.Ensemble.BAD_RANGE)
                     {
                         result += Range[beam];
                         count++;
                     }
+                }
+
+                // If all values are bad
+                // Return a bad range
+                if (count == 0)
+                {
+                    return DataSet.Ensemble.BAD_RANGE;
                 }
 
                 return result / count;

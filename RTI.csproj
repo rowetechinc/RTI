@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -101,6 +101,8 @@
     <Compile Include="Screen\ReferenceLayerAverage.cs" />
     <Compile Include="Screen\RemoveShipSpeed.cs" />
     <Compile Include="Screen\ScreenBottomTrackRange.cs" />
+    <Compile Include="Screen\ScreenMarkBadBelowBottom.cs" />
+    <Compile Include="Screen\ScreenVelocity.cs" />
     <Compile Include="Utils\Converters.cs" />
     <Compile Include="Utils\MathHelper.cs" />
     <Compile Include="Utils\Validator.cs" />

@@ -77,6 +77,7 @@ namespace RTI
 
             /// <summary>
             /// Range of the first Bin from the transducer in meters.
+            /// (Blank)
             /// </summary>
             public float FirstBinRange { get; set; }
 

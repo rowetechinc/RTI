@@ -38,6 +38,7 @@
  *                                         Average the data using running or every X samples.
  * 02/29/2012      RC          2.04       Added try/catch in AverageEnsembles() to prevent exception when jumping around in ensembles.
  *                                         Update FirstPingTime with first ensemble in average when averaging.
+ * 03/06/2012      RC          2.05       Fixed bug in AverageEnsemblesAccum() where i check for a bad node.
  * 
  */
 
@@ -617,7 +618,7 @@ namespace RTI
                     // Bad node
                     // List changed and the node are no longer valid
                     // Caused when clearing the list or large jumps
-                    if (nodeEns != null)
+                    if (nodeEns == null)
                     {
                         break;
                     }
@@ -654,7 +655,7 @@ namespace RTI
                     // Move to the next ensemble in the list
                     nodeEns = nodeEns.Next;
 
-                } while (nodeEns != lastEnsembleNode);
+                } while (nodeEns != lastEnsembleNode.Next);
                 
 
                 // Average the values

@@ -41,6 +41,7 @@
  * 02/14/2012      RC          2.03       Added file extensions.
  * 02/22/2012      RC          2.03       Added an enum for the different transform types.
  * 02/24/2012      RC          2.04       Changed version number.
+ * 03/05/2012      RC          2.05       Changed version number.
  * 
  * 
  */
@@ -67,7 +68,7 @@ namespace RTI
             /// <summary>
             /// Application Minor version number.
             /// </summary>
-            public const int RTI_VERSION_MINOR = 04;
+            public const int RTI_VERSION_MINOR = 05;
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any

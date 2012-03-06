@@ -1,5 +1,12 @@
 RTI Changelog
 
+RTI-2.05
+ - Changed the version number.
+ - Created ScreenVelocity.cs to screen the velocity data of bad velocity and against a threshold for the error value.
+ - Fixed bug in ReferenceLayerAverage::AverageEnsemblesAccum() where i check for a bad node.
+ - Fixed BottomTrackDataSet::GetAverageRange() to look for bad averages.
+ - Added the Screening Mark Bad Below Bottom.
+
 RTI-2.04
  - Changed the version number.
  - Added try/catch in ReferenceLayerAverage::AverageEnsembles() to prevent exception when jumping around in ensembles.

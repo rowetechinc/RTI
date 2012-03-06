@@ -131,20 +131,22 @@ namespace RTI
                             ensemble.EarthVelocityData.VV[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
                             ensemble.EarthVelocityData.VV[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
                             ensemble.EarthVelocityData.VV[bin].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
-                            break;
                         }
+                        else
+                        {
 
-                        // Calculate the magnitude of the velocity
-                        //double mag = MathHelper.CalculateMagnitude(ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
-                        //                                           ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
-                        //                                           ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]);
-                        double mag = MathHelper.CalculateMagnitude(ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
-                                                                    ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
-                                                                    0);      // do not use Vertical
+                            // Calculate the magnitude of the velocity
+                            //double mag = MathHelper.CalculateMagnitude(ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
+                            //                                           ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
+                            //                                           ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]);
+                            double mag = MathHelper.CalculateMagnitude(ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
+                                                                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
+                                                                        0);      // do not use Vertical
 
-                        ensemble.EarthVelocityData.VV[bin].Magnitude = mag;
-                        ensemble.EarthVelocityData.VV[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
-                        ensemble.EarthVelocityData.VV[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
+                            ensemble.EarthVelocityData.VV[bin].Magnitude = mag;
+                            ensemble.EarthVelocityData.VV[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
+                            ensemble.EarthVelocityData.VV[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
+                        }
                     }
 
                     // VelocityVector array created

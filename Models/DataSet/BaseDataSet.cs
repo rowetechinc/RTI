@@ -93,7 +93,7 @@ namespace RTI
             /// Number of DATA in this data type.
             /// 
             /// DO NOT USE THIS TO GET THE NUMBER OF
-            /// BINS IN THE DATASET (ENSEMBLE).  USE
+            /// BINS IN THE ENSEMBLE.  USE
             /// EnsembleData.Bins.  THIS NUMBER IS THE
             /// NUMBER OF DATA VALUES IN THE DATATYPE.
             /// </summary>

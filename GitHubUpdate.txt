@@ -2,6 +2,7 @@ Update GitHub
 -----------------------
 Use Git Bash
  - Change directory to TRUNK/RTI
+ - git add .
  - git commit
  - git push origin master (it will ask for password)
  - git tag -a vX.X -m 'Version X.XX'  (replace X with the version number)

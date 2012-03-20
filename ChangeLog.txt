@@ -1,5 +1,10 @@
 RTI Changelog
 
+RTI-2.06
+ - Changed the version number.
+ - Updated GIT instructions.
+ - Set the magnitude to absolute value in VelocityVector.  No negatives.
+
 RTI-2.05
  - Changed the version number.
  - Created ScreenVelocity.cs to screen the velocity data of bad velocity and against a threshold for the error value.

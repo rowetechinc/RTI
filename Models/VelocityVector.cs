@@ -34,11 +34,13 @@
  * -----------------------------------------------------------------
  * 12/28/2011      RC          1.10       Initial coding.
  * 02/24/2012      RC          2.03       Create VelocityVectorHelper with a method to create velocity vectors here.
+ * 03/16/2012      RC          2.06       Set the magnitude to absolute value.  No negatives.
  *       
  * 
  */
 
 
+using System;
 namespace RTI
 {
     namespace DataSet
@@ -143,7 +145,7 @@ namespace RTI
                                                                         ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
                                                                         0);      // do not use Vertical
 
-                            ensemble.EarthVelocityData.VV[bin].Magnitude = mag;
+                            ensemble.EarthVelocityData.VV[bin].Magnitude = Math.Abs(mag);
                             ensemble.EarthVelocityData.VV[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
                             ensemble.EarthVelocityData.VV[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
                         }

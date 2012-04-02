@@ -42,6 +42,7 @@
  *                                         Removed "private set".
  *                                         Rename Decode methods to Decode().
  * 01/23/2012      RC          1.14       Fixed Encode to convert to int to byte array.
+ * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  *       
  * 
  */
@@ -157,7 +158,7 @@ namespace RTI
                     for (int bin = 0; bin < NumElements; bin++)
                     {
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        GoodBeamData[bin, beam] = Converters.ByteArrayToInt(dataType, index);
+                        GoodBeamData[bin, beam] = MathHelper.ByteArrayToInt(dataType, index);
                     }
                 }
             }
@@ -210,7 +211,7 @@ namespace RTI
                     {
                         // Get the index for the next element and add to the array
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        System.Buffer.BlockCopy(Converters.IntToByteArray(GoodBeamData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
+                        System.Buffer.BlockCopy(MathHelper.IntToByteArray(GoodBeamData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
                     }
                 }
 

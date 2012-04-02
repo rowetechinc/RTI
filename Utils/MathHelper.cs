@@ -36,10 +36,13 @@
  * 01/16/2012      RC          1.14       Added Calculate Magnitude and direction.
  * 02/14/2012      RC          2.03       Fixed standard deviation equation.
  * 02/24/2012      RC          2.03       Added DegreeToRadian.
+ * 03/29/2012      RC          2.07       Added the methods from Converters.cs
  * 
  */
 
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 
 namespace RTI
@@ -51,6 +54,8 @@ namespace RTI
     {
         /// <summary>
         /// Calculate the population standard deviation for the 4 values given.
+        /// It is assumed that every value is used to calculate the standard deviation.
+        /// If we were only given a small sample of points, then the sample standard deviation should be used.
         /// </summary>
         /// <param name="v1">Value 1.</param>
         /// <param name="v2">Value 2.</param>
@@ -86,9 +91,15 @@ namespace RTI
             }
 
             // Calculate the average
+            // If nothing to average return 0
             if (count > 0)
             {
                 avg /= count;
+            }
+            else
+            {
+                avg = 0;
+                return 0;
             }
 
             double variance = 0;
@@ -110,11 +121,68 @@ namespace RTI
             }
 
             // Calculate the variance
-            variance /= 4;
+            variance /= count;
 
             // Return the standard deviation
             return Math.Sqrt(variance);
         }
+
+        /// <summary>
+        /// Calculate the population standard deviation for the list of values given.
+        /// It is assumed that every value is used to calculate the standard deviation.
+        /// If we were only given a small sample of points, then the sample standard deviation should be used.
+        /// </summary>
+        /// <param name="values">Values to calculate.</param>
+        /// <param name="BAD_VALUE">Bad value to omit.</param>
+        /// <param name="avg">Average of all the values in the list excluding the bad values.</param>
+        /// <returns>Population standard deviation of the values excluding the bad values.</returns>
+        public static double StandardDev(List<double> values, double BAD_VALUE, out double avg)
+        {
+            avg = 0;
+            int count = 0;
+            double variance = 0;
+
+            // Calculate average
+            foreach (double value in values)
+            {
+                // Omit any bad values
+                if (value != BAD_VALUE)
+                {
+                    avg += value;
+                    count++;
+                }
+            }
+
+            // Calculate the average
+            // If nothing to average return 0
+            if (count > 0)
+            {
+                avg /= count;
+            }
+            else
+            {
+                avg = 0;
+                return 0;
+            }
+
+            // Calculate variance
+            foreach (double value in values)
+            {
+                // Omit any bad values
+                if (value != BAD_VALUE)
+                {
+                    variance += Math.Pow(value - avg, 2);
+                }
+            }
+
+            
+            // Calculate the variance
+            variance /= count;
+
+            // Return the standard deviation
+            return Math.Sqrt(variance);
+        }
+
 
         /// <summary>
         /// Calculate the Magnitude given the North, East and Vertical velocity.
@@ -130,7 +198,7 @@ namespace RTI
 
         /// <summary>
         /// Calculate the Direction of the velocities given.
-        /// Value will be returned in degrees.
+        /// Value will be returned in degrees.  Give the Y axis as the first parameter.
         /// </summary>
         /// <param name="y">Y axis velocity value.</param>
         /// <param name="x">X axis velocity value.</param>
@@ -148,6 +216,476 @@ namespace RTI
         public static double DegreeToRadian(double angle)
         {
             return Math.PI * angle / 180.0;
+        }
+
+        /// <summary>
+        /// Struct to hold the bytes and the integer or float.
+        /// Conversion will be done by populating the values.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct TestUnion
+        {
+            [FieldOffset(0)]
+            public byte Byte1;
+            [FieldOffset(1)]
+            public byte Byte2;
+            [FieldOffset(2)]
+            public byte Byte3;
+            [FieldOffset(3)]
+            public byte Byte4;
+            [FieldOffset(0)]
+            public float Float;
+            [FieldOffset(0)]
+            public int Int;
+        }
+
+
+        /// <summary>
+        /// Convert the bytes to a 32 bit (4 bytes) float.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator) (Windows)
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">4 Byte of data for a float.</param>
+        /// <param name="index">Index in the array to start.</param>
+        /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
+        /// <returns>Float value from the byte array.</returns>
+        public static float ByteArrayToFloat(byte[] data, int index, bool isBigEndian = false)
+        {
+            // Ensure the data exist and there is enough data
+            if (data == null || index + 4 > data.Length)
+            {
+                return 0;
+            }
+
+            // Check if the system is Little Endian
+            // and the data was given as Big Endian
+            if (BitConverter.IsLittleEndian && isBigEndian)
+            {
+                // Then reverse the values to be in Little Endian
+                TestUnion result = new TestUnion();
+                result.Byte4 = data[index++];
+                result.Byte3 = data[index++];
+                result.Byte2 = data[index++];
+                result.Byte1 = data[index];
+
+                return result.Float;
+            }
+            // We are on a Little Endian System
+            // and the data is given as Little Endian
+            else
+            {
+                return BitConverter.ToSingle(data, index);
+            }
+        }
+
+        /// <summary>
+        /// Convert the bytes to a 32 bit (4 bytes) Unsigned integer.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">Data to convert.</param>
+        /// <param name="index">Location of the data.</param>
+        /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
+        /// <returns>Unsigned integer.</returns>
+        public static UInt32 ByteArrayToUInt32(byte[] data, int index, bool isBigEndian = false)
+        {
+            // Ensure the data exist and there is enough data
+            if (data == null || index + 4 > data.Length)
+            {
+                return 0;
+            }
+
+            // Check if the system is Little Endian
+            // and the data was given as Big Endian
+            if (BitConverter.IsLittleEndian && isBigEndian)
+            {
+                // Then reverse the values to be in Little Endian
+                return (UInt32)((data[index] << 24) | data[index + 1] << 16 | (data[index + 2] << 8) | data[index + 3]);
+            }
+            // We are on a Little Endian System
+            // and the data is given as Little Endian
+            else
+            {
+                return (UInt32)((data[index + 3] << 24) | data[index + 2] << 16 | (data[index + 1] << 8) | data[index]);
+            }
+        }
+
+        /// <summary>
+        /// Convert the bytes to a 32 bit (4 bytes) Unsigned integer.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">Data to convert.</param>
+        /// <param name="index">Location of the data.</param>
+        /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
+        /// <returns>Unsigned integer.</returns>
+        public static int ByteArrayToInt(byte[] data, int index, bool isBigEndian = false)
+        {
+            // Ensure the data exist and there is enough data
+            if (data == null || index + 4 > data.Length)
+            {
+                return 0;
+            }
+
+            // Check if the system is Little Endian
+            // and the data was given as Big Endian
+            if (BitConverter.IsLittleEndian && isBigEndian)
+            {
+                // Then reverse the values to be in Little Endian
+                return (int)((data[index] << 24) | data[index + 1] << 16 | (data[index + 2] << 8) | data[index + 3]);
+            }
+            // We are on a Little Endian System
+            // and the data is given as Little Endian
+            else
+            {
+                return (int)((data[index + 3] << 24) | data[index + 2] << 16 | (data[index + 1] << 8) | data[index]);
+            }
+        }
+
+        /// <summary>
+        /// Convert the bytes to a 16 bit (2 bytes) Unsigned integer.
+        /// Shift values to create value.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">Data received.</param>
+        /// <param name="index">Index in the array to start.</param>
+        /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
+        /// <returns>UInt16 from the index location.</returns>
+        public static UInt16 ByteArrayToUInt16(byte[] data, int index, bool isBigEndian = false)
+        {
+            // Ensure the data exist and there is enough data
+            if (data == null || index + 2 > data.Length)
+            {
+                return 0;
+            }
+
+            // Check if the system is Little Endian
+            // and the data was given as Big Endian
+            if (BitConverter.IsLittleEndian && isBigEndian)
+            {
+                // Then reverse the values to be in Little Endian
+                return (UInt16)((data[index] << 8) | data[index+1]);
+
+
+            }
+            // We are on a Little Endian System
+            // and the data is given as Little Endian
+            else
+            {
+                return (UInt16)((data[index+1] << 8) | data[index]);
+            }
+
+        }
+
+        /// <summary>
+        /// Convert the single byte given in the data at the given
+        /// index into a integer value.
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">Data received.</param>
+        /// <param name="index">Index in the array to start.</param>
+        /// <returns>UInt16 from the index location.</returns>
+        public static int ByteArrayToInt(byte[] data, int index)
+        {
+            // Ensure there is a byte to work with
+            // starting from the index
+            if (index > data.Length)
+            {
+                return 0;
+            }
+
+            return (int)data[index];
+        }
+
+        /// <summary>
+        /// Convert the single byte given in the data at the given
+        /// index into a boolean value.
+        /// 
+        /// Bad Index return False.
+        /// Anything greater than 0 return true;  0x01 - 0xFF
+        /// Only 0x00 is false.
+        /// </summary>
+        /// <param name="data">Data received.</param>
+        /// <param name="index">Index in the array to start.</param>
+        /// <returns>Boolean from the index location.</returns>
+        public static bool ByteArrayToBoolean(byte[] data, int index)
+        {
+            if (index > data.Length)
+            {
+                return false;
+            }
+
+            return BitConverter.ToBoolean(data, index);
+        }
+
+        /// <summary>
+        /// Convert the given float to a byte array.
+        /// The return value is a array containing the bytes.
+        /// The byte array will be returned in Little Endian
+        /// unless the inBigEndian is set to true.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// </summary>
+        /// <param name="value">Float value to convert.</param>
+        /// <param name="inBigEndian">Set to True if you want to results returned in Big Endian format.</param>
+        /// <returns>Byte array which contains the bytes of the conversion.</returns>
+        public static byte[] FloatToByteArray(float value, bool inBigEndian = false)
+        {
+            // Check for a bad value
+            if (float.IsNaN(value) || float.IsInfinity(value))
+            {
+                byte[] tmp = new byte[4];
+                tmp[0] = 0;
+                tmp[1] = 0;
+                tmp[2] = 0;
+                tmp[3] = 0;
+                return tmp;
+            }
+
+            TestUnion result = new TestUnion();
+            result.Float = value;
+
+            byte[] resultArray = new byte[4];
+            resultArray[0] = result.Byte1;
+            resultArray[1] = result.Byte2;
+            resultArray[2] = result.Byte3;
+            resultArray[3] = result.Byte4;
+
+            // Reverse the order if data needs to be in Big Endian
+            // and the system is in Little Endian
+            if (BitConverter.IsLittleEndian && inBigEndian)
+            {
+                Array.Reverse(resultArray);
+            }
+
+            return resultArray;
+        }
+
+        /// <summary>
+        /// Convert the given UInt32 to a byte array.
+        /// The return value is a array containing the bytes.
+        /// The byte array will be returned in Little Endian
+        /// unless the inBigEndian is set to true.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// </summary>
+        /// <param name="value">Float value to convert.</param>
+        /// <param name="inBigEndian">Set to True if you want to results returned in Big Endian format.</param>
+        /// <returns>Byte array which contains the bytes of the conversion.</returns>
+        public static byte[] UInt32ToByteArray(UInt32 value,  bool inBigEndian = false)
+        {
+            byte[] temp = BitConverter.GetBytes(value);
+
+            // If little endian and want in Big Endian, the bytes are in the
+            // wrong order and reverse
+            if (BitConverter.IsLittleEndian && inBigEndian)
+            {
+                Array.Reverse(temp);
+            }
+
+            return temp;
+        }
+
+        /// <summary>
+        /// Convert the given UInt16 to a byte array.
+        /// The return value is a array containing the bytes.
+        /// The byte array will be returned in Little Endian
+        /// unless the inBigEndian is set to true.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// </summary>
+        /// <param name="value">Float value to convert.</param>
+        /// <param name="inBigEndian">Set to True if you want to results returned in Big Endian format.</param>
+        /// <returns>Byte array which contains the bytes of the conversion.</returns>
+        public static byte[] UInt16ToByteArray(UInt16 value, bool inBigEndian = false)
+        {
+            byte[] temp = BitConverter.GetBytes(value);
+
+            // If little endian and want in Big Endian, the bytes are in the
+            // wrong order and reverse
+            if (BitConverter.IsLittleEndian && inBigEndian)
+            {
+                Array.Reverse(temp);
+            }
+
+            return temp;
+        }
+
+        /// <summary>
+        /// Convert the given Int to a byte array.
+        /// The return value is a array containing the bytes.
+        /// The byte array will be returned in Little Endian
+        /// unless the inBigEndian is set to true.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator)
+        /// 
+        /// </summary>
+        /// <param name="value">Float value to convert.</param>
+        /// <param name="inBigEndian">Set to True if you want to results returned in Big Endian format.</param>
+        /// <returns>Byte array which contains the bytes of the conversion.</returns>
+        public static byte[] IntToByteArray(int value, bool inBigEndian = false)
+        {
+            TestUnion result = new TestUnion();
+            result.Int = value;
+
+            byte[] resultArray = new byte[4];
+            resultArray[0] = result.Byte1;
+            resultArray[1] = result.Byte2;
+            resultArray[2] = result.Byte3;
+            resultArray[3] = result.Byte4;
+
+            // Reverse the order if data needs to be in Big Endian
+            // and the system is in Little Endian
+            if (BitConverter.IsLittleEndian && inBigEndian)
+            {
+                Array.Reverse(resultArray);
+            }
+
+            return resultArray;
+        }
+
+        /// <summary>
+        /// Convert an UInt8 to byte array.
+        /// Create an array with a single element.
+        /// If the value given is greater then a byte,
+        /// then 0 will be returned.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <returns>Converted to byte array.</returns>
+        public static byte[] UInt8ToByteArray(int value)
+        {
+            // Check if the value is valid
+            if (value < 0 || value > 255)
+            {
+                value = 0;
+            }
+
+            byte[] temp = new byte[1];
+            temp[0] = (byte)value;
+
+            return temp;
+        }
+
+        /// <summary>
+        /// Convert an Boolean to byte array.
+        /// The byte array must then be in Big Endian,
+        /// so the byte array may need to be reversed.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <returns>Converted to byte array.</returns>
+        public static byte[] BooleanToByteArray(bool value)
+        {
+            byte[] temp = new byte[1];
+
+            if (value)
+            {
+                temp[0] = 1;
+            }
+            else
+            {
+                temp[0] = 0;
+            }
+
+            return temp;
+        }
+
+        /// <summary>
+        /// Convert the given byte array to a string.
+        /// </summary>
+        /// <param name="packet">Ensemble containing data.</param>
+        /// <param name="index">Location of first byte in Ensemble to convert.</param>
+        /// <param name="len">Length of the string in bytes.</param>
+        /// <param name="inBigEndian">Is the packet given in Big Endian form.</param>
+        /// <returns>String value for the given byte array.</returns>
+        public static string ByteArrayToString(byte[] packet, int len, int index, bool inBigEndian = false)
+        {
+            // Get the data from the packet
+            byte[] value = SubArray<byte>(packet, index, len);
+
+            // Reverse the order if data needs to be in Big Endian
+            // and the system is in Little Endian
+            if (BitConverter.IsLittleEndian && inBigEndian)
+            {
+                Array.Reverse(value);
+            }
+
+            string s = "";
+            int i;
+            for (i = 0; i < value.Length; i++)
+            {
+                s += (char)value[i];
+            }
+            return s;
+        }
+
+        /// <summary>
+        /// Get the subarray of for the given array
+        /// based off the index and length.  This
+        /// can take any type of array.
+        /// </summary>
+        /// <typeparam name="T">Type of data within array.</typeparam>
+        /// <param name="data">Array containing data.</param>
+        /// <param name="index">Start point.</param>
+        /// <param name="length">Number of bytes to copy to subarray.</param>
+        /// <returns></returns>
+        public static T[] SubArray<T>(T[] data, int index, int length)
+        {
+            T[] result = new T[length];
+            System.Buffer.BlockCopy(data, index, result, 0, length);
+            return result;
         }
 
     }

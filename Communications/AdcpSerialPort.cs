@@ -37,6 +37,7 @@
  * 12/29/2011      RC          1.11       Added event for ADCP serial data.
  * 02/10/2012      RC          2.02       Added common commands to the ADCP.
  * 02/29/2012      RC          2.04       Added a try/catch block in ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
+ * 03/23/2012      RC          2.07       Added a 100 ms delay after sending the command to set in Compass mode.  This fixes starting calibration.
  *       
  * 
  */
@@ -44,6 +45,7 @@
 using System.IO;
 using System.Threading;
 using System;
+using System.Diagnostics;
 
 namespace RTI
 {
@@ -116,6 +118,8 @@ namespace RTI
                 try
                 {
                     // Add data to the display
+                    // If in compass mode and the compass is outputing a lot of data
+                    // The speed the data is coming in is to quick to display
                     SetReceiveBuffer(System.Text.ASCIIEncoding.ASCII.GetString(rcvData));
 
                     if (Mode == AdcpSerialModes.ADCP)
@@ -222,6 +226,11 @@ namespace RTI
 
             // Try to send the command, if it fails try again
             startResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_DIAGCPT, TIMEOUT);
+            
+            // Delay for 485 response
+            Thread.Sleep(100);
+
+            // If the command was not good, try it again
             if (!startResult)
             {
                 startResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_DIAGCPT, TIMEOUT);
@@ -254,10 +263,13 @@ namespace RTI
             SendData(startIntervalCmd, 0, startIntervalCmd.Length);
 
             // Delay for 485 response
-            Thread.Sleep(100);
+            //Thread.Sleep(100);
 
             // Stop ADCP from compass mode
             SendData(RTI.Commands.AdcpCommands.CMD_DIAGCPT_DISCONNECT);
+
+            // Delay for 485 response
+            Thread.Sleep(100);
 
             // Set the serial port to ADCP mode to decode ADCP data
             Mode = AdcpSerialPort.AdcpSerialModes.ADCP;
@@ -323,6 +335,24 @@ namespace RTI
                 SendData(SaveCalDataCmd, 0, SaveCalDataCmd.Length);
                 Thread.Sleep(100);
             }
+        }
+
+        /// <summary>
+        /// Send the given command to the ADCP.  This will then be 
+        /// sent to the compass.  This will only be sent to the
+        /// compass, if the ADCP is in compass mode.
+        /// </summary>
+        /// <returns>TRUE = Command sent.  / False = Command NOT sent.  Most likely not in Compass mode.</returns>
+        public bool SendCompassCommand(byte[] command)
+        {
+            if (Mode == AdcpSerialModes.COMPASS)
+            {
+                SendData(command, 0, command.Length);
+                Thread.Sleep(100);
+                return true;
+            }
+
+            return false;
         }
 
         #endregion

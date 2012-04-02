@@ -103,7 +103,6 @@
     <Compile Include="Screen\ScreenBottomTrackRange.cs" />
     <Compile Include="Screen\ScreenMarkBadBelowBottom.cs" />
     <Compile Include="Screen\ScreenVelocity.cs" />
-    <Compile Include="Utils\Converters.cs" />
     <Compile Include="Utils\MathHelper.cs" />
     <Compile Include="Utils\Validator.cs" />
     <Compile Include="Writer\AdcpBinaryWriter.cs" />

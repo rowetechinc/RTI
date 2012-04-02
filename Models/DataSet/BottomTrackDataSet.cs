@@ -52,6 +52,7 @@
  *                                         Removed "private set".
  * 02/23/2012      RC          2.03       Changed Status to a Status object.
  * 03/06/2012      RC          2.05       Modified GetAverageRange() to check for bad values.
+ * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 
  */
 
@@ -405,72 +406,72 @@ namespace RTI
             /// <param name="data">Byte array containing the Bottom Track data type.</param>
             private void Decode(byte[] data)
             {
-                FirstPingTime = Converters.ByteArrayToFloat(data, GenerateIndex(0));
-                LastPingTime = Converters.ByteArrayToFloat(data, GenerateIndex(1));
+                FirstPingTime = MathHelper.ByteArrayToFloat(data, GenerateIndex(0));
+                LastPingTime = MathHelper.ByteArrayToFloat(data, GenerateIndex(1));
 
-                Heading = Converters.ByteArrayToFloat(data, GenerateIndex(2));
-                Pitch = Converters.ByteArrayToFloat(data, GenerateIndex(3));
-                Roll = Converters.ByteArrayToFloat(data, GenerateIndex(4));
-                WaterTemp = Converters.ByteArrayToFloat(data, GenerateIndex(5));
-                SystemTemp = Converters.ByteArrayToFloat(data, GenerateIndex(6));
-                Salinity = Converters.ByteArrayToFloat(data, GenerateIndex(7));
-                Pressure = Converters.ByteArrayToFloat(data, GenerateIndex(8));
-                TransducerDepth = Converters.ByteArrayToFloat(data, GenerateIndex(9));
-                SpeedOfSound = Converters.ByteArrayToFloat(data, GenerateIndex(10));
+                Heading = MathHelper.ByteArrayToFloat(data, GenerateIndex(2));
+                Pitch = MathHelper.ByteArrayToFloat(data, GenerateIndex(3));
+                Roll = MathHelper.ByteArrayToFloat(data, GenerateIndex(4));
+                WaterTemp = MathHelper.ByteArrayToFloat(data, GenerateIndex(5));
+                SystemTemp = MathHelper.ByteArrayToFloat(data, GenerateIndex(6));
+                Salinity = MathHelper.ByteArrayToFloat(data, GenerateIndex(7));
+                Pressure = MathHelper.ByteArrayToFloat(data, GenerateIndex(8));
+                TransducerDepth = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
+                SpeedOfSound = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
 
-                Status = new Status((int)Converters.ByteArrayToFloat(data, GenerateIndex(11)));
-                NumBeams = Converters.ByteArrayToFloat(data, GenerateIndex(12));
-                ActualPingCount = Converters.ByteArrayToFloat(data, GenerateIndex(13));
+                Status = new Status((int)MathHelper.ByteArrayToFloat(data, GenerateIndex(11)));
+                NumBeams = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+                ActualPingCount = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
 
-                Range[0] = Converters.ByteArrayToFloat(data, GenerateIndex(14));
-                Range[1] = Converters.ByteArrayToFloat(data, GenerateIndex(15));
-                Range[2] = Converters.ByteArrayToFloat(data, GenerateIndex(16));
-                Range[3] = Converters.ByteArrayToFloat(data, GenerateIndex(17));
+                Range[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
+                Range[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+                Range[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
+                Range[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
 
-                SNR[0] = Converters.ByteArrayToFloat(data, GenerateIndex(18));
-                SNR[1] = Converters.ByteArrayToFloat(data, GenerateIndex(19));
-                SNR[2] = Converters.ByteArrayToFloat(data, GenerateIndex(20));
-                SNR[3] = Converters.ByteArrayToFloat(data, GenerateIndex(21));
+                SNR[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
+                SNR[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
+                SNR[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
+                SNR[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(21));
 
-                Amplitude[0] = Converters.ByteArrayToFloat(data, GenerateIndex(22));
-                Amplitude[1] = Converters.ByteArrayToFloat(data, GenerateIndex(23));
-                Amplitude[2] = Converters.ByteArrayToFloat(data, GenerateIndex(24));
-                Amplitude[3] = Converters.ByteArrayToFloat(data, GenerateIndex(25));
+                Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(22));
+                Amplitude[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(23));
+                Amplitude[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(24));
+                Amplitude[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(25));
 
-                Correlation[0] = Converters.ByteArrayToFloat(data, GenerateIndex(26));
-                Correlation[1] = Converters.ByteArrayToFloat(data, GenerateIndex(27));
-                Correlation[2] = Converters.ByteArrayToFloat(data, GenerateIndex(28));
-                Correlation[3] = Converters.ByteArrayToFloat(data, GenerateIndex(29));
+                Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(26));
+                Correlation[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(27));
+                Correlation[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(28));
+                Correlation[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(29));
 
-                BeamVelocity[0] = Converters.ByteArrayToFloat(data, GenerateIndex(30));
-                BeamVelocity[1] = Converters.ByteArrayToFloat(data, GenerateIndex(31));
-                BeamVelocity[2] = Converters.ByteArrayToFloat(data, GenerateIndex(32));
-                BeamVelocity[3] = Converters.ByteArrayToFloat(data, GenerateIndex(33));
+                BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(30));
+                BeamVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(31));
+                BeamVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(32));
+                BeamVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(33));
 
-                BeamGood[0] = Converters.ByteArrayToFloat(data, GenerateIndex(34));
-                BeamGood[1] = Converters.ByteArrayToFloat(data, GenerateIndex(35));
-                BeamGood[2] = Converters.ByteArrayToFloat(data, GenerateIndex(36));
-                BeamGood[3] = Converters.ByteArrayToFloat(data, GenerateIndex(37));
+                BeamGood[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(34));
+                BeamGood[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(35));
+                BeamGood[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(36));
+                BeamGood[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(37));
 
-                InstrumentVelocity[0] = Converters.ByteArrayToFloat(data, GenerateIndex(38));
-                InstrumentVelocity[1] = Converters.ByteArrayToFloat(data, GenerateIndex(39));
-                InstrumentVelocity[2] = Converters.ByteArrayToFloat(data, GenerateIndex(40));
-                InstrumentVelocity[3] = Converters.ByteArrayToFloat(data, GenerateIndex(41));
+                InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(38));
+                InstrumentVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(39));
+                InstrumentVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(40));
+                InstrumentVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(41));
 
-                InstrumentGood[0] = Converters.ByteArrayToFloat(data, GenerateIndex(42));
-                InstrumentGood[1] = Converters.ByteArrayToFloat(data, GenerateIndex(43));
-                InstrumentGood[2] = Converters.ByteArrayToFloat(data, GenerateIndex(44));
-                InstrumentGood[3] = Converters.ByteArrayToFloat(data, GenerateIndex(45));
+                InstrumentGood[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(42));
+                InstrumentGood[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(43));
+                InstrumentGood[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(44));
+                InstrumentGood[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(45));
 
-                EarthVelocity[0] = Converters.ByteArrayToFloat(data, GenerateIndex(46));
-                EarthVelocity[1] = Converters.ByteArrayToFloat(data, GenerateIndex(47));
-                EarthVelocity[2] = Converters.ByteArrayToFloat(data, GenerateIndex(48));
-                EarthVelocity[3] = Converters.ByteArrayToFloat(data, GenerateIndex(49));
+                EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(46));
+                EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(47));
+                EarthVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(48));
+                EarthVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(49));
 
-                EarthGood[0] = Converters.ByteArrayToFloat(data, GenerateIndex(50));
-                EarthGood[1] = Converters.ByteArrayToFloat(data, GenerateIndex(51));
-                EarthGood[2] = Converters.ByteArrayToFloat(data, GenerateIndex(52));
-                EarthGood[3] = Converters.ByteArrayToFloat(data, GenerateIndex(53));
+                EarthGood[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(50));
+                EarthGood[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(51));
+                EarthGood[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(52));
+                EarthGood[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(53));
 
                 //CreateBindingList();
             }
@@ -490,72 +491,72 @@ namespace RTI
 
                 // Get the length
                 byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Heading), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pitch), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Roll), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(WaterTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SystemTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Salinity), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pressure), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(TransducerDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Heading), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pitch), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Roll), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WaterTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SystemTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Salinity), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pressure), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(TransducerDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Status.Value), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Status.Value), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Range[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SNR[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Amplitude[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Correlation[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BeamGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(InstrumentGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(EarthGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NumElements);

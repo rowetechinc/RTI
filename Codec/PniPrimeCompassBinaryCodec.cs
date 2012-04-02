@@ -41,7 +41,15 @@
  * 11/18/2011      RC                     Removed debug output.
  * 11/30/2011      RC                     Added ICodec.
  * 12/10/2012      RC           2.02      Made calls to PropertyChanged use OnPropertyChanged to check for null.
- * 
+ * 03/23/2012      RC           2.07      Changed how the incoming data is added to the buffer.
+ *                                         Added classes to store results from the commands.
+ * 03/26/2012      RC           2.07      Added GetUInt16() to convert array value to UInt16.
+ *                                         Added DecodekSaveDone() to decode the kSaveDone message.
+ *                                         Added GetDefaultCompassCalMagCommand() to get the command for the Factory defaults for Mag.
+ * 03/29/2012      RC           2.07      Moved conversion to MathHelper.
+ *                                         Added IS_BIG_ENDIAN to state all data is in Big Endian form.
+ * 03/30/2012      RC           2.07      Surround processing thread in try/catch loop.  
+ *                                         Check size of buffer before trying to remove the data.
  * 
  */
 
@@ -49,6 +57,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
+using log4net;
 namespace RTI
 {
     /// <summary>
@@ -57,6 +66,102 @@ namespace RTI
     /// </summary>
     public class PniPrimeCompassBinaryCodec : ICodec
     {
+
+        /// <summary>
+        /// Setup logger to report errors.
+        /// </summary>
+        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        #region DEFAULTS
+        /// <summary>
+        /// Default Declination.
+        /// </summary>
+        public const float DEFAULT_DECLINATION = 0.0f;
+
+        /// <summary>
+        /// Minimum Declination.
+        /// </summary>
+        public const float MIN_DECLINATION = -180.0f;
+
+        /// <summary>
+        /// Maximum Declination.
+        /// </summary>
+        public const float MAX_DECLINATION = 180.0f;
+
+        /// <summary>
+        /// Default True North
+        /// </summary>
+        public const bool DEFAULT_TRUE_NORTH = false;
+
+        /// <summary>
+        /// Default Big Endian.
+        /// </summary>
+        public const bool DEFAULT_BIG_ENDIAN = true;
+
+        /// <summary>
+        /// Default Mounting Reference.
+        /// </summary>
+        public const byte DEFAULT_MOUNTING_REF = 1;
+
+        /// <summary>
+        /// Minimum Mounting Reference.
+        /// </summary>
+        public const byte MIN_MOUNTING_REF = 1;
+
+        /// <summary>
+        /// Maximum Mounting Reference.
+        /// </summary>
+        public const byte MAX_MOUNTING_REF = 24;
+
+        /// <summary>
+        /// Default Calibration Stable Check.
+        /// </summary>
+        public const bool DEFAULT_USER_CAL_STABLE_CHECK = true;
+
+        /// <summary>
+        /// Default Number of points in calibration.
+        /// </summary>
+        public const UInt32 DEFAULT_USER_CAL_NUM_POINTS = 12;
+
+        /// <summary>
+        /// Minimum number of Calibration points.
+        /// </summary>
+        public const UInt32 MIN_USER_CAL_NUM_POINTS = 12;
+
+        /// <summary>
+        /// Maximum number of Calibration points.
+        /// </summary>
+        public const UInt32 MAX_USER_CAL_NUM_POINTS = 32;
+
+        /// <summary>
+        /// Default Calibration Auto sampling.
+        /// </summary>
+        public const bool DEFAULT_USER_CAL_AUTO_SAMPLING = true;
+
+        /// <summary>
+        /// Default baudrate.
+        /// </summary>
+        public const byte DEFAULT_BAUD_RATE = 12;
+
+        /// <summary>
+        /// Minimum Baudrate.
+        /// </summary>
+        public const byte MIN_BAUD_RATE = 0;
+
+        /// <summary>
+        /// Maximum Baudrate.
+        /// </summary>
+        public const byte MAX_BAUD_RATE = 14;
+
+        #endregion
+
+        #region Variables
+
+        /// <summary>
+        /// Set flag that all the data from the compass
+        /// is in Big Endian form.
+        /// </summary>
+        private const bool IS_BIG_ENDIAN = true;
 
         /// <summary>
         /// Size of the checksum value in bytes.
@@ -71,7 +176,13 @@ namespace RTI
         /// <summary>
         /// Maximum size from documentation (PACKET_MIN_SIZE + (4091 * 8)).
         /// </summary>
-        private int MAX_LENGTH = 32733;
+        private const int MAX_LENGTH = 32733;
+
+        /// <summary>
+        /// The number of tries to wait for more incoming
+        /// data before removing the first element and trying again.
+        /// </summary>
+        private const int TIMEOUT = 10;
 
         /// <summary>
         /// First value to start with to look for data.
@@ -98,6 +209,11 @@ namespace RTI
         private List<Byte> _incomingDataBuffer;
 
         /// <summary>
+        /// Lock the buffer of data.
+        /// </summary>
+        private readonly object _bufferLock = new object();
+
+        /// <summary>
         /// Current size of the message within the buffer.
         /// </summary>
         protected int _currentMsgSize;
@@ -116,6 +232,8 @@ namespace RTI
         /// Wait queue flag.
         /// </summary>
         private EventWaitHandle _eventWaitData;
+
+        #endregion
 
         #region Enum and Structs
 
@@ -166,6 +284,357 @@ namespace RTI
         }
 
         /// <summary>
+        /// Response when sending the command kGetData.
+        /// </summary>
+        public class DataResponse
+        {
+            /// <summary>
+            /// Compass Heading output.
+            /// Format: Float32
+            /// Units: Degrees
+            /// Range: 0.0 to 359.9.
+            /// </summary>
+            public float Heading {get; set;}
+
+            /// <summary>
+            /// Distortion.
+            /// True = at least on magnetometer axis is reading beyond +/- 100 uT
+            /// Format: Boolean
+            /// Units: True / False
+            /// Range: False (Default) = No Distortion
+            /// </summary>
+            public bool Distortion { get; set; }
+
+            /// <summary>
+            /// Read only flag that indicates user calibration status.
+            /// False (Default) = Not calibrated.
+            /// Format: Boolean
+            /// Units: True / False
+            /// Range: False (Default) = Not calibrated.
+            /// </summary>
+            public bool CalStatus { get; set; }
+
+            /// <summary>
+            /// Pitch angle output.  
+            /// Format: Float32
+            /// Units: Degrees
+            /// Range: -90.0 to 90.0
+            /// </summary>
+            public float Pitch { get; set; }
+
+            /// <summary>
+            /// Roll anglue output.
+            /// Format: Float32
+            /// Units: Degrees
+            /// Range: -180.0 to 180.0
+            /// </summary>
+            public float Roll { get; set; }
+
+            /// <summary>
+            /// User calibrated Earth's acceleration Pitch vector component output.
+            /// Format: Float32
+            /// Units: G
+            /// Range: -1.0 to 1.0
+            /// </summary>
+            public float pAligned { get; set; }
+
+            /// <summary>
+            /// User calibrated Earth's acceleration Roll vector component output.
+            /// Format: Float32
+            /// Units: G
+            /// Range: -1.0 to 1.0
+            /// </summary>
+            public float rAligned { get; set; }
+
+            /// <summary>
+            /// User calibrated Earth's acceleration Z vector component output.
+            /// Format: Float32
+            /// Units: G
+            /// Range: -1.0 to 1.0
+            /// </summary>
+            public float izAligned { get; set; }
+
+            /// <summary>
+            /// User calibrated Earth's magnetic field X vector component output.
+            /// Format: Float32
+            /// Units: uT
+            /// Range:
+            /// </summary>
+            public float xAligned { get; set; }
+
+            /// <summary>
+            /// User calibrated Earth's magnetic field Y vector component output.
+            /// Format: Float32
+            /// Units: uT
+            /// Range:
+            /// </summary>
+            public float yAligned { get; set; }
+
+            /// <summary>
+            /// User calibrated Earth's magnetic field Z vector component output.
+            /// Format: Float32
+            /// Units: uT
+            /// Range:
+            /// </summary>
+            public float zAligned { get; set; }
+
+            /// <summary>
+            /// Set all default values.
+            /// </summary>
+            public DataResponse()
+            {
+                Heading = 0.0f;
+                Distortion = false;
+                CalStatus = false;
+                Pitch = 0.0f;
+                Roll = 0.0f;
+                pAligned = 0.0f;
+                rAligned = 0.0f;
+                izAligned = 0.0f;
+                xAligned = 0.0f;
+                xAligned = 0.0f;
+                xAligned = 0.0f;
+            }
+        }
+
+        /// <summary>
+        /// Response received from sending the command kGetConfig.
+        /// </summary>
+        public class Configuration
+        {
+            /// <summary>
+            /// This sets the declination angle to determine True
+            /// North heading.  Positive declination is easterly declination
+            /// and negative is westerly declination.  THis is not applied until
+            /// kTrueNorth is set to true.
+            /// Format: Float32
+            /// Units: Degrees
+            /// Range: -180.0 to 180.0
+            /// Default Value: 0
+            /// </summary>
+            public float Declination {get; set;}
+
+            /// <summary>
+            /// Flag to set compass heading output to true north
+            /// heading by adding the declination angle to the magnetic 
+            /// north heading.
+            /// Format: Boolean
+            /// Units: True / False
+            /// Range: 
+            /// Default Value: False
+            /// </summary>
+            public bool TrueNorth {get; set;}
+
+            /// <summary>
+            /// Flag to set the Endianness of packets.
+            /// Format: Boolean
+            /// Units: True / False
+            /// Range: 
+            /// Default Value: True
+            /// </summary>
+            public bool BigEndian { get; set; }
+
+            /// <summary>
+            /// This sets the reference orientation for the module.
+            /// Standard: When selected the unit is to be mounted with the main board in a
+            ///   horizontal position (the Z axis magnetic sensor is vertical).
+            /// X Sensor Up: When selected the unit is to be mounted with the main board in a
+            ///   vertical position: the X axis magnetic sensor is vertical and points up.
+            /// Y Sensor Up: When selected the unit is to be mounted with the main board in a
+            ///   vertical position: the Y axis magnetic sensor is vertical and points up.
+            /// X Sensor Down: When selected the unit is to be mounted with the main board
+            ///   in a vertical position: the X axis magnetic sensor is vertical and points down.
+            /// Y Sensor Down: When selected the unit is to be mounted with the main board
+            ///   in a vertical position: the Y axis magnetic sensor is vertical and points down.
+            /// Standard 90 Degrees: When selected the unit is to be mounted with the main
+            ///   board in a horizontal position but rotated so the arrow is pointed 90 degrees
+            ///   counterclockwise to the front of the host system.
+            /// Standard 180 Degrees: When selected the unit is to be mounted with the main
+            ///   board in a horizontal position but rotated so the arrow is pointed 180 degrees
+            ///   counterclockwise to the front of the host system.
+            /// Standard 270 Degrees: When selected the unit is to be mounted with the main
+            ///   board in a horizontal position but rotated so the arrow is pointed 270 degrees
+            ///   counterclockwise to the front of the host system.
+            /// Format: UInt8
+            /// Units: Code
+            /// Range: 1 - 24
+            /// Default Value: 1
+            /// </summary>
+            public int MountingRef { get; set; }
+
+            /// <summary>
+            /// This flag is used during user calibration.  If set to FALSE, 
+            /// the module will take a point if the magnetic field has changed 
+            /// more than 23 uT in either axis.  If set to TRUE the unit will
+            /// take a point if the magnetic field has a stability of 30 uT in
+            /// each direction and the previous point changed more than 5 uT
+            /// and acceleration vector delta within 2 mg.
+            /// Format: Boolean
+            /// Units: True / False
+            /// Range: 
+            /// Default Value: True
+            /// </summary>
+            public bool UserCalStableCheck { get; set; }
+
+            /// <summary>
+            /// The maximum number of samples taken during user
+            /// calibration.
+            /// Format: UInt32
+            /// Units: Number of Points.
+            /// Range: 12 - 32.
+            /// Default Value: 12
+            /// </summary>
+            public UInt32 UserCalNumPoints { get; set; }
+
+            /// <summary>
+            /// This flag is used during user calibration.  If set to TRUE,
+            /// the module will continuously take calibration sample points
+            /// until the set number of calibration samples.  If set to
+            /// FALSE, the module waits for kTakeUserCalSample frame to take
+            /// a sample with the condition that a magnetic field vector 
+            /// componenet delta is greater than 5 micro Telsa from the
+            /// last sample point.
+            /// Format: Boolean
+            /// Units: True / False
+            /// Range: 
+            /// Default Value: True
+            /// </summary>
+            public bool UserCalAutoSampling { get; set; }
+
+            /// <summary>
+            /// Baudrate index value.  A power-down power-up cycle is
+            /// required when changing the baudrate.
+            /// Format: UInt8
+            /// Units: Baudrate code.
+            /// Range: 0 - 14.
+            /// Default Value: 12 (38400)
+            /// </summary>
+            public int BaudRate { get; set; }
+
+            /// <summary>
+            /// Set the default values.
+            /// </summary>
+            public Configuration()
+            {
+                Declination = DEFAULT_DECLINATION;
+                TrueNorth = DEFAULT_TRUE_NORTH;
+                BigEndian = DEFAULT_BIG_ENDIAN;
+                MountingRef = DEFAULT_MOUNTING_REF;
+                UserCalStableCheck = DEFAULT_USER_CAL_STABLE_CHECK;
+                UserCalNumPoints = DEFAULT_USER_CAL_NUM_POINTS;
+                UserCalAutoSampling = DEFAULT_USER_CAL_AUTO_SAMPLING;
+                BaudRate = DEFAULT_BAUD_RATE;
+            }
+
+            /// <summary>
+            /// Return the string for the Mounting Reference code.
+            /// </summary>
+            /// <param name="mntRef">Mounting Reference code.</param>
+            /// <returns>String for the Mounting Reference code.</returns>
+            public static string MountingRefToString(int mntRef)
+            {
+                switch(mntRef)
+                {
+                    case 1:
+                        return "Standard";
+                    case 2:
+                        return "X axis up";
+                    case 3:
+                        return "Y axis up";
+                    case 4:
+                        return "-90° heading offset";
+                    case 5:
+                        return "-180° heading offset";
+                    case 6:
+                        return "-270° heading offset";
+                    case 7:
+                        return "Z down";
+                    case 8:
+                        return "X + 90°";
+                    case 9:
+                        return "X + 180°";
+                    case 10:
+                        return "X + 270°";
+                    case 11:
+                        return "Y + 90°";
+                    case 12:
+                        return "Y + 180°";
+                    case 13:
+                        return "Y + 270°";
+                    case 14:
+                        return "Z down + 90°";
+                    case 15:
+                        return "Z down + 180°";
+                    case 16:
+                        return "Z down + 270°";
+                    case 17:
+                        return "X down";
+                    case 18:
+                        return "X down + 90°";
+                    case 19:
+                        return "X down + 180°";
+                    case 20:
+                        return "X down + 270°";
+                    case 21:
+                        return "Y down";
+                    case 22:
+                        return "Y down + 90°";
+                    case 23:
+                        return "Y down + 180°";
+                    case 24:
+                        return "Y down + 270°";
+                    default:
+                        return "INVALID";
+                }
+            }
+
+            /// <summary>
+            /// Return the string of the baudrate for
+            /// the given baudrate code.
+            /// </summary>
+            /// <param name="baudrate">Baudrate code.</param>
+            /// <returns>String for the baudrate code.</returns>
+            public static string BaudRateToString(int baudrate)
+            {
+                switch(baudrate)
+                {
+                    case 0:
+                        return "300";
+                    case 1:
+                        return "600";
+                    case 2:
+                        return "1200";
+                    case 3:
+                        return "1800";
+                    case 4:
+                        return "2400";
+                    case 5:
+                        return "3600";
+                    case 6:
+                        return "4800";
+                    case 7:
+                        return "7200";
+                    case 8:
+                        return "9600";
+                    case 9:
+                        return "14400";
+                    case 10:
+                        return "19200";
+                    case 11:
+                        return "28800";
+                    case 12:
+                        return "38400";
+                    case 14:
+                        return "57600";
+                    case 15:
+                        return "115200";
+                    default:
+                        return "INVALID";
+                }
+            }
+        }
+
+        /// <summary>
         /// Enum to decide which 
         /// calibration mode to use.
         /// </summary>
@@ -191,78 +660,320 @@ namespace RTI
         /// Enum to define all the IDs for the
         /// decoding.
         /// </summary>
-        enum ID
+        public enum ID
         {
             // Frame IDs (Commands)
-            kGetModInfo = 1,             // 1
-            kModInfoResp = 2,            // 2
-            kSetDataComponents = 3,      // 3
-            kGetData = 4,                // 4
-            kDataResp = 5,               // 5
-            kSetConfig = 6,              // 6
-            kGetConfig = 7,              // 7
-            kConfigResp = 8,             // 8
-            kSave = 9,                   // 9
-            kStartCal = 10,              // 10
-            kStopCal = 11,               // 11
-            kSetParam = 12,              // 12
-            kGetParam = 13,              // 13
-            kParamResp = 14,             // 14
-            kPowerDown = 15,             // 15
-            kSaveDone = 16,              // 16
-            kUserCalSampCount = 17,      // 17
-            kUserCalScore = 18,          // 18
-            kSetConfigDone = 19,         // 19
-            kSetParamDone = 20,          // 20
-            kStartIntervalMode = 21,     // 21
-            kStopIntervalMode = 22,      // 22
-            kPowerUp = 23,               // 23
-            kSetAcqParams = 24,          // 24
-            kGetAcqParams = 25,          // 25
-            kAcqParamsDone = 26,         // 26
-            kAcqParamsResp = 27,         // 27
-            kPowerDoneDown = 28,         // 28
-            kFactoryUserCal = 29,        // 29
-            kFactoryUserCalDone = 30,    // 30
-            kTakeUserCalSample = 31,     // 31
-            kFactoryInclCal = 36,        // 36
-            kFactoryInclCalDone = 37,    // 37
+
+            /// <summary>
+            /// 1 Queries the modules type and firmware revision number
+            /// </summary>
+            kGetModInfo = 1,
+            
+            /// <summary>
+            /// 2 Response to kGetModInfo
+            /// </summary>
+            kModInfoResp = 2,
+
+            /// <summary>
+            /// 3 Sets the data components to be output
+            /// </summary>
+            kSetDataComponents = 3,
+
+            /// <summary>
+            /// 4 Queries the module for data
+            /// </summary>
+            kGetData = 4,
+
+            /// <summary>
+            /// 5 Response to kGetData
+            /// </summary>
+            kDataResp = 5,
+
+            /// <summary>
+            /// 6 Sets internal configuration in the module
+            /// </summary>
+            kSetConfig = 6,
+
+            /// <summary>
+            /// 7 Queries the module for the current internal configuration value
+            /// </summary>
+            kGetConfig = 7,
+
+            /// <summary>
+            /// 8 Response to kGetConfig
+            /// </summary>
+            kConfigResp = 8,
+
+            /// <summary>
+            /// 9 Commands the module to save internal and user calibration
+            /// </summary>
+            kSave = 9,
+
+            /// <summary>
+            /// 10 Commands module to start user calibration
+            /// </summary>
+            kStartCal = 10,
+
+            /// <summary>
+            /// 11 Commands the module to stop user calibration
+            /// </summary>
+            kStopCal = 11,
+
+            /// <summary>
+            /// 12 Sets the FIR filter settings for the magnetometer and accelerometer sensors
+            /// </summary>
+            kSetParam = 12,
+
+            /// <summary>
+            /// 13 Queries for the FIR filter settings for the magnetometer and accelerometer sensors
+            /// </summary>
+            kGetParam = 13,
+
+            /// <summary>
+            /// 14 Contains the FIR filter setting for the magnetometer and accelerometer sensors
+            /// </summary>
+            kParamResp = 14,
+
+            /// <summary>
+            /// 15 Used to completely power-down the module
+            /// </summary>
+            kPowerDown = 15,
+
+            /// <summary>
+            /// 16 Response to kSave
+            /// </summary>
+            kSaveDone = 16,
+
+            /// <summary>
+            /// 17 Sent from the module after taking a calibration sample point
+            /// </summary>
+            kUserCalSampCount = 17,
+
+            /// <summary>
+            /// 18 Contains the calibration score
+            /// </summary>
+            kUserCalScore = 18,
+
+            /// <summary>
+            /// 19 Response to kSetConfig
+            /// </summary>
+            kSetConfigDone = 19,
+
+            /// <summary>
+            /// 20 Response to kSetParam
+            /// </summary>
+            kSetParamDone = 20,
+
+            /// <summary>
+            /// 21 Commands the module to output data at a fixed interval
+            /// </summary>
+            kStartIntervalMode = 21,
+
+            /// <summary>
+            /// 22 Commands the module to stop data output at a fixed interval
+            /// </summary>
+            kStopIntervalMode = 22,
+
+            /// <summary>
+            /// 23 Sent after wake up from power down mode
+            /// </summary>
+            kPowerUp = 23,
+
+            /// <summary>
+            /// 24 Sets the sensor acquistion parameters
+            /// </summary>
+            kSetAcqParams = 24,
+
+            /// <summary>
+            /// 25 Queries for the sensor acquisition parameters 
+            /// </summary>
+            kGetAcqParams = 25,
+
+            /// <summary>
+            /// 26 Response to kSetAcqParams
+            /// </summary>
+            kAcqParamsDone = 26,
+
+            /// <summary>
+            /// 27 Response to kGetAcqParams
+            /// </summary>
+            kAcqParamsResp = 27,
+
+            /// <summary>
+            /// 28 Response to kPowerDown
+            /// </summary>
+            kPowerDoneDown = 28,
+
+            /// <summary>
+            /// 29 Clears user magnetometer calibration coefficients
+            /// </summary>
+            kFactoryUserCal = 29,
+
+            /// <summary>
+            /// 30 Response to kFactoryUserCal
+            /// </summary>
+            kFactoryUserCalDone = 30,
+
+            /// <summary>
+            /// 31 Commands the unit to take a sample during user calibration
+            /// </summary>
+            kTakeUserCalSample = 31,
+
+            /// <summary>
+            /// 36 Clears user accelerometer calibration coefficients
+            /// </summary>
+            kFactoryInclCal = 36,
+
+            /// <summary>
+            /// 37 Response to kFactoryInclCal
+            /// </summary>
+            kFactoryInclCalDone = 37,
             
             // Param IDs
-            kFIRConfig = 1,         //3-AxisID(UInt8)+ Count(UInt8)+Value(Float64)+...
+            /// <summary>
+            /// 3-AxisID(UInt8)+ Count(UInt8)+Value(Float64)+...
+            /// </summary>
+            kFIRConfig = 1,
             
             // Data Component IDs
-            kHeading = 5,                // 5 - type Float32
-            kDistortion = 8,             // 8 - type boolean
-            kCalStatus = 9,              // 9 - type boolean
-            kPAligned = 21,              // 21 - type Float32
-            kRAligned = 22,              // 22 - type Float32
-            kIZAligned = 23,             // 23 - type Float32
-            kPAngle = 24,                // 24 - type Float32
-            kRAngle = 25,                // 25 - type Float32
-            kXAligned = 27,              // 27 - type Float32
-            kYAligned = 28,              // 28 - type Float32
-            kZAligned = 29,              // 29 - type Float32
+            /// <summary>
+            /// 5 - type Float32
+            /// </summary>
+            kHeading = 5,
+ 
+            /// <summary>
+            /// 8 - type boolean
+            /// </summary>
+            kDistortion = 8,
+
+            /// <summary>
+            /// 9 - type boolean
+            /// </summary>
+            kCalStatus = 9,
+
+            /// <summary>
+            /// 21 - type Float32
+            /// </summary>
+            kPAligned = 21,
+
+            /// <summary>
+            /// 22 - type Float32
+            /// </summary>
+            kRAligned = 22,
+
+            /// <summary>
+            /// 23 - type Float32
+            /// </summary>
+            kIZAligned = 23,
+
+            /// <summary>
+            /// 24 - type Float32
+            /// </summary>
+            kPAngle = 24,
+
+            /// <summary>
+            /// 25 - type Float32
+            /// </summary>
+            kRAngle = 25,
+
+            /// <summary>
+            /// 27 - type Float32
+            /// </summary>
+            kXAligned = 27,
+
+            /// <summary>
+            /// 28 - type Float32
+            /// </summary>
+            kYAligned = 28,
+
+            /// <summary>
+            /// 29 - type Float32
+            /// </summary>
+            kZAligned = 29,
             
             // Configuration Parameter IDs
-            kDeclination = 1,               // 1 - type Float32
-            kTrueNorth = 2,                 // 2 - type boolean
-            kMountingRef = 10,              // 10 - type UInt8
-            kUserCalStableCheck = 11,       // 11 - type boolean
-            kUserCalNumPoints = 12,         // 12 - type UInt32
-            kUserCalAutoSampling = 13,      // 13 – type boolean
-            kBaudRate = 14,                 // 14 – UInt8
+            /// <summary>
+            /// 1 - type Float32
+            /// </summary>
+            kDeclination = 1,
+
+            /// <summary>
+            /// 2 - type boolean
+            /// </summary>
+            kTrueNorth = 2,
+
+            /// <summary>
+            /// 6 - type boolean
+            /// </summary>
+            kBigEndian = 6,
+
+            /// <summary>
+            /// 10 - type UInt8
+            /// </summary>
+            kMountingRef = 10,
+
+            /// <summary>
+            /// 11 - type boolean
+            /// </summary>
+            kUserCalStableCheck = 11,
+            
+            /// <summary>
+            /// 12 - type UInt32
+            /// </summary>
+            kUserCalNumPoints = 12,
+
+            /// <summary>
+            /// 13 – type boolean
+            /// </summary>
+            kUserCalAutoSampling = 13,
+
+            /// <summary>
+            /// 14 – UInt8
+            /// </summary>
+            kBaudRate = 14,
             
             // Mounting Reference IDs
-            kMountedStandard = 1,   // 1
-            kMountedXUp = 2,        // 2
-            kMountedYUp = 3,        // 3
-            kMountedStdPlus90 = 4,  // 4
-            kMountedStdPlus180 = 5, // 5
-            kMountedStdPlus270 = 6, // 6
+
+            /// <summary>
+            /// 1
+            /// </summary>
+            kMountedStandard = 1,
+
+            /// <summary>
+            /// 
+            /// </summary>
+            kMountedXUp = 2,
+
+            /// <summary>
+            /// 
+            /// </summary>
+            kMountedYUp = 3,
+
+            /// <summary>
+            /// 
+            /// </summary>
+            kMountedStdPlus90 = 4,
+
+            /// <summary>
+            /// 
+            /// </summary>
+            kMountedStdPlus180 = 5,
+
+            /// <summary>
+            /// 
+            /// </summary>
+            kMountedStdPlus270 = 6,
+
             // Result IDs
-            kErrNone = 0,           // 0
-            kErrSave = 1,           // 1
+            /// <summary>
+            /// 0 No Error
+            /// </summary>
+            kErrNone = 0,
+
+            /// <summary>
+            /// 1 Error Saving
+            /// </summary>
+            kErrSave = 1,
         };
 
         #endregion
@@ -377,6 +1088,73 @@ namespace RTI
         }
 
         /// <summary>
+        /// Create a message based off the frame type, Config ID
+        /// and data given.  This will first calculate
+        /// the size of the entire message.  Then it
+        /// will start to construct the message.
+        /// [byteCount (2 bytes)] [[Frame ID (1 byte)][Payload (0 - N bytes)]] [CRC (2 bytes)]
+        /// [Payload] = [[Config ID(1 byte)][Value (0 - N bytes)]]
+        /// 2 bytes for Byte count
+        /// Packet
+        ///    1 byte for Frame ID
+        ///    N bytes for Playload
+        ///        1 Byte for Config ID
+        ///        N bytes for Value
+        /// 2 bytes for Checksum
+        /// </summary>
+        /// <param name="frameType">Frame ID type</param>
+        /// <param name="configId">Config ID to update.</param>
+        /// <param name="data">Data for message.</param>
+        /// <returns>Byte array containing the message.</returns>
+        private static byte[] CreateConfigMsg(ID frameType, ID configId, byte[] data)
+        {
+            UInt32 index = 0;           // Our location in the frame we are putting together
+            UInt16 crc = 0;             // The CRC to add to the end of the packer
+            UInt16 count = 0;           // The total length the packet will be
+
+            // Check if there is any data to add to the command
+            int payload = 0;
+            if (data != null)
+            {
+                payload = data.Length;      // Value size
+                payload += 1;               // Config ID
+            }
+
+            // Get the length of the command
+            count = (UInt16)(Convert.ToUInt16(payload) + PACKET_MIN_SIZE);
+            byte[] buffer = new byte[count];
+
+            // Store the total len of the packet including the len
+            // byteCount (2), the Frame ID(1), the data (data.length), and the crc (2)
+            // If no data is sent, the min len is 5
+            buffer[index++] = (byte)(count >> 8);
+            buffer[index++] = (byte)(count & 0xff);
+
+            // Store the frame ID
+            buffer[index++] = (byte)frameType;
+
+            // Copy the data to be sent
+            if (data != null)
+            {
+                // Set the Config ID
+                buffer[index++] = (byte)configId;
+
+                // Set the value
+                for (int x = 0; x < data.Length; x++)
+                {
+                    buffer[index++] = data[x];
+                }
+            }
+
+            // Compute and add the CRC
+            crc = CRC(buffer);
+            buffer[index++] = (byte)(crc >> 8);
+            buffer[index++] = (byte)(crc & 0xFF);
+
+            return buffer;
+        }
+
+        /// <summary>
         /// Create the Get Mod Info command.
         /// </summary>
         /// <returns>Byte array with command.</returns>
@@ -391,7 +1169,7 @@ namespace RTI
         /// <returns>Byte array with command.</returns>
         public static byte[] StartCalibrationCommand(CalMode mode)
         {
-            byte[] data = UInt32ToByteArray((UInt32)mode);
+            byte[] data = MathHelper.UInt32ToByteArray((UInt32)mode, IS_BIG_ENDIAN);
 
             return CreateMsg((int)ID.kStartCal, data);
         }
@@ -408,7 +1186,7 @@ namespace RTI
         /// <summary>
         /// Create the Start Interval Mode command.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Byte array with command.</returns>
         public static byte[] StartIntervalModeCommand()
         {
             return CreateMsg((int)ID.kStartIntervalMode, null); 
@@ -417,7 +1195,7 @@ namespace RTI
         /// <summary>
         /// Create the Stop Interval Mode command.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Byte array with command.</returns>
         public static byte[] StopIntervalModeCommand()
         {
             return CreateMsg((int)ID.kStopIntervalMode, null);
@@ -430,10 +1208,176 @@ namespace RTI
         /// Internal configurations and user calibration is restored on
         /// power up.  
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Byte array with command.</returns>
         public static byte[] SaveCompassCalCommand()
         {
             return CreateMsg((int)ID.kSave, null);
+        }
+
+        /// <summary>
+        /// Get the Data from the compass.  This will get
+        /// data like the heading, pitch, roll and
+        /// distortion.  Results will be stored in DataResponse.
+        /// 
+        /// The output for this is set by kSetDataComponents.  The
+        /// kSetDataComonents states which IDs will be given in 
+        /// kGetData.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetDataCommand()
+        {
+            return CreateMsg((int)ID.kGetData, null);
+        }
+
+        /// <summary>
+        /// This frame cleas the user magnetometer calibration coefficents.  The frame
+        /// has no payload.  This frame must be followed by the kSave frame to change in non-volatile
+        /// memory.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetDefaultCompassCalMagCommand()
+        {
+            return CreateMsg((int)ID.kFactoryUserCal, null);
+        }
+
+        /// <summary>
+        /// This frame commands the unit to take a sample during user caliberation.  The frame has no payload.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetTakeUserCalSampleCommand()
+        {
+            return CreateMsg((int)ID.kTakeUserCalSample, null);
+        }
+
+        /// <summary>
+        /// This frame cleas the user accelerometer calibration coefficents.  The frame
+        /// has no payload.  This frame must be followed by the kSave frame to change in non-volatile
+        /// memory.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetDefaultCompassCalAccelCommand()
+        {
+            return CreateMsg((int)ID.kFactoryInclCal, null);
+        }
+
+        /// <summary>
+        /// Set the Data output to all the components.
+        /// This will set kGetData to output all the components.
+        /// </summary>
+        /// <returns>Byte array of the command.</returns>
+        public static byte[] SetAllDataComponentsCommand()
+        {
+            int numComponenets = 11;
+
+            int count = numComponenets + 1;     // Add one to include the ID count
+            byte[] payload = new byte[count];
+
+            payload[0] = (byte)count;
+            payload[1] = (byte)ID.kHeading;
+            payload[2] = (byte)ID.kPAngle;
+            payload[3] = (byte)ID.kRAngle;
+            payload[4] = (byte)ID.kDistortion;
+            payload[5] = (byte)ID.kCalStatus;
+            payload[6] = (byte)ID.kPAligned;
+            payload[7] = (byte)ID.kRAligned;
+            payload[8] = (byte)ID.kZAligned;
+            payload[9] = (byte)ID.kXAligned;
+            payload[10] = (byte)ID.kYAligned;
+            payload[11] = (byte)ID.kZAligned;
+
+            return CreateMsg((int)ID.kSetDataComponents, payload);
+        }
+
+        /// <summary>
+        /// Return the Data output back to the default
+        /// heading, pitch and roll.
+        /// </summary>
+        /// <returns>Byte array of Data components.</returns>
+        public static byte[] SetHPRDataComponentsCommands()
+        {
+            int numComponenets = 3;
+
+            int count = numComponenets + 1;     // Add one to include the ID count
+            byte[] payload = new byte[count];
+
+            payload[0] = (byte)count;
+            payload[1] = (byte)ID.kHeading;
+            payload[2] = (byte)ID.kPAngle;
+            payload[3] = (byte)ID.kRAngle;
+
+            return CreateMsg((int)ID.kSetDataComponents, payload);
+        }
+
+        /// <summary>
+        /// The frame queries the module for the current internal configuration value.  THe
+        /// payload contains the configuration ID request.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetConfigCommand(ID configId)
+        {
+            byte[] id = new byte[1];
+            id[0] = (byte)configId;
+
+            return CreateMsg((int)ID.kGetConfig, id);
+        }
+
+        /// <summary>
+        /// Create the Configuration command.  The configuration command takes
+        /// only 1 command at a time.  So create the message with the payload
+        /// being the Config ID and Value.
+        /// If any value is given that is bad, return NULL.
+        /// </summary>
+        /// <param name="id">Config ID.</param>
+        /// <param name="value">New Value.</param>
+        /// <returns>Byte array with the command.  Return NULL if any values are bad.</returns>
+        public static byte[] SetConfigCommand(ID id, object value)
+        {
+            try
+            {
+                // Set all the id ranges
+                switch (id)
+                {
+                    case ID.kDeclination:
+                        if ((float)value < MIN_DECLINATION || (float)value > MAX_DECLINATION)
+                        {
+                            return null;
+                        }
+                        return CreateConfigMsg(ID.kSetConfig, ID.kDeclination, MathHelper.FloatToByteArray((float)value, IS_BIG_ENDIAN));
+                    case ID.kTrueNorth:
+                        return CreateConfigMsg(ID.kSetConfig, ID.kTrueNorth, MathHelper.BooleanToByteArray((bool)value));
+                    case ID.kBigEndian:
+                        return CreateConfigMsg(ID.kSetConfig, ID.kBigEndian, MathHelper.BooleanToByteArray((bool)value));
+                    case ID.kMountingRef:
+                        if ((byte)value < MIN_MOUNTING_REF || (byte)value > MAX_MOUNTING_REF)
+                        {
+                            return null;
+                        }
+                        return CreateConfigMsg(ID.kSetConfig, ID.kMountingRef, MathHelper.UInt8ToByteArray((byte)value));
+                    case ID.kUserCalStableCheck:
+                        return CreateConfigMsg(ID.kSetConfig, ID.kUserCalStableCheck, MathHelper.BooleanToByteArray((bool)value));
+                    case ID.kUserCalNumPoints:
+                        if ((UInt32)value < MIN_USER_CAL_NUM_POINTS || (UInt32)value > MAX_USER_CAL_NUM_POINTS)
+                        {
+                            return null;
+                        }
+                        return CreateConfigMsg(ID.kSetConfig, ID.kUserCalNumPoints, MathHelper.UInt32ToByteArray((UInt32)value, IS_BIG_ENDIAN));
+                    case ID.kUserCalAutoSampling:
+                        return CreateConfigMsg(ID.kSetConfig, ID.kUserCalAutoSampling, MathHelper.BooleanToByteArray((bool)value));
+                    case ID.kBaudRate:
+                        if ((byte)value < MIN_BAUD_RATE || (byte)value > MAX_BAUD_RATE)
+                        {
+                            return null;
+                        }
+                        return CreateConfigMsg(ID.kSetConfig, ID.kBaudRate, MathHelper.UInt8ToByteArray((byte)value));
+                    default:
+                        return null;
+                }
+            }
+            catch (InvalidCastException)
+            {
+                // Bad value given
+                return null;
+            }
         }
 
         #endregion
@@ -449,9 +1393,12 @@ namespace RTI
         /// <param name="data">Data to add to incoming buffer.</param>
         public void AddIncomingData(byte[] data)
         {
-            for (int x = 0; x < data.Length; x++)
+            lock (_bufferLock)
             {
-                _incomingDataBuffer.Add(data[x]);
+                //Debug.WriteLine("Buffer Size: {0}  Incoming data size: {1}", _incomingDataBuffer.Count, data.Length);
+
+                // Add new data to the buffer
+                _incomingDataBuffer.AddRange(data);
             }
 
             // Wake up the thread to process data
@@ -463,7 +1410,10 @@ namespace RTI
         /// </summary>
         public void ClearIncomingData()
         {
-            _incomingDataBuffer.Clear();
+            lock (_bufferLock)
+            {
+                _incomingDataBuffer.Clear();
+            }
         }
 
         /// <summary>
@@ -497,70 +1447,115 @@ namespace RTI
         /// </summary>
         private void DecodeIncomingData()
         {
-            if( _incomingDataBuffer.Count >= PACKET_MIN_SIZE )
+            try
             {
-                // Get the length of the message
-                int expectedLength = GetMsgLength();
-
-                // Check if the entire message has been received
-                // If not, continue to wait for the message
-                if (expectedLength > 0 && _incomingDataBuffer.Count >= expectedLength)
+                if (_incomingDataBuffer.Count >= PACKET_MIN_SIZE)
                 {
-                    // This will check the first 2 bytes
-                    // and last 2 bytes to see if checksum
-                    // passes
-                    // If passes, decode the message
-                    if (VerifyMsg(expectedLength))
+                    // Get the length of the message
+                    int expectedLength = GetMsgLength();
+
+                    //Debug.WriteLine("Incoming Data: Buffer Size: {0} length: {1}", _incomingDataBuffer.Count, expectedLength);
+
+                    // Check if the entire message has been received
+                    // If not, continue to wait for the message
+                    if (expectedLength > 0 && expectedLength <= _incomingDataBuffer.Count)
                     {
-                        // Copy the message to a byte array
-                        // The size of the message was set when the message was found
-                        byte[] message = new byte[_currentMsgSize];
-                        _incomingDataBuffer.CopyTo(0, message, 0, _currentMsgSize);
+                        // This will check the first 2 bytes
+                        // and last 2 bytes to see if checksum
+                        // passes
+                        // If passes, decode the message
+                        if (VerifyMsg(expectedLength))
+                        {
+                            byte[] message = new byte[_currentMsgSize];
+                            lock (_bufferLock)
+                            {
+                                // Due to multithreading, the buffer may have been cleared
+                                // before this lock is set, ensure the data still exist
+                                if (_incomingDataBuffer.Count >= _currentMsgSize)
+                                {
+                                    // Copy the message to a byte array
+                                    // The size of the message was set when the message was found
+                                    _incomingDataBuffer.CopyTo(0, message, 0, _currentMsgSize);
 
-                        // Remove message from buffer
-                        _incomingDataBuffer.RemoveRange(0, _currentMsgSize);
+                                    // Remove message from buffer
+                                    _incomingDataBuffer.RemoveRange(0, _currentMsgSize);
+                                }
+                            }
 
-                        // Decode the message
-                        DecodeMessage(message);
+                            // Decode the message
+                            DecodeMessage(message);
+                        }
+                        // If the current data does not create a complete
+                        // message, remove the first byte and try again
+                        else
+                        {
+                            lock (_bufferLock)
+                            {
+                                //_incomingDataBuffer.RemoveAt(0);
+                            }
+                        }
                     }
-                    // If the current data does not create a complete
-                    // message, remove the first byte and try again
                     else
                     {
-                        _incomingDataBuffer.RemoveAt(0);
+                        // Length is too large to be correct
+                        if (expectedLength > MAX_LENGTH || _timeout > TIMEOUT)
+                        {
+                            lock (_bufferLock)
+                            {
+                                if (_incomingDataBuffer.Count > 0)
+                                {
+                                    //_incomingDataBuffer.RemoveAt(0);
+                                }
+                            }
+                            _timeout = 0;
+                            return;
+
+                            // Try to decode the data now
+                            //DecodeIncomingData();
+                        }
+
+                        // Try to prevent expectedLength 
+                        // from stalling the state
+                        _timeout++;
                     }
                 }
-                else 
-                {
-                    // Length is too large to be correct
-                    if (expectedLength > MAX_LENGTH || _timeout > 10)
-                    {
-                        _incomingDataBuffer.RemoveAt(0);
-                        _timeout = 0;
-
-                        // Try to decode the data now
-                        DecodeIncomingData();
-                    }
-
-                    // Try to prevent expectedLength 
-                    // from stalling the state
-                    _timeout++;
-                }
+            }
+            catch (Exception e)
+            {
+                // Some threading issues can cause the buffer
+                // to be cleared while still trying to use between
+                // checking the size and getting the data out of the
+                // buffer
+                log.Error("Error decoding PNI Prime messages", e);
             }
         }
 
+        /// <summary>
+        /// Determine what type of message was
+        /// received.  This will get the 3 byte
+        /// in the message and determine which
+        /// type the message is.  It will then call
+        /// the apporiate decode method for message 
+        /// received.
+        /// </summary>
+        /// <param name="msg">Message to decode.</param>
         private void DecodeMessage(byte[] msg)
         {
             // Ensure a good message was recieved.
-            if (msg.Length >= 2)
+            if (msg.Length >= PACKET_MIN_SIZE)
             {
-                //Debug.WriteLine("Found good Compass msg: " + msg);
+
                 int frameType = msg[2];
+
+                //Debug.WriteLine("Found good Compass ID: {0}  msg length: {1}", frameType, msg.Length);
 
                 switch (frameType)
                 {
                     case (int)ID.kDataResp:
                         DecodekDataResp(msg);
+                        break;
+                    case (int)ID.kConfigResp:
+                        DecodekConfigResp(msg);
                         break;
                     case (int)ID.kUserCalSampCount:
                         DecodekUserCalSampCount(msg);
@@ -568,11 +1563,36 @@ namespace RTI
                     case (int)ID.kUserCalScore:
                         DecodekUserCalScore(msg);
                         break;
+                    case (int)ID.kFactoryUserCalDone:
+                        PublishEvent(new CompassEventArgs(ID.kFactoryUserCalDone, null));
+                        break;
+                    case (int)ID.kFactoryInclCalDone:
+                        PublishEvent(new CompassEventArgs(ID.kFactoryInclCalDone, null));
+                        break;
+                    case (int)ID.kSaveDone:
+                        DecodekSaveDone(msg);
+                        break;
                     default:
                         break;
                 }
             }
 
+        }
+
+        /// <summary>
+        /// ID 16
+        /// This frame is the response to kSave frame.  The payload contains a UInt16 error
+        /// code.  0000h indicates no error, 0001h indicates error when attempting to save data into
+        /// non-volatile memory.
+        /// </summary>
+        /// <param name="msg">Data to decode.</param>
+        private void DecodekSaveDone(byte[] msg)
+        {
+            // Results, 0 = no error
+            UInt16 result = MathHelper.ByteArrayToUInt16(msg, FIRST_PACKET_INDEX, IS_BIG_ENDIAN);
+
+            // Call all subscribers with the error value
+            PublishEvent(new CompassEventArgs(ID.kSaveDone, result));
         }
 
         /// <summary>
@@ -586,10 +1606,10 @@ namespace RTI
         {
             // Start with xAxis 3
             // This is the start of a 4 byte UInt32
-            UInt32 sampleCount = GetUInt32(ref msg, FIRST_PACKET_INDEX);
+            UInt32 sampleCount = MathHelper.ByteArrayToUInt32(msg, FIRST_PACKET_INDEX, IS_BIG_ENDIAN);
 
             // Call all subscribers with new sample count
-            OnPropertyChange(this, new PropertyChangeEventArgs(EVENT_CAL_SAMPLE, sampleCount));
+            PublishEvent(new CompassEventArgs(ID.kUserCalSampCount, sampleCount));
         }
 
         /// <summary>
@@ -606,27 +1626,27 @@ namespace RTI
             int index = FIRST_PACKET_INDEX;
             
             // Get Std Dev Err
-            score.stdDevErr = GetFloat(ref msg, index);
+            score.stdDevErr = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN); ;
             index += SIZE_OF_FLOAT;
 
             // X Coverage
-            score.xCoverage = GetFloat(ref msg, index);
+            score.xCoverage = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN); ;
             index += SIZE_OF_FLOAT;
 
             // Y Coverage
-            score.yCoverage = GetFloat(ref msg, index);
+            score.yCoverage = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN); ;
             index += SIZE_OF_FLOAT;
 
             // Z Coverage
-            score.zCoverage = GetFloat(ref msg, index);
+            score.zCoverage = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN); ;
             index += SIZE_OF_FLOAT;
 
             // XYZ Accel Coverage
-            float xyzAccelCoverage = GetFloat(ref msg, index);
+            float xyzAccelCoverage = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN); ;
             index += SIZE_OF_FLOAT;
 
             // Accel StdDev Err
-            score.accelStdDevErr = GetFloat(ref msg, index);
+            score.accelStdDevErr = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN); ;
 
             // xyzAccelCoverage is in the XXYY.ZZ
             // Break up the ranges into there componenets
@@ -654,7 +1674,7 @@ namespace RTI
             }
 
             // Call all subscribers with new sample count
-            OnPropertyChange(this, new PropertyChangeEventArgs(EVENT_CAL_SCORE, score));
+            PublishEvent(new CompassEventArgs(ID.kUserCalScore, score));
         }
 
         /// <summary>
@@ -662,29 +1682,18 @@ namespace RTI
         /// Decode the Data Response.
         /// This is a message sent by the compass
         /// at a fixed interval time.  It contains
-        /// the Heading, pitch, roll
+        /// the Heading, pitch, roll.
+        /// Pass the data to all subscribers.
         /// </summary>
         /// <param name="msg">Data to decode</param>
         private void DecodekDataResp(byte[] msg)
         {
             int index = FIRST_PACKET_INDEX;
             int idCount = msg[index++];
-            
 
-            float heading = 0.0f;
-            bool distortion = false;    // True = at least on magnetometer axis is reading beyond +/- 100 uT
-            bool calStatus = false;     // False = not calibrated
-            float pitch = 0.0f;
-            float roll = 0.0f;
-            float pAligned = 0.0f;      // User calibrated Earth's acceleration vector component output
-            float rAligned = 0.0f;      // User calibrated Earth's acceleration vector component output 
-            float izAligned = 0.0f;     // User calibrated Earth's acceleration vector component output 
-            float xAligned = 0.0f;      // User calibrated Earth's magnetic field vector component output
-            float yAligned = 0.0f;      // User calibrated Earth's magnetic field vector component output
-            float zAligned = 0.0f;      // User calibrated Earth's magnetic field vector component output
+            DataResponse dataResponse = new DataResponse();
 
-            string str = String.Format("Compass Data: Num Types: {0} ", idCount);
-
+            // Go through each ID in the response
             for (int count = 0; count < idCount; count++)
             {
                 int id = msg[index++];
@@ -693,69 +1702,158 @@ namespace RTI
                 switch (id)
                 {
                     case (int)ID.kHeading:
-                        //heading = BitConverter.ToSingle(msg, xAxis);
-                        heading = GetFloat(ref msg, index);
+                        dataResponse.Heading = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("Heading: {0} ", heading);
                         break;
                     case (int)ID.kPAngle:
-                        //pitch = BitConverter.ToSingle(msg, xAxis);
-                        pitch = GetFloat(ref msg, index);
+                        dataResponse.Pitch = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("Pitch: {0} ", pitch);
                         break;
                     case (int)ID.kRAngle:
-                        //roll = BitConverter.ToSingle(msg, xAxis);
-                        roll = GetFloat(ref msg, index);
+                        dataResponse.Roll = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("Roll: {0} ", roll);
                         break;
                     case (int)ID.kDistortion:
-                        distortion = BitConverter.ToBoolean(msg, index);
+                        dataResponse.Distortion = MathHelper.ByteArrayToBoolean(msg, index);
                         index += SIZE_OF_BOOLEAN;
-                        str += String.Format("Distortion: {0} ", distortion);
                         break;
                     case (int)ID.kCalStatus:
-                        calStatus = BitConverter.ToBoolean(msg, index);
+                        dataResponse.CalStatus = MathHelper.ByteArrayToBoolean(msg, index);
                         index += SIZE_OF_BOOLEAN;
-                        str += String.Format("CalStatus: {0} ", calStatus);
                         break;
                     case (int)ID.kPAligned:
-                        pAligned = GetFloat(ref msg, index);
+                        dataResponse.pAligned = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("PAligned: {0} ", pAligned);
                         break;
                     case (int)ID.kRAligned:
-                        rAligned = GetFloat(ref msg, index);
+                        dataResponse.rAligned = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("RAligned: {0} ", rAligned);
                         break;
                     case (int)ID.kIZAligned:
-                        izAligned = GetFloat(ref msg, index);
+                        dataResponse.izAligned = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("IZAligned: {0} ", izAligned);
                         break;
                     case (int)ID.kXAligned:
-                        xAligned = GetFloat(ref msg, index);
+                        dataResponse.xAligned = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("XAligned: {0} ", xAligned);
                         break;
                     case (int)ID.kYAligned:
-                        yAligned = GetFloat(ref msg, index);
+                        dataResponse.yAligned = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("YAligned: {0} ", yAligned);
                         break;
                     case (int)ID.kZAligned:
-                        zAligned = GetFloat(ref msg, index);
+                        dataResponse.zAligned = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
                         index += SIZE_OF_FLOAT;
-                        str += String.Format("ZAligned: {0} ", zAligned);
                         break;
                     default:
                         break;
                 }
             }
 
-            //Debug.WriteLine(str);
+            // Call all subscribers with new sample count
+            PublishEvent(new CompassEventArgs(ID.kDataResp, dataResponse));
+        }
+
+        /// <summary>
+        /// ID 8
+        /// The frame queries is the response to kGetConfig frame.  The
+        /// payload contains the configuration ID and value.
+        /// </summary>
+        private void DecodekConfigResp(byte[] msg)
+        {
+            int index = FIRST_PACKET_INDEX;
+
+            Configuration config = new Configuration();
+
+            int id = msg[index++];
+
+            // Set all the id ranges
+            switch (id)
+            {
+                case (int)ID.kDeclination:
+                    config.Declination = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);;
+
+                    // Call all subscribers with new sample count
+                    PublishEvent(new CompassEventArgs(ID.kDeclination, config.Declination));
+                    break;
+                case (int)ID.kTrueNorth:
+                    config.TrueNorth = MathHelper.ByteArrayToBoolean(msg, index);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kTrueNorth, config.TrueNorth));
+                    break;
+                case (int)ID.kBigEndian:
+                    config.BigEndian = MathHelper.ByteArrayToBoolean(msg, index);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kBigEndian, config.BigEndian));
+                    break;
+                case (int)ID.kMountingRef:
+                    config.MountingRef = MathHelper.ByteArrayToInt(msg, index);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kMountingRef, config.MountingRef));
+                    break;
+                case (int)ID.kUserCalStableCheck:
+                    config.UserCalStableCheck = MathHelper.ByteArrayToBoolean(msg, index);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kUserCalStableCheck, config.UserCalStableCheck));
+                    break;
+                case (int)ID.kUserCalNumPoints:
+                    config.UserCalNumPoints = MathHelper.ByteArrayToUInt32(msg, index, IS_BIG_ENDIAN);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kUserCalNumPoints, config.UserCalNumPoints));
+                    break;
+                case (int)ID.kUserCalAutoSampling:
+                    config.UserCalAutoSampling = MathHelper.ByteArrayToBoolean(msg, index);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kUserCalAutoSampling, config.UserCalAutoSampling));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Give the calibration positions for
+        /// the next sample taken.
+        /// </summary>
+        /// <param name="sample">Position Sample.</param>
+        /// <returns>String of next position for each sample given.</returns>
+        public static string MagCalibrationPosition(UInt32 sample)
+        {
+            switch(sample)
+            {
+                case 0:
+                    return "0°";
+                case 1:
+                    return "90°";
+                case 2:
+                    return "180°";
+                case 3:
+                    return "270°";
+                case 4:
+                    return "30° Roll: 20°";
+                case 5:
+                    return "120° Roll: 20°";
+                case 6:
+                    return "210° Roll: 20°";
+                case 7:
+                    return "300° Roll: 20°";
+                case 8:
+                    return "60° Roll: -20°";
+                case 9:
+                    return "150° Roll -20°";
+                case 10:
+                    return "240° Roll -20°";
+                case 11:
+                    return "330° Roll -20°";
+                default:
+                    return "-";
+            }
         }
         
         /// <summary>
@@ -803,7 +1901,7 @@ namespace RTI
 
         /// <summary>
         /// This will go the end of the message based off the
-        /// size and get the last 2 ranges.  It will combine
+        /// size and get the last 2 values.  It will combine
         /// them to form the checksum.
         /// </summary>
         /// <param name="size">Size of the message.</param>
@@ -812,7 +1910,7 @@ namespace RTI
         {
             if (size >= PACKET_MIN_SIZE)
             {
-                // Get the last 2 ranges in the buffer
+                // Get the last 2 values in the buffer
                 // and combine to make a checksum value
                 return (UInt16)((_incomingDataBuffer[size - 2] << 8) | _incomingDataBuffer[size - 1]);
             }
@@ -836,81 +1934,6 @@ namespace RTI
         #endregion
 
         #region Utilities
-
-        /// <summary>
-        /// All data is received in Big Endian.
-        /// If the system is in Little Endian, then
-        /// the byte converter will not convert properly
-        /// and the bytes will have to be reversed.
-        /// </summary>
-        /// <param name="data">Data to get the value.</param>
-        /// <param name="index">Index in the array to start.</param>
-        /// <returns>Float value from the byte array.</returns>
-        private float GetFloat(ref byte[] data, int index)
-        {
-            // Get the 4 bytes and store to an array
-            byte[] temp = new byte[4];
-            temp[0] = data[index++];
-            temp[1] = data[index++];
-            temp[2] = data[index++];
-            temp[3] = data[index];
-
-            // Check if we need to reverse the data
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(temp);
-            }
-
-            return BitConverter.ToSingle(temp, 0);
-        }
-
-        /// <summary>
-        /// All data is received in Big Endian.
-        /// If the system is in Little Endian, then
-        /// the byte converter will not convert properly
-        /// and the bytes will have to be reversed.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        private UInt32 GetUInt32(ref byte[] data, int index)
-        {
-            // Get the 4 bytes and store to an array
-            byte[] temp = new byte[4];
-            temp[0] = data[index++];
-            temp[1] = data[index++];
-            temp[2] = data[index++];
-            temp[3] = data[index];
-
-            // Check if we need to reverse the data
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(temp);
-            }
-
-            return BitConverter.ToUInt32(temp, 0);
-        }
-
-        /// <summary>
-        /// Convert an UInt32 to byte array.
-        /// The byte array must then be in Big Endian,
-        /// so the byte array may need to be reversed.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private static byte[] UInt32ToByteArray(UInt32 value)
-        {
-            byte[] temp = BitConverter.GetBytes(value);
-
-            // If little endian, the bytes are in the
-            // wrong order and reverse
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(temp);
-            }
-
-            return temp;
-        }
 
         /// <summary>
         /// Calculate the checksum for the given data.
@@ -966,19 +1989,18 @@ namespace RTI
 
         #endregion
 
-        // Call to subscribers on property change
-        #region Property Change Event Handling
+        #region Events
 
         /// <summary>
         /// Class for an event argument to send and receive
         /// data through events.
         /// </summary>
-        public class PropertyChangeEventArgs : EventArgs
+        public class CompassEventArgs : EventArgs
         {
             /// <summary>
             /// Property name that has changed.
             /// </summary>
-            public string PropertyName { get; internal set; }
+            public ID EventType { get; internal set; }
 
             /// <summary>
             /// Value to hold for property changes.
@@ -986,52 +2008,40 @@ namespace RTI
             public object Value { get; internal set; }
 
             /// <summary>
-            /// Property change event argument.
+            /// Object to store the event type and value.
             /// </summary>
-            /// <param name="propertyName">Property name.</param>
+            /// <param name="eventType">Event type given the ID enum.</param>
             /// <param name="data">Value to store.</param>
-            public PropertyChangeEventArgs(string propertyName, object data)
+            public CompassEventArgs(ID eventType, object data)
             {
-                this.PropertyName = propertyName;
+                this.EventType = eventType;
                 this.Value = data;
             }
-        }
-
-        /// <summary>
-        /// Event when Cal Sample received.
-        /// </summary>
-        public const string EVENT_CAL_SAMPLE = "SAMPLE";
-
-        /// <summary>
-        /// Event when Cal Score received.
-        /// </summary>
-        public const string EVENT_CAL_SCORE = "CAL_SCORE";                                      
+        }                                    
 
         /// <summary>
         /// Method to call when subscribing to an event.
         /// </summary>
-        /// <param name="sender"></param>
         /// <param name="data"></param>
-        public delegate void PropertyChangeHandler(object sender, PropertyChangeEventArgs data);
+        public delegate void CompassEventHandler(CompassEventArgs data);
 
         /// <summary>
         /// Event to subscribe to
         /// </summary>
-        public event PropertyChangeHandler PropertyChange;
+        public event CompassEventHandler CompassEvent;
 
         /// <summary>
         /// An event has been fired.  This method
         /// will call all subscribers with the event.
         /// </summary>
-        /// <param name="sender">This</param>
         /// <param name="data">The event to send.</param>
-        public void OnPropertyChange(object sender, PropertyChangeEventArgs data)
+        public void PublishEvent(CompassEventArgs data)
         {
             // Check if there are any Subscribers
-            if (PropertyChange != null)
+            if (CompassEvent != null)
             {
                 // Call the Event
-                PropertyChange(this, data);
+                CompassEvent(data);
             }
         }
 

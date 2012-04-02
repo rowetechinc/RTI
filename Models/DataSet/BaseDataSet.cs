@@ -40,6 +40,7 @@
  * 01/19/2012      RC          1.14        Added NUM_DATASET_HEADER_ELEMENTS. Used variable in GetBaseDataSize().
  *                                          Fix bug in GetDataSetSize(), wrong case statement variable for float.
  *                                          Fix bug in GenerateHeader(), ValueType hard coded to BYTE.
+ * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  *       
  * 
  */
@@ -220,23 +221,23 @@ namespace RTI
                 byte[] result = new byte[DataSet.Ensemble.PAYLOAD_HEADER_LEN];
 
                 // Add Data Type (Byte)
-                byte[] dataType = Converters.IntToByteArray(ValueType);
+                byte[] dataType = MathHelper.IntToByteArray(ValueType);
                 System.Buffer.BlockCopy(dataType, 0, result, 0, 4);
 
                 // Add Bins or data length
-                byte[] len = Converters.IntToByteArray(numElments);
+                byte[] len = MathHelper.IntToByteArray(numElments);
                 System.Buffer.BlockCopy(len, 0, result, 4, 4);
 
                 // Add Beams (1 for Ensemble, Ancillary and Nmea, 4 for all other data sets.  )
-                byte[] beams = Converters.IntToByteArray(ElementsMultiplier);
+                byte[] beams = MathHelper.IntToByteArray(ElementsMultiplier);
                 System.Buffer.BlockCopy(beams, 0, result, 8, 4);
 
                 // Add Image (default 0)
-                byte[] image = Converters.IntToByteArray(Imag);
+                byte[] image = MathHelper.IntToByteArray(Imag);
                 System.Buffer.BlockCopy(image, 0, result, 12, 4);
 
                 // Add NameLen (default 8)
-                byte[] nameLen = Converters.IntToByteArray(NameLength);
+                byte[] nameLen = MathHelper.IntToByteArray(NameLength);
                 System.Buffer.BlockCopy(nameLen, 0, result, 16, 4);
  
                 // Add Name (E0000XX\0)

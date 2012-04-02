@@ -43,6 +43,7 @@
  * 01/18/2012      RC          1.14       Added Encode() to convert to byte array.
  *                                         Removed "private set".
  * 01/24/2012      RC          1.14       Removed Rounded properties to methods to reduce memory footprint.
+ * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  *       
  * 
  */
@@ -211,19 +212,19 @@ namespace RTI
             /// <param name="data">Byte array containing the Ancillary data type.</param>
             private void Decode(byte[] data)
             {
-                FirstBinRange = Converters.ByteArrayToFloat(data, GenerateIndex(0));
-                BinSize = Converters.ByteArrayToFloat(data, GenerateIndex(1));
-                FirstPingTime = Converters.ByteArrayToFloat(data, GenerateIndex(2));
-                LastPingTime = Converters.ByteArrayToFloat(data, GenerateIndex(3));
-                Heading = Converters.ByteArrayToFloat(data, GenerateIndex(4));
-                Pitch = Converters.ByteArrayToFloat(data, GenerateIndex(5));
-                Roll = Converters.ByteArrayToFloat(data, GenerateIndex(6));
-                WaterTemp = Converters.ByteArrayToFloat(data, GenerateIndex(7));
-                SystemTemp = Converters.ByteArrayToFloat(data, GenerateIndex(8));
-                Salinity = Converters.ByteArrayToFloat(data, GenerateIndex(9));
-                Pressure = Converters.ByteArrayToFloat(data, GenerateIndex(10));
-                TransducerDepth = Converters.ByteArrayToFloat(data, GenerateIndex(11));
-                SpeedOfSound = Converters.ByteArrayToFloat(data, GenerateIndex(12));
+                FirstBinRange = MathHelper.ByteArrayToFloat(data, GenerateIndex(0));
+                BinSize = MathHelper.ByteArrayToFloat(data, GenerateIndex(1));
+                FirstPingTime = MathHelper.ByteArrayToFloat(data, GenerateIndex(2));
+                LastPingTime = MathHelper.ByteArrayToFloat(data, GenerateIndex(3));
+                Heading = MathHelper.ByteArrayToFloat(data, GenerateIndex(4));
+                Pitch = MathHelper.ByteArrayToFloat(data, GenerateIndex(5));
+                Roll = MathHelper.ByteArrayToFloat(data, GenerateIndex(6));
+                WaterTemp = MathHelper.ByteArrayToFloat(data, GenerateIndex(7));
+                SystemTemp = MathHelper.ByteArrayToFloat(data, GenerateIndex(8));
+                Salinity = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
+                Pressure = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
+                TransducerDepth = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
+                SpeedOfSound = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
             }
 
             /// <summary>
@@ -241,19 +242,19 @@ namespace RTI
 
                 // Get the length
                 byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(FirstBinRange), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(BinSize), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Heading), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pitch), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Roll), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(WaterTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SystemTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Salinity), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(Pressure), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(TransducerDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(Converters.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(FirstBinRange), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BinSize), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Heading), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pitch), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Roll), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WaterTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SystemTemp), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Salinity), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pressure), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(TransducerDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NumElements);

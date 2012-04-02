@@ -43,6 +43,7 @@
  * 02/24/2012      RC          2.04       Changed version number.
  * 03/05/2012      RC          2.05       Changed version number.
  * 03/06/2012      RC          2.06       Changed version number.
+ * 03/20/2012      RC          2.07       Changed version number.
  * 
  * 
  */
@@ -69,7 +70,7 @@ namespace RTI
             /// <summary>
             /// Application Minor version number.
             /// </summary>
-            public const int RTI_VERSION_MINOR = 06;
+            public const int RTI_VERSION_MINOR = 07;
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any

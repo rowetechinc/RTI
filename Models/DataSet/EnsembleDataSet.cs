@@ -53,6 +53,7 @@
  * 02/23/2012      RC          2.03       Changed Status to status object.
  * 02/29/2012      RC          2.04       Set the Status for the constructor that take PRTI01 or PRTI02 sentences.
  *                                         Created a special serial number for the DVL constructors.
+ * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  *       
  * 
  */
@@ -369,19 +370,19 @@ namespace RTI
             /// <param name="data">Byte array containing the Ensemble data type.</param>
             private void Decode(byte[] data)
             {
-                EnsembleNumber = Converters.ByteArrayToInt(data, GenerateIndex(0));
-                NumBins = Converters.ByteArrayToInt(data, GenerateIndex(1));
-                NumBeams = Converters.ByteArrayToInt(data, GenerateIndex(2));
-                DesiredPingCount = Converters.ByteArrayToInt(data, GenerateIndex(3));
-                ActualPingCount = Converters.ByteArrayToInt(data, GenerateIndex(4));
-                Status = new Status(Converters.ByteArrayToInt(data, GenerateIndex(5)));
-                Year = Converters.ByteArrayToInt(data, GenerateIndex(6));
-                Month = Converters.ByteArrayToInt(data, GenerateIndex(7));
-                Day = Converters.ByteArrayToInt(data, GenerateIndex(8));
-                Hour = Converters.ByteArrayToInt(data, GenerateIndex(9));
-                Minute = Converters.ByteArrayToInt(data, GenerateIndex(10));
-                Second = Converters.ByteArrayToInt(data, GenerateIndex(11));
-                HSec = Converters.ByteArrayToInt(data, GenerateIndex(12));
+                EnsembleNumber = MathHelper.ByteArrayToInt(data, GenerateIndex(0));
+                NumBins = MathHelper.ByteArrayToInt(data, GenerateIndex(1));
+                NumBeams = MathHelper.ByteArrayToInt(data, GenerateIndex(2));
+                DesiredPingCount = MathHelper.ByteArrayToInt(data, GenerateIndex(3));
+                ActualPingCount = MathHelper.ByteArrayToInt(data, GenerateIndex(4));
+                Status = new Status(MathHelper.ByteArrayToInt(data, GenerateIndex(5)));
+                Year = MathHelper.ByteArrayToInt(data, GenerateIndex(6));
+                Month = MathHelper.ByteArrayToInt(data, GenerateIndex(7));
+                Day = MathHelper.ByteArrayToInt(data, GenerateIndex(8));
+                Hour = MathHelper.ByteArrayToInt(data, GenerateIndex(9));
+                Minute = MathHelper.ByteArrayToInt(data, GenerateIndex(10));
+                Second = MathHelper.ByteArrayToInt(data, GenerateIndex(11));
+                HSec = MathHelper.ByteArrayToInt(data, GenerateIndex(12));
 
                 // Revision D additions
                 if (NumElements >= NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D * Ensemble.BYTES_IN_INT)
@@ -427,19 +428,19 @@ namespace RTI
                 
                 // Get the length
                 byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_INT];
-                System.Buffer.BlockCopy(Converters.IntToByteArray(EnsembleNumber), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(NumBins), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(DesiredPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Status.Value), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Year), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Month), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Day), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Hour), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Minute), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(Second), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
-                System.Buffer.BlockCopy(Converters.IntToByteArray(HSec), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(EnsembleNumber), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(NumBins), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(DesiredPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Status.Value), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Year), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Month), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Day), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Hour), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Minute), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(Second), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
+                System.Buffer.BlockCopy(MathHelper.IntToByteArray(HSec), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT);
                 System.Buffer.BlockCopy(SysSerialNumber.Encode(), 0, payload, GeneratePayloadIndex(index), SerialNumber.NUM_BYTES);
                 System.Buffer.BlockCopy(SysFirmware.Encode(), 0, payload, GeneratePayloadIndex(index) + (SERIAL_NUM_INT * Ensemble.BYTES_IN_INT), Firmware.NUM_BYTES);
 

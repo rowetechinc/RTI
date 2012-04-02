@@ -1,5 +1,17 @@
 RTI Changelog
 
+RTI-2.07
+ - Changed the version number.
+ - Changed how the incoming data is added to the buffer in PniPrimeCompassBinaryCodec.
+ - Add the incoming data to the buffer not using a for loop in Compass and AdcpBinary codecs.  Use AddRange().
+ - Added a 100 ms delay after sending the command to set in Compass mode in AdcpSerialPort.  This fixes starting calibration.
+ - In PniPrimeCompassBinaryCodec, added classes to store results from the commands.
+ - Added PniPrimeCompassBinaryCodec::GetUInt16() to convert array value to UInt16.
+ - Added PniPrimeCompassBinaryCodec::DecodekSaveDone() to decode the kSaveDone message.
+ - Added PniPrimeCompassBinaryCodec::GetDefaultCompassCalMagCommand() to get the command for the Factory defaults for Mag.
+ - Moved PniPrimeCompassBinaryCodec convertion methods to MathHelper.
+ - Combined MatherHelper.cs and Converters.cs together in MathHelper.cs.
+
 RTI-2.06
  - Changed the version number.
  - Updated GIT instructions.

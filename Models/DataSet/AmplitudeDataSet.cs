@@ -40,6 +40,7 @@
  * 01/19/2012      RC          1.14       Added Encode() to create a byte array of data.
  *                                         Removed "private set".
  *                                         Rename Decode methods to Decode().
+ * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  *       
  * 
  */
@@ -158,7 +159,7 @@ namespace RTI
                     for (int bin = 0; bin < NumElements; bin++)
                     {
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        AmplitudeData[bin, beam] = Converters.ByteArrayToFloat(dataType, index);
+                        AmplitudeData[bin, beam] = MathHelper.ByteArrayToFloat(dataType, index);
                     }
                 }
             }
@@ -212,7 +213,7 @@ namespace RTI
                     {
                         // Get the index for the next element and add to the array
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        System.Buffer.BlockCopy(Converters.FloatToByteArray(AmplitudeData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(AmplitudeData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
                     }
                 }
 

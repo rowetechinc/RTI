@@ -48,6 +48,8 @@
  * 02/06/2012      RC          2.00       Improve the performance of the ReceiveBufferString when limiting the size.
  * 02/10/2012      RC          2.02       Made serial port and serial options PROTECTED so class that extend can use it.
  *                                         Added BREAK command.
+ * 03/23/2012      RC          2.07       Added a wait in the Break command to ensure the state has time to change.
+ * 03/30/2012      RC          2.07       Check for a break state when sending data.
  * 
  */
 
@@ -273,9 +275,15 @@ namespace RTI
                 // Send a break to the serial port
                 _serialPort.BreakState = true;
 
+                // Wait for the state to change
+                // and leave on a bit of time
                 System.Threading.Thread.Sleep(100);
 
+                // Change state back
                 _serialPort.BreakState = false;
+
+                // Wait for state to change back
+                System.Threading.Thread.Sleep(100);
             }
         }
 
@@ -375,7 +383,7 @@ namespace RTI
         /// <param name="data">Data to write.</param>
         public void SendData(string data)
         {
-            if (_serialPort.IsOpen && !String.IsNullOrEmpty(data))
+            if (_serialPort.IsOpen && !String.IsNullOrEmpty(data) && !_serialPort.BreakState)
             {
                 // Format the command
                 data += '\r';
@@ -394,7 +402,7 @@ namespace RTI
         /// <param name="count">Number of bytes to write.</param>
         public void SendData(byte[] data, int offset, int count)
         {
-            if (_serialPort.IsOpen && (data != null))
+            if (_serialPort.IsOpen && (data != null) && !_serialPort.BreakState)
             {
                 _serialPort.Write(data, offset, count);
             }

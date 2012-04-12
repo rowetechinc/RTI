@@ -44,6 +44,8 @@
  * 03/05/2012      RC          2.05       Changed version number.
  * 03/06/2012      RC          2.06       Changed version number.
  * 03/20/2012      RC          2.07       Changed version number.
+ * 04/02/2012      RC          2.08       Changed version number.
+ * 04/10/2012      RC          2.08       Changed the recorded file extenstion to match the ADCP.
  * 
  * 
  */
@@ -70,7 +72,7 @@ namespace RTI
             /// <summary>
             /// Application Minor version number.
             /// </summary>
-            public const int RTI_VERSION_MINOR = 07;
+            public const int RTI_VERSION_MINOR = 08;
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any
@@ -87,14 +89,14 @@ namespace RTI
             /// This file will contain a single ensemble
             /// per entry.
             /// </summary>
-            public const string SINGLE_ENSEMBLE_FILE_EXT = ".rti";
+            public const string SINGLE_ENSEMBLE_FILE_EXT = ".ENS";
 
             /// <summary>
             /// File extension for the Averaged ADCP binary data.
             /// This file will contain X averaged ensembles per
             /// entry.
             /// </summary>
-            public const string AVG_ENSEMBLE_FILE_EXT = ".arti";
+            public const string AVG_ENSEMBLE_FILE_EXT = ".ENA";
 
             #endregion
 

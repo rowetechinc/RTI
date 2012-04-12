@@ -50,6 +50,7 @@
  *                                         Added IS_BIG_ENDIAN to state all data is in Big Endian form.
  * 03/30/2012      RC           2.07      Surround processing thread in try/catch loop.  
  *                                         Check size of buffer before trying to remove the data.
+ * 04/06/2012      RC           2.08      Changed serial port read thread, so make the codec decode in a while loop again.
  * 
  */
 
@@ -226,7 +227,7 @@ namespace RTI
         /// <summary>
         /// Flag to continue loop.
         /// </summary>
-        private bool _continue;
+        private volatile bool _continue;
 
         /// <summary>
         /// Wait queue flag.
@@ -989,7 +990,6 @@ namespace RTI
             _incomingDataBuffer = new List<byte>();
             _currentMsgSize = 0;
 
-
             // Initialize the thread
             _continue = true;
             _eventWaitData = new EventWaitHandle(false, EventResetMode.AutoReset);
@@ -1449,7 +1449,7 @@ namespace RTI
         {
             try
             {
-                if (_incomingDataBuffer.Count >= PACKET_MIN_SIZE)
+                while (_incomingDataBuffer.Count >= PACKET_MIN_SIZE)
                 {
                     // Get the length of the message
                     int expectedLength = GetMsgLength();
@@ -1491,7 +1491,7 @@ namespace RTI
                         {
                             lock (_bufferLock)
                             {
-                                //_incomingDataBuffer.RemoveAt(0);
+                                _incomingDataBuffer.RemoveAt(0);
                             }
                         }
                     }
@@ -1504,11 +1504,11 @@ namespace RTI
                             {
                                 if (_incomingDataBuffer.Count > 0)
                                 {
-                                    //_incomingDataBuffer.RemoveAt(0);
+                                    _incomingDataBuffer.RemoveAt(0);
                                 }
                             }
                             _timeout = 0;
-                            return;
+                            //return;
 
                             // Try to decode the data now
                             //DecodeIncomingData();
@@ -1553,24 +1553,31 @@ namespace RTI
                 {
                     case (int)ID.kDataResp:
                         DecodekDataResp(msg);
+                        //Debug.WriteLine("Compass Data Response");
                         break;
                     case (int)ID.kConfigResp:
                         DecodekConfigResp(msg);
+                        //Debug.WriteLine("Compass Config Response");
                         break;
                     case (int)ID.kUserCalSampCount:
                         DecodekUserCalSampCount(msg);
+                        //Debug.WriteLine("Compass Cal Sample Count");
                         break;
                     case (int)ID.kUserCalScore:
                         DecodekUserCalScore(msg);
+                        //Debug.WriteLine("Compass Cal Score");
                         break;
                     case (int)ID.kFactoryUserCalDone:
                         PublishEvent(new CompassEventArgs(ID.kFactoryUserCalDone, null));
+                        //Debug.WriteLine("Compass Mag Factory Cal Done");
                         break;
                     case (int)ID.kFactoryInclCalDone:
                         PublishEvent(new CompassEventArgs(ID.kFactoryInclCalDone, null));
+                        //Debug.WriteLine("Compass Accel Factory Cal Done");
                         break;
                     case (int)ID.kSaveDone:
                         DecodekSaveDone(msg);
+                        //Debug.WriteLine("Compass Save Done");
                         break;
                     default:
                         break;
@@ -1604,7 +1611,7 @@ namespace RTI
         /// <param name="msg">Data to decode.</param>
         private void DecodekUserCalSampCount(byte[] msg)
         {
-            // Start with xAxis 3
+            // Start with index 3
             // This is the start of a 4 byte UInt32
             UInt32 sampleCount = MathHelper.ByteArrayToUInt32(msg, FIRST_PACKET_INDEX, IS_BIG_ENDIAN);
 
@@ -1789,7 +1796,7 @@ namespace RTI
                     PublishEvent(new CompassEventArgs(ID.kBigEndian, config.BigEndian));
                     break;
                 case (int)ID.kMountingRef:
-                    config.MountingRef = MathHelper.ByteArrayToInt(msg, index);
+                    config.MountingRef = MathHelper.ByteArrayToInt8(msg, index);
 
                     // Call all subscribers with new values
                     PublishEvent(new CompassEventArgs(ID.kMountingRef, config.MountingRef));

@@ -321,8 +321,12 @@ namespace RTI
                 _fileName = GetNewFileName();
             }
 
-            // Write the data to the file
-            _binWriter.Write(data);
+            try
+            {
+                // Write the data to the file
+                _binWriter.Write(data);
+            }
+            catch (Exception) { }
 
             // Keep track of the file size
             _fileSize += data.Length;

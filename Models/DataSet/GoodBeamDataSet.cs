@@ -158,7 +158,7 @@ namespace RTI
                     for (int bin = 0; bin < NumElements; bin++)
                     {
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        GoodBeamData[bin, beam] = MathHelper.ByteArrayToInt(dataType, index);
+                        GoodBeamData[bin, beam] = MathHelper.ByteArrayToInt32(dataType, index);
                     }
                 }
             }
@@ -211,7 +211,7 @@ namespace RTI
                     {
                         // Get the index for the next element and add to the array
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        System.Buffer.BlockCopy(MathHelper.IntToByteArray(GoodBeamData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
+                        System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(GoodBeamData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
                     }
                 }
 

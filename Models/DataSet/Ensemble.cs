@@ -57,6 +57,7 @@
  * 02/13/2012      RC          2.03       Made the object serializable to allow for deep copies.
  * 02/14/2012      RC          2.03       Added BAD_RANGE.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 04/10/2012      RC          2.08       Changed BYTES_IN_INT to BYTES_IN_INT8 and BYTES_IN_INT32.
  *                                         
  *       
  * 
@@ -173,9 +174,14 @@ namespace RTI
             public const int BYTES_IN_FLOAT = 4;
 
             /// <summary>
-            /// Number of bytes per integer.
+            /// Number of bytes per a 32bit integer.
             /// </summary>
-            public const int BYTES_IN_INT = 4;
+            public const int BYTES_IN_INT32 = 4;
+
+            /// <summary>
+            /// Number of bytes in an 8 byte integer.
+            /// </summary>
+            public const int BYTES_IN_INT8 = 1;
 
             /// <summary>
             /// Default value for base data type FLOAT (ValueType).
@@ -1417,24 +1423,24 @@ namespace RTI
 
                 // Add the ensemble to the result
                 // Subtract 4 to not include the checksum
-                System.Buffer.BlockCopy(ensemble, 0, result, 0, ensemble.Length - BYTES_IN_INT);
+                System.Buffer.BlockCopy(ensemble, 0, result, 0, ensemble.Length - BYTES_IN_INT32);
 
                 // Replace the new payload and 1's compliment
-                byte[] payloadSizeByte = MathHelper.IntToByteArray(payloadSize);
-                byte[] payloadSizeNotByte = MathHelper.IntToByteArray(payloadSizeNot);
-                System.Buffer.BlockCopy(payloadSizeByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
-                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
+                byte[] payloadSizeByte = MathHelper.Int32ToByteArray(payloadSize);
+                byte[] payloadSizeNotByte = MathHelper.Int32ToByteArray(payloadSizeNot);
+                System.Buffer.BlockCopy(payloadSizeByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT32 + BYTES_IN_INT32), BYTES_IN_INT32);
+                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT32 + BYTES_IN_INT32 + BYTES_IN_INT32), BYTES_IN_INT32);
 
                 // Add the new dataset to the ensemble overlapping on checksum
                 // Subtract 4 to not include the checksum
-                System.Buffer.BlockCopy(dataset, 0, result, ensemble.Length - BYTES_IN_INT, dataset.Length);
+                System.Buffer.BlockCopy(dataset, 0, result, ensemble.Length - BYTES_IN_INT32, dataset.Length);
 
                 // Create new checksum 
                 long checksum = Ensemble.CalculateEnsembleChecksum(result);
                 
                 // Add checksum to the end of the datatype
-                byte[] checksumByte = MathHelper.IntToByteArray((int)checksum);
-                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT, BYTES_IN_INT);
+                byte[] checksumByte = MathHelper.Int32ToByteArray((int)checksum);
+                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT32, BYTES_IN_INT32);
 
                 return result;
             }
@@ -1468,17 +1474,17 @@ namespace RTI
                 System.Buffer.BlockCopy(payload, 0, result, ENSEMBLE_HEADER_LEN, payload.Length);
 
                 // Set the payload size and 1's compliment
-                byte[] payloadSizeByte = MathHelper.IntToByteArray(payload.Length);
-                byte[] payloadSizeNotByte = MathHelper.IntToByteArray(~payload.Length);
-                System.Buffer.BlockCopy(payloadSizeByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
-                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT + BYTES_IN_INT + BYTES_IN_INT), BYTES_IN_INT);
+                byte[] payloadSizeByte = MathHelper.Int32ToByteArray(payload.Length);
+                byte[] payloadSizeNotByte = MathHelper.Int32ToByteArray(~payload.Length);
+                System.Buffer.BlockCopy(payloadSizeByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT32 + BYTES_IN_INT32), BYTES_IN_INT32);
+                System.Buffer.BlockCopy(payloadSizeNotByte, 0, result, (HEADER_START_COUNT + BYTES_IN_INT32 + BYTES_IN_INT32 + BYTES_IN_INT32), BYTES_IN_INT32);
 
                 // Create new checksum 
                 long checksum = Ensemble.CalculateEnsembleChecksum(result);
 
                 // Add checksum to the end of the datatype
-                byte[] checksumByte = MathHelper.IntToByteArray((int)checksum);
-                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT, BYTES_IN_INT);
+                byte[] checksumByte = MathHelper.Int32ToByteArray((int)checksum);
+                System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT32, BYTES_IN_INT32);
 
                 return result;
             }
@@ -1526,11 +1532,11 @@ namespace RTI
                 }
 
                 // Add ensemble number
-                byte[] ensNum = MathHelper.IntToByteArray(ensembleNum);
-                System.Buffer.BlockCopy(ensNum, 0, header, HEADER_START_COUNT, BYTES_IN_INT);
+                byte[] ensNum = MathHelper.Int32ToByteArray(ensembleNum);
+                System.Buffer.BlockCopy(ensNum, 0, header, HEADER_START_COUNT, BYTES_IN_INT32);
 
-                byte[] notEnsNum = MathHelper.IntToByteArray(~ensembleNum);
-                System.Buffer.BlockCopy(notEnsNum, 0, header, HEADER_START_COUNT + BYTES_IN_INT, BYTES_IN_INT);
+                byte[] notEnsNum = MathHelper.Int32ToByteArray(~ensembleNum);
+                System.Buffer.BlockCopy(notEnsNum, 0, header, HEADER_START_COUNT + BYTES_IN_INT32, BYTES_IN_INT32);
 
                 return header;
             }

@@ -37,6 +37,8 @@
  * 02/14/2012      RC          2.03       Fixed standard deviation equation.
  * 02/24/2012      RC          2.03       Added DegreeToRadian.
  * 03/29/2012      RC          2.07       Added the methods from Converters.cs
+ * 04/10/2012      RC          2.08       Changed ByteArrayToInt() to ByteArrayToInt8() and ByteArrayToInt32().
+ *                                         Added MB_TO_BYTES.
  * 
  */
 
@@ -52,6 +54,12 @@ namespace RTI
     /// </summary>
     public class MathHelper
     {
+        /// <summary>
+        /// Value to convert megabytes to bytes.
+        /// </summary>
+        public const int MB_TO_BYTES = 1048576;
+
+
         /// <summary>
         /// Calculate the population standard deviation for the 4 values given.
         /// It is assumed that every value is used to calculate the standard deviation.
@@ -340,7 +348,7 @@ namespace RTI
         /// <param name="index">Location of the data.</param>
         /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
         /// <returns>Unsigned integer.</returns>
-        public static int ByteArrayToInt(byte[] data, int index, bool isBigEndian = false)
+        public static int ByteArrayToInt32(byte[] data, int index, bool isBigEndian = false)
         {
             // Ensure the data exist and there is enough data
             if (data == null || index + 4 > data.Length)
@@ -415,7 +423,7 @@ namespace RTI
         /// <param name="data">Data received.</param>
         /// <param name="index">Index in the array to start.</param>
         /// <returns>UInt16 from the index location.</returns>
-        public static int ByteArrayToInt(byte[] data, int index)
+        public static int ByteArrayToInt8(byte[] data, int index)
         {
             // Ensure there is a byte to work with
             // starting from the index
@@ -576,7 +584,7 @@ namespace RTI
         /// <param name="value">Float value to convert.</param>
         /// <param name="inBigEndian">Set to True if you want to results returned in Big Endian format.</param>
         /// <returns>Byte array which contains the bytes of the conversion.</returns>
-        public static byte[] IntToByteArray(int value, bool inBigEndian = false)
+        public static byte[] Int32ToByteArray(int value, bool inBigEndian = false)
         {
             TestUnion result = new TestUnion();
             result.Int = value;

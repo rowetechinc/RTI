@@ -148,7 +148,7 @@ namespace RTI
                 // Name length gives length of name
                 // The rest are 4 bytes for each item
                 // 1 is subtracted because Name's size is given with NameLength.
-                return nameLength + (Ensemble.BYTES_IN_INT * (NUM_DATASET_HEADER_ELEMENTS - 1));
+                return nameLength + (Ensemble.BYTES_IN_INT32 * (NUM_DATASET_HEADER_ELEMENTS - 1));
             }
 
             /// <summary>
@@ -173,7 +173,7 @@ namespace RTI
                         dataType = Ensemble.BYTES_IN_BYTES;
                         break;
                     case Ensemble.DATATYPE_INT:
-                        dataType = Ensemble.BYTES_IN_INT;
+                        dataType = Ensemble.BYTES_IN_INT32;
                         break;
                     case Ensemble.DATATYPE_FLOAT:
                         dataType = Ensemble.BYTES_IN_FLOAT;
@@ -221,23 +221,23 @@ namespace RTI
                 byte[] result = new byte[DataSet.Ensemble.PAYLOAD_HEADER_LEN];
 
                 // Add Data Type (Byte)
-                byte[] dataType = MathHelper.IntToByteArray(ValueType);
+                byte[] dataType = MathHelper.Int32ToByteArray(ValueType);
                 System.Buffer.BlockCopy(dataType, 0, result, 0, 4);
 
                 // Add Bins or data length
-                byte[] len = MathHelper.IntToByteArray(numElments);
+                byte[] len = MathHelper.Int32ToByteArray(numElments);
                 System.Buffer.BlockCopy(len, 0, result, 4, 4);
 
                 // Add Beams (1 for Ensemble, Ancillary and Nmea, 4 for all other data sets.  )
-                byte[] beams = MathHelper.IntToByteArray(ElementsMultiplier);
+                byte[] beams = MathHelper.Int32ToByteArray(ElementsMultiplier);
                 System.Buffer.BlockCopy(beams, 0, result, 8, 4);
 
                 // Add Image (default 0)
-                byte[] image = MathHelper.IntToByteArray(Imag);
+                byte[] image = MathHelper.Int32ToByteArray(Imag);
                 System.Buffer.BlockCopy(image, 0, result, 12, 4);
 
                 // Add NameLen (default 8)
-                byte[] nameLen = MathHelper.IntToByteArray(NameLength);
+                byte[] nameLen = MathHelper.Int32ToByteArray(NameLength);
                 System.Buffer.BlockCopy(nameLen, 0, result, 16, 4);
  
                 // Add Name (E0000XX\0)

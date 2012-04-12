@@ -350,7 +350,7 @@ namespace RTI
                             }
                             else
                             {
-                                Debug.WriteLine(string.Format("Checksums do not match Cal: {0}  Actual:{1}", calculatedChecksum, ensembleChecksum));
+                                //Debug.WriteLine(string.Format("Checksums do not match Cal: {0}  Actual:{1}", calculatedChecksum, ensembleChecksum));
                             }
                         }
 
@@ -393,11 +393,11 @@ namespace RTI
 
             for (int i = 0; i < DataSet.Ensemble.MAX_NUM_DATA_SETS; i++)
             {
-                type = MathHelper.ByteArrayToInt(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 0));
-                numElements = MathHelper.ByteArrayToInt(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 1));
-                elementMultiplier = MathHelper.ByteArrayToInt(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 2));
-                imag = MathHelper.ByteArrayToInt(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 3));
-                nameLen = MathHelper.ByteArrayToInt(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 4));
+                type = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 0));
+                numElements = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 1));
+                elementMultiplier = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 2));
+                imag = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 3));
+                nameLen = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 4));
                 name = MathHelper.ByteArrayToString(ensemble, 8, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 5));
 
                 // Get the size of this data set

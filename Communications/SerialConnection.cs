@@ -50,6 +50,11 @@
  *                                         Added BREAK command.
  * 03/23/2012      RC          2.07       Added a wait in the Break command to ensure the state has time to change.
  * 03/30/2012      RC          2.07       Check for a break state when sending data.
+ * 04/06/2012      RC          2.08       Added WAIT_STATE.
+ *                                         Made the serial port private to protect against sending and receiving data incorrectly.
+ *                                         Added IsOpen(), IsBreakState() and IsAvailable() to check status of serial port.
+ *                                         Use a thread to read the data instead of an event handler.
+ *                                         Added a shutdown method that must be called when destorying the object to stop the thread.
  * 
  */
 
@@ -77,8 +82,28 @@ namespace RTI
         // Setup logger
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        // Private variables for this class
         #region Variables
+
+        /// <summary>
+        /// Default period to wait before checking for data to read.
+        /// 
+        /// 4Hz
+        /// </summary>
+        protected const int DEFAULT_SERIAL_INTERVAL = 250;
+
+        /// <summary>
+        /// Period to wait when downloading data.  This value is smaller
+        /// to ensure a quick download.
+        /// </summary>
+        protected const int DOWNLOAD_SERIAL_INTERVAL = 25;
+
+        /// <summary>
+        /// A wait state used to wait between sending a command and
+        /// expecting a result back in the buffer.  Since the data is
+        /// not read continuously from the serial port, use must wait a
+        /// period of time between sending a command and expecting a result.
+        /// </summary>
+        public const int WAIT_STATE = DEFAULT_SERIAL_INTERVAL;    // Time to wait between sending a message and getting a response
 
         /// <summary>
         /// ACK for receiving messages.
@@ -93,7 +118,7 @@ namespace RTI
         /// <summary>
         /// Serial port connection.
         /// </summary>
-        protected SerialPort _serialPort;
+        private SerialPort _serialPort;
 
         /// <summary>
         /// Serial port options.
@@ -118,9 +143,37 @@ namespace RTI
         /// </summary>
         private string _validateMsg;
 
+        /// <summary>
+        /// Used to make the thread sleep between reads.
+        /// </summary>
+        private EventWaitHandle _threadWait;
+
+        /// <summary>
+        /// Thread to read the data from the serial port.
+        /// </summary>
+        private Thread _readThread;
+
+        /// <summary>
+        /// Time period to wait between reads of the serial 
+        /// port in the ReadThread.
+        /// </summary>
+        private int _threadInterval;
+
+        /// <summary>
+        /// Flag used to stop the ReadThread.
+        /// </summary>
+        private volatile bool _stopThread;
+
+        /// <summary>
+        /// Flag used to determine if we are sending data.
+        /// This is to prevent sending and reading data
+        /// at the same time.  Priority is given to sending
+        /// data.
+        /// </summary>
+        private bool _isSendingData;
+
         #endregion
 
-        // Abstract methods for this class
         #region Abstract
         /// <summary>
         /// Abstract method that must be implemented by all classes
@@ -142,7 +195,6 @@ namespace RTI
 
         #endregion
 
-        // Properties for the class
         #region Properties
 
         /// <summary>
@@ -185,10 +237,31 @@ namespace RTI
             _serialOptions = serialOptions;                         // Serial port options
             _serialPort = new SerialPort();                         // Serial port
 
+            // Initialize the thread
+            _threadWait = new EventWaitHandle(false, EventResetMode.AutoReset);
+            _threadInterval = DEFAULT_SERIAL_INTERVAL;
+            _stopThread = false;
+            _isSendingData = false;
+            _readThread = new Thread(new ParameterizedThreadStart(ReadThreadMethod));
+            _readThread.Start();
+
             _validateMsg = "";
         }
 
-        // Method calls for the class
+        /// <summary>
+        ///  Shutdown the object.
+        ///  This must be called when destorying the object to 
+        ///  ensure the ReadThread is stopped.
+        /// </summary>
+        public void Shutdown()
+        {
+            _stopThread = true;
+
+            // Wake up the thread to stop thread
+            //_threadWait.Set();
+            //_threadWait.Dispose();
+        }
+
         #region Methods
         /// <summary>
         /// Disconnect the current connection,
@@ -217,9 +290,6 @@ namespace RTI
                 _serialPort.Handshake = Handshake.None;             // No handshake (Flow Control None)
                 ReceiveBufferString = "";                           // Clear the buffer
 
-                // Event handler to recieve data
-                _serialPort.DataReceived += new SerialDataReceivedEventHandler(ReadEventHandler);
-
                 if (!_serialPort.IsOpen)
                 {
                     // Open the serial port and remove old data
@@ -235,19 +305,15 @@ namespace RTI
                     {
                         // Port is already in use
                         log.Warn("COMM Port already in use: " + _serialOptions.Port, ex);
-                        //RecorderManager.Instance.ReportError("COMM Port already in use: " + _serialOptions.Port, ex);
-                        //MessageBox.Show(string.Format("Port {0} already in use.", _serialOptions.Port), "Communication Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     catch (System.ArgumentOutOfRangeException ex_range)
                     {
                         // Not sure what is causing this exception yet
                         log.Error("Error COMM Port: " + _serialOptions.Port, ex_range);
-                        //RecorderManager.Instance.ReportError("Error COMM Port: " + _serialOptions.Port, ex_range);
                     }
                     catch (Exception ex)
                     {
                         log.Error("Error Opening in COMM Port: " + _serialOptions.Port, ex);
-                        //RecorderManager.Instance.ReportError("Error Opening in COMM Port: " + _serialOptions.Port, ex);
                     }
                 }
             }
@@ -258,8 +324,38 @@ namespace RTI
         /// </summary>
         public void Disconnect()
         {
+            //_timer.Enabled = false;             // Stop checking serial port
             _serialPort.Close();
             _serialPort.Dispose();
+        }
+
+        /// <summary>
+        /// Check if the serial port is in a break state.
+        /// </summary>
+        /// <returns>True = Break / False = No Break.</returns>
+        public bool IsBreakState()
+        {
+            return _serialPort.BreakState;
+        }
+
+        /// <summary>
+        /// Check if the serial port is open.
+        /// </summary>
+        /// <returns>True = Serial Port Open / False = Serial Port is NOT open.</returns>
+        public bool IsOpen()
+        {
+            return _serialPort.IsOpen;
+        }
+
+        /// <summary>
+        /// Check if the serial port is available.
+        /// The serial port is available if it is open 
+        /// and if it is not in a break state.
+        /// </summary>
+        /// <returns>TRUE = Serial Port available to send or receive data.</returns>
+        public bool IsAvailable()
+        {
+            return _serialPort.IsOpen && !_serialPort.BreakState;
         }
 
         /// <summary>
@@ -277,78 +373,107 @@ namespace RTI
 
                 // Wait for the state to change
                 // and leave on a bit of time
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(WAIT_STATE);
 
                 // Change state back
                 _serialPort.BreakState = false;
 
                 // Wait for state to change back
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(WAIT_STATE);
             }
         }
 
         /// <summary>
-        /// This is an event handler for the serial port
-        /// to receive data.  When data becomes available,
-        /// the event handler will be called.  It will then 
-        /// pass data to the ReceiveEventHandler which is 
-        /// abstract.  
-        /// 
-        /// ReceiveDataHandler is an abstract method that
-        /// all classes that extend this class must implement.
-        /// The incoming data will be passed to this method.
-        /// This method must return immediately after receiving
-        /// the data.
+        /// Reset the interval time.  If no value is given,
+        /// the default value will be used.  This is the time
+        /// in milliseconds to check the serial port for data.
         /// </summary>
-        protected void ReadEventHandler(object s, SerialDataReceivedEventArgs e)
+        /// <param name="interval">Interval time in milliseconds to check the serial port for data.</param>
+        protected void SetTimerInterval(int interval = DEFAULT_SERIAL_INTERVAL)
         {
-            // Open the serial port and remove old data
-            try
+            //_timer.Interval = interval;
+            _threadInterval = interval;
+        }
+
+        /// <summary>
+        /// Read thread used to read the data from the serial port.
+        /// This will sleep until a timeout period is met.  Then wake up
+        /// and check if there is data to read.  If there is data to read,
+        /// it will read the data and pass it to the handlers.  It will not read
+        /// data if the serial port is not open, the serial port is in a break state
+        /// or if the serial port is sending a command.
+        /// 
+        /// To stop the thread, set _stopThread to true.  _stopThread is volatile so it
+        /// can be set in a multithreaded environment.
+        /// </summary>
+        /// <param name="data">Not Used.</param>
+        private void ReadThreadMethod(object data)
+        {
+            while (!_stopThread)
             {
-                byte[] buffer = new byte[_serialPort.BytesToRead];
-                _serialPort.Read(buffer, 0, buffer.Length);
-
-                // Pass the data to all subscribers
-                if (this.ReceiveRawSerialDataEvent != null)
+                try
                 {
-                    this.ReceiveRawSerialDataEvent(buffer);
+                    // Ensure the serial port is open
+                    // Not in a break state
+                    // And not sending data
+                    if (_serialPort.IsOpen && !_serialPort.BreakState && !_isSendingData)
+                    {
+                        int bytesAvail = _serialPort.BytesToRead;
+                        if (bytesAvail > 0)
+                        {
+                            byte[] buffer = new byte[bytesAvail];
+
+                            //Debug.WriteLine("Reading data from Serial Port");
+                            int bytesRead = _serialPort.Read(buffer, 0, buffer.Length);
+
+                            // Pass the data to all subscribers
+                            if (this.ReceiveRawSerialDataEvent != null)
+                            {
+                                this.ReceiveRawSerialDataEvent(buffer);
+                            }
+
+                            // Pass the data to a function that can be overloaded
+                            // so the data can be handled differently
+                            ReceiveDataHandler(buffer);
+                        }
+                    }
                 }
-
-                // Pass the data to a function that can be overloaded
-                // so the data can be handled differently
-                ReceiveDataHandler(buffer);
-
-                // WaitOne(0) tests whether the event was set and returns TRUE
-                //   if it was set and FALSE otherwise.
-                // The 0 tells the manual reset event to only check if it was set
-                //   and return immediately, otherwise if the number is greater than
-                //   0 it will wait for that many milliseconds for the event to be set
-                //   and only then return - effectively blocking your thread for that
-                //   period of time
-                if (threadStop.WaitOne(0))
+                catch (System.UnauthorizedAccessException ex)
                 {
-                    Disconnect();
+                    // If the port is already in use, do not
+                    // start the thread
+                    Debug.WriteLine("COMM Port Error Reading: " + _serialOptions.Port, ex);
+
+                    if (_serialPort != null)
+                    {
+                        Disconnect();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Error Reading in COMM Port: " + _serialOptions.Port, ex);
+
+                    if (_serialPort != null)
+                    {
+                        Disconnect();
+                    }
+                }
+                finally
+                {
+                    _threadWait.WaitOne(_threadInterval);
                 }
             }
-            catch (System.UnauthorizedAccessException ex)
-            {
-                // If the port is already in use, do not
-                // start the thread
-                Debug.WriteLine("COMM Port Error Reading: " + _serialOptions.Port, ex);
+        }
 
-                if (_serialPort != null)
-                {
-                    Disconnect();
-                }
-            }
-            catch (Exception ex)
+        /// <summary>
+        /// Clear the Input and output buffer.
+        /// </summary>
+        protected void ClearBuffers()
+        {
+            if (IsAvailable())
             {
-                Debug.WriteLine("Error Reading in COMM Port: " + _serialOptions.Port, ex);
-
-                if (_serialPort != null)
-                {
-                    Disconnect();
-                }
+                _serialPort.DiscardInBuffer();
+                _serialPort.DiscardOutBuffer();
             }
         }
 
@@ -388,23 +513,33 @@ namespace RTI
                 // Format the command
                 data += '\r';
 
+                _isSendingData = true;
                 _serialPort.Write(data);
+                ReceiveBufferString = data + ReceiveBufferString;
+                _isSendingData = false;
             }
         }
 
         /// <summary>
-        /// Send a byte array to the serial port.
+        /// Send the given buffer of data to the serial port.
+        /// The serial port must be open and not in a break state.
+        /// This will write the data in the buffer at the given
+        /// offset with the given length to the serial port.
+        /// 
         /// This will not add the carrage return to the
         /// end of the data.
         /// </summary>
-        /// <param name="data">Data to write.</param>
-        /// <param name="offset">Where to start in array.</param>
+        /// <param name="buffer">Buffer of data to write.</param>
+        /// <param name="offset">Location in the buffer to write.</param>
         /// <param name="count">Number of bytes to write.</param>
-        public void SendData(byte[] data, int offset, int count)
+        public void SendData(byte[] buffer, int offset, int count)
         {
-            if (_serialPort.IsOpen && (data != null) && !_serialPort.BreakState)
+            if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
             {
-                _serialPort.Write(data, offset, count);
+                _isSendingData = true;
+                _serialPort.Write(buffer, offset, count);
+                ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
+                _isSendingData = false;
             }
         }
 
@@ -485,9 +620,7 @@ namespace RTI
                 
         }
 
-
         #endregion
-
 
         #region Events
 

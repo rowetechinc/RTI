@@ -1,5 +1,17 @@
 RTI Changelog
 
+RTI-2.08
+ - Changed the version number.
+ - Added XMODEM-CRC download from the ADCP.
+ - Check if serial is open and the break state when sending a command.
+ - Added WAIT_STATE to SerialConnection to have a uniform time to wait for serial port.
+ - Added AdcpSerialPort::DownloadCancel() to reset setting if a download is canceled.
+ - In PniPrimeCompassBinaryCodec, changed serial port read thread, so make the codec decode in a while loop again.
+ - Changed the SerialConnection Reading data from an event handler to a read thread.
+ - Stop the Compass Calibration after a score is received.
+ - Changed MathHelper::ByteArrayToInt() to MathHelper::ByteArrayToInt8() and MathHelper::ByteArrayToInt32().
+ - Changed the file extensions for recorded files to match the ADCP. ENS.
+
 RTI-2.07
  - Changed the version number.
  - Changed how the incoming data is added to the buffer in PniPrimeCompassBinaryCodec.

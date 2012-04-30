@@ -55,6 +55,10 @@
  *                                         Added IsOpen(), IsBreakState() and IsAvailable() to check status of serial port.
  *                                         Use a thread to read the data instead of an event handler.
  *                                         Added a shutdown method that must be called when destorying the object to stop the thread.
+ * 04/12/2012      RC          2.09       Added ReadData() to manually read. 
+ *                                         Added PauseReadThread() to pause reading data from the serial port.
+ * 04/26/2012      RC          2.10       Added a default value to SendDataAndWaitReply().
+ * 04/27/2012      RC          2.10       Added a sleep in the SendData() commands.
  * 
  */
 
@@ -165,6 +169,13 @@ namespace RTI
         private volatile bool _stopThread;
 
         /// <summary>
+        /// This is used to pause the processing of the
+        /// read thread.  This will cause no processing
+        /// to be done in the read thread if set true.
+        /// </summary>
+        private bool _pauseReadThread;
+
+        /// <summary>
         /// Flag used to determine if we are sending data.
         /// This is to prevent sending and reading data
         /// at the same time.  Priority is given to sending
@@ -241,6 +252,7 @@ namespace RTI
             _threadWait = new EventWaitHandle(false, EventResetMode.AutoReset);
             _threadInterval = DEFAULT_SERIAL_INTERVAL;
             _stopThread = false;
+            _pauseReadThread = false;
             _isSendingData = false;
             _readThread = new Thread(new ParameterizedThreadStart(ReadThreadMethod));
             _readThread.Start();
@@ -359,6 +371,21 @@ namespace RTI
         }
 
         /// <summary>
+        /// This is use to pause the read thread.
+        /// To pause the read thread, set this true.  To unpause read thread,
+        /// set this to false.
+        /// 
+        /// The read thread will still be running, but it will not read from the serial port
+        /// and process data.  It will just go back to sleep.  You can also set the timer interval
+        /// higher to reduce the cpu usage of the read thread during this time period.
+        /// </summary>
+        /// <param name="pause">TRUE = Pause read thread / False = Resume read thread.</param>
+        public void PauseReadThread(bool pause = false)
+        {
+            _pauseReadThread = pause;
+        }
+
+        /// <summary>
         /// Send a break on the serial port.
         /// This will take at least 100ms to complete.
         /// The serial port turns on the break state, waits
@@ -416,7 +443,8 @@ namespace RTI
                     // Ensure the serial port is open
                     // Not in a break state
                     // And not sending data
-                    if (_serialPort.IsOpen && !_serialPort.BreakState && !_isSendingData)
+                    // And not pasued
+                    if (_serialPort.IsOpen && !_serialPort.BreakState && !_isSendingData && !_pauseReadThread)
                     {
                         int bytesAvail = _serialPort.BytesToRead;
                         if (bytesAvail > 0)
@@ -468,7 +496,7 @@ namespace RTI
         /// <summary>
         /// Clear the Input and output buffer.
         /// </summary>
-        protected void ClearBuffers()
+        protected void ClearSerialBuffers()
         {
             if (IsAvailable())
             {
@@ -501,6 +529,29 @@ namespace RTI
         }
 
         /// <summary>
+        /// Manually read from the serial port.
+        /// You should set PauseReadThread() to true when reading manually
+        /// to ensure the read thread does not also read data.
+        /// </summary>
+        /// <param name="buffer">Buffer to read to.</param>
+        /// <param name="offset">Location in buffer to read to.</param>
+        /// <param name="count">Number of bytes to read.</param>
+        /// <returns>Number of bytes read.</returns>
+        public int ReadData(byte[] buffer, int offset, int count)
+        {
+            int result = 0;
+
+            if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+            {
+                // Read the data from the serial port
+                result = _serialPort.Read(buffer, offset, count);
+            }
+
+            // Return number of bytes read
+            return result;
+        }
+
+        /// <summary>
         /// Send a command to the serial port.
         /// This will add the carrage return to
         /// the end of the string.
@@ -516,6 +567,10 @@ namespace RTI
                 _isSendingData = true;
                 _serialPort.Write(data);
                 ReceiveBufferString = data + ReceiveBufferString;
+
+                // Wait for 485 response and read thread to read response
+                Thread.Sleep(WAIT_STATE);
+
                 _isSendingData = false;
             }
         }
@@ -539,6 +594,10 @@ namespace RTI
                 _isSendingData = true;
                 _serialPort.Write(buffer, offset, count);
                 ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
+
+                // Wait for 485 response and read thread to read response
+                Thread.Sleep(WAIT_STATE);
+
                 _isSendingData = false;
             }
         }
@@ -549,9 +608,9 @@ namespace RTI
         /// as the message sent, then return true.
         /// </summary>
         /// <param name="data">Data to send through the serial port.</param>
-        /// <param name="timeout">Timeout to wait in milliseconds.</param>
+        /// <param name="timeout">Timeout to wait in milliseconds.  Default = 1 sec.</param>
         /// <return>Flag if was successful sending the command.</return>
-        public bool SendDataWaitReply(string data, int timeout)
+        public bool SendDataWaitReply(string data, int timeout = 1000)
         {
             bool result = true;
 

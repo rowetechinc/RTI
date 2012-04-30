@@ -1,5 +1,25 @@
 RTI Changelog
 
+RTI-2.10
+ - Changed the version number.
+ - Removed from Pulse project.
+ - Check if bottom track data exist in TextOutputViewModel before displaying.
+ - Changed AdcpSerialPort::GetDirectoryListing() to return a list of files.
+ - Make AdcpSerialPort::GetDirectoryListing() wait for all the lines before parsing the data.
+ - Make AdcpSerialPort::XModemDownload return true if file was downloaded.
+ - Added a default value to SerialConnection::SendDataWaitReply() of 1 second.
+ - Fix cancel AdcpSerialPort:CancelDownload to actually cancel download all the time.
+ - Added a sleep in the SerialConnection::SendData() commands.
+
+RTI-2.09
+ - Changed the version number.
+ - Added SerialConnection::ReadData() to manually read data from the serial port.
+ - Added SerialConnection::PauseReadThread() to pause reading data from the serial port.
+ - Added CMD_DS_CANCEL to AdcpCommands.
+ - Added ADCP Upload and modified Download in AdcpSerialPort.
+ - Changed name of AdcpSerialPort::FileSizeEvent to AdcpSerialPort::DownloadFileSizeEvent.
+ - Added AdcpSerialPort Upload events.
+
 RTI-2.08
  - Changed the version number.
  - Added XMODEM-CRC download from the ADCP.

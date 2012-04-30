@@ -51,6 +51,7 @@
  * 02/10/2012      RC          2.02       Added GetDeploymentCommandList().
  *                                         Removed Time of First Ping from GetCommandList();
  *                                         Changed default values to match Adcp User Guide Rev F and CDEFAULT in firmware v0.2.04.
+ * 04/13/2012      RC          2.09       Added CMD_DS_CANCEL.
  * 
  */
 
@@ -590,6 +591,11 @@ namespace RTI
             /// Data Storage Show.  Show SD card usage
             /// </summary>
             public const string CMD_DSSHOW = "DSSHOW";
+
+            /// <summary>
+            /// Send this command to cancel a download progress.
+            /// </summary>
+            public const string CMD_DS_CANCEL = "D";
 
             #endregion
 

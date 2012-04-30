@@ -46,7 +46,8 @@
  * 03/20/2012      RC          2.07       Changed version number.
  * 04/02/2012      RC          2.08       Changed version number.
  * 04/10/2012      RC          2.08       Changed the recorded file extenstion to match the ADCP.
- * 
+ * 04/12/2012      RC          2.09       Changed version number.
+ * 04/23/2012      RC          2.10       Changed version number.  Added version number for DotSpatial.
  * 
  */
 using System;
@@ -72,13 +73,28 @@ namespace RTI
             /// <summary>
             /// Application Minor version number.
             /// </summary>
-            public const int RTI_VERSION_MINOR = 08;
+            public const int RTI_VERSION_MINOR = 10;
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any
             /// special branches of the application.
             /// </summary>
             public const string RTI_VERSION_ADDITIONAL = " Beta";
+
+            /// <summary>
+            /// DotSpatial Major version number. 
+            /// </summary>
+            public const int RTI_DOTSPATIAL_VERSION_MAJOR = 1;
+
+            /// <summary>
+            /// DotSpatial Minor version number.
+            /// </summary>
+            public const int RTI_DOTSPATIAL_VERSION_MINOR = 0;
+
+            /// <summary>
+            /// DotSpatial Revision.
+            /// </summary>
+            public const int RTI_DOTSPAITAL_VERSION_REVESION = 845;
 
             #endregion
 

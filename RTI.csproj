@@ -43,8 +43,8 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.11.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.1.2.11\log4net.dll</HintPath>
+    <Reference Include="log4net">
+      <HintPath>Packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -69,7 +69,36 @@
     <Compile Include="Communications\GpsSerialPort.cs" />
     <Compile Include="Communications\SerialConnection.cs" />
     <Compile Include="Communications\SerialOptions.cs" />
+    <Content Include="DotSpatial\License.txt" />
     <Content Include="GitHubUpdate.txt" />
+    <Compile Include="DotSpatial\Positioning\Angle.cs" />
+    <Compile Include="DotSpatial\Positioning\Azimuth.cs" />
+    <Compile Include="DotSpatial\Positioning\CartesianPoint.cs" />
+    <Compile Include="DotSpatial\Positioning\DilutionOfPrecision.cs" />
+    <Compile Include="DotSpatial\Positioning\Distance.cs" />
+    <Compile Include="DotSpatial\Positioning\Elevation.cs" />
+    <Compile Include="DotSpatial\Positioning\Ellipsoid.cs" />
+    <Compile Include="DotSpatial\Positioning\Enumerations.cs" />
+    <Compile Include="DotSpatial\Positioning\GpggaSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\GpggkSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\GpgllSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\GpgsaSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\GpgsvSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\GprmcSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\GpvtgSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\ICloneable.cs" />
+    <Compile Include="DotSpatial\Positioning\Interfaces.cs" />
+    <Compile Include="DotSpatial\Positioning\Latitude.cs" />
+    <Compile Include="DotSpatial\Positioning\Longitude.cs" />
+    <Compile Include="DotSpatial\Positioning\NmeaSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\Packet.cs" />
+    <Compile Include="DotSpatial\Positioning\PgrmfSentence.cs" />
+    <Compile Include="DotSpatial\Positioning\Position.cs" />
+    <Compile Include="DotSpatial\Positioning\Position3D.cs" />
+    <Compile Include="DotSpatial\Positioning\Radian.cs" />
+    <Compile Include="DotSpatial\Positioning\Satellite.cs" />
+    <Compile Include="DotSpatial\Positioning\SignalToNoiseRatio.cs" />
+    <Compile Include="DotSpatial\Positioning\Speed.cs" />
     <Compile Include="Models\AdcpCommands.cs" />
     <Compile Include="Models\AdcpSubsystemCommands.cs" />
     <Compile Include="Models\DataSet\Ensemble.cs" />
@@ -98,6 +127,11 @@
     <Compile Include="Models\DVL\Prti02Sentence.cs" />
     <Compile Include="Models\Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Screen\ReferenceLayerAverage.cs" />
     <Compile Include="Screen\RemoveShipSpeed.cs" />
     <Compile Include="Screen\ScreenBottomTrackRange.cs" />
@@ -109,15 +143,18 @@
     <Compile Include="Writer\AdcpDatabaseWriter.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DotSpatial\DotSpatial.csproj">
-      <Project>{514FAA1F-D18F-44EC-863F-7FF7AB363053}</Project>
-      <Name>DotSpatial</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="ChangeLog.txt" />
     <Content Include="License.txt" />
     <Content Include="README.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

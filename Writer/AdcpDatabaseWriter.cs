@@ -57,7 +57,7 @@
  * 01/26/2012      RC          1.14       Store Subsystem as a byte.
  * 01/30/2012      RC          1.14       Changed subsystem in firmware to subsystem index.
  * 02/23/2012      RC          2.03       Changed Status in Ensemble DataSet and Bottom Track DataSet to a Status object.
- * 
+ * 04/25/2012      RC          2.10       Fix bug, if bottom track does not exist, add 0 as paramater values.
  * 
  */
 
@@ -553,6 +553,61 @@ namespace RTI
                             cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[1] });
                             cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[2] });
                             cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[3] });
+                        }
+                        else
+                        {
+                            cmd.Parameters.Add(new SQLiteParameter("@btFirstPingTime", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btLastPingTime", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btHeading", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btPitch", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btRoll", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btWaterTemp", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSysTemp", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSalinity", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btPressure", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSos", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btStatus", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btActualPingCount", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB3", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB0", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB1", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB2", System.Data.DbType.Single) { Value = 0 });
+                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB3", System.Data.DbType.Single) { Value = 0 });
                         }
 
                         if (dataset.IsNmeaAvail)

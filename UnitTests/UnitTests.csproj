@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>UnitTests</RootNamespace>
+    <AssemblyName>UnitTests</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework, Version=2.6.0.12051, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Packages\NUnit.2.6.0.12054\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Codec\AdcpDvlCodecTest.cs" />
+    <Compile Include="Codec\PniPrimeCompassBinaryCodecTest.cs" />
+    <Compile Include="Models\AdcpCommandsTest.cs" />
+    <Compile Include="Models\DataSet\AncillaryDataSetTest.cs" />
+    <Compile Include="Models\DataSet\BottomTrackDataSetTest.cs" />
+    <Compile Include="Models\DataSet\EarthVelocityDataSetTest.cs" />
+    <Compile Include="Models\DataSet\EarthWaterMassDataSetTest.cs" />
+    <Compile Include="Models\DataSet\EnsembleDataSetTest.cs" />
+    <Compile Include="Models\DataSet\EnsembleTest.cs" />
+    <Compile Include="Models\DataSet\InstrumentWaterMassDataSetTest.cs" />
+    <Compile Include="Models\DataSet\NmeaDataSetTest.cs" />
+    <Compile Include="Models\DataSet\SerialNumberTest.cs" />
+    <Compile Include="Models\DVL\Prti01SentenceTest.cs" />
+    <Compile Include="Models\DVL\Prti02SentenceTest.cs" />
+    <Compile Include="Models\ProjectTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Spatial\DistanceTest.cs" />
+    <Compile Include="Spatial\NmeaSentenceTest.cs" />
+    <Compile Include="Spatial\SpeedTest.cs" />
+    <Compile Include="Utils\MathHelperTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RTI.csproj">
+      <Project>{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}</Project>
+      <Name>RTI</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(SolutionDir)\packages\NUnit.Runners.2.6.0.12051\tools\nunit-console-x86 $(TargetPath)</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

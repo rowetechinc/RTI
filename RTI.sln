@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RTI", "RTI.csproj", "{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Minimal Build|Any CPU = Minimal Build|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}.Minimal Build|Any CPU.ActiveCfg = Minimal Build|Any CPU
+		{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}.Minimal Build|Any CPU.Build.0 = Minimal Build|Any CPU
+		{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B69F49CD-CCA9-4532-A4A0-E185CD3FAB33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}.Minimal Build|Any CPU.ActiveCfg = Release|Any CPU
+		{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}.Minimal Build|Any CPU.Build.0 = Release|Any CPU
+		{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB8AA91A-F6F6-41F6-93D1-DE6E811DE5D8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -52,6 +52,7 @@
  *                                         Removed Time of First Ping from GetCommandList();
  *                                         Changed default values to match Adcp User Guide Rev F and CDEFAULT in firmware v0.2.04.
  * 04/13/2012      RC          2.09       Added CMD_DS_CANCEL.
+ * 05/01/2012      RC          2.11       Added functions to decode the ENGPNI and BREAK.
  * 
  */
 
@@ -286,6 +287,49 @@ namespace RTI
 
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Heading, pitch and roll.
+        /// </summary>
+        public struct HPR
+        {
+            /// <summary>
+            /// Heading in degrees.
+            /// </summary>
+            public double Heading { get; set; }
+
+            /// <summary>
+            /// Pitch in degrees.
+            /// </summary>
+            public double Pitch { get; set; }
+
+            /// <summary>
+            /// Roll in degrees.
+            /// </summary>
+            public double Roll { get; set; }
+        }
+
+        /// <summary>
+        /// Struct to hold the Break statement
+        /// values.
+        /// </summary>
+        public struct BreakStmt
+        {
+            /// <summary>
+            /// Serial number.
+            /// </summary>
+            public RTI.SerialNumber SerialNum { get; set; }
+
+            /// <summary>
+            /// Firmware string.
+            /// </summary>
+            public string Firmware { get; set; }
+
+            /// <summary>
+            /// Hardware string.
+            /// </summary>
+            public string Hardware { get; set; }
         }
 
         #endregion
@@ -1494,6 +1538,124 @@ namespace RTI
                 // Add the subsystem commands
 
                 return s;
+            }
+
+            #endregion
+
+            #region Decode
+
+            /// <summary>
+            /// Decode the results to ENGPNI.
+            /// This will give the heading, pitch and roll
+            /// read from the ADCP.
+            /// 
+            /// H=  0.00, P=  0.00, R=  0.00
+            /// </summary>
+            /// <param name="result">Result string from the ENGPNI command.</param>
+            public static HPR DecodeEngPniResult(string result)
+            {
+                // Look for the ENGPNI result
+                double heading = 0.0;
+                double pitch = 0.0;
+                double roll = 0.0;
+
+                // Look for the line with the results
+                char[] delimiters = new char[] { '\r', '\n' };
+                string[] lines = result.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    // Check if is the line to decode
+                    if (lines[x].Contains("H="))
+                    {
+                        // Decode the line
+                        delimiters = new char[] { ',' };
+                        string[] elem = lines[x].Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                        for (int y = 0; y < elem.Length; y++)
+                        {
+                            // Trim the white space
+                            // Then go just past the = to get the value
+                            // The first character determines which value is given
+                            string value = elem[y].Trim();
+                            char firstChar = value[0];
+                            int elemStart = value.IndexOf('=') + 1;
+                            string subElem = value.Substring(elemStart, value.Length - elemStart);
+
+                            // Parse each value
+                            switch (firstChar)
+                            {
+                                case 'H':
+                                    double.TryParse(subElem, out heading);
+                                    break;
+                                case 'P':
+                                    double.TryParse(subElem, out pitch);
+                                    break;
+                                case 'R':
+                                    double.TryParse(subElem, out roll);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                return new HPR() { Heading = heading, Pitch = pitch, Roll = roll };
+            }
+
+            /// <summary>
+            /// Decode the break statement of all its data.
+            /// Copyright (c) 2009-2012 Rowe Technologies Inc. All rights reserved.
+            /// DP300 DP1200 
+            /// SN: 01460000000000000000000000000000
+            /// FW: 00.02.05 Apr 17 2012 05:40:11
+            /// </summary>
+            /// <param name="buffer">Buffer containing the break statement.</param>
+            /// <returns>Return the values decoded from the buffer given.</returns>
+            public static BreakStmt DecodeBREAK(string buffer)
+            {
+                string serial = "";
+                string fw = "";
+                string hw = "";
+
+                // Break up the lines
+                char[] delimiters = new char[] { '\r', '\n' };
+                string[] lines = buffer.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                // Decode each line of data
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    // Change delimiter to a space
+                    delimiters = new char[] { ' ' };
+                    string[] elem = lines[x].Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                    // Firmware
+                    if (lines[x].Contains("FW:"))
+                    {
+                        if (elem.Length >= 2)
+                        {
+                            fw = elem[1];
+                        }
+                    }
+
+                    // Serial number
+                    if (lines[x].Contains("SN:"))
+                    {
+                        if (elem.Length >= 2)
+                        {
+                            serial = elem[1];
+                        }
+                    }
+
+                    // Hardware
+                    if (lines.Length > 2)
+                    {
+                        hw = lines[1];
+                    }
+
+                }
+
+                // Return the break statement values
+                return new BreakStmt(){ SerialNum = new SerialNumber(serial), Firmware = fw.Trim(), Hardware = hw.Trim() };
             }
 
             #endregion

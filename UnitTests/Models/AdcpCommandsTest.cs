@@ -110,6 +110,50 @@ namespace RTI
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CWTTBP, asc.CWTTBP);
         }
 
+        /// <summary>
+        /// Test the DecodeBREAK() function.
+        /// </summary>
+        [Test]
+        public void TestDecodeBreak()
+        {
+            string brk = "Copyright (c) 2009-2012 Rowe Technologies Inc. All rights reserved. \r\nDP300 DP1200 \r\nSN: 01460000000000000000000000000001 \r\nFW: 00.02.05 Apr 17 2012 05:40:11";
+
+            BreakStmt brkStmt = RTI.Commands.AdcpCommands.DecodeBREAK(brk);
+
+            Assert.AreEqual(1, brkStmt.SerialNum.SystemSerialNumber, "Serial Number is incorrect");
+            Assert.AreEqual("01460000000000000000000000000001", brkStmt.SerialNum.ToString(), "Serial Number String is Incorrect");
+            Assert.AreEqual(2, brkStmt.SerialNum.SubSystemsDict.Count, "Subsystem count is incorrect");
+            Assert.AreEqual("00.02.05", brkStmt.Firmware, "Firmware is incorrect");
+            Assert.AreEqual("DP300 DP1200", brkStmt.Hardware, "Hardware is Incorrect");
+        }
+
+        /// <summary>
+        /// Test the Decode ENGPNI command.
+        /// </summary>
+        [Test]
+        public void TestDecodeEngPni()
+        {
+            string buffer = "H=0.00, P=0.00, R=0.00";
+            HPR result = RTI.Commands.AdcpCommands.DecodeEngPniResult(buffer);
+
+            Assert.AreEqual(0, result.Heading, "Heading is incorrect");
+            Assert.AreEqual(0, result.Pitch, "Pitch is incorrect");
+            Assert.AreEqual(0, result.Roll, "Roll is incorrect");
+        }
+
+        /// <summary>
+        /// Test the Decode ENGPNI command with data.
+        /// </summary>
+        [Test]
+        public void TestDecodeEngPniData()
+        {
+            string buffer = "H=179.235, P=56.23, R=-2.04";
+            HPR result = RTI.Commands.AdcpCommands.DecodeEngPniResult(buffer);
+
+            Assert.AreEqual(179.235, result.Heading, "Heading is incorrect");
+            Assert.AreEqual(56.23, result.Pitch, "Pitch is incorrect");
+            Assert.AreEqual(-2.04, result.Roll, "Roll is incorrect");
+        }
 
     }
 }

@@ -1,5 +1,24 @@
 RTI Changelog
 
+RTI-2.11
+ - Changed the version number.
+ - Changed AdcpSerialPort::TIMEOUT value.
+ - Added PRAGMA to database creation in Project.cs.
+ - Added AdcpDatabaseReader.cs to read a project using a cache.
+ - Added AdcpSerialPort::CancelUpload() to cancel uploading data.
+ - Added AdcpDatabaseCodec::QueryForDataSet() that returns a cache of data.
+ - Added AdcpDatabaseReader::GetAllEnsembles() to get all the ensembles for a project at once.
+ - Changed how AdcpDatabaseReader::PopulateCache() query for the data.
+ - Fixed bug checking if bottom track data is available before trying to use it in RemoveShipSpeed::RemoveVelocity().
+ - Made AdcpDatabaseCodec::GetNumberOfEnsembles() a static method.
+ - In VelocityPlot, fixed how the plot is resized based off MaxEnsemble and number of ensembles in the list.
+ - Added AdcpDatabaseReader::GetEnsembles() to read in a set of ensembles.
+ - Added Added Cache::GetFirst() to get the first entry in the cache.
+ - Added MathHelper::ParseDouble().
+ - Added VelocityVectorHelper::GenerateVelocityVectors() and VelocityVectorHelper::GenerateAmplitudeVectors().
+ - Added AdcpDatabaseReader::GetFirstEnsemble().
+ - Added variable MAX_NUM_BINS to DataSet.Ensemble.
+
 RTI-2.10
  - Changed the version number.
  - Removed from Pulse project.

@@ -43,8 +43,13 @@
     <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>Packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\log4net.1.2.10.0\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.6.0.12051, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\NUnit.2.6.0.12054\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -132,11 +137,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Reader\AdcpDatabaseReader.cs" />
     <Compile Include="Screen\ReferenceLayerAverage.cs" />
     <Compile Include="Screen\RemoveShipSpeed.cs" />
     <Compile Include="Screen\ScreenBottomTrackRange.cs" />
     <Compile Include="Screen\ScreenMarkBadBelowBottom.cs" />
     <Compile Include="Screen\ScreenVelocity.cs" />
+    <Compile Include="Utils\Cache.cs" />
     <Compile Include="Utils\MathHelper.cs" />
     <Compile Include="Utils\Validator.cs" />
     <Compile Include="Writer\AdcpBinaryWriter.cs" />

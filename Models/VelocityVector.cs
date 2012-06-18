@@ -35,6 +35,7 @@
  * 12/28/2011      RC          1.10       Initial coding.
  * 02/24/2012      RC          2.03       Create VelocityVectorHelper with a method to create velocity vectors here.
  * 03/16/2012      RC          2.06       Set the magnitude to absolute value.  No negatives.
+ * 06/07/2012      RC          2.11       Added GenerateVelocityVectors() and GenerateAmplitudeVectors().
  *       
  * 
  */
@@ -157,6 +158,101 @@ namespace RTI
 
                 // VelocityVector array could not be created
                 return false;
+            }
+
+            /// <summary>
+            /// Create an struct to hold bin vectors for the velocity data
+            /// based off the ensemble given.  This will remove the
+            /// Bottom Track velocity from the velocity data then
+            /// create  a vector representing the
+            /// water velocity.
+            /// Removing Ship Speed:
+            /// BT Good, GPS Good or Bad = BT velocities
+            /// BT Bad, GPS Good = GPS velocity
+            /// BT Bad, GPS Bad = Previous Good BT
+            /// BT Bad, Gps Bad, Previous BT Bad = None
+            /// 
+            /// </summary>
+            /// <param name="adcpData">Ensemble to generate vector values.</param>
+            /// <returns>Vectors for each bin in ensemble.</returns>
+            public static DataSet.EnsembleVelocityVectors GenerateVelocityVectors(DataSet.Ensemble adcpData)
+            {
+                // Create the velocity vector data
+                DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
+
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = adcpData.EnsembleData.UniqueId;
+
+                if (adcpData.IsEarthVelocityAvail && adcpData.EarthVelocityData.IsVelocityVectorAvail)
+                {
+                    ensVec.Vectors = adcpData.EarthVelocityData.VV;
+                }
+
+                return ensVec;
+            }
+
+            /// <summary>
+            /// Create an struct to hold bin vectors for the amplitude data.
+            /// Average the amplitude value for each bin and store as the magnitude value.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to generate vector values.</param>
+            /// <returns>Vectors for each bin in ensemble.</returns>
+            public static DataSet.EnsembleVelocityVectors GenerateAmplitudeVectors(DataSet.Ensemble ensemble)
+            {
+                RTI.DataSet.VelocityVector[] vv = null;
+
+                if (ensemble.IsAmplitudeAvail)
+                {
+                    // Create Velocity Vector with averaged amplitude data
+                    vv = new RTI.DataSet.VelocityVector[ensemble.AmplitudeData.NumElements];
+
+                    // Create a vector for each bin
+                    // Take the average of the amplitude for the bin value
+                    for (int bin = 0; bin < ensemble.EarthVelocityData.NumElements; bin++)
+                    {
+                        // Get the average for each bin
+                        float avg = 0;
+                        int count = 0;
+                        if (ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_0_INDEX] != DataSet.Ensemble.BAD_VELOCITY) { avg += ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_0_INDEX]; count++; }
+                        if (ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_1_INDEX] != DataSet.Ensemble.BAD_VELOCITY) { avg += ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_1_INDEX]; count++; }
+                        if (ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_2_INDEX] != DataSet.Ensemble.BAD_VELOCITY) { avg += ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_2_INDEX]; count++; }
+                        if (ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_3_INDEX] != DataSet.Ensemble.BAD_VELOCITY) { avg += ensemble.AmplitudeData.AmplitudeData[bin, DataSet.Ensemble.BEAM_3_INDEX]; count++; }
+
+                        // Ensure values were found
+                        if (count > 0)
+                        {
+                            avg /= count;
+                        }
+
+                        vv[bin].Magnitude = avg;
+                        vv[bin].DirectionXNorth = 0;
+                        vv[bin].DirectionYNorth = 0;
+                    }
+
+                }
+
+
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = ensemble.EnsembleData.UniqueId;
+
+                if (vv != null)
+                {
+                    ensVec.Vectors = vv;
+                }
+                else
+                {
+                    // Put an BAD velocity entry
+                    vv = new DataSet.VelocityVector[1];
+                    vv[0].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
+                    vv[0].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
+                    vv[0].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
+
+                    ensVec.Vectors = vv;
+                }
+
+                return ensVec;
             }
         }
     }

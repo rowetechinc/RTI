@@ -44,6 +44,7 @@
  * 01/26/2012      RC          1.14       Store subsystem as a byte instead of a string.
  * 01/27/2012      RC          1.14       Added Serial number to the project properties.
  * 02/03/2012      RC          2.00       Added equal, hashcode and ToString method.
+ * 05/10/2012      RC          2.11       Added PRAGMA to database creation.
  */
 
 using System;
@@ -244,6 +245,8 @@ namespace RTI
             // All the possible tables
             var commands = new[]
             {
+                "PRAGMA synchronous = OFF",
+                "PRAGMA journal_mode = MEMORY",
                 "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER, NumBins INTEGER NOT NULL, NumBeams INTEGER NOT NULL, DesiredPingCount INTEGER NOT NULL, ActualPingCount INTEGER NOT NULL, Status INTEGER NOT NULL, Year INTEGER NOT NULL, Month INTEGER NOT NULL, Day INTEGER NOT NULL, Hour INTEGER NOT NULL, Minute INTEGER NOT NULL, Second INTEGER NOT NULL, HundSec INTEGER NOT NULL, DateTime DATETIME NOT NULL, FirstBinRange FLOAT NOT NULL, BinSize FLOAT NOT NULL, ProfileFirstPingTime FLOAT NOT NULL, ProfileLastPingTime FLOAT NOT NULL, Heading FLOAT NOT NULL, Pitch FLOAT NOT NULL, Roll FLOAT NOT NULL, WaterTemp FLOAT NOT NULL, SysTemp FLOAT NOT NULL, Salinity FLOAT NOT NULL, Pressure FLOAT NOT NULL, TransducerDepth FLOAT NOT NULL, SpeedOfSound FLOAT NOT NULL, DbTime DATETIME NOT NULL, IsBeamVelAvail BOOLEAN, IsInstrVelAvail BOOLEAN, IsEarthVelAvail BOOLEAN, IsAmpAvail BOOLEAN, IsCorrAvail BOOLEAN, IsGoodBeamAvail BOOLEAN, IsGoodEarthAvail BOOLEAN, IsAncillaryAvail BOOLEAN, IsBottomTrackAvail BOOLEAN, IsNmeaAvail BOOLEAN, NmeaData TEXT, SysSerialNum TEXT, FirmwareMajor TINYINT, FirmwareMinor TINYINT, FirmwareRevision TINYINT, SubsystemIndex TINYINT, BTFirstPingTime FLOAT, BTLastPingTime FLOAT, BTHeading FLOAT, BTPitch FLOAT, BTRoll FLOAT, BTWaterTemp FLOAT, BTSysTemp FLOAT, BTSalinity FLOAT, BTPressure FLOAT, BTSpeedOfSound FLOAT, BTStatus INTEGER, BTActualPingCount FLOAT, BTRangeBeam0 FLOAT, BTRangeBeam1 FLOAT, BTRangeBeam2 FLOAT, BTRangeBeam3 FLOAT, BTSNRBeam0 FLOAT, BTSNRBeam1 FLOAT, BTSNRBeam2 FLOAT, BTSNRBEAM3 FLOAT, BTAmpBeam0 FLOAT, BTAmpBeam1 FLOAT, BTAmpBeam2 FLOAT, BTAmpBeam3 FLOAT, BTCorrBeam0 FLOAT, BTCorrBeam1 FLOAT, BTCorrBeam2 FLOAT, BTCorrBeam3 FLOAT, BTBeamVelBeam0 FLOAT, BTBeamVelBeam1 FLOAT, BTBeamVelBeam2 FLOAT, BTBeamVelBeam3 FLOAT, BTBeamGoodBeam0 FLOAT, BTBeamGoodBeam1 FLOAT, BTBeamGoodBeam2 FLOAT, BTBeamGoodBeam3 FLOAT, BTInstrVelBeam0 FLOAT, BTInstrVelBeam1 FLOAT, BTInstrVelBeam2 FLOAT, BTInstrVelBeam3 FLOAT,  BTInstrGoodBeam0 FLOAT, BTInstrGoodBeam1 FLOAT, BTInstrGoodBeam2 FLOAT, BTInstrGoodBeam3 FLOAT, BTEarthVelBeam0 FLOAT, BTEarthVelBeam1 FLOAT, BTEarthVelBeam2 FLOAT, BTEarthVelBeam3 FLOAT, BTEarthGoodBeam0 FLOAT, BTEarthGoodBeam1 FLOAT, BTEarthGoodBeam2 FLOAT, BTEarthGoodBeam3 FLOAT)",
                 "CREATE TABLE tblBeam(ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleId INTEGER, BinNum INTEGER NOT NULL, BeamNum SAMLLINT NOT NULL, BeamVel FLOAT, EarthVel FLOAT, InstrVel FLOAT, Amplitude FLOAT, Correlation FLOAT, GoodBeam SMALLINT, GoodEarth SMALLINT, Orientation TINYINT NOT NULL, FOREIGN KEY(EnsembleId) REFERENCES tblEnsemble(ID))",
                 "CREATE INDEX idxBeam ON tblBeam(EnsembleId, BinNum)",

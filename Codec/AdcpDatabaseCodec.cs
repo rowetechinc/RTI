@@ -48,6 +48,8 @@
  * 01/13/2012      RC          1.12       Merged Ensemble table and Bottom Track table in database.
  * 01/24/2012      RC          1.14       Put try/catch in ParseDataTables() if error parsing.
  * 02/29/2012      RC          2.04       Return 0 in GetNumberOfEnsembles() if no project is given.
+ * 05/23/2012      RC          2.11       Added QueryForDataSet() that returns a cache of data.
+ *                                         Made GetNumberOfEnsembles() a static method.
  * 
  */
 
@@ -56,6 +58,7 @@ using System.Diagnostics;
 using System.Data;
 using System;
 using System.Collections.Generic;
+
 namespace RTI
 {
     /// <summary>
@@ -89,7 +92,7 @@ namespace RTI
         /// </summary>
         /// <param name="project">Project to check.</param>
         /// <returns>Number of rows in the table.</returns>
-        public int GetNumberOfEnsembles(Project project)
+        public static int GetNumberOfEnsembles(Project project)
         {
             if (project != null)
             {
@@ -120,6 +123,34 @@ namespace RTI
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Get a list of ensembles from the database.  This will query for a list of
+        /// rows from the database starting from the index and getting the size given.
+        /// Then parse and add the data to the list.
+        /// </summary>
+        /// <param name="project">Project containing the ensemble.</param>
+        /// <param name="index">Row ID</param>
+        /// <param name="size">Number of ensembles to get from the database.</param>
+        /// <returns>List of dataset based off the Row ID given and size.</returns>
+        public Cache<long, DataSet.Ensemble> QueryForDataSet(Project project, long index, uint size)
+        {
+            Cache<long, DataSet.Ensemble> cache = new Cache<long, DataSet.Ensemble>(size);
+
+            // Query for the ensemble
+            string queryEns = String.Format("SELECT * FROM {0} WHERE ID>={1} LIMIT {2};", DbCommon.TBL_ENS_ENSEMBLE, index.ToString(), size.ToString());
+            DataTable data = DbCommon.GetDataTableFromProjectDb(project, queryEns);
+            foreach (DataRow row in data.Rows)
+            {
+                int id = 0;
+                try { id = Convert.ToInt32(row[DbCommon.COL_ENS_ID]); } catch (Exception) { }
+
+                DataSet.Ensemble dataset = ParseDataTables(project, row);
+                cache.Add(id, dataset);
+            }
+
+            return cache;
         }
 
         /// <summary>

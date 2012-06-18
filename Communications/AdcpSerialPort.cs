@@ -51,6 +51,8 @@
  *                                         Make GetDirectoryListing() wait for all the lines before parsing the data.
  *                                         XModemDownload return true if file was downloaded.
  *                                         Fix cancel download to actually cancel download all the time.
+ * 05/03/2012      RC          2.11       Changed TIMEOUT value.
+ * 05/22/2012      RC          2.11       Added ability to cancel uploading data.
  * 
  */
 
@@ -79,7 +81,7 @@ namespace RTI
         /// a response from the ADCP for sending
         /// a command.  Value in milliseconds.
         /// </summary>
-        private const int TIMEOUT = 750; 
+        private const int TIMEOUT = 2000; 
 
         /// <summary>
         /// The ADCP can be put into Compass mode
@@ -1150,6 +1152,16 @@ namespace RTI
         private bool XMODEM = false;
 
         /// <summary>
+        /// Cancel uploading the data.  This will
+        /// stop the while loop in the upload process
+        /// if it is running.
+        /// </summary>
+        public void CancelUpload()
+        {
+            XmodemCancel = true;
+        }
+
+        /// <summary>
         /// Publish the event for the size of the file
         /// that is currently being uploaded.
         /// <param name="fileName">File Name.</param>
@@ -1323,7 +1335,12 @@ namespace RTI
                             try
                             {
                                 // Send the command to the ADCP to start uploading a file
+                                // ****
+                                // BUG, SHOULD WAIT FOR ECHO TO ENSURE NO NAME WITH A C IS PARSED LATER
+                                // ****
                                 SendData(message1);
+                                //SendDataWaitReply(message1);  // Need to call a read.  Move StartUpload() to here
+
 
                                 XmodemState = XmodemXsent;
 
@@ -1551,7 +1568,6 @@ namespace RTI
             // Stop the upload loop
             XMODEM = false;
 
-            // Pause the read thread
             // This will make the read thread resume reading data from the serial port
             PauseReadThread(false);
 
@@ -1644,17 +1660,11 @@ namespace RTI
 
             // Try to send the command, if it fails try again
             startResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_DIAGCPT, TIMEOUT);
-            
-            // Delay for 485 response
-            //Thread.Sleep(WAIT_STATE);
 
             // If the command was not good, try it again
             if (!startResult)
             {
                 startResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_DIAGCPT, TIMEOUT);
-
-                // Delay for 485 response
-                //Thread.Sleep(WAIT_STATE);
             }
 
             // If was capable of putting 
@@ -1681,7 +1691,7 @@ namespace RTI
             SendData(startIntervalCmd, 0, startIntervalCmd.Length);
 
             // Stop ADCP from compass mode
-            SendData(RTI.Commands.AdcpCommands.CMD_DIAGCPT_DISCONNECT);
+            SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_DIAGCPT_DISCONNECT, TIMEOUT);
 
             // Set the serial port to ADCP mode to decode ADCP data
             Mode = AdcpSerialPort.AdcpSerialModes.ADCP;

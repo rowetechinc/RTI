@@ -37,6 +37,7 @@
  * 02/17/2012      RC          2.03       Added determining which value to use, BT, GPS or Previous BT.
  * 02/24/2012      RC          2.03       Put all the logic to remove the ship speed in RemoveVelocity.
  *                                         Put method to create velocity vector in VelocityVector.cs.
+ * 05/23/2012      RC          2.11       Fixed bug checking if bottom track data is available before trying to use it in RemoveVelocity().
  * 
  */
 
@@ -76,7 +77,7 @@ namespace RTI
                     bool isGpsVelGood = false;
 
                     // Check if we can use Bottom Track velocity
-                    if (CanUseBT)
+                    if (CanUseBT && ensemble.IsBottomTrackAvail)
                     {
                         // Check if Bottom Track Velocity is good
                         if (ensemble.BottomTrackData.IsEarthVelocityGood())
@@ -94,17 +95,14 @@ namespace RTI
                     }
 
                     // Check if we can use GPS speed
-                    if (CanUseGps)
+                    if (CanUseGps && ensemble.IsNmeaAvail)
                     {
                         // Check if Gps Speed is good
-                        if (ensemble.IsNmeaAvail)
+                        if (ensemble.NmeaData.IsGpvtgAvail())
                         {
-                            if (ensemble.NmeaData.IsGpvtgAvail())
+                            if (ensemble.NmeaData.IsGpsSpeedGood())
                             {
-                                if (ensemble.NmeaData.IsGpsSpeedGood())
-                                {
-                                    isGpsVelGood = true;
-                                }
+                                isGpsVelGood = true;
                             }
                         }
                     }
@@ -125,7 +123,7 @@ namespace RTI
                         btNorth = Convert.ToSingle(speed * Math.Cos(MathHelper.DegreeToRadian(heading)));
 
                         // We do not have a vertical velocity using GPS speed, so try to use the Bottom Track
-                        if (ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
                         {
                             btVertical = ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX];
                         }

@@ -58,6 +58,7 @@
  * 02/14/2012      RC          2.03       Added BAD_RANGE.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 04/10/2012      RC          2.08       Changed BYTES_IN_INT to BYTES_IN_INT8 and BYTES_IN_INT32.
+ * 06/14/2012      RC          2.11       Added variable MAX_NUM_BINS.
  *                                         
  *       
  * 
@@ -304,6 +305,16 @@ namespace RTI
             /// Beam Z.
             /// </summary>
             public const int BEAM_Z_INDEX = BEAM_2_INDEX;
+
+            #endregion
+
+            #region Validation Variables
+
+            /// <summary>
+            /// Maximum number of bins in an ensemble.
+            /// Based off command: CWPBN.
+            /// </summary>
+            public const int MAX_NUM_BINS = 200;
 
             #endregion
 

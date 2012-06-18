@@ -41,6 +41,7 @@
  * 02/14/2012      RC          2.03       Check if serial numbers are equal and hashcode.
  * 02/29/2012      RC          2.04       Set any empty serial number string to all 0's (32 digits).
  *                                         Made a special serial number for a DVL message.
+ * 05/01/2012      RC          2.11       Made serial number string public.
  *
  */
 
@@ -123,11 +124,6 @@ namespace RTI
 
         #endregion
 
-        /// <summary>
-        /// Complete serial number stored as a string.
-        /// </summary>
-        private string _serialNumberString;
-
         #endregion
 
         #region Properties
@@ -158,6 +154,11 @@ namespace RTI
         /// </summary>
         public Dictionary<UInt16, Subsystem> SubSystemsDict { get; private set; }
 
+        /// <summary>
+        /// Complete serial number stored as a string.
+        /// </summary>
+        public string SerialNumberString { get; private set; }
+
         #endregion
 
         /// <summary>
@@ -180,7 +181,7 @@ namespace RTI
         /// </summary>
         public SerialNumber()
         {
-            _serialNumberString = EMPTY_SERIAL_NUM_STRING;
+            SerialNumberString = EMPTY_SERIAL_NUM_STRING;
             SystemSerialNumber = EMPTY_SERIAL_NUM;
             Spare = "";
             BaseHardware = "";
@@ -211,14 +212,14 @@ namespace RTI
             if (!string.IsNullOrEmpty(serialNum))
             {
                 // Set the string
-                _serialNumberString = serialNum;
+                SerialNumberString = serialNum;
 
                 // Decode the serial number
                 Decode(serialNum);
             }
             else
             {
-                _serialNumberString = EMPTY_SERIAL_NUM_STRING;
+                SerialNumberString = EMPTY_SERIAL_NUM_STRING;
                 SystemSerialNumber = EMPTY_SERIAL_NUM;
                 Spare = "";
                 BaseHardware = "";
@@ -227,7 +228,7 @@ namespace RTI
             }
         }
 
-        #region Methods
+        #region Decode
 
         /// <summary>
         /// Get the subsystem from the dictionary.  If the
@@ -256,10 +257,10 @@ namespace RTI
         private void Decode(byte[] serialNum)
         {
             // Convert the byte array to a string
-            _serialNumberString = System.Text.Encoding.ASCII.GetString(serialNum);
+            SerialNumberString = System.Text.Encoding.ASCII.GetString(serialNum);
 
             // Decode the serial number
-            Decode(_serialNumberString);
+            Decode(SerialNumberString);
         }
 
         /// <summary>
@@ -291,7 +292,7 @@ namespace RTI
         /// <returns>Byte array of the system serial number.</returns>
         public byte[] Encode()
         {
-            return System.Text.Encoding.ASCII.GetBytes(_serialNumberString);
+            return System.Text.Encoding.ASCII.GetBytes(SerialNumberString);
         }
 
         /// <summary>
@@ -411,7 +412,7 @@ namespace RTI
         /// <returns>String of this object.</returns>
         public override string ToString()
         {
-            return _serialNumberString;
+            return SerialNumberString;
         }
 
         /// <summary>
@@ -459,7 +460,7 @@ namespace RTI
         /// <returns>Hashcode for the object.</returns>
         public override int GetHashCode()
         {
-            return _serialNumberString.GetHashCode();
+            return SerialNumberString.GetHashCode();
         }
 
         /// <summary>
@@ -476,7 +477,7 @@ namespace RTI
 
             SerialNumber p = (SerialNumber)obj;
 
-            return ( _serialNumberString == p.ToString());
+            return ( SerialNumberString == p.ToString());
         }
 
         /// <summary>

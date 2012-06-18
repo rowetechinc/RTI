@@ -39,6 +39,7 @@
  * 03/29/2012      RC          2.07       Added the methods from Converters.cs
  * 04/10/2012      RC          2.08       Changed ByteArrayToInt() to ByteArrayToInt8() and ByteArrayToInt32().
  *                                         Added MB_TO_BYTES.
+ * 06/04/2012      RC          2.11       Added ParseDouble().
  * 
  */
 
@@ -696,5 +697,21 @@ namespace RTI
             return result;
         }
 
+        /// <summary>
+        /// Parse a string to a double.
+        /// Convert the value from other locale types.
+        /// </summary>
+        /// <param name="s">String to parse.</param>
+        /// <returns>Value parsed.</returns>
+        private double ParseDouble(string s)
+        {
+            if (s == null)
+                return double.NaN;
+            s = s.Replace(',', '.');
+            double result;
+            if (double.TryParse(s, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out result))
+                return result;
+            return double.NaN;
+        }
     }
 }

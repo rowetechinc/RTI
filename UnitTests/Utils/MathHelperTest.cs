@@ -25,6 +25,7 @@
  * Date            Initials    Vertion    Comments
  * -----------------------------------------------------------------
  * 03/29/2012      RC          2.07       Initial coding
+ * 07/19/2012      RC          2.12       Updated UnitTest with converting byte arrays to Float64 and doubles.
  * 
  * 
  */
@@ -362,7 +363,7 @@ namespace UnitTests.Utils
         /// http://www.h-schmidt.net/FloatApplet/IEEE754.html
         /// </summary>
         [Test]
-        public void BytesToFloat()
+        public void BytesToFloatBE()
         {
             byte[] data = new byte[4];
             data[0] = 0x41;
@@ -382,7 +383,7 @@ namespace UnitTests.Utils
         /// http://www.h-schmidt.net/FloatApplet/IEEE754.html
         /// </summary>
         [Test]
-        public void BytesToFloatNeg()
+        public void BytesToFloatNegBE()
         {
             byte[] data = new byte[4];
             data[0] = 0xC1;
@@ -438,16 +439,38 @@ namespace UnitTests.Utils
         /// <summary>
         /// Convert the bytes to a float.  
         /// Not enough bytes given.
-        /// The bytes are in Big Endian form.
+        /// The bytes are in Little Endian form.
         /// Little Endian, the bytes are reversed from Big Endian.
         /// http://www.h-schmidt.net/FloatApplet/IEEE754.html
         /// </summary>
         [Test]
-        public void BytesToFloatToSmall()
+        public void BytesToFloatToSmallLE()
         {
-            byte[] data = new byte[2];
-            data[0] = 0xC1;
+            byte[] data = new byte[3];
+            data[0] = 0x4B;
             data[1] = 0x47;
+            data[2] = 0x41;
+
+            float value = RTI.MathHelper.ByteArrayToFloat(data, 0, false);
+
+            Assert.AreEqual(0, value, 0.0001, "Float incorrect");
+        }
+
+        /// <summary>
+        /// Try to convert the bytes to a float, but do not give enough
+        /// bytes for the conversion.  The converter will then add 00 to the 
+        /// front of the byte array to make a complete value.
+        /// The bytes are in Big Endian form.
+        /// 
+        /// http://www.h-schmidt.net/FloatApplet/IEEE754.html
+        /// </summary>
+        [Test]
+        public void BytesToFloatToSmallBE()
+        {
+            byte[] data = new byte[3];
+            data[0] = 0x41;
+            data[1] = 0x47;
+            data[2] = 0x4B;
 
             float value = RTI.MathHelper.ByteArrayToFloat(data, 0, true);
 
@@ -488,6 +511,334 @@ namespace UnitTests.Utils
             float value = RTI.MathHelper.ByteArrayToFloat(data, 0, true);
 
             Assert.AreEqual(0, value, 0.0001, "Float incorrect");
+        }
+
+        #endregion
+
+        #region Byte Array to Float64
+
+        /// <summary>
+        /// Convert the bytes to a Float64.
+        /// The bytes are in Big Endian form.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0x55;
+            data[1] = 0x55;
+            data[2] = 0x55;
+            data[3] = 0x55;
+            data[4] = 0x55;
+            data[5] = 0x55;
+            data[6] = 0x55;
+            data[7] = 0x55;
+
+            double value = RTI.MathHelper.ByteArrayToFloat64(data, 0, true);
+
+            Assert.AreEqual(1.1945305291614955126e103, value, 0.0001, "Float64 incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Float64.  Negative number.
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64NegBE()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0xC1;
+            data[1] = 0xD0;
+            data[2] = 0xBD;
+            data[3] = 0xA5;
+            data[4] = 0xC5;
+            data[5] = 0x47;
+            data[6] = 0xE6;
+            data[7] = 0xB7;
+
+            double value = RTI.MathHelper.ByteArrayToFloat64(data, 0, true);
+
+            Assert.AreEqual(-1123456789.123456789, value, 0.0001, "Negative Float64 incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Float64.
+        /// The bytes are in Little Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64LE()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0xB7;
+            data[1] = 0xE6;
+            data[2] = 0x47;
+            data[3] = 0xC5;
+            data[4] = 0xA5;
+            data[5] = 0xBD;
+            data[6] = 0xD0;
+            data[7] = 0x41;
+
+            double value = RTI.MathHelper.ByteArrayToFloat64(data, 0, false);
+
+            Assert.AreEqual(1123456789.123456789, value, 0.0001, "Float64 incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Float64. Negative Number.
+        /// The bytes are in Little Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64NegLE()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0xB7;
+            data[1] = 0xE6;
+            data[2] = 0x47;
+            data[3] = 0xC5;
+            data[4] = 0xA5;
+            data[5] = 0xBD;
+            data[6] = 0xD0;
+            data[7] = 0xC1;
+
+            double value = RTI.MathHelper.ByteArrayToFloat64(data, 0, false);
+
+            Assert.AreEqual(-1123456789.123456789, value, 0.0001, "Float64 incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Float64.  
+        /// Not enough bytes given.
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64ToSmall()
+        {
+            byte[] data = new byte[2];
+            data[0] = 0xC1;
+            data[1] = 0x47;
+
+            double value = RTI.MathHelper.ByteArrayToFloat64(data, 0, true);
+
+            Assert.AreEqual(0, value, 0.0001, "Float64 incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Float64.  
+        /// Null byte array.
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64Null()
+        {
+            double value = RTI.MathHelper.ByteArrayToFloat64(null, 0, true);
+
+            Assert.AreEqual(0, value, 0.0001, "Float64 incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Float64.  
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToFloat64_0()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0x0;
+            data[1] = 0x0;
+            data[2] = 0x0;
+            data[3] = 0x0;
+            data[4] = 0x0;
+            data[5] = 0x0;
+            data[6] = 0x0;
+            data[7] = 0x0;
+
+            double value = RTI.MathHelper.ByteArrayToFloat64(data, 0, true);
+
+            Assert.AreEqual(0, value, 0.0001, "Float64 incorrect");
+        }
+
+        #endregion
+
+        #region Byte Array to Double
+
+        /// <summary>
+        /// Convert the bytes to a Double.
+        /// The bytes are in Big Endian form.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDouble()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0x55;
+            data[1] = 0x55;
+            data[2] = 0x55;
+            data[3] = 0x55;
+            data[4] = 0x55;
+            data[5] = 0x55;
+            data[6] = 0x55;
+            data[7] = 0x55;
+
+            double value = RTI.MathHelper.ByteArrayToDouble(data, 0, true);
+
+            Assert.AreEqual(1.1945305291614955126e103, value, 0.0001, "Double incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Double.  Negative number.
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDoubleNegBE()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0xC1;
+            data[1] = 0xD0;
+            data[2] = 0xBD;
+            data[3] = 0xA5;
+            data[4] = 0xC5;
+            data[5] = 0x47;
+            data[6] = 0xE6;
+            data[7] = 0xB7;
+
+            double value = RTI.MathHelper.ByteArrayToDouble(data, 0, true);
+
+            Assert.AreEqual(-1123456789.123456789, value, 0.0001, "Negative Double incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Double.
+        /// The bytes are in Little Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDoubleLE()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0xB7;
+            data[1] = 0xE6;
+            data[2] = 0x47;
+            data[3] = 0xC5;
+            data[4] = 0xA5;
+            data[5] = 0xBD;
+            data[6] = 0xD0;
+            data[7] = 0x41;
+
+            double value = RTI.MathHelper.ByteArrayToDouble(data, 0, false);
+
+            Assert.AreEqual(1123456789.123456789, value, 0.0001, "Double incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Double. Negative Number.
+        /// The bytes are in Little Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDoubleNegLE()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0xB7;
+            data[1] = 0xE6;
+            data[2] = 0x47;
+            data[3] = 0xC5;
+            data[4] = 0xA5;
+            data[5] = 0xBD;
+            data[6] = 0xD0;
+            data[7] = 0xC1;
+
+            double value = RTI.MathHelper.ByteArrayToDouble(data, 0, false);
+
+            Assert.AreEqual(-1123456789.123456789, value, 0.0001, "Double incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Double.  
+        /// Not enough bytes given.
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDoubleToSmall()
+        {
+            byte[] data = new byte[2];
+            data[0] = 0xC1;
+            data[1] = 0x47;
+
+            double value = RTI.MathHelper.ByteArrayToDouble(data, 0, true);
+
+            Assert.AreEqual(0, value, 0.0001, "Double incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Double.  
+        /// Null byte array.
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDoubleNull()
+        {
+            double value = RTI.MathHelper.ByteArrayToDouble(null, 0, true);
+
+            Assert.AreEqual(0, value, 0.0001, "Double incorrect");
+        }
+
+        /// <summary>
+        /// Convert the bytes to a Double.  
+        /// The bytes are in Big Endian form.
+        /// Little Endian, the bytes are reversed from Big Endian.
+        /// 
+        /// http://babbage.cs.qc.cuny.edu/IEEE-754/
+        /// </summary>
+        [Test]
+        public void BytesToDouble0()
+        {
+            byte[] data = new byte[8];
+            data[0] = 0x0;
+            data[1] = 0x0;
+            data[2] = 0x0;
+            data[3] = 0x0;
+            data[4] = 0x0;
+            data[5] = 0x0;
+            data[6] = 0x0;
+            data[7] = 0x0;
+
+            double value = RTI.MathHelper.ByteArrayToDouble(data, 0, true);
+
+            Assert.AreEqual(0, value, 0.0001, "Double incorrect");
         }
 
         #endregion

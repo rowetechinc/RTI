@@ -53,11 +53,17 @@
  *                                         Changed default values to match Adcp User Guide Rev F and CDEFAULT in firmware v0.2.04.
  * 04/13/2012      RC          2.09       Added CMD_DS_CANCEL.
  * 05/01/2012      RC          2.11       Added functions to decode the ENGPNI and BREAK.
+ * 06/26/2012      RC          2.12       Added CMD_BREAK to have a command for the command list in AdcpSerialPort::SendCommands().
+ * 07/10/2012      RC          2.12       Decode ENGI2CSHOW.
+ *                                         Added classes for board serial number and revisions and register information for ENGI2CSHOW decoding.
+ *                                         Made decode BREAK statement save the firmware as an object.
+ * 07/17/2012      RC          2.12       Added DecodeSTIME() to decode the command STIME result.
  * 
  */
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 
 namespace RTI
@@ -289,6 +295,10 @@ namespace RTI
             }
         }
 
+        #region Decode Structs
+
+        #region Heading, Pitch Roll
+
         /// <summary>
         /// Heading, pitch and roll.
         /// </summary>
@@ -310,6 +320,10 @@ namespace RTI
             public double Roll { get; set; }
         }
 
+        #endregion
+
+        #region BREAK
+
         /// <summary>
         /// Struct to hold the Break statement
         /// values.
@@ -322,9 +336,9 @@ namespace RTI
             public RTI.SerialNumber SerialNum { get; set; }
 
             /// <summary>
-            /// Firmware string.
+            /// Firmware version.
             /// </summary>
-            public string Firmware { get; set; }
+            public Firmware FirmwareVersion { get; set; }
 
             /// <summary>
             /// Hardware string.
@@ -334,11 +348,274 @@ namespace RTI
 
         #endregion
 
+        #region I2C Memory Devices
+
+        /// <summary>
+        /// I2C Board Id.
+        /// </summary>
+        public enum I2cBoardId
+        {
+            /// <summary>
+            /// I/O Board.
+            /// </summary>
+            IO = 50007,
+
+            /// <summary>
+            /// Low Power Regulator Board.
+            /// </summary>
+            LOW_PWR_REG = 50012,
+
+            /// <summary>
+            /// Transmitter Board.
+            /// </summary>
+            XMITTER = 50009,
+
+            /// <summary>
+            /// Virtual Ground Board.
+            /// </summary>
+            VIRTUAL_GND = 50018,
+
+            /// <summary>
+            /// Receiver Board.
+            /// </summary>
+            RCVR = 50022,
+
+            /// <summary>
+            /// Backplane Board.
+            /// </summary>
+            BACKPLANE = 50016,
+
+            /// <summary>
+            /// Unknown Board ID.
+            /// </summary>
+            UNKNOWN = 0
+        }
+
+        /// <summary>
+        /// Board ID, Revision and Serial number as displayed
+        /// from ENGI2CSHOW.
+        /// </summary>
+        public class I2cBoard
+        {
+            /// <summary>
+            /// Board ID.
+            /// </summary>
+            public I2cBoardId ID { get; set; }
+
+            /// <summary>
+            /// Board Revision.
+            /// </summary>
+            public string Revision { get; set; }
+
+            /// <summary>
+            /// Board Serial Number.
+            /// </summary>
+            public int SerialNum { get; set; }
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            public I2cBoard()
+            {
+                ID = I2cBoardId.UNKNOWN;
+                Revision = "";
+                SerialNum = 0;
+            }
+
+            /// <summary>
+            /// Parse the serial number.  If it fails,
+            /// the serial number will be 0 and false will be
+            /// returned.
+            /// </summary>
+            /// <param name="serial">Serial number to try and set.</param>
+            /// <returns>TRUE = serial number set.</returns>
+            public bool SetSerial(string serial)
+            {
+                int sn = 0;
+                if(int.TryParse(serial, out sn))
+                {
+                
+                    SerialNum = sn;
+                    return true;
+                }
+
+                return false;
+            }
+
+            /// <summary>
+            /// Output the ID and all the register values.
+            /// </summary>
+            /// <returns>String of this object.</returns>
+            public override string ToString()
+            {
+                string id = ID.ToString();
+                return string.Format("{0}  Rev: {1}  Serial: {2}\n", id.PadRight(15), Revision.PadRight(5), SerialNum);
+            }
+        }
+
+        /// <summary>
+        /// The register values for a receiver.  This includes
+        /// the ID given from ENGI2CSHOW.
+        /// </summary>
+        public class I2cRegister
+        {
+            /// <summary>
+            /// ID for the receiver register.
+            /// </summary>
+            public int ID { get; set; }
+
+            /// <summary>
+            /// Register values.  This will be the list of 
+            /// values in the register.  It is a list just in case
+            /// in the future the number of registers changes.
+            /// </summary>
+            public List<string> RegValues { get; set; }
+
+            /// <summary>
+            /// Constructor.
+            /// 
+            /// Initialize the list.
+            /// </summary>
+            public I2cRegister()
+            {
+                // Initialize the values
+                ID = 0;
+                RegValues = new List<string>();
+            }
+
+            /// <summary>
+            /// Output the ID and all the register values.
+            /// </summary>
+            /// <returns>String of this object.</returns>
+            public override string ToString()
+            {
+                StringBuilder builder = new StringBuilder();
+                string id = ID.ToString();
+                builder.AppendFormat("ID: {0}  Regs: ", id.PadRight(5));
+                foreach(string str in RegValues)
+                {
+                    builder.AppendFormat("{0} ", str);
+                }
+
+                builder.Append("\n");
+                return builder.ToString();
+            }
+        }
+
+        /// <summary>
+        /// All information retrieved from ENGI2CSHOW.  This includes all the board's
+        /// revision and serial number and the RTC and receiver registers.
+        /// </summary>
+        public class I2cMemDevs
+        {
+            /// <summary>
+            /// List of Receiver registers.
+            /// Receiver currently contains 27 registers.
+            /// </summary>
+            public List<I2cRegister> RvcrRegs;
+
+            /// <summary>
+            /// List of RTC registers.
+            /// RTC currently contains 19 registers.
+            /// </summary>
+            public List<I2cRegister> RtcRegs { get; set; }
+
+            /// <summary>
+            /// I/O board information.
+            /// </summary>
+            public I2cBoard IoBoard { get; set; }
+
+            /// <summary>
+            /// Low Power Regulator board information.
+            /// </summary>
+            public I2cBoard LowPwrRegBoard { get; set; }
+
+            /// <summary>
+            /// Transmitter board information.
+            /// </summary>
+            public I2cBoard XmitterBoard { get; set; }
+
+            /// <summary>
+            /// Virtual Ground board information.
+            /// </summary>
+            public I2cBoard VirtualGndBoard { get; set; }
+
+            /// <summary>
+            /// Receiver board information.
+            /// </summary>
+            public I2cBoard RcvrBoard { get; set; }
+
+            /// <summary>
+            /// Backplane board information.
+            /// </summary>
+            public I2cBoard BackPlaneBoard { get; set; }
+
+            /// <summary>
+            /// Constructor.
+            /// 
+            /// Initialize lists.
+            /// </summary>
+            public I2cMemDevs()
+            {
+                // Initialize lits
+                RvcrRegs = new List<I2cRegister>();
+                RtcRegs = new List<I2cRegister>();
+                IoBoard = new I2cBoard();
+                LowPwrRegBoard = new I2cBoard();
+                XmitterBoard = new I2cBoard();
+                VirtualGndBoard = new I2cBoard();
+                RcvrBoard = new I2cBoard();
+                BackPlaneBoard = new I2cBoard();
+            }
+
+            /// <summary>
+            /// Output the object as a string.  Display
+            /// all the strings of the objects.
+            /// </summary>
+            /// <returns>This object as a string.</returns>
+            public override string ToString()
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append("Receiver Registers\n");
+                builder.Append("------------------------\n");
+                foreach (I2cRegister rcvrReg in RvcrRegs)
+                {
+                    builder.Append(rcvrReg.ToString());
+                }
+
+                builder.Append("\nRTC Registers\n");
+                builder.Append("------------------------\n");
+                foreach (I2cRegister rtcReg in RtcRegs)
+                {
+                    builder.Append(rtcReg.ToString());
+                }
+
+                builder.Append("\nBoards\n");
+                builder.Append("------------------------\n");
+                builder.AppendFormat("{0}", IoBoard.ToString());
+                builder.AppendFormat("{0}", LowPwrRegBoard.ToString());
+                builder.AppendFormat("{0}", XmitterBoard.ToString());
+                builder.AppendFormat("{0}", VirtualGndBoard.ToString());
+                builder.AppendFormat("{0}", RcvrBoard.ToString());
+                builder.AppendFormat("{0}", BackPlaneBoard.ToString());
+
+                return builder.ToString();
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        #endregion
+
         /// <summary>
         /// Commands handled by the ADCP.
         /// </summary>
         public class AdcpCommands
         {
+            #region Varialbles
+
             /// <summary>
             /// Serial number to know how many 
             /// subsystem exist in the current 
@@ -346,9 +623,16 @@ namespace RTI
             /// </summary>
             private SerialNumber _serialNumber;
 
+            #endregion
+
             #region Commands
 
             //public const char CR = '\r';
+
+            /// <summary>
+            /// Used for commands list to give a command for a BREAK.
+            /// </summary>
+            public const string CMD_BREAK = "BREAK";
 
             #region Pinging
 
@@ -643,7 +927,7 @@ namespace RTI
 
             #endregion
 
-            #region Diagnostic
+            #region Compass
 
             /// <summary>
             /// Diagnostic Command: Compass Pass Thru
@@ -1544,11 +1828,14 @@ namespace RTI
 
             #region Decode
 
+            #region ENGPNI
+
             /// <summary>
             /// Decode the results to ENGPNI.
             /// This will give the heading, pitch and roll
             /// read from the ADCP.
             /// 
+            /// Ex:
             /// H=  0.00, P=  0.00, R=  0.00
             /// </summary>
             /// <param name="result">Result string from the ENGPNI command.</param>
@@ -1602,8 +1889,14 @@ namespace RTI
                 return new HPR() { Heading = heading, Pitch = pitch, Roll = roll };
             }
 
+            #endregion
+
+            #region BREAK
+
             /// <summary>
             /// Decode the break statement of all its data.
+            /// 
+            /// Ex:
             /// Copyright (c) 2009-2012 Rowe Technologies Inc. All rights reserved.
             /// DP300 DP1200 
             /// SN: 01460000000000000000000000000000
@@ -1616,6 +1909,7 @@ namespace RTI
                 string serial = "";
                 string fw = "";
                 string hw = "";
+                Firmware firmware = new Firmware();
 
                 // Break up the lines
                 char[] delimiters = new char[] { '\r', '\n' };
@@ -1633,7 +1927,30 @@ namespace RTI
                     {
                         if (elem.Length >= 2)
                         {
-                            fw = elem[1];
+                            fw = elem[1].Trim();
+
+                            // Decode the firmware version
+                            char[] fwDelimiters = new char[] { '.' };
+                            string[] fwElem = fw.Split(fwDelimiters, StringSplitOptions.RemoveEmptyEntries);
+                            if (fwElem.Length == 3)
+                            {
+                                ushort major = 0;
+                                ushort minor = 0;
+                                ushort revision = 0;
+                                if (ushort.TryParse(fwElem[0], out major))
+                                {
+                                    firmware.FirmwareMajor = major;
+                                }
+                                if (ushort.TryParse(fwElem[1], out minor))
+                                {
+                                    firmware.FirmwareMinor = minor;
+                                }
+                                if (ushort.TryParse(fwElem[2], out revision))
+                                {
+                                    firmware.FirmwareRevision = revision;
+                                }
+                            }
+
                         }
                     }
 
@@ -1655,8 +1972,250 @@ namespace RTI
                 }
 
                 // Return the break statement values
-                return new BreakStmt(){ SerialNum = new SerialNumber(serial), Firmware = fw.Trim(), Hardware = hw.Trim() };
+                return new BreakStmt(){ SerialNum = new SerialNumber(serial), FirmwareVersion = firmware, Hardware = hw.Trim() };
             }
+
+            #endregion
+
+            #region ENGI2CSHOW
+
+            /// <summary>
+            /// Decode the command ENGI2CSHOW to get
+            /// the serial numbers for each board in the board stack.
+            /// </summary>
+            /// <param name="buffer"></param>
+            public static I2cMemDevs DecodeENGI2CSHOW(string buffer)
+            {
+                I2cMemDevs devs = new I2cMemDevs();
+
+                // Look for the line with the results
+                char[] delimiters = new char[] { '\r', '\n' };
+                string[] lines = buffer.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    // Skip lines with --
+                    // They do not contain any data
+                    if (!lines[x].Contains("--"))
+                    {
+                        // RCVR registers
+                        if (lines[x].Contains("RVCR"))
+                        {
+                            // Decode line and add to the list of Receiver registers
+                            devs.RvcrRegs.Add(DecodeRegisterLine(lines[x]));
+                        }
+
+                        // Boards
+                        if (lines[x].Contains("24AA32AF"))
+                        {
+                            // Decode the line
+                            List<I2cBoard> boards = DecodeBoardLine(lines[x]);
+                            foreach (I2cBoard board in boards)
+                            {
+                                // Set the board based off the ID
+                                if (board.ID == I2cBoardId.BACKPLANE) { devs.BackPlaneBoard = board; }
+                                if (board.ID == I2cBoardId.IO) { devs.IoBoard = board; }
+                                if (board.ID == I2cBoardId.LOW_PWR_REG) { devs.LowPwrRegBoard = board; }
+                                if (board.ID == I2cBoardId.RCVR) { devs.RcvrBoard = board; }
+                                if (board.ID == I2cBoardId.VIRTUAL_GND) { devs.VirtualGndBoard = board; }
+                                if (board.ID == I2cBoardId.XMITTER) { devs.XmitterBoard = board; }
+                            }
+                        }
+
+                        // RTC registers
+                        if (lines[x].Contains("DS3231"))
+                        {
+                            // Decode line and add to the list of RTC registers
+                            devs.RtcRegs.Add(DecodeRegisterLine(lines[x]));
+                        }
+                    }
+                }
+
+                return devs;
+            }
+            /// <summary>
+            /// Decode the line of all the register information.  The number of registers will vary 
+            /// between hardware types.  Add all the register values and ID to the struct.
+            /// 
+            /// Ex: 
+            /// 
+            /// RVCR,      01, 01 07 00 00 04 0F 40 A0 7F 00 00 20 20 00 40 00 60 00 50 03 03 00 10 00 00 27 27
+            /// DS3231,    68, 28 46 11 02 10 07 12 00 00 00 00 00 00 00 00 00 00 30 00
+            /// </summary>
+            /// <param name="line">Line containing the register information.</param>
+            /// <returns>Register information.</returns>
+            private static I2cRegister DecodeRegisterLine(string line)
+            {
+                I2cRegister result = new I2cRegister();
+
+                // Split by comma
+                char[] delimiters = new char[] { ',' };
+                string[] values = line.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                // Ensure we have enough data
+                if (values.Length >= 3)
+                {
+                    // Set the ID
+                    try
+                    {
+                        int id = Convert.ToInt32(values[1].Trim(), 16);
+                        result.ID = id;
+                    }
+                    catch(Exception)
+                    {
+                        result.ID = 0;
+                    }
+
+                    // Split by space for registers
+                    delimiters = new char[] { ' ' };
+                    string[] regs = values[2].Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                    result.RegValues = new List<string>(regs);
+                }
+
+                return result;
+            }
+
+            /// <summary>
+            /// Decode the line of all the board information.  It will contain the
+            /// board ID, revision and serial number.  Some lines may contain more then
+            /// one board's information on the same line.
+            /// 
+            /// Ex: 
+            /// 24AA32AF,     50, 50007  REV:XD1  SER#010
+            /// 24AA32AF,     53, 50018  REV:XD1  SER#010   50022  REV:XA  SER#0XX
+            /// </summary>
+            /// <param name="line">Line containing the board information.</param>
+            /// <returns>Board information.</returns>
+            private static List<I2cBoard> DecodeBoardLine(string line)
+            {
+                List<I2cBoard> boards = new List<I2cBoard>();
+
+                // Split by comma
+                char[] delimiters = new char[] { ',' };
+                string[] values = line.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                // Ensure we have enough data
+                if (values.Length >= 3)
+                {
+                    delimiters = new char[] { ' ' };
+                    string[] brds = values[2].Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                    // Verify there is enough to decode a board
+                    if (brds.Length >= 3)
+                    {
+                        // Decode the board
+                        I2cBoard i2cBrd = DecodeBoardValues(brds[0].Trim(), brds[1].Trim(), brds[2].Trim());
+                        if (i2cBrd != null)
+                        {
+                            boards.Add(i2cBrd);
+                        }
+
+                        // If more than 1 board was on a line
+                        // Decode the second board
+                        if (brds.Length >= 6)
+                        {
+                            i2cBrd = DecodeBoardValues(brds[3], brds[4], brds[5]);
+                            if (i2cBrd != null)
+                            {
+                                boards.Add(i2cBrd);
+                            }
+                        }
+                    }
+
+                }
+
+
+
+                return boards;
+            }
+
+            /// <summary>
+            /// Try to decode the board values.
+            /// 
+            /// If there is an error parsing the board ID,
+            /// the ID will be left as Unknown.
+            /// 
+            /// Ex:
+            /// id = 50007  
+            /// rev = REV:XD1  
+            /// serial = SER#010
+            /// </summary>
+            /// <param name="id">ID string.</param>
+            /// <param name="rev">Revision string.</param>
+            /// <param name="serial">Serial string.</param>
+            /// <returns>Information about the board.</returns>
+            private static I2cBoard DecodeBoardValues(string id, string rev, string serial)
+            {
+                I2cBoard board = new I2cBoard();
+
+                // Try to parse the Board ID
+                // If there is an error return NULL
+                int boardId = 0;
+                if (int.TryParse(id, out boardId))
+                {
+                    board.ID = (I2cBoardId)boardId;
+                }
+
+                // Parse the Revision
+                // Split by semicolon (:)
+                char[] delimiters = new char[] { ':' };
+                string[] revision = rev.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                if (revision.Length >= 2)
+                {
+                    board.Revision = revision[1];
+                }
+
+                // Parse the Serial Number
+                // Split by pound sign (#)
+                delimiters = new char[] { '#' };
+                string[] serialNum = serial.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+                if (serialNum.Length >= 2)
+                {
+                    board.SetSerial(serialNum[1]);
+                }
+
+                return board;
+            }
+
+
+
+            #endregion
+
+            #region STIME
+
+            /// <summary>
+            /// Decode the Date Time line.  This will look for the date and time line.
+            /// It will then parse the line using DateTime.Parse().
+            /// 
+            /// Ex:
+            /// 
+            /// </summary>
+            /// <param name="buffer">Buffer from the serial port.</param>
+            /// <returns>DateTime parsed from the buffer.</returns>
+            public static DateTime DecodeSTIME(string buffer)
+            {
+                // Look for the line with the results
+                char[] delimiters = new char[] { '\r', '\n' };
+                string[] lines = buffer.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                // Create a blank date and time
+                DateTime dt = new DateTime();
+
+                // Look for the line with data
+                foreach (string line in lines)
+                { 
+                    // Check for the line that does not contain STIME
+                    // This is the date time line
+                    if(!line.Contains(RTI.Commands.AdcpCommands.CMD_STIME))
+                    {
+                        // Create a new date and time by parsing the date time line
+                        dt = DateTime.Parse(line);
+                    }
+                }
+
+                return dt;
+            }
+
+            #endregion
 
             #endregion
 

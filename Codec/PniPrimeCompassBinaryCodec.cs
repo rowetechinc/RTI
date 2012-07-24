@@ -51,6 +51,7 @@
  * 03/30/2012      RC           2.07      Surround processing thread in try/catch loop.  
  *                                         Check size of buffer before trying to remove the data.
  * 04/06/2012      RC           2.08      Changed serial port read thread, so make the codec decode in a while loop again.
+ * 07/06/2012      RC           2.12      Added SIZE_OF_FLOAT64, GetParamCommand(), SetTaps0Commands(), SetTaps4Commands() and DecodeKParamResp() to get and set Compass Taps.
  * 
  */
 
@@ -194,6 +195,11 @@ namespace RTI
         /// Number of bytes for a float.
         /// </summary>
         private int SIZE_OF_FLOAT = 4;
+
+        /// <summary>
+        /// Number of bytes for a Float64.
+        /// </summary>
+        private int SIZE_OF_FLOAT64 = 8;
 
         /// <summary>
         /// Number of bytes for a boolean.
@@ -636,6 +642,38 @@ namespace RTI
         }
 
         /// <summary>
+        /// Response from asking for the parameters to the
+        /// compass.  This will return a list of filter taps.
+        /// The Parameter ID and Axis ID determine which values
+        /// these represent.
+        /// 
+        /// The current FIR filter settings for either magnetometer 
+        /// or accelerometer sensors.  Each tap is a Float64.
+        /// </summary>
+        public struct Parameters
+        {
+            /// <summary>
+            /// Parameter ID.
+            /// </summary>
+            public int ParamId { get; set; }
+
+            /// <summary>
+            /// Axis ID.
+            /// </summary>
+            public int AxisId { get; set; }
+
+            /// <summary>
+            /// Number of filter tap values.
+            /// </summary>
+            public int Count { get; set; }
+
+            /// <summary>
+            /// Filter Tap values.
+            /// </summary>
+            public List<double> Taps { get; set; }
+        }
+
+        /// <summary>
         /// Enum to decide which 
         /// calibration mode to use.
         /// </summary>
@@ -975,6 +1013,36 @@ namespace RTI
             /// 1 Error Saving
             /// </summary>
             kErrSave = 1,
+
+            /// <summary>
+            /// Config Axis ID: X.
+            /// </summary>
+            kXAxis = 1,
+
+            /// <summary>
+            /// Config Axis ID: Y.
+            /// </summary>
+            kYAxis = 2,
+
+            /// <summary>
+            /// Config Axis ID: Z.
+            /// </summary>
+            kZAxis = 3,
+
+            /// <summary>
+            /// Config Axis ID: Pitch (Accelerator).
+            /// </summary>
+            kPAxis = 4,
+
+            /// <summary>
+            /// Config Axis ID: Roll  (Accelerator).
+            /// </summary>
+            kRAxis = 5,
+
+            /// <summary>
+            /// Config Axis ID: Z  (Accelerator).
+            /// </summary>
+            kIZAxis = 6
         };
 
         #endregion
@@ -1036,23 +1104,23 @@ namespace RTI
         /// 2 bytes for Checksum
         /// </summary>
         /// <param name="frameType">Frame ID type</param>
-        /// <param name="data">Data for message.</param>
+        /// <param name="payload">Payload.  Additional data for message.</param>
         /// <returns>Byte array containing the message.</returns>
-        private static byte[] CreateMsg(byte frameType, byte[] data)
+        private static byte[] CreateMsg(byte frameType, byte[] payload)
         {
             UInt32 index = 0;           // Our location in the frame we are putting together
             UInt16 crc = 0;             // The CRC to add to the end of the packer
             UInt16 count = 0;           // The total length the packet will be
 
-            // Check if there is any data to add to the command
-            int dataLength = 0;
-            if (data != null)
+            // Check if there is any payload to add to the command
+            int packetframeLength = 0;
+            if (payload != null)
             {
-                dataLength = data.Length;
+                packetframeLength = payload.Length;
             }
 
             // Get the length of the command
-            count = (UInt16)(Convert.ToUInt16(dataLength) + PACKET_MIN_SIZE);
+            count = (UInt16)(Convert.ToUInt16(packetframeLength) + PACKET_MIN_SIZE);
             byte[] buffer = new byte[count];
 
             //// Exit without sending if there is too much data to fit inside our packet
@@ -1070,12 +1138,12 @@ namespace RTI
             // Store the frame ID
             buffer[index++] = frameType;
 
-            // Copy the data to be sent
-            if (data != null)
+            // Copy the payload to be sent
+            if (payload != null)
             {
-                for (int x = 0; x < data.Length; x++)
+                for (int x = 0; x < payload.Length; x++)
                 {
-                    buffer[index++] = data[x];
+                    buffer[index++] = payload[x];
                 }
             }
 
@@ -1230,7 +1298,7 @@ namespace RTI
         }
 
         /// <summary>
-        /// This frame cleas the user magnetometer calibration coefficents.  The frame
+        /// This frame clears the user magnetometer calibration coefficents.  The frame
         /// has no payload.  This frame must be followed by the kSave frame to change in non-volatile
         /// memory.
         /// </summary>
@@ -1308,6 +1376,8 @@ namespace RTI
             return CreateMsg((int)ID.kSetDataComponents, payload);
         }
 
+        #region Config Commands
+
         /// <summary>
         /// The frame queries the module for the current internal configuration value.  THe
         /// payload contains the configuration ID request.
@@ -1379,6 +1449,161 @@ namespace RTI
                 return null;
             }
         }
+
+        #endregion
+
+        #region Param Commands
+
+        /// <summary>
+        /// Get the parameter for the Z Axis of the compass.
+        /// 
+        /// The order of th payload is reversed because of Endian.
+        /// </summary>
+        /// <returns></returns>
+        public static byte[] GetParamCommand()
+        {
+            byte[] payload = new byte[2];
+
+            payload[0] = (byte)ID.kZAxis;               // Axis ID
+            payload[1] = (byte)ID.kFIRConfig;           // Reverse the order and put the kFIRConfig ID second
+
+            return CreateMsg((int)ID.kGetParam, payload);
+        }
+
+        /// <summary>
+        /// ID 12
+        /// 0 Tap Setting. 
+        /// Use the byte arrays commands to set 0 taps.  Both commands must sent
+        /// to be correctly set.  This will set no taps and tap count to 0.
+        /// 
+        /// This frame sets the FIR filter settings for the magnetomter and accelerometer sensors.
+        /// The second byte of the payload indicates the x vector componenet of either the magnetomter
+        /// or accelerometer.  This is to differentiate whether to apply the filter settins to the magnetometer
+        /// or accelerometer.  The third bye in the payload indicates the number of FIR taps to use then followed
+        /// byt the filter taps.  Each tap is a Float64.  The maximum number of taps that can be set is 32 and the 
+        /// minimum is 0 (no filtering).  Parameter ID should be set to 3.
+        /// </summary>
+        /// <param name="kXAxis">X Axis byte array command.</param>
+        /// <param name="kPAxis">P Axis byte array command.</param>
+        public static void SetTaps0Commands(out byte[] kXAxis, out byte[] kPAxis)
+        {
+            // X Axis
+            byte[] xAxisPayload = new byte[3];
+            xAxisPayload[0] = 0x03;                   // Param ID          
+            xAxisPayload[1] = (byte)ID.kXAxis;        // X Axis
+            xAxisPayload[2] = 0x00;                   // Tap Count
+            kXAxis = CreateMsg((int)ID.kSetParam, xAxisPayload);
+
+            // P Axis
+            byte[] pAxisPayload = new byte[3];
+            pAxisPayload[0] = 0x03;                   // Param ID          
+            pAxisPayload[1] = (byte)ID.kPAxis;        // P Axis
+            pAxisPayload[2] = 0x00;                   // Tap Count
+            kPAxis = CreateMsg((int)ID.kSetParam, pAxisPayload);
+        }
+
+        /// <summary>
+        /// ID 12
+        /// 4 Tap Setting. 
+        /// Use the byte arrays commands to set 4 taps.  Both commands must sent
+        /// to be correctly set.
+        /// 
+        /// This frame sets the FIR filter settings for the magnetomter and accelerometer sensors.
+        /// The second byte of the payload indicates the x vector componenet of either the magnetomter
+        /// or accelerometer.  This is to differentiate whether to apply the filter settins to the magnetometer
+        /// or accelerometer.  The third bye in the payload indicates the number of FIR taps to use then followed
+        /// byt the filter taps.  Each tap is a Float64.  The maximum number of taps that can be set is 32 and the 
+        /// minimum is 0 (no filtering).  Parameter ID should be set to 3.
+        /// </summary>
+        /// <param name="kXAxis">X Axis byte array command.</param>
+        /// <param name="kPAxis">P Axis byte array command.</param>
+        public static void SetTaps4Commands(out byte[] kXAxis, out byte[] kPAxis)
+        {
+            //0028 0C 030104 3FA7EA327A23B20F3FDD02B9B0BB89B73FDD02B9B0BB89B73FA7EA327A23B20F 472B
+            //0028 0C 030404 3FA7EA327A23B20F3FDD02B9B0BB89B73FDD02B9B0BB89B73FA7EA327A23B20F 8BD8
+
+            // X Axis
+            byte[] xAxisPayload = new byte[35];
+            xAxisPayload[0] = 0x03;                   // Param ID          
+            xAxisPayload[1] = (byte)ID.kXAxis;        // X Axis
+            xAxisPayload[2] = 0x04;                   // Tap Count
+            xAxisPayload[3] = 0x3F;
+            xAxisPayload[4] = 0xA7;
+            xAxisPayload[5] = 0xEA;
+            xAxisPayload[6] = 0x32;
+            xAxisPayload[7] = 0x7A;
+            xAxisPayload[8] = 0x23;
+            xAxisPayload[9] = 0xB2;
+            xAxisPayload[10] = 0x0F;
+            xAxisPayload[11] = 0x3F;
+            xAxisPayload[12] = 0xDD;
+            xAxisPayload[13] = 0x02;
+            xAxisPayload[14] = 0xB9;
+            xAxisPayload[15] = 0xB0;
+            xAxisPayload[16] = 0xBB;
+            xAxisPayload[17] = 0x89;
+            xAxisPayload[18] = 0xB7;
+            xAxisPayload[19] = 0x3F;
+            xAxisPayload[20] = 0xDD;
+            xAxisPayload[21] = 0x02;
+            xAxisPayload[22] = 0xB9;
+            xAxisPayload[23] = 0xB0;
+            xAxisPayload[24] = 0xBB;
+            xAxisPayload[25] = 0x89;
+            xAxisPayload[26] = 0xB7;
+            xAxisPayload[27] = 0x3F;
+            xAxisPayload[28] = 0xA7;
+            xAxisPayload[29] = 0xEA;
+            xAxisPayload[30] = 0x32;
+            xAxisPayload[31] = 0x7A;
+            xAxisPayload[32] = 0x23;
+            xAxisPayload[33] = 0xB2;
+            xAxisPayload[34] = 0x0F;
+
+            kXAxis = CreateMsg((int)ID.kSetParam, xAxisPayload);
+
+            // P Axis
+            byte[] pAxisPayload = new byte[35];
+            pAxisPayload[0] = 0x03;                   // Param ID          
+            pAxisPayload[1] = (byte)ID.kPAxis;        // P Axis
+            pAxisPayload[2] = 0x04;                   // Tap Count
+            pAxisPayload[3] = 0x3F;
+            pAxisPayload[4] = 0xA7;
+            pAxisPayload[5] = 0xEA;
+            pAxisPayload[6] = 0x32;
+            pAxisPayload[7] = 0x7A;
+            pAxisPayload[8] = 0x23;
+            pAxisPayload[9] = 0xB2;
+            pAxisPayload[10] = 0x0F;
+            pAxisPayload[11] = 0x3F;
+            pAxisPayload[12] = 0xDD;
+            pAxisPayload[13] = 0x02;
+            pAxisPayload[14] = 0xB9;
+            pAxisPayload[15] = 0xB0;
+            pAxisPayload[16] = 0xBB;
+            pAxisPayload[17] = 0x89;
+            pAxisPayload[18] = 0xB7;
+            pAxisPayload[19] = 0x3F;
+            pAxisPayload[20] = 0xDD;
+            pAxisPayload[21] = 0x02;
+            pAxisPayload[22] = 0xB9;
+            pAxisPayload[23] = 0xB0;
+            pAxisPayload[24] = 0xBB;
+            pAxisPayload[25] = 0x89;
+            pAxisPayload[26] = 0xB7;
+            pAxisPayload[27] = 0x3F;
+            pAxisPayload[28] = 0xA7;
+            pAxisPayload[29] = 0xEA;
+            pAxisPayload[30] = 0x32;
+            pAxisPayload[31] = 0x7A;
+            pAxisPayload[32] = 0x23;
+            pAxisPayload[33] = 0xB2;
+            pAxisPayload[34] = 0x0F;
+
+            kPAxis = CreateMsg((int)ID.kSetParam, pAxisPayload);
+        }
+
+        #endregion
 
         #endregion
 
@@ -1578,6 +1803,9 @@ namespace RTI
                     case (int)ID.kSaveDone:
                         DecodekSaveDone(msg);
                         //Debug.WriteLine("Compass Save Done");
+                        break;
+                    case (int)ID.kParamResp:
+                        DecodeKParamResp(msg);
                         break;
                     default:
                         break;
@@ -1822,6 +2050,39 @@ namespace RTI
                 default:
                     break;
             }
+        }
+
+        /// <summary>
+        /// ID 14
+        /// This frame contains the current FIR filter settings for either magnetometer
+        /// or acceleromter sensors.  The second byte of the payload is the vector axis ID,
+        /// the third byte is the number of filter taps then followed by the filter taps.  Each
+        /// tap is a Float64.
+        /// Pass the data to all subscribers.
+        /// </summary>
+        /// <param name="msg">Message to decode.</param>
+        private void DecodeKParamResp(byte[] msg)
+        {
+            Parameters param = new Parameters();
+            param.Taps = new List<double>();
+
+            int index = FIRST_PACKET_INDEX;
+            param.ParamId = msg[index++];
+            param.AxisId = msg[index++];
+            param.Count = msg[index++];
+
+            // Go through each tap in the response
+            // Convert to a Float64
+            for (int count = 0; count < param.Count; count++)
+            {
+                double tap = MathHelper.ByteArrayToFloat64(msg, index, IS_BIG_ENDIAN);
+                index += SIZE_OF_FLOAT64;
+
+                param.Taps.Add(tap);
+            }
+
+            // Call all subscribers with parameters
+            PublishEvent(new CompassEventArgs(ID.kParamResp, param));
         }
 
         /// <summary>

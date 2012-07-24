@@ -59,6 +59,7 @@
  *                                         Added PauseReadThread() to pause reading data from the serial port.
  * 04/26/2012      RC          2.10       Added a default value to SendDataAndWaitReply().
  * 04/27/2012      RC          2.10       Added a sleep in the SendData() commands.
+ * 07/09/2012      RC          2.12       Added locks to read and write methods for multithreading.
  * 
  */
 
@@ -182,6 +183,16 @@ namespace RTI
         /// data.
         /// </summary>
         private bool _isSendingData;
+
+        /// <summary>
+        /// Lock for reading from the serial port.
+        /// </summary>
+        private object _readLock = new object();
+
+        /// <summary>
+        /// Lock for writing to the serial port.
+        /// </summary>
+        private object _writeLock = new object();
 
         #endregion
 
@@ -540,11 +551,15 @@ namespace RTI
         public int ReadData(byte[] buffer, int offset, int count)
         {
             int result = 0;
-
-            if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+            
+            // Lock to prevent multiple threads from reading at the same time
+            lock (_readLock)
             {
-                // Read the data from the serial port
-                result = _serialPort.Read(buffer, offset, count);
+                if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+                {
+                    // Read the data from the serial port
+                    result = _serialPort.Read(buffer, offset, count);
+                }
             }
 
             // Return number of bytes read
@@ -559,19 +574,23 @@ namespace RTI
         /// <param name="data">Data to write.</param>
         public void SendData(string data)
         {
-            if (_serialPort.IsOpen && !String.IsNullOrEmpty(data) && !_serialPort.BreakState)
+            // Lock to prevent multiple threads from writing at the same time
+            lock (_writeLock)
             {
-                // Format the command
-                data += '\r';
+                if (_serialPort.IsOpen && !String.IsNullOrEmpty(data) && !_serialPort.BreakState)
+                {
+                    // Format the command
+                    data += '\r';
 
-                _isSendingData = true;
-                _serialPort.Write(data);
-                ReceiveBufferString = data + ReceiveBufferString;
+                    _isSendingData = true;
+                    _serialPort.Write(data);
+                    ReceiveBufferString = data + ReceiveBufferString;
 
-                // Wait for 485 response and read thread to read response
-                Thread.Sleep(WAIT_STATE);
+                    // Wait for 485 response and read thread to read response
+                    Thread.Sleep(WAIT_STATE);
 
-                _isSendingData = false;
+                    _isSendingData = false;
+                }
             }
         }
 
@@ -589,16 +608,20 @@ namespace RTI
         /// <param name="count">Number of bytes to write.</param>
         public void SendData(byte[] buffer, int offset, int count)
         {
-            if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+            // Lock to prevent multiple threads from writing at the same time
+            lock (_writeLock)
             {
-                _isSendingData = true;
-                _serialPort.Write(buffer, offset, count);
-                ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
+                if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+                {
+                    _isSendingData = true;
+                    _serialPort.Write(buffer, offset, count);
+                    ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
 
-                // Wait for 485 response and read thread to read response
-                Thread.Sleep(WAIT_STATE);
+                    // Wait for 485 response and read thread to read response
+                    Thread.Sleep(WAIT_STATE);
 
-                _isSendingData = false;
+                    _isSendingData = false;
+                }
             }
         }
 

@@ -40,6 +40,9 @@
  * 04/10/2012      RC          2.08       Changed ByteArrayToInt() to ByteArrayToInt8() and ByteArrayToInt32().
  *                                         Added MB_TO_BYTES.
  * 06/04/2012      RC          2.11       Added ParseDouble().
+ * 06/22/2012      RC          2.12       Added PercentError() and PercentDifference() methods.
+ * 07/06/2012      RC          2.12       Added ByteArrayToDouble() and ByteArrayToFloat64().
+ * 07/19/2012      RC          2.12       When parsing the byte arrays, verify the byte arrays given are the correct size.
  * 
  */
 
@@ -227,6 +230,8 @@ namespace RTI
             return Math.PI * angle / 180.0;
         }
 
+        #region Byte Array Math
+
         /// <summary>
         /// Struct to hold the bytes and the integer or float.
         /// Conversion will be done by populating the values.
@@ -242,10 +247,20 @@ namespace RTI
             public byte Byte3;
             [FieldOffset(3)]
             public byte Byte4;
+            [FieldOffset(4)]
+            public byte Byte5;
+            [FieldOffset(5)]
+            public byte Byte6;
+            [FieldOffset(6)]
+            public byte Byte7;
+            [FieldOffset(7)]
+            public byte Byte8;
             [FieldOffset(0)]
             public float Float;
             [FieldOffset(0)]
             public int Int;
+            [FieldOffset(0)]
+            public double Double;
         }
 
 
@@ -267,8 +282,11 @@ namespace RTI
         /// <returns>Float value from the byte array.</returns>
         public static float ByteArrayToFloat(byte[] data, int index, bool isBigEndian = false)
         {
+            // Number of bytes the data should at least contain
+            int expectedLen = 4;
+
             // Ensure the data exist and there is enough data
-            if (data == null || index + 4 > data.Length)
+            if (data == null || data.Length < expectedLen || index + expectedLen > data.Length)
             {
                 return 0;
             }
@@ -295,6 +313,79 @@ namespace RTI
         }
 
         /// <summary>
+        /// Convert the bytes to a 64 bit (8 bytes) Float64.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator) (Windows)
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">8 Byte of data for a Float64 (Double).</param>
+        /// <param name="index">Index in the array to start.</param>
+        /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
+        /// <returns>Float value from the byte array.</returns>
+        public static double ByteArrayToFloat64(byte[] data, int index, bool isBigEndian = false)
+        {
+            // Number of bytes the data should at least contain
+            int expectedLen = 8;
+
+            // Ensure the data exist and there is enough data
+            if (data == null || data.Length < expectedLen || index + expectedLen > data.Length)
+            {
+                return 0;
+            }
+
+            // Check if the system is Little Endian
+            // and the data was given as Big Endian
+            if (BitConverter.IsLittleEndian && isBigEndian)
+            {
+                // Then reverse the values to be in Little Endian
+                TestUnion result = new TestUnion();
+                result.Byte8 = data[index++];
+                result.Byte7 = data[index++];
+                result.Byte6 = data[index++];
+                result.Byte5 = data[index++];
+                result.Byte4 = data[index++];
+                result.Byte3 = data[index++];
+                result.Byte2 = data[index++];
+                result.Byte1 = data[index];
+
+                return result.Double;
+            }
+            // We are on a Little Endian System
+            // and the data is given as Little Endian
+            else
+            {
+                return BitConverter.ToDouble(data, index);
+            }
+        }
+
+        /// <summary>
+        /// Convert the bytes to a 64 bit (8 bytes) Double.
+        /// 
+        /// Check if the data is in big endian form.
+        /// If the system is in Little Endian, then
+        /// the byte converter will not convert properly
+        /// and the bytes will have to be reversed.
+        /// Big Endian      = Most Significant ------ Least Significant     (ARM, 68k, ...)     (As Displayed on a calculator)
+        /// Little Endian   = Least Significant ------ Most Significant     (x86)               (Reverse order on a calculator) (Windows)
+        /// 
+        /// If Bad return 0.
+        /// </summary>
+        /// <param name="data">8 Byte of data for a Double.</param>
+        /// <param name="index">Index in the array to start.</param>
+        /// <param name="isBigEndian">Flag used to determine if the given byte array is in Big Endian.</param>
+        /// <returns>Float value from the byte array.</returns>
+        public static double ByteArrayToDouble(byte[] data, int index, bool isBigEndian = false)
+        {
+            return ByteArrayToFloat64(data, index, isBigEndian);
+        }
+
+        /// <summary>
         /// Convert the bytes to a 32 bit (4 bytes) Unsigned integer.
         /// 
         /// Check if the data is in big endian form.
@@ -312,8 +403,11 @@ namespace RTI
         /// <returns>Unsigned integer.</returns>
         public static UInt32 ByteArrayToUInt32(byte[] data, int index, bool isBigEndian = false)
         {
+            // Number of bytes the data should at least contain
+            int expectedLen = 4;
+
             // Ensure the data exist and there is enough data
-            if (data == null || index + 4 > data.Length)
+            if (data == null || data.Length < expectedLen || index + expectedLen > data.Length)
             {
                 return 0;
             }
@@ -351,8 +445,11 @@ namespace RTI
         /// <returns>Unsigned integer.</returns>
         public static int ByteArrayToInt32(byte[] data, int index, bool isBigEndian = false)
         {
+            // Number of bytes the data should at least contain
+            int expectedLen = 4;
+
             // Ensure the data exist and there is enough data
-            if (data == null || index + 4 > data.Length)
+            if (data == null || data.Length < expectedLen || index + expectedLen > data.Length)
             {
                 return 0;
             }
@@ -391,8 +488,11 @@ namespace RTI
         /// <returns>UInt16 from the index location.</returns>
         public static UInt16 ByteArrayToUInt16(byte[] data, int index, bool isBigEndian = false)
         {
+            // Number of bytes the data should at least contain
+            int expectedLen = 2;
+
             // Ensure the data exist and there is enough data
-            if (data == null || index + 2 > data.Length)
+            if (data == null || data.Length < expectedLen || index + expectedLen > data.Length)
             {
                 return 0;
             }
@@ -428,7 +528,7 @@ namespace RTI
         {
             // Ensure there is a byte to work with
             // starting from the index
-            if (index > data.Length)
+            if (data == null || index > data.Length)
             {
                 return 0;
             }
@@ -449,7 +549,7 @@ namespace RTI
         /// <returns>Boolean from the index location.</returns>
         public static bool ByteArrayToBoolean(byte[] data, int index)
         {
-            if (index > data.Length)
+            if (data == null || index > data.Length)
             {
                 return false;
             }
@@ -697,13 +797,15 @@ namespace RTI
             return result;
         }
 
+        #endregion
+
         /// <summary>
         /// Parse a string to a double.
         /// Convert the value from other locale types.
         /// </summary>
         /// <param name="s">String to parse.</param>
         /// <returns>Value parsed.</returns>
-        private double ParseDouble(string s)
+        public static double ParseDouble(string s)
         {
             if (s == null)
                 return double.NaN;
@@ -713,5 +815,49 @@ namespace RTI
                 return result;
             return double.NaN;
         }
+
+        #region Percent Error
+
+        /// <summary>
+        /// Precent Error.
+        /// Applied when comparing an experimental quantity, E, with a theoretical
+        /// quantity, T, which is considered the "correct" value.  The percent error
+        /// is the absolute value of the difference divided by the "correct" value 
+        /// times 100.
+        /// </summary>
+        /// <param name="correctValue">The correct value.</param>
+        /// <param name="experimentalValue">Experimental Value.</param>
+        /// <returns>Percent error as a percent.</returns>
+        public static double PercentError(double correctValue, double experimentalValue)
+        {
+            // Check for bad values
+            if (correctValue == 0)
+            {
+                return 0;
+            }
+
+            return Math.Abs((correctValue - experimentalValue) / correctValue) * 100;
+        }
+
+        /// <summary>
+        /// Applied when comparing two experimental quantities, E1 and E2, neither
+        /// of which can be considered the "correct" value.  The percent difference
+        /// is the absolute value of the difference over themean times 100.
+        /// </summary>
+        /// <param name="exp1Value">Experimental Value 1.</param>
+        /// <param name="exp2Value">Experimental Value 2.</param>
+        /// <returns>Percent Difference as a percent.</returns>
+        public static double PercentDifference(double exp1Value, double exp2Value)
+        {
+            // Check for bad values
+            if (0.5 * (exp1Value + exp2Value) == 0)
+            {
+                return 0;
+            }
+
+            return ((Math.Abs(exp1Value - exp2Value)) / (0.5 * (exp1Value + exp2Value))) * 100;
+        }
+
+        #endregion
     }
 }

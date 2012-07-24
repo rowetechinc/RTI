@@ -57,7 +57,7 @@
     <Compile Include="Models\DataSet\EnsembleTest.cs" />
     <Compile Include="Models\DataSet\InstrumentWaterMassDataSetTest.cs" />
     <Compile Include="Models\DataSet\NmeaDataSetTest.cs" />
-    <Compile Include="Models\DataSet\SerialNumberTest.cs" />
+    <Compile Include="Models\SerialNumberTest.cs" />
     <Compile Include="Models\DVL\Prti01SentenceTest.cs" />
     <Compile Include="Models\DVL\Prti02SentenceTest.cs" />
     <Compile Include="Models\ProjectTest.cs" />

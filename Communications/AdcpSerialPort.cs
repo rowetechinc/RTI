@@ -53,6 +53,15 @@
  *                                         Fix cancel download to actually cancel download all the time.
  * 05/03/2012      RC          2.11       Changed TIMEOUT value.
  * 05/22/2012      RC          2.11       Added ability to cancel uploading data.
+ * 06/26/2012      RC          2.12       Created SendCommands() to send a list of commands.
+ * 07/03/2012      RC          2.12       Created SysTestFirmwareFiles() to test for missing firmware files.
+ * 07/06/2012      RC          2.12       Check if the command given is null in SendCompassCommand().
+ *                                         Created SysTestCompass() to test is compass is giving data.
+ * 07/17/2012      RC          2.12       Added SysTestI2cMemoryDevices() to test boards and registers in the system.
+ *                                         Added SetSystemTime() to set the system time.  Used in StartPinging().
+ * 07/18/2012      RC          2.12       Added SysTestSingleWaterProfilePing() and SysTestSingleBottomTrackPing() to test the Status of the system.
+ *                                         Changed SysTestFirmwareVersion() to check if the firmware version is less then given version.
+ *                                         Changed SysTestI2cMemoryDevices() to check for bad serial and revision if not testing for a specific serial and revision. 
  * 
  */
 
@@ -312,37 +321,41 @@ namespace RTI
         #region XModem Download
 
         /// <summary>
-        /// Send the command to display the Directory listing.
-        /// Then return the results from the serial display.
+        /// Download the list of file from the ADCP.  A command
+        /// is sent to give the listing of all the files on the ADCP.
+        /// Store the results to _dirListingString.  This is done
+        /// by subscribing to the serial output.  Then send the command.
+        /// Receive all the lines from the serial output until it finds
+        /// the end of the command.  Then unsubscribe to receive
+        /// serial output.
         /// </summary>
-        /// <returns>List of the directory files.</returns>
-        public List<string> GetDirectoryListing()
+        private void DownloadDirectoryListing()
         {
             int TIMEOUT = 50;
-
+            
             // Clear the buffer
             ReceiveBufferString = "";
             _dirListingString = "";
-
+            
             // Subscribe to receive serial string data
             this.ReceiveSerialData += new ReceiveSerialDataEventHandler(GetDirListing_ReceiveSerialData);
-
+            
             if (IsAvailable())
             {
                 // Send the command to get the directory listing
                 SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DSDIR));
-
+            
                 // Added an extra wait to Wait for response
                 Thread.Sleep(WAIT_STATE);
             }
-
+            
             // Wait for the complete list
             // "Used Space: ..." is the last line
             // Check ReceiveBufferString and not _dirListingString because it is a smaller string
             while ( ReceiveBufferString.IndexOf("Used Space:") <= 0)
             {
                 Thread.Sleep(WAIT_STATE * 2);
-
+            
                 // Stop looking after timeout has occured
                 if (TIMEOUT <= 0)
                 {
@@ -350,11 +363,22 @@ namespace RTI
                 }
                 TIMEOUT--;
             }
-
+            
             // Unsubscribe from the event
             this.ReceiveSerialData -= GetDirListing_ReceiveSerialData;
+        }
 
-            // Get the list of directories
+        /// <summary>
+        /// Send the command to display the Directory listing.
+        /// Then return the results from the serial display.
+        /// </summary>
+        /// <returns>List of the directory files.</returns>
+        public List<string> GetDirectoryListing()
+        {
+            // Download the directory listing to _dirListingString
+            DownloadDirectoryListing();
+
+            // Filter the list of directories
             List<string> dirListing = CreateDirectoryListing(_dirListingString);
 
             // Clear the string
@@ -1597,14 +1621,7 @@ namespace RTI
             bool pingResult = false;
 
             // Try to send the command, if it fails try again
-            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetTimeCommand(), TIMEOUT);
-            if (!timeResult)
-            {
-                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetTimeCommand(), TIMEOUT);
-            }
-
-            // Allow some time for the ADCP to set the time
-            System.Threading.Thread.Sleep(WAIT_STATE * 2);
+            timeResult = SetSystemDateTime();
 
             // Try to send the command, if it fails try again
             pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
@@ -1643,6 +1660,29 @@ namespace RTI
 
             // Return if either failed
             return stopResult;
+        }
+
+        /// <summary>
+        /// Set the system time to the ADCP.  This will use the time
+        /// currently set on the computer running this command.  This includes
+        /// the time and date.
+        /// </summary>
+        /// <returns>TRUE = DateTime set.</returns>
+        public bool SetSystemDateTime()
+        {
+            bool timeResult = false;
+
+            // Try to send the command, if it fails try again
+            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetTimeCommand(), TIMEOUT);
+            if (!timeResult)
+            {
+                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetTimeCommand(), TIMEOUT);
+            }
+
+            // Allow some time for the ADCP to set the time
+            System.Threading.Thread.Sleep(WAIT_STATE * 8);
+
+            return timeResult;
         }
 
         #endregion
@@ -1768,7 +1808,7 @@ namespace RTI
         /// <returns>TRUE = Command sent.  / False = Command NOT sent.  Most likely not in Compass mode.</returns>
         public bool SendCompassCommand(byte[] command)
         {
-            if (Mode == AdcpSerialModes.COMPASS)
+            if (Mode == AdcpSerialModes.COMPASS  && command != null)
             {
                 SendData(command, 0, command.Length);
                 return true;
@@ -1821,6 +1861,680 @@ namespace RTI
 
             return saveResult;
         }
+
+        #endregion
+
+        #region Send Commands To Serial Port
+
+        /// <summary>
+        /// Send a list of commands.
+        /// </summary>
+        /// <param name="cmds">List of commands.</param>
+        /// <returns>TRUE = All commands were sent successfully.</returns>
+        public bool SendCommands(List<string> cmds)
+        {
+            bool result = true;
+
+            foreach (string commands in cmds)
+            {
+                if (commands.CompareTo(RTI.Commands.AdcpCommands.CMD_START_PINGING) == 0)
+                {
+                    // Start pinging
+                    result &= StartPinging();
+                }
+                else if (commands.CompareTo(RTI.Commands.AdcpCommands.CMD_STOP_PINGING) == 0)
+                {
+                    // Stop pinging
+                    result &= StopPinging();
+                }
+                else if (commands.CompareTo(RTI.Commands.AdcpCommands.CMD_BREAK) == 0)
+                {
+                    // Send a break
+                    SendBreak();
+                }
+                else
+                {
+                    // Send the command within the buffer
+                    // Try sending the command.  If it fails try one more time
+                    bool currResult = SendDataWaitReply(commands, TIMEOUT);
+                    if (!currResult)
+                    {
+                        // Try again if failed first time
+                        currResult = SendDataWaitReply(commands, TIMEOUT);
+                    }
+
+                    // Keep track if any were false
+                    // If any were false, this will stay false
+                    result &= currResult;
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region System Test
+
+        #region Communication
+
+        /// <summary>
+        /// Test if we have communication with the ADCP.  This will send a break
+        /// to the ADCP.  If nothing is received from the ADCP, then we do not 
+        /// have communication and send a fail result.
+        /// </summary>
+        /// <returns>Result from the test.</returns>
+        public SystemTestResult SysTestAdcpCommunication()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send a Break
+            SendBreak();
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Get the buffer output
+            string buffer = ReceiveBufferString;
+
+            if (buffer.Length <= 0)
+            {
+                result.TestResult = false;
+                result.ErrorListStrings.Add("Communication with ADCP failed.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_NO_COMM);
+            }
+            else
+            {
+                RTI.Commands.BreakStmt breakStmt = RTI.Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
+                
+                // Pass the results
+                result.Results = breakStmt;
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region Firmware
+
+        /// <summary>
+        /// Verify the Firmware version matches.  This will send a BREAK to the ADCP and 
+        /// decode the BREAK statement for the firmware version.  
+        /// </summary>
+        /// <param name="isTestVersion">Flag if we should test the version agaisnt the one given.</param>
+        /// <param name="major">Major version.</param>
+        /// <param name="minor">Minor version.</param>
+        /// <param name="revision">Revision version.</param>
+        /// <returns>Firmware test result.</returns>
+        public SystemTestResult SysTestFirmwareVersion(bool isTestVersion, ushort major = 0, ushort minor = 0, ushort revision = 0)
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send a Break
+            SendBreak();
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Get the buffer output
+            string buffer = ReceiveBufferString;
+
+            if (buffer.Length <= 0)
+            {
+                result.TestResult = false;
+                result.ErrorListStrings.Add("Communication with ADCP failed.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_NO_COMM);
+            }
+            else
+            {
+                // Decode a break statement for version 
+                RTI.Commands.BreakStmt breakStmt = RTI.Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
+
+                // Check if we should check the versions for specific values
+                if (isTestVersion)
+                {
+                    // Check each value with the one given
+                    if (breakStmt.FirmwareVersion.FirmwareMajor < major)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Firmware Major version does not match.  Expected: {0}  Found: {1}", major, breakStmt.FirmwareVersion.FirmwareMajor));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_FIRMWARE_MAJOR);
+                    }
+                    if (breakStmt.FirmwareVersion.FirmwareMinor < minor)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Firmware Minor version does not match.  Expected: {0}  Found: {1}", minor, breakStmt.FirmwareVersion.FirmwareMinor));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_FIRMWARE_MINOR);
+                    }
+                    if (breakStmt.FirmwareVersion.FirmwareRevision < revision)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Firmware Revision version does not match.  Expected: {0}  Found: {1}", revision, breakStmt.FirmwareVersion.FirmwareRevision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_FIRMWARE_REVISION);
+                    }
+                }
+                else
+                {
+                    // Check if the major, minor and revision are all 0
+                    // If all are 0, then the version is not set
+                    if (breakStmt.FirmwareVersion.FirmwareMajor == 0 && breakStmt.FirmwareVersion.FirmwareMinor == 0 && breakStmt.FirmwareVersion.FirmwareRevision == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Firmware version not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_FIRMWARE_VERSION);
+                    }
+                }
+
+                // Pass the results
+                result.Results = breakStmt;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Test if the system firmware files exist. This check the
+        /// directory listing for all the files. If the firmware files
+        /// do not exist, the result will report which files are missing.
+        /// </summary>
+        /// <returns>Result of the test.  File missing if any missing.</returns>
+        public SystemTestResult SysTestFirmwareFiles()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Download the directory listing to _dirListingString
+            DownloadDirectoryListing();
+
+            // Parse the directory listing string for all file info
+            // Each line should contain a piece of file info
+            string[] lines = _dirListingString.Split('\n');
+
+            // Ensure data exist
+            if (lines.Length <= 0)
+            {
+                result.ErrorListStrings.Add("Firmware files missing.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_FILES_MISSING);
+                result.TestResult = false;
+            }
+            else
+            {
+                // Data exist, verify the correct files exist
+                bool helpExist = false;
+                bool rtisysExist = false;
+                bool bootExist = false;
+                bool sysconfExist = false;
+                bool bbcodeExist = false;
+
+                for(int x = 0; x < lines.Length; x++)
+                {
+                    if (lines[x].Contains("HELP")) { helpExist = true; }            // HELP.TXT
+                    if (lines[x].Contains("RTISYS")) { rtisysExist = true; }        // RTISYS.BIN
+                    if (lines[x].Contains("BOOT")) { bootExist = true; }            // BOOT.BIN
+                    if (lines[x].Contains("SYSCONF")) { sysconfExist = true; }      // SYSCONF.BIN
+                    if (lines[x].Contains("BBCODE")) { bbcodeExist = true; }        // BBCODE.BIN
+                }
+
+                // HELP.TXT missing
+                if (!helpExist)
+                {
+                    result.ErrorListStrings.Add("HELP.TXT missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_HELP_MISSING);
+                    result.TestResult = false;
+                }
+
+                // RTISYS.BIN missing
+                if (!rtisysExist)
+                {
+                    result.ErrorListStrings.Add("RTISYS.BIN missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_RTISYS_MISSING);
+                    result.TestResult = false;
+                }
+
+                // BOOT.BIN missing
+                if (!bootExist)
+                {
+                    result.ErrorListStrings.Add("BOOT.BIN missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_BOOT_MISSING);
+                    result.TestResult = false;
+                }
+
+                // SYSCONF.BIN missing
+                if (!sysconfExist)
+                {
+                    result.ErrorListStrings.Add("SYSCONF.BIN missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_SYSCONF_MISSING);
+                    result.TestResult = false;
+                }
+
+                // BBCODE.BIN missing
+                if (!bbcodeExist)
+                {
+                    result.ErrorListStrings.Add("BBCODE.BIN missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_BBCODE_MISSING);
+                    result.TestResult = false;
+                }
+            }
+
+            // Clear the string
+            _dirListingString = "";
+
+            return result;
+        }
+
+        #endregion
+
+        #region Compass
+
+        /// <summary>
+        /// Decode the ENGPNI command.  Verify that heading, pitch and roll are not 0.
+        /// If all the values are 0, then the compass is not outputing data.
+        /// </summary>
+        /// <returns>Return the results of the test.</returns>
+        public SystemTestResult SysTestCompass()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send the command ENGPNI
+            SendData(RTI.Commands.AdcpCommands.CMD_ENGPNI);
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Decode the result
+            RTI.Commands.HPR hpr = RTI.Commands.AdcpCommands.DecodeEngPniResult(ReceiveBufferString);
+
+            // Check if all the values are 0
+            if (hpr.Heading == 0 && hpr.Pitch == 0 && hpr.Roll == 0)
+            {
+                result.TestResult = false;
+                result.ErrorListStrings.Add("Compass not outputing data.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.COMPASS_NO_OUTPUT);
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region I2C Boards
+
+        /// <summary>
+        /// Verify all the registers are present and the
+        /// board serial numbers and revisions are correct.
+        /// </summary>
+        /// <param name="testSerialRev">Flag if we should test the serial and revision of the board.</param>
+        /// <param name="memDevsExpected">The expected results.</param>
+        /// <returns>Result of the test.</returns>
+        public SystemTestResult SysTestI2cMemoryDevices(bool testSerialRev, RTI.Commands.I2cMemDevs memDevsExpected)
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send the command ENGI2CSHOW
+            SendData("ENGI2CSHOW");
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Get the buffer output
+            string buffer = ReceiveBufferString;
+
+            if (buffer.Length <= 0)
+            {
+                result.TestResult = false;
+                result.ErrorListStrings.Add("Communication with ADCP failed.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_NO_COMM);
+            }
+            else
+            {
+                RTI.Commands.I2cMemDevs memDevsResult = RTI.Commands.AdcpCommands.DecodeENGI2CSHOW(ReceiveBufferString);
+
+                // Set the results so the user can see the serial number and revision actually seen
+                result.Results = memDevsResult;
+
+                // Check if we are testing the revision and serial number
+                // Because the user cannot know the correct serial and rev,
+                // this test cannot always pass if the software is not updated with the latest revisions
+                // If we are not testing for the correct serial and revision, then verify that anything is set,
+                // If the revision or serial number is 0, then the serial or revision is not set.
+                if (testSerialRev)
+                {
+                    // Backplane serial
+                    if (memDevsExpected.BackPlaneBoard.SerialNum != memDevsResult.BackPlaneBoard.SerialNum)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Backplane board serial number does not match system serial number.  Expected: {0}  Found: {1}", memDevsExpected.BackPlaneBoard.SerialNum, memDevsResult.BackPlaneBoard.SerialNum));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_BACKPLANE_BRD);
+                    }
+
+                    // Backplane Rev
+                    if (memDevsExpected.BackPlaneBoard.Revision.CompareTo(memDevsResult.BackPlaneBoard.Revision) != 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Backplane board revision does not match.  Expected: {0}  Found: {1}", memDevsExpected.BackPlaneBoard.Revision, memDevsResult.BackPlaneBoard.Revision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_BACKPLANE_BRD);
+                    }
+
+                    // I/O serial
+                    if (memDevsExpected.IoBoard.SerialNum != memDevsResult.IoBoard.SerialNum)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("I/O board serial number does not match system serial number.  Expected: {0}  Found: {1}", memDevsExpected.IoBoard.SerialNum, memDevsResult.IoBoard.SerialNum));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_IO_BRD);
+                    }
+
+                    // I/0 Rev
+                    if (memDevsExpected.IoBoard.Revision.CompareTo(memDevsResult.IoBoard.Revision) != 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("I/0 board revision does not match.  Expected: {0}  Found: {1}", memDevsExpected.IoBoard.Revision, memDevsResult.IoBoard.Revision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_IO_BRD);
+                    }
+
+                    // RVCR serial
+                    if (memDevsExpected.RcvrBoard.SerialNum != memDevsResult.RcvrBoard.SerialNum)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Receiver board serial number does not match system serial number.  Expected: {0}  Found: {1}", memDevsExpected.RcvrBoard.SerialNum, memDevsResult.RcvrBoard.SerialNum));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_RCVR_BRD);
+                    }
+
+                    // RVCR Rev
+                    if (memDevsExpected.RcvrBoard.Revision.CompareTo(memDevsResult.RcvrBoard.Revision) != 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Receiver board revision does not match.  Expected: {0}  Found: {1}", memDevsExpected.RcvrBoard.Revision, memDevsResult.RcvrBoard.Revision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_RCVR_BRD);
+                    }
+
+                    // Low Power Reg serial
+                    if (memDevsExpected.LowPwrRegBoard.SerialNum != memDevsResult.LowPwrRegBoard.SerialNum)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Low Power Regulator board serial number does not match system serial number.  Expected: {0}  Found: {1}", memDevsExpected.LowPwrRegBoard.SerialNum, memDevsResult.LowPwrRegBoard.SerialNum));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_LOW_PWR_REG_BRD);
+                    }
+
+                    // Low Power Reg Rev
+                    if (memDevsExpected.LowPwrRegBoard.Revision.CompareTo(memDevsResult.LowPwrRegBoard.Revision) != 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Low Power Regulator board revision does not match.  Expected: {0}  Found: {1}", memDevsExpected.LowPwrRegBoard.Revision, memDevsResult.LowPwrRegBoard.Revision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_LOW_PWR_REG_BRD);
+                    }
+
+                    // Virtual Ground serial
+                    if (memDevsExpected.VirtualGndBoard.SerialNum != memDevsResult.VirtualGndBoard.SerialNum)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Virtual Ground board serial number does not match system serial number.  Expected: {0}  Found: {1}", memDevsExpected.VirtualGndBoard.SerialNum, memDevsResult.VirtualGndBoard.SerialNum));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_VIRTUAL_GND_BRD);
+                    }
+
+                    // Virtual Ground Rev
+                    if (memDevsExpected.VirtualGndBoard.Revision.CompareTo(memDevsResult.VirtualGndBoard.Revision) != 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Virtual Ground board revision does not match.  Expected: {0}  Found: {1}", memDevsExpected.VirtualGndBoard.Revision, memDevsResult.VirtualGndBoard.Revision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_VIRTUAL_GND_BRD);
+                    }
+
+                    // Xmitter serial
+                    if (memDevsExpected.XmitterBoard.SerialNum != memDevsResult.XmitterBoard.SerialNum)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Xmitter board serial number does not match system serial number.  Expected: {0}  Found: {1}", memDevsExpected.XmitterBoard.SerialNum, memDevsResult.XmitterBoard.SerialNum));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_XMITTER_BRD);
+                    }
+
+                    // Xmitter Rev
+                    if (memDevsExpected.XmitterBoard.Revision.CompareTo(memDevsResult.XmitterBoard.Revision) != 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Xmitter board revision does not match.  Expected: {0}  Found: {1}", memDevsExpected.XmitterBoard.Revision, memDevsResult.XmitterBoard.Revision));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_XMITTER_BRD);
+                    }
+                }
+                else
+                {
+                    // Backplane serial
+                    if (memDevsResult.BackPlaneBoard.SerialNum == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Backplane board serial number is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_BACKPLANE_BRD);
+                    }
+
+                    // Backplane Rev
+                    if (memDevsResult.BackPlaneBoard.Revision.CompareTo("0") == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Backplane board revision is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_BACKPLANE_BRD);
+                    }
+
+                    // I/O serial
+                    if (memDevsResult.IoBoard.SerialNum == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("I/O board serial number is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_IO_BRD);
+                    }
+
+                    // I/0 Rev
+                    if (memDevsResult.IoBoard.Revision.CompareTo("0") == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("I/0 board revision is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_IO_BRD);
+                    }
+
+                    // RVCR serial
+                    if (memDevsResult.RcvrBoard.SerialNum == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Receiver board serial number is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_RCVR_BRD);
+                    }
+
+                    // RVCR Rev
+                    if (memDevsResult.RcvrBoard.Revision.CompareTo("0") == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Receiver board revision is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_RCVR_BRD);
+                    }
+
+                    // Low Power Reg serial
+                    if (memDevsResult.LowPwrRegBoard.SerialNum == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Low Power Regulator board serial number is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_LOW_PWR_REG_BRD);
+                    }
+
+                    // Low Power Reg Rev
+                    if (memDevsResult.LowPwrRegBoard.Revision.CompareTo("0") == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Low Power Regulator board revision is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_LOW_PWR_REG_BRD);
+                    }
+
+                    // Virtual Ground serial
+                    if (memDevsResult.VirtualGndBoard.SerialNum == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Virtual Ground board serial number is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_VIRTUAL_GND_BRD);
+                    }
+
+                    // Virtual Ground Rev
+                    if (memDevsResult.VirtualGndBoard.Revision.CompareTo("0") == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Virtual Ground board revision is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_VIRTUAL_GND_BRD);
+                    }
+
+                    // Xmitter serial
+                    if (memDevsResult.XmitterBoard.SerialNum == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Xmitter board serial number is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_SERIAL_XMITTER_BRD);
+                    }
+
+                    // Xmitter Rev
+                    if (memDevsResult.XmitterBoard.Revision.CompareTo("0") == 0)
+                    {
+                        result.TestResult = false;
+                        result.ErrorListStrings.Add(string.Format("Xmitter board revision is not set."));
+                        result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_REV_XMITTER_BRD);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region RTC Time
+
+        /// <summary>
+        /// Test the RTC.  This will set the time to the RTC.  It will
+        /// then check the time agaisnt the system time.  The times should be
+        /// within a second of each other.  So if ADCP time is before 
+        /// </summary>
+        /// <returns>Result of the test.</returns>
+        public SystemTestResult SysTestRtcTime()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Set the system time
+            if (SetSystemDateTime())
+            {
+                // Now get the time and verify it is within 1 second of the previous time
+                // Clear buffer
+                ReceiveBufferString = "";
+
+                // Send STIME to get the time
+                SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_STIME));
+
+                // Wait for an output
+                Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
+
+                DateTime currDt = DateTime.Now;                                                         // Get the current date and time
+                DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
+
+                // Set the Results as the ADCP Date and Time
+                result.Results = adcpDt;
+
+                // Verify the Date and Time are within a second of each other
+                // This could fail on the rare occassion that the hour changes in the second between getting the two times
+                if (adcpDt > currDt ||
+                    adcpDt.Year != currDt.Year ||
+                    adcpDt.Month != currDt.Month ||
+                    adcpDt.Day != currDt.Day ||
+                    adcpDt.Hour != currDt.Hour ||
+                    adcpDt.Minute != currDt.Minute ||
+                    adcpDt.Second > currDt.Second)
+                {
+                    result.TestResult = false;
+                    result.ErrorListStrings.Add(string.Format("RTC time does not match current time.  Expected: {0}  Found {1}", currDt.ToString(), adcpDt.ToString()));
+                    result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_RTC_TIME);
+                }
+            }
+            else
+            {
+                // Could not send a command to the ADCP
+                result.TestResult = false;
+                result.ErrorListStrings.Add("Communication with ADCP failed.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_NO_COMM);
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region Status
+
+        /// <summary>
+        /// Configure the ADCP to send a single Water Profile ping.  This will turn off Water Track and Bottom Track.
+        /// Then Ping the system.  Then reset the default values.  There are no results for this test.  You must subscribe
+        /// to receive the ensemble and check the status.
+        /// </summary>
+        /// <returns>No results are set.</returns>
+        public SystemTestResult SysTestSingleWaterProfilePing()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Now get the time and verify it is within 1 second of the previous time
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Set defaults, turn off bt and wt and ping
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_CDEFAULT));             // Set defaults
+            SendData(string.Format("{0} 0", RTI.Commands.AdcpSubsystemCommands.CMD_CBTON));     // Turn off Bottom Track
+            SendData(string.Format("{0} 0", RTI.Commands.AdcpSubsystemCommands.CMD_CWTON));     // Turn off Water Track
+            SendData(string.Format("{0} 1", RTI.Commands.AdcpSubsystemCommands.CMD_CWPON));     // Turn On Water Profile
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_PING));                 // Get a ping
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Send CDEFAULT to put back in default mode
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_CDEFAULT));
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Configure the ADCP to send a single Bottom Track ping.  This will turn off Water Track and Water Profile.
+        /// Then Ping the system.  Then reset the default values.  There are no results for this test.  You must subscribe
+        /// to receive the ensemble and check the status.
+        /// </summary>
+        /// <returns>No results are set.</returns>
+        public SystemTestResult SysTestSingleBottomTrackPing()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Now get the time and verify it is within 1 second of the previous time
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Set defaults, turn off bt and wt and ping
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_CDEFAULT));             // Set defaults
+            SendData(string.Format("{0} 0", RTI.Commands.AdcpSubsystemCommands.CMD_CWPON));     // Turn off Water Profile
+            SendData(string.Format("{0} 0", RTI.Commands.AdcpSubsystemCommands.CMD_CWTON));     // Turn off Water Track
+            SendData(string.Format("{0} 1", RTI.Commands.AdcpSubsystemCommands.CMD_CBTON));     // Turn On Bottom Track
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_PING));                 // Get a ping
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Send CDEFAULT to put back in default mode
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_CDEFAULT));
+
+            return result;
+        }
+
+        #endregion
 
         #endregion
 

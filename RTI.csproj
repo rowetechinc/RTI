@@ -125,6 +125,7 @@
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />
     <Compile Include="Models\Subsystem.cs" />
+    <Compile Include="Models\SystemTestResult.cs" />
     <Compile Include="Models\UniqueID.cs" />
     <Compile Include="Models\VelocityVector.cs" />
     <Compile Include="Models\DVL\Interfaces.cs" />

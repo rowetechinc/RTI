@@ -34,10 +34,12 @@
  * -----------------------------------------------------------------
  * 01/20/2012      RC          1.14       Initial coding
  * 01/26/2012      RC          1.14       Changed constructor to take a byte instead of string for subsystem.
+ * 07/20/2012      Rc          2.12       Added FirmwareVersionList() to get a list of all possible firmware major, minor and revision values.
  *
  */
 
 using System;
+using System.Collections.Generic;
 namespace RTI
 {
     /// <summary>
@@ -103,7 +105,7 @@ namespace RTI
         /// Firmware revision.
         /// This is an unsigned int between 0 and 255.
         /// </summary>
-        public UInt16 FirmwareRevsion { get; set; }
+        public UInt16 FirmwareRevision { get; set; }
 
         #endregion
 
@@ -115,7 +117,7 @@ namespace RTI
         {
             FirmwareMajor = 0;
             FirmwareMinor = 0;
-            FirmwareRevsion = 0;
+            FirmwareRevision = 0;
             SubsystemIndex = 0;
         }
 
@@ -140,7 +142,7 @@ namespace RTI
         {
             FirmwareMajor = major;
             FirmwareMinor = minor;
-            FirmwareRevsion = revision;
+            FirmwareRevision = revision;
             SubsystemIndex = subSystem;
         }
 
@@ -157,7 +159,7 @@ namespace RTI
         {
             FirmwareMajor = firmware[MAJOR_START];
             FirmwareMinor = firmware[MINOR_START];
-            FirmwareRevsion = firmware[REVISION_START];
+            FirmwareRevision = firmware[REVISION_START];
             SubsystemIndex = firmware[SUBSYSTEM_START];
         }
 
@@ -170,7 +172,7 @@ namespace RTI
             byte[] result = new byte[NUM_BYTES];
             result[MAJOR_START] = (byte)FirmwareMajor;
             result[MINOR_START] = (byte)FirmwareMinor;
-            result[REVISION_START] = (byte)FirmwareRevsion;
+            result[REVISION_START] = (byte)FirmwareRevision;
             result[SUBSYSTEM_START] = (byte)SubsystemIndex;
 
             return result;
@@ -183,7 +185,24 @@ namespace RTI
         /// <returns>String of the version number.</returns>
         public override string ToString()
         {
-            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevsion, SubsystemIndex.ToString());
+            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, SubsystemIndex.ToString());
+        }
+
+        /// <summary>
+        /// Create a list of all the possible major, minor and revision values.
+        /// </summary>
+        /// <returns>List of all possible values.</returns>
+        public static List<ushort> FirmwareVersionList()
+        {
+            List<ushort> list = new List<ushort>();
+
+            // Populate the list
+            for (ushort x = 0; x < 255; x++) 
+            { 
+                list.Add(x); 
+            }
+
+            return list;
         }
     }
 }

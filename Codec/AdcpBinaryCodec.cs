@@ -53,6 +53,7 @@
  * 02/07/2012      RC          2.00       Changed to a while loop to process the queue in the thread.
  * 02/23/2012      RC          2.07       Add the incoming data to the buffer not using a for loop.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 06/21/2012      RC          2.12       Remove the queue and put the data in the buffer when received.
  * 
  */
 
@@ -84,16 +85,14 @@ namespace RTI
         private const int NMEA_BUFFER_SIZE = 100;
 
         /// <summary>
+        /// Timeout of a loop.
+        /// </summary>
+        private const int TIMEOUT_MAX = 20;
+
+        /// <summary>
         /// A buffer to store the current NMEA data.
         /// </summary>
         private LinkedList<string> _nmeaBuffer;
-
-        /// <summary>
-        /// Queue to hold all incoming data.
-        /// This queue holds all the byte arrays
-        /// received.
-        /// </summary>
-        private Queue<byte[]> _incomingDataQueue;
 
         /// <summary>
         /// Buffer for the incoming data.
@@ -145,7 +144,7 @@ namespace RTI
             _nmeaBuffer = new LinkedList<string>();
 
             // Initialize buffer
-            _incomingDataQueue = new Queue<byte[]>();
+            //_incomingDataQueue = new Queue<byte[]>();
             _incomingDataBuffer = new List<Byte>();
 
             // Initialize the ensemble size to at least the HDRLEN
@@ -168,9 +167,9 @@ namespace RTI
         /// <param name="data">Data to add to incoming buffer.</param>
         public void AddIncomingData(byte[] data)
         {
-            if (data != null)
+            if (data != null && data.Length > 0)
             {
-                _incomingDataQueue.Enqueue(data);
+                _incomingDataBuffer.AddRange(data);
             }
 
             // Wake up the thread to process data
@@ -203,20 +202,9 @@ namespace RTI
         /// </summary>
         public void ClearIncomingData()
         {
-            // Check if there is any data remain
-            // If so process the remaining data
-            if (_incomingDataQueue.Count > 0)
-            {
-                // Wake up the thread to process data
-                _eventWaitData.Set();
-            }
-
             // Lock the buffer while clearing
             lock (_bufferLock)
             {
-                // Clear the queue
-                _incomingDataQueue.Clear();
-
                 // Clear the buffer
                 _incomingDataBuffer.Clear();
             }
@@ -255,25 +243,17 @@ namespace RTI
                     return;
                 }
 
-                // Lock the buffer while writing
-                lock (_bufferLock)
+                // Process all data in the buffer
+                // If the buffer cannot be processed, the timeout will break out
+                // of the loop
+                int timeout = 0;
+                while (_incomingDataBuffer.Count > DataSet.Ensemble.ENSEMBLE_HEADER_LEN && timeout <= TIMEOUT_MAX)
                 {
-                    // Remove all the data from the queue and add it to the buffer
-                    //for (int q = 0; q < _incomingDataQueue.Count; q++)
-                    while(_incomingDataQueue.Count > 0)
-                    {
-                        byte[] data = _incomingDataQueue.Dequeue();
+                    // Decode the data sent to the codec
+                    DecodeIncomingData();
 
-                        //for (int x = 0; x < data.Length; x++)
-                        //{
-                        //    _incomingDataBuffer.Add(data[x]);
-                        //}
-                        _incomingDataBuffer.AddRange(data);
-                    }
+                    timeout++;
                 }
-
-                // Decode the data sent to the codec
-                DecodeIncomingData();
             }
         }
 

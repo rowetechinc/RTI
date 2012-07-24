@@ -42,6 +42,7 @@
  * 02/29/2012      RC          2.04       Set any empty serial number string to all 0's (32 digits).
  *                                         Made a special serial number for a DVL message.
  * 05/01/2012      RC          2.11       Made serial number string public.
+ * 07/11/2012      RC          2.12       Fix bug if the serial number string given is bad.
  *
  */
 
@@ -307,7 +308,8 @@ namespace RTI
             }
             catch (Exception)
             {
-                SystemSerialNumber = 0;
+                SerialNumberString = EMPTY_SERIAL_NUM_STRING;
+                SystemSerialNumber = EMPTY_SERIAL_NUM;
             }
         }
 
@@ -317,7 +319,14 @@ namespace RTI
         /// <param name="serialNum">String of the serial number.</param>
         private void SetSpare(string serialNum)
         {
-            Spare = serialNum.Substring(SPARE_START, SPARE_NUM_BYTES);
+            try
+            {
+                Spare = serialNum.Substring(SPARE_START, SPARE_NUM_BYTES);
+            }
+            catch (Exception)
+            {
+                Spare = "";
+            }
         }
 
         /// <summary>
@@ -327,11 +336,19 @@ namespace RTI
         /// <param name="serialNum">String of the serial number.</param>
         private void SetSubSystem(string serialNum)
         {
-            SubSystems = serialNum.Substring(SUBSYSTEM_START, SUBSYSTEM_NUM_BYTES);
+            try
+            {
+                SubSystems = serialNum.Substring(SUBSYSTEM_START, SUBSYSTEM_NUM_BYTES);
 
-            // Decode the subsystem string into a list
-            // of subsystems
-            SubSystemsDict = GetSubsystemList(SubSystems);
+                // Decode the subsystem string into a list
+                // of subsystems
+                SubSystemsDict = GetSubsystemList(SubSystems);
+            }
+            catch (Exception)
+            {
+                SubSystems = "";
+                SubSystemsDict = new Dictionary<UInt16, Subsystem>();
+            }
         }
 
         /// <summary>
@@ -341,10 +358,17 @@ namespace RTI
         /// <param name="serialNum">String of the serial number.</param>
         private void SetBaseHardware(string serialNum)
         {
-            BaseHardware = serialNum.Substring(BASE_HDWR_START, BASE_HDWR_NUM_BYTES);
+            try
+            {
+                BaseHardware = serialNum.Substring(BASE_HDWR_START, BASE_HDWR_NUM_BYTES);
 
-            // Decode the base hardware
-            DecodeBaseHardware(BaseHardware);
+                // Decode the base hardware
+                DecodeBaseHardware(BaseHardware);
+            }
+            catch (Exception)
+            {
+                BaseHardware = "";
+            }
         }
 
         /// <summary>

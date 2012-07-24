@@ -49,6 +49,7 @@
  * 04/12/2012      RC          2.09       Changed version number.
  * 04/23/2012      RC          2.10       Changed version number.  Added version number for DotSpatial.
  * 04/30/2012      RC          2.11       Changed version number.
+ * 06/18/2012      RC          2.12       Changed version number.
  * 
  */
 using System;
@@ -74,7 +75,7 @@ namespace RTI
             /// <summary>
             /// Application Minor version number.
             /// </summary>
-            public const int RTI_VERSION_MINOR = 11;
+            public const int RTI_VERSION_MINOR = 12;
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any

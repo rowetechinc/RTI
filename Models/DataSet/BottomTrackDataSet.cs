@@ -53,6 +53,8 @@
  * 02/23/2012      RC          2.03       Changed Status to a Status object.
  * 03/06/2012      RC          2.05       Modified GetAverageRange() to check for bad values.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 06/20/2012      RC          2.12       Added IsInstrumentVelocityGood().
+ * 06/21/2012      RC          2.12       Add 3 beam solution option in IsInstrumentVelocityGood() and IsEarthVelocityGood().
  * 
  */
 
@@ -801,14 +803,48 @@ namespace RTI
             /// <summary>
             /// Return whether any of the Earth Velocity values are bad.
             /// If one is bad, they are all bad.
+            /// If we do not allow 3 Beam solution and Q is bad, then all is bad.
             /// </summary>
+            /// <param name="allow3BeamSolution">Allow a 3 Beam solution. Default = true</param>
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
-            public bool IsEarthVelocityGood()
+            public bool IsEarthVelocityGood(bool allow3BeamSolution = true)
             {
+                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                if (EarthVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                {
+                    return false;
+                }
+
                 if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                     EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    EarthVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                {
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            /// <summary>
+            /// Return whether any of the Instrument Velocity values are bad.
+            /// If one is bad, they are all bad.
+            /// If we do not allow 3 Beam solution and Q is bad, then all is bad.
+            /// </summary>
+            /// <param name="allow3BeamSolution">Allow a 3 Beam solution. Default = true</param>
+            /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
+            public bool IsInstrumentVelocityGood(bool allow3BeamSolution = true)
+            {
+                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                if (InstrumentVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                {
+                    return false;
+                }
+
+                if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                
                 {
                     return false;
                 }

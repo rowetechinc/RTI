@@ -1,5 +1,35 @@
 RTI Changelog
 
+RTI-2.12
+ - Changed the version number.
+ - Added IsInstrumentVelocityGood() to BottomTrackDataSet.cs.
+ - Added IsBinGood() to EarthVelocityDataSet and InstrVelocityDataSet.
+ - Add 3 beam solution option in IsBinGood() in EarthVelocityDataSet and InstrVelocityDataSet.
+ - Add 3 beam solution option in IsInstrumentVelocityGood() and IsEarthVelocityGood() in BottomTrackDataSet.
+ - In AdcpBinaryCodec, remove the queue and put the data in the buffer when received.
+ - When processing data, fixed bug where the final buffer of data read in was not processed in AdcpImportBinaryFile.
+ - Added PercentError() and PercentDifference() methods in MathHelper.cs.
+ - Created AdcpSerialPort::SendCommands() to send a list of commands.
+ - Added RTI.AdcpCommands.CMD_BREAK to have a command for the command list in AdcpSerialPort::SendCommands().
+ - Made the SerialOptions object smaller.  Make the options static.
+ - Create AdcpSerialPort::SysTestFirmwareFiles() to test for missing firmware files.
+ - Added MathHelper::ByteArrayToDouble() and MathHelper::ByteArrayToFloat64().
+ - Check if the command given is null in AdcpSerialPort::SendCompassCommand().
+ - Created AdcpSerialPort::SysTestCompass() to test is compass is giving data.
+ - Added to PniPrimveCompassBinaryCodec, SIZE_OF_FLOAT64, GetParamCommand(), SetTaps0Commands(), SetTaps4Commands() and DecodeKParamResp() to get and set Compass Taps.
+ - Added locks to read and write methods for multithreading in SerialConnection.
+ - In AdcpCommands, Decode ENGI2CSHOW, added classes for board serial number and revisions and register information for ENGI2CSHOW decoding, made decode BREAK statement save the firmware as an object.
+ - Add SystemTestResults::Results to hold an object to pass with results.
+ - Added AdcpCommands::DecodeSTIME() to decode the command STIME result.
+ - Added SystemTestErrorCodes::INCORRECT_RTC_TIME.
+ - Added AdcpSerialPort::SetSystemTime() to set the system time.  Used in StartPinging().
+ - Made AdcpBinaryCodec::DecodeAdcpData() public so it can decode anytime.
+ - Added AdcpSerialPort::SysTestSingleWaterProfilePing() and AdcpSerialPort::SysTestSingleBottomTrackPing() to test the Status of the system.
+ - Updated UnitTest to test decoding ENGI2CSHOW and STIME within AdcpCommands.
+ - In MathHelper, When parsing the byte arrays, verify the byte arrays given are the correct size.
+ - Updated UnitTest with converting byte arrays to Float64 and doubles.
+ - Added Firmware::FirmwareVersionList() to get a list of all possible firmware major, minor and revision values.
+
 RTI-2.11
  - Changed the version number.
  - Changed AdcpSerialPort::TIMEOUT value.

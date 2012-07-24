@@ -495,7 +495,7 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@sysSerialNum", System.Data.DbType.String) { Value = dataset.EnsembleData.SysSerialNumber.ToString() });
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareMajor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMajor });
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareMinor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMinor });
-                        cmd.Parameters.Add(new SQLiteParameter("@firmwareRevision", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareRevsion });
+                        cmd.Parameters.Add(new SQLiteParameter("@firmwareRevision", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareRevision });
                         cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.SubsystemIndex });
 
                         // Bottom Track parameters

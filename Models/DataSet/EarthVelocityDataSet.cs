@@ -46,6 +46,8 @@
  *                                         Removed "private set".
  *                                         Rename Decode methods to Decode().
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 06/20/2012      RC          2.12       Added IsBinGood().
+ * 06/21/2012      RC          2.12       Add 3 beam solution option in IsBinGood().
  * 
  */
 
@@ -168,7 +170,7 @@ namespace RTI
             /// <summary>
             /// Get all the Earth Velocity ranges for each beam and Bin.
             /// 
-            /// I changed the order from what the data is stored as and now make it Bin y Beams.
+            /// I changed the order from what the data is stored as and now make it Bin x Beams.
             /// </summary>
             /// <param name="dataType">Byte array containing the Earth Velocity data type.</param>
             private void Decode(byte[] dataType)
@@ -188,7 +190,7 @@ namespace RTI
             /// <summary>
             /// Get all the Earth Velocity ranges for each beam and Bin.
             /// 
-            /// I changed the order from what the data is stored as and now make it Bin y Beams.
+            /// I changed the order from what the data is stored as and now make it Bin x Beams.
             /// </summary>
             /// <param name="dataTable">DataTable containing the Earth Velocity data type.</param>
             private void Decode(DataTable dataTable)
@@ -258,6 +260,32 @@ namespace RTI
                 }
 
                 return s;
+            }
+
+            /// <summary>
+            /// Return whether any of the Earth Velocity values are bad.
+            /// If one is bad, they are all bad.  This will check the given bin.
+            /// If we do not allow 3 Beam solution and Q is bad, then all is bad.
+            /// </summary>
+            /// <param name="bin">Bin to check.</param>
+            /// <param name="allow3BeamSolution">Allow a 3 Beam solution. Default = true</param>
+            /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
+            public bool IsBinGood(int bin, bool allow3BeamSolution = true)
+            {
+                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                if (EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                {
+                    return false;
+                }
+
+                if (EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                {
+                    return false;
+                }
+
+                return true;
             }
 
             /// <summary>

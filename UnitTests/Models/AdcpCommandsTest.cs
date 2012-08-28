@@ -28,6 +28,7 @@
  * 02/07/2012      RC          2.00       Updated to latest AdcpCommand and AdcpSubsystemCommand.
  * 07/11/2012      RC          2.12       Updated Decode BREAK to pass a firmware object instead of a string.
  * 07/19/2012      RC          2.12       Added test for decoding ENGI2CSHOW and STIME.
+ * 07/26/2012      RC          2.13       Added test for decoding DSDIR.
  * 
  * 
  */
@@ -339,6 +340,41 @@ using System.Text;
             Assert.AreEqual(10, dt.Hour, "Hour is incorrect.");
             Assert.AreEqual(7, dt.Minute, "Minute is incorrect.");
             Assert.AreEqual(41, dt.Second, "Second is incorrect.");
+        }
+
+        /// <summary>
+        /// Test decoding DSDIR.
+        /// </summary>
+        [Test]
+        public void TEstDecodeDSDIR()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.Append("DSDIR\n");
+            builder.Append("Total Space:                       3781.500 MB\n");
+            builder.Append("BOOT.BIN     2012/07/10 06:41:00      0.023\n");
+            builder.Append("RTISYS.BIN   2012/07/24 09:56:18      0.184\n");
+            builder.Append("HELP.TXT     2012/07/10 07:10:12      0.003\n");
+            builder.Append("BBCODE.BIN   2012/07/10 06:41:00      0.017\n");
+            builder.Append("ENGHELP.TXT  2012/07/17 09:49:04      0.002\n");
+            builder.Append("SYSCONF.BIN  2012/07/24 10:56:08      0.003\n");
+            builder.Append("A0000001.ENS 2012/04/02 16:53:11      1.004\n");
+            builder.Append("A0000002.ENS 2012/04/02 17:53:11      1.004\n");
+            builder.Append("A0000003.ENS 2012/04/02 18:53:11      1.004\n");
+            builder.Append("A0000004.ENS 2012/04/02 19:53:11      1.004\n");
+            builder.Append("A0000005.ENS 2012/04/02 20:53:11      1.004\n");
+            builder.Append("Used Space:                           5.252 MB\n");
+            builder.Append(" \n");
+            builder.Append("DSDIR\n");
+
+            RTI.Commands.AdcpDirListing listing = RTI.Commands.AdcpCommands.DecodeDSDIR(builder.ToString());
+
+            Assert.AreEqual(3781.500, listing.TotalSpace, 0.001, "Total Space is incorrect.");
+            Assert.AreEqual(5.252, listing.UsedSpace, 0.001, "Used Space is incorrect.");
+            Assert.AreEqual(5, listing.DirListing.Count, "Number of files is incorrect.");
+            Assert.AreEqual(1.004, listing.DirListing[0].FileSize, "File size of file 1 is incorrect.");
+            Assert.AreEqual("A0000001.ENS", listing.DirListing[0].FileName, "File name of file 1 is incorrect.");
+            Assert.AreEqual(1.004, listing.DirListing[4].FileSize, "File size of file 5 is incorrect.");
+            Assert.AreEqual("A0000005.ENS", listing.DirListing[4].FileName, "File name of file 5 is incorrect.");
         }
 
     }

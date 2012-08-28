@@ -44,8 +44,9 @@ using System;
 namespace RTI
 {
     /// <summary>
-    /// Codes are ASCII codes.
-    /// Codes are stored as ASCII codes.
+    /// Hold the subsystem settings.
+    /// This includes the subsystem index and system code.
+    /// The code designates the type of system.
     /// </summary>
     public class Subsystem
     {

@@ -58,12 +58,19 @@
  *                                         Added classes for board serial number and revisions and register information for ENGI2CSHOW decoding.
  *                                         Made decode BREAK statement save the firmware as an object.
  * 07/17/2012      RC          2.12       Added DecodeSTIME() to decode the command STIME result.
+ * 07/26/2012      RC          2.13       Created AdcpDirListing and AdcpEnsFileInfo to capture the file information on the ADCP.
+ *                                         Added DecodeDSDIR().
+ * 07/27/2012      RC          2.13       Added ToSeconds() to TimeValue object.
+ * 07/31/2012      RC          2.13       Added CommandPayload object to pass commands as an object in events. 
+ *                                         Changed DEFAULT_CWSS (Speed of Sound) to 1490 m/s.
+ * 08/21/2012      RC          2.13       Changed parsing the DateTime in DecodeSTIME() to TryParse.  If bad value, then it will use the default time.
  * 
  */
 
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
 
 
 namespace RTI
@@ -71,6 +78,8 @@ namespace RTI
     namespace Commands
     {
         #region Classes and Enums
+
+        #region EnableDisable
 
         /// <summary>
         /// Enum to handle commands that pass a 0 or 1 for enable for disable.
@@ -87,6 +96,10 @@ namespace RTI
             /// </summary>
             ENABLE = 1
         };
+
+        #endregion
+
+        #region Baudrate
 
         /// <summary>
         /// Baud rate options for C232B, C422B and C485B.
@@ -139,6 +152,10 @@ namespace RTI
             BAUD_230400 = 230400
         };
 
+        #endregion
+
+        #region HeadingSrc
+
         /// <summary>
         /// Heading source options.
         /// </summary>
@@ -156,6 +173,10 @@ namespace RTI
             /// </summary>
             SERIAL = 2
         };
+
+        #endregion
+
+        #region TimeValue
 
         /// <summary>
         /// TimeValue used to send command CWPAI.
@@ -293,9 +314,20 @@ namespace RTI
 
                 return false;
             }
+
+            /// <summary>
+            /// Return the number of seconds in the time.
+            /// </summary>
+            /// <returns>Number of seconds in the time.</returns>
+            public int ToSeconds()
+            {
+                return (int)Math.Round((3600 * Hour) + (60 * Minute) + Second + (HunSec / 100.0));
+            }
         }
 
-        #region Decode Structs
+        #endregion
+
+        #region Decode Structs and Classes
 
         #region Heading, Pitch Roll
 
@@ -604,6 +636,243 @@ namespace RTI
         }
 
         #endregion
+
+        #region DSDIR
+
+        #region AdcpEnsFileInfo
+
+        /// <summary>
+        /// Description of an ensemble file
+        /// store on the ADCP.  This will include
+        /// the file name, date of modification and
+        /// file size.
+        /// 
+        /// A0000001.ENS 2012/04/02 16:53:11      1.004
+        /// </summary>
+        public class AdcpEnsFileInfo
+        {
+            #region Properties
+
+            /// <summary>
+            /// Name of the file.
+            /// </summary>
+            public string FileName { get; set; }
+
+            /// <summary>
+            /// Date and time the file was last modified.
+            /// </summary>
+            public DateTime ModificationDateTime { get; set; }
+
+            /// <summary>
+            /// Size of the file in megabytes.
+            /// </summary>
+            public double FileSize { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Create an empty file info.
+            /// </summary>
+            public AdcpEnsFileInfo()
+            {
+                // Default values
+                FileName = string.Empty;
+                ModificationDateTime = DateTime.Now;
+                FileSize = 0.0;
+            }
+
+            /// <summary>
+            /// Take a single string and parse the
+            /// file info data.
+            /// 
+            /// Example:
+            /// A0000001.ENS 2012/04/02 16:53:11      1.004
+            /// </summary>
+            /// <param name="fileListing">String containing the file info.</param>
+            public AdcpEnsFileInfo(string fileListing)
+            {
+                // Parse the string of all it elements
+                char[] delimiters = { ' ' };
+                string[] fileInfo = fileListing.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                // Ensure info was found
+                if (fileInfo.Length >= 4)
+                {
+                    FileName = fileInfo[0];
+                    SetDateTime(fileInfo[1] + " " + fileInfo[2]);
+                    SetFileSize(fileInfo[3]);
+                }
+                else
+                {
+                    // Default values
+                    FileName = string.Empty;
+                    ModificationDateTime = DateTime.Now;
+                    FileSize = 0.0;
+                }
+
+            }
+
+            /// <summary>
+            /// Parse the Date and time.  This will
+            /// take the date and time string and
+            /// convert it to a DateTime object.  If it
+            /// cannot be converted, it will use the 
+            /// current time.
+            /// 
+            /// 2012/04/02 16:53:11
+            /// </summary>
+            /// <param name="dateTime">String containing the date and time.</param>
+            private void SetDateTime(string dateTime)
+            {
+                // Try to parse the date and time
+                // If the date and time cannot be parsed
+                // use the current date and time
+                DateTime dateTimeValue;
+                if (DateTime.TryParseExact(dateTime, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTimeValue))
+                {
+                    ModificationDateTime = dateTimeValue;
+                }
+                else
+                {
+                    ModificationDateTime = DateTime.Now;
+                }
+
+            }
+
+            /// <summary>
+            /// Try to parse the string into the file size.
+            /// If the parse is not successful, set the size
+            /// to 0.0.
+            /// </summary>
+            /// <param name="fileSize">File Size as a string in Megabytes.</param>
+            private void SetFileSize(string fileSize)
+            {
+                double size = 0.0;
+                double.TryParse(fileSize, out size);
+
+                // Set the size after parsing the string.
+                FileSize = size;
+            }
+        }
+
+        #endregion
+
+        #region AdcpDirListing
+
+        /// <summary>
+        /// Get the listing of all the files on the ADCP
+        /// and free and used space.
+        /// </summary>
+        public class AdcpDirListing
+        {
+            /// <summary>
+            /// Free memory space on the ADCP.
+            /// </summary>
+            public float TotalSpace { get; set; }
+
+            /// <summary>
+            /// Used memory space on the ADCP.
+            /// </summary>
+            public float UsedSpace { get; set; }
+
+            /// <summary>
+            /// List of all the ensemble files
+            /// on the system.
+            /// </summary>
+            public List<AdcpEnsFileInfo> DirListing { get; set; }
+
+            /// <summary>
+            /// Initialize the list and sizes.
+            /// </summary>
+            public AdcpDirListing()
+            {
+                DirListing = new List<AdcpEnsFileInfo>();
+                TotalSpace = 0;
+                UsedSpace = 0;
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        #endregion
+
+        #region Adcp Command Payload
+
+        /// <summary>
+        /// This object is used to send a command around.  This will store 
+        /// the command and its parameter.  This can be used for events where
+        /// a subscriber is interested in knowning if a command was sent.
+        /// 
+        /// When receiving the command, the user will have to determine the 
+        /// type of the parameter.  This can be done using the following example.
+        /// 
+        /// if(Parameter is boolean) ....
+        /// </summary>
+        public class CommandPayload
+        {
+            #region Properties
+
+            /// <summary>
+            /// String of the command.  This is used to determine
+            /// which command this payload is.
+            /// </summary>
+            public string Command { get; set; }
+
+            /// <summary>
+            /// The value associated with this command.  If this
+            /// command takes a parameter, this value will be set
+            /// with its value.  If the command does not use a parameter,
+            /// the parameter will be null.
+            /// </summary>
+            public object Parameter { get; set; }
+
+            /// <summary>
+            /// Subsystem for the command.  Each subsystem can send
+            /// the same command.  This will differenciate which subsystem
+            /// sent the command.
+            /// </summary>
+            public Subsystem SubSystem { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize the object with empty values.
+            /// </summary>
+            public CommandPayload()
+            {
+                Command = "";
+                Parameter = null;
+                SubSystem = Subsystem.Empty;
+            }
+
+            /// <summary>
+            /// Initialize the object with the given values.
+            /// </summary>
+            /// <param name="ss">Subsystem the command came from.</param>
+            /// <param name="cmd">Command to set this object to.</param>
+            /// <param name="param">Parameter for the object.</param>
+            public CommandPayload(Subsystem ss, string cmd, object param)
+            {
+                SubSystem = ss;
+                Command = cmd;
+                Parameter = param;
+            }
+
+            /// <summary>
+            /// Initialize the object with a command that does not take
+            /// a parameter.  Parameter will be set to null.
+            /// </summary>
+            /// <param name="ss">Subsystem the command came from.</param>
+            /// <param name="cmd">Command to set to the payload.</param>
+            public CommandPayload(Subsystem ss, string cmd)
+            {
+                SubSystem = ss;
+                Command = cmd;
+                Parameter = null;
+            }
+        }
 
         #endregion
 
@@ -1104,7 +1373,7 @@ namespace RTI
             /// <summary>
             /// Default Speed of Sound.
             /// </summary>
-            public const float DEFAULT_CWSS = 1500.0f;
+            public const float DEFAULT_CWSS = 1490.0f;
 
             /// <summary>
             /// Default Heading Offset.
@@ -2208,11 +2477,118 @@ namespace RTI
                     if(!line.Contains(RTI.Commands.AdcpCommands.CMD_STIME))
                     {
                         // Create a new date and time by parsing the date time line
-                        dt = DateTime.Parse(line);
+                        DateTime.TryParse(line, out dt);
                     }
                 }
 
                 return dt;
+            }
+
+            #endregion
+
+            #region DSDIR
+
+            /// <summary>
+            /// Parse the buffer of all the lines containing
+            /// a file.  This will be the complete line with the
+            /// file name, file size and date.
+            /// 
+            /// Ex:
+            /// 
+            /// DSDIR
+            /// Total Space:                       3781.500 MB
+            /// BOOT.BIN     2012/07/10 06:41:00      0.023
+            /// RTISYS.BIN   2012/07/24 09:56:18      0.184
+            /// HELP.TXT     2012/07/10 07:10:12      0.003
+            /// BBCODE.BIN   2012/07/10 06:41:00      0.017
+            /// ENGHELP.TXT  2012/07/17 09:49:04      0.002
+            /// SYSCONF.BIN  2012/07/24 10:56:08      0.003
+            /// A0000001.ENS 2012/04/02 16:53:11      1.004
+            /// A0000002.ENS 2012/04/02 17:53:11      1.004
+            /// A0000003.ENS 2012/04/02 18:53:11      1.004
+            /// A0000004.ENS 2012/04/02 19:53:11      1.004
+            /// A0000005.ENS 2012/04/02 20:53:11      1.004
+            /// Used Space:                           5.252 MB
+            /// 
+            /// DSDIR
+            /// 
+            /// </summary>
+            /// <param name="buffer">Buffer containing all the file info.</param>
+            /// <returns>List of all the ENS and RAW files in the file list.</returns>
+            public static AdcpDirListing DecodeDSDIR(string buffer)
+            {
+                AdcpDirListing listing = new AdcpDirListing();
+
+                // Parse the directory listing string for all file info
+                // Each line should contain a piece of file info
+                string[] lines = buffer.Split('\n');
+
+                // Create a list of all the ENS files
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    // Only add the ENS files to the list
+                    // Ignore the txt and bin files
+                    if (lines[x].Contains("ENS") || lines[x].Contains("RAW"))
+                    {
+                        listing.DirListing.Add(new AdcpEnsFileInfo(lines[x]));
+                    }
+
+                    // Total Space
+                    if (lines[x].Contains("Total Space"))
+                    {
+                        // Parse the string of all it elements
+                        // Total Space:                       3781.500 MB
+                        char[] delimiters = { ':' };
+                        string[] sizeInfo = lines[x].Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                        // If it has 2 elements, the second element should be the size
+                        if (sizeInfo.Length >= 2)
+                        {
+                            // Remove the MB from the end of the value
+                            string sizeStr = sizeInfo[1].Trim();
+                            char[] delimiters1 = { ' ' };
+                            string[] sizeStrElem = sizeStr.Split(delimiters1, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (sizeStrElem.Length >= 1)
+                            {
+                                float size = 0.0f;
+                                if (float.TryParse(sizeStrElem[0].Trim(), out size))
+                                {
+                                    listing.TotalSpace = size;
+                                }
+                            }
+                        }
+                    }
+
+                    // Used space
+                    if (lines[x].Contains("Used Space"))
+                    {
+                        // Parse the string of all it elements
+                        // Used Space:                           5.252 MB
+                        char[] delimiters = { ':' };
+                        string[] sizeInfo = lines[x].Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                        // If it has 2 elements, the second element should be the size
+                        if (sizeInfo.Length >= 2)
+                        {
+                            // Remove the MB from the end of the value
+                            string sizeStr = sizeInfo[1].Trim();
+                            char[] delimiters1 = { ' ' };
+                            string[] sizeStrElem = sizeStr.Split(delimiters1, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (sizeStrElem.Length >= 1)
+                            {
+                                float size = 0.0f;
+                                if (float.TryParse(sizeStrElem[0].Trim(), out size))
+                                {
+                                    listing.UsedSpace = size;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return listing;
             }
 
             #endregion

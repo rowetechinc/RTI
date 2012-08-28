@@ -39,6 +39,7 @@
  * 12/13/2011      RC          1.09       Added IsEnabled property.
  * 12/29/2011      RC          1.11       Added event for GPS serial data.
  * 02/29/2012      RC          2.04       Added a try/catch block in ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
+ * 08/20/2012      RC          2.13       Set a default value for constructor of IsEnabled.
  *       
  * 
  */
@@ -67,10 +68,11 @@ namespace RTI
         /// Create a GPS with the given options.
         /// </summary>
         /// <param name="gpsSerialOptions">Serial port options.</param>
-        public GpsSerialPort(SerialOptions gpsSerialOptions) :
+        /// <param name="isEnabled">Flag if the port is enabled by default.  Default value is false.</param>
+        public GpsSerialPort(SerialOptions gpsSerialOptions, bool isEnabled = false) :
             base(gpsSerialOptions)
         {
-            IsEnabled = false;
+            IsEnabled = isEnabled;
         }
 
         /// <summary>

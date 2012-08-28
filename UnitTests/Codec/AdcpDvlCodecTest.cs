@@ -22,7 +22,7 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Vertion    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 11/28/2011      RC                     Initial coding
  * 12/08/2011      RC          1.09       Added Water Mass dataset parsing.

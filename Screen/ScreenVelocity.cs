@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/05/2012      RC          2.05       Initial coding
+ * 08/23/2012      RC          2.13       Added 3 beam solution check.  Also fixed bug in earth and instrument when not check if velocity is bad when threshold checking.
  * 
  */
 
@@ -59,16 +60,17 @@ namespace RTI
             /// <param name="ensemble">Ensemble to screen.</param>
             /// <param name="thresholdScreen">Flag if we should screen the error value against a threshold.  TRUE = screen threshold.</param>
             /// <param name="threshold">Threshold to screen against for the error value.  If not screening threshold, any value here will work.</param>
+            /// <param name="threeBeamSolution">Flag for 3 Beam Solution.  This is used if the user does not want to use 3 beam solution.  Then Q cannot be bad velocity.</param>
             /// <returns>TRUE if screening occured.</returns>
-            public static bool Screen(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25)
+            public static bool Screen(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25, bool threeBeamSolution = true)
             {
                 bool result = false;
 
                 // If any of the velocity data is available,
                 // then screening can occur
                 result = ScreenBeamVelocity(ref ensemble);
-                result = ScreenEarthVelocity(ref ensemble, thresholdScreen, threshold);
-                result = ScreenInstrumentVelocity(ref ensemble, thresholdScreen, threshold);
+                result = ScreenEarthVelocity(ref ensemble, thresholdScreen, threshold, threeBeamSolution);
+                result = ScreenInstrumentVelocity(ref ensemble, thresholdScreen, threshold, threeBeamSolution);
 
                 return result;
             }
@@ -145,20 +147,27 @@ namespace RTI
             /// Screen the Earth velocity data.  
             /// 
             /// This will check for any bad velocity, if any are bad, then
-            /// the entire bin is bad.  If the error velocity is bad, then 
-            /// the entire bin is bad.  
+            /// the entire bin is bad.  If the error velocity is bad, 3 Beam 
+            /// Solution will decide what to do with the values.
             /// 
+            /// Threshold Screen
             /// This will also check the error velocity against a threshold.
             /// If the error velocity is greater than the threshold, the
-            /// bin is bad.
+            /// bin is bad.  It will ignore Bad Velocity so that the 3 Beam Solution can check.
+            /// 
+            /// 3 Beam Solution
+            /// If the user does not want to use 3 beam solution, then if all 4 beams do not
+            /// give good data, the Error Velocity will be Bad Velocity.  If set to false and
+            /// it finds the Error Velocity is bad, then it will set all the values bad.
             /// 
             /// If Good Ping data exist, update the Good Ping data also.
             /// </summary>
             /// <param name="ensemble">Ensemble to screen.</param>
             /// <param name="thresholdScreen">Flag if we should screen the error value against a threshold.  TRUE = screen threshold.</param>
             /// <param name="threshold">Threshold to screen against for the error value.  If not screening threshold, any value here will work.</param>
+            /// <param name="threeBeamSolution">Flag for 3 Beam Solution.  This is used if the user does not want to use 3 beam solution.  Then Q cannot be bad velocity.</param>
             /// <returns>TRUE if screening occured.</returns>
-            public static bool ScreenEarthVelocity(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25)
+            public static bool ScreenEarthVelocity(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25, bool threeBeamSolution = true)
             {
                 if (ensemble.IsEarthVelocityAvail)
                 {
@@ -168,8 +177,7 @@ namespace RTI
                         bool isBad = false;
                         if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                             ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                            ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                            ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                            ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
                         {
                             isBad = true;
                         }
@@ -179,7 +187,18 @@ namespace RTI
                         // if its greater than the threshold, the value is bad.
                         if (thresholdScreen)
                         {
-                            if (Math.Abs(ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX]) > threshold)
+                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&        // If Error Vel is bad, then it could still be a 3 beam solution 
+                                Math.Abs(ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX]) > threshold)
+                            {
+                                isBad = true;
+                            }
+                        }
+
+                        // 3 Beam Solution
+                        // If the error velocity is bad and the user does not want 3 Beam solution, it will set the values to bad
+                        if (!threeBeamSolution)
+                        {
+                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                             {
                                 isBad = true;
                             }
@@ -214,18 +233,25 @@ namespace RTI
             /// Screen the Instrument velocity data.
             /// 
             /// This will check for any bad velocity, if any are bad, then
-            /// the entire bin is bad.  If the error velocity is bad, then 
-            /// the entire bin is bad.  
+            /// the entire bin is bad.  If the error velocity is bad, 3 Beam 
+            /// Solution will decide what to do with the values.
             /// 
+            /// Threshold Screen
             /// This will also check the error velocity against a threshold.
             /// If the error velocity is greater than the threshold, the
-            /// bin is bad.
+            /// bin is bad.  It will ignore Bad Velocity so that the 3 Beam Solution can check.
+            /// 
+            /// 3 Beam Solution
+            /// If the user does not want to use 3 beam solution, then if all 4 beams do not
+            /// give good data, the Error Velocity will be Bad Velocity.  If set to false and
+            /// it finds the Error Velocity is bad, then it will set all the values bad.
             /// </summary>
             /// <param name="ensemble">Ensemble to screen.</param>
             /// <param name="thresholdScreen">Flag if we should screen the error value against a threshold.  TRUE = screen threshold.</param>
             /// <param name="threshold">Threshold to screen against for the error value.  If not screening threshold, any value here will work.</param>
+            /// <param name="threeBeamSolution">Flag for 3 Beam Solution.  This is used if the user does not want to use 3 beam solution.  Then Q cannot be bad velocity.</param>
             /// <returns>TRUE if screening occured.</returns>
-            public static bool ScreenInstrumentVelocity(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25)
+            public static bool ScreenInstrumentVelocity(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25, bool threeBeamSolution = true)
             {
                 if (ensemble.IsInstrVelocityAvail)
                 {
@@ -235,8 +261,7 @@ namespace RTI
                         bool isBad = false;
                         if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                             ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                         {
                             isBad = true;
                         }
@@ -246,7 +271,18 @@ namespace RTI
                         // if its greater than the threshold, the value is bad.
                         if (thresholdScreen)
                         {
-                            if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] > threshold)
+                            if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&        // If Error Vel is bad, then it could still be a 3 beam solution 
+                                ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] > threshold)
+                            {
+                                isBad = true;
+                            }
+                        }
+
+                        // 3 Beam Solution
+                        // If the error velocity is bad and the user does not want 3 Beam solution, it will set the values to bad
+                        if (!threeBeamSolution)
+                        {
+                            if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                             {
                                 isBad = true;
                             }

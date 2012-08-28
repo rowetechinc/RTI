@@ -43,6 +43,7 @@
  * 06/22/2012      RC          2.12       Added PercentError() and PercentDifference() methods.
  * 07/06/2012      RC          2.12       Added ByteArrayToDouble() and ByteArrayToFloat64().
  * 07/19/2012      RC          2.12       When parsing the byte arrays, verify the byte arrays given are the correct size.
+ * 07/30/2012      RC          2.13       Added MemorySizeString() to display file memory sizes with the highest scale factor.
  * 
  */
 
@@ -856,6 +857,36 @@ namespace RTI
             }
 
             return ((Math.Abs(exp1Value - exp2Value)) / (0.5 * (exp1Value + exp2Value))) * 100;
+        }
+
+        #endregion
+
+        #region Memory Size
+
+        /// <summary>
+        /// Display a pretty file size.  This will determine the 
+        /// highest factor is can display for the size.  It will then
+        /// display the value with the highest scale factor.
+        /// http://sharpertutorials.com/pretty-format-bytes-kb-mb-gb/
+        /// </summary>
+        /// <param name="bytes">Bytes to display.</param>
+        /// <returns>String with the size given has the highest scale factor.</returns>
+        public static string MemorySizeString(long bytes)
+        {
+            const int scale = 1024;
+            string[] orders = new string[] { "GB", "MB", "KB", "Bytes" };
+            long max = (long)Math.Pow(scale, orders.Length - 1);
+
+            foreach (string order in orders)
+            {
+                if (bytes > max)
+                {
+                    return string.Format("{0:##.##} {1}", Decimal.Divide(bytes, max), order);
+                }
+
+                max /= scale;
+            }
+            return "0 Bytes";
         }
 
         #endregion

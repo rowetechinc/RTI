@@ -60,6 +60,8 @@
  * 04/26/2012      RC          2.10       Added a default value to SendDataAndWaitReply().
  * 04/27/2012      RC          2.10       Added a sleep in the SendData() commands.
  * 07/09/2012      RC          2.12       Added locks to read and write methods for multithreading.
+ * 08/21/2012      RC          2.12       Used IsAvailable() instead of checking each time for isOpen and !breakState when using the serial port.
+ *                                         Made Connect() and Reconnect return a bool if a connection could be made.
  * 
  */
 
@@ -290,17 +292,26 @@ namespace RTI
         /// Disconnect the current connection,
         /// then connect the serial port.
         /// </summary>
-        public void Reconnect()
+        /// <returns>TRUE = Connection could be made.  / FALSE = Conneciton could not be made.</returns>
+        public bool Reconnect()
         {
-            Disconnect();
-            Connect();
             Debug.WriteLine("Reconnect Serial port: " + _serialOptions.Port);
+
+            // Disconnect the serial port
+            Disconnect();
+
+            // Reconnect the serial port
+            return Connect();
         }
 
         /// <summary>
         /// Connect to the serial port.
+        /// This will set the serial port based off the serial options.
+        /// It will then try to open the serial port.  If it cannot be opened,
+        /// it will get an exception and return false.  The error will be logged.
         /// </summary>
-        public void Connect()
+        /// <returns>TRUE = Connection could be made.  / FALSE = Conneciton could not be made.</returns>
+        public bool Connect()
         {
             // Make sure serial port is set
             if (!string.IsNullOrEmpty(_serialOptions.Port))
@@ -328,18 +339,28 @@ namespace RTI
                     {
                         // Port is already in use
                         log.Warn("COMM Port already in use: " + _serialOptions.Port, ex);
+                        return false;
                     }
                     catch (System.ArgumentOutOfRangeException ex_range)
                     {
                         // Not sure what is causing this exception yet
                         log.Error("Error COMM Port: " + _serialOptions.Port, ex_range);
+                        return false;
                     }
                     catch (Exception ex)
                     {
                         log.Error("Error Opening in COMM Port: " + _serialOptions.Port, ex);
+                        return false;
                     }
                 }
+
+                // If the serial port is already open, return true
+                return true;
             }
+
+            // Serial port could not be opened
+            // Either a bad string or a string not given for the port
+            return false;
         }
 
         /// <summary>
@@ -378,7 +399,7 @@ namespace RTI
         /// <returns>TRUE = Serial Port available to send or receive data.</returns>
         public bool IsAvailable()
         {
-            return _serialPort.IsOpen && !_serialPort.BreakState;
+            return _serialPort != null && _serialPort.IsOpen && !_serialPort.BreakState;
         }
 
         /// <summary>
@@ -404,7 +425,7 @@ namespace RTI
         /// </summary>
         public void SendBreak()
         {
-            if (_serialPort.IsOpen)
+            if (IsAvailable())
             {
                 // Send a break to the serial port
                 _serialPort.BreakState = true;
@@ -455,7 +476,7 @@ namespace RTI
                     // Not in a break state
                     // And not sending data
                     // And not pasued
-                    if (_serialPort.IsOpen && !_serialPort.BreakState && !_isSendingData && !_pauseReadThread)
+                    if (IsAvailable() && !_isSendingData && !_pauseReadThread)
                     {
                         int bytesAvail = _serialPort.BytesToRead;
                         if (bytesAvail > 0)
@@ -555,7 +576,7 @@ namespace RTI
             // Lock to prevent multiple threads from reading at the same time
             lock (_readLock)
             {
-                if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+                if (IsAvailable() && buffer != null)
                 {
                     // Read the data from the serial port
                     result = _serialPort.Read(buffer, offset, count);
@@ -577,7 +598,7 @@ namespace RTI
             // Lock to prevent multiple threads from writing at the same time
             lock (_writeLock)
             {
-                if (_serialPort.IsOpen && !String.IsNullOrEmpty(data) && !_serialPort.BreakState)
+                if (IsAvailable() && !String.IsNullOrEmpty(data))
                 {
                     // Format the command
                     data += '\r';
@@ -611,7 +632,7 @@ namespace RTI
             // Lock to prevent multiple threads from writing at the same time
             lock (_writeLock)
             {
-                if (_serialPort.IsOpen && buffer != null && !_serialPort.BreakState)
+                if (IsAvailable() && buffer != null)
                 {
                     _isSendingData = true;
                     _serialPort.Write(buffer, offset, count);

@@ -35,6 +35,7 @@
  * 09/01/2011      RC                     Initial coding
  * 02/02/2012      RC          2.0        Added additional baudrate options. 
  * 07/03/2012      RC          2.12       Made the object smaller.  Make the options static.
+ * 08/21/2012      RC          2.13       Added IsPortAvailable() to check if a port is usable.
  */
 
 using System.Collections.Generic;
@@ -215,6 +216,32 @@ namespace RTI
             DataBits = 8;
             Parity = System.IO.Ports.Parity.None;
             StopBits = System.IO.Ports.StopBits.One;
+        }
+
+        /// <summary>
+        /// Test if the given COMM port can be used.
+        /// This will try to open the port.  If an exception is thrown,
+        /// then the port is not available.  
+        /// </summary>
+        /// <param name="portNum">COMM Port number.</param>
+        /// <returns>TRUE = Port is Available / False = Port is not available.</returns>
+        public static bool IsPortAvailable(string portNum)
+        {
+            System.IO.Ports.SerialPort seriaPort = new System.IO.Ports.SerialPort();
+
+            seriaPort.PortName = portNum;// String.Format("COM{0}", ComPort.ToString());
+
+            try
+            {
+                seriaPort.Open();
+                seriaPort.Close();
+                return true;
+            }
+            catch (System.Exception)
+            {
+                // Port could not be opened
+                return false;
+            }
         }
 
         /// <summary>

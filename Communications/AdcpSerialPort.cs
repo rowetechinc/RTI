@@ -61,7 +61,9 @@
  *                                         Added SetSystemTime() to set the system time.  Used in StartPinging().
  * 07/18/2012      RC          2.12       Added SysTestSingleWaterProfilePing() and SysTestSingleBottomTrackPing() to test the Status of the system.
  *                                         Changed SysTestFirmwareVersion() to check if the firmware version is less then given version.
- *                                         Changed SysTestI2cMemoryDevices() to check for bad serial and revision if not testing for a specific serial and revision. 
+ *                                         Changed SysTestI2cMemoryDevices() to check for bad serial and revision if not testing for a specific serial and revision.
+ * 07/30/2012      RC          2.13       Reduced the timeout in DownloadDirectoryListing().
+ * 08/24/2012      RC          2.13       Added test to check for maint.txt and EngHelp.txt in SysTestFirmwareFiles().
  * 
  */
 
@@ -70,6 +72,7 @@ using System.Threading;
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace RTI
 {
@@ -81,16 +84,9 @@ namespace RTI
     /// </summary>
     public class AdcpSerialPort : SerialConnection
     {
-        #region Variables
+        #region Enums and Classes
 
-        /// <summary>
-        /// Time to wait to see if a command
-        /// was sent.  If a timeout occurs
-        /// it means a command did not get
-        /// a response from the ADCP for sending
-        /// a command.  Value in milliseconds.
-        /// </summary>
-        private const int TIMEOUT = 2000; 
+        #region AdcpSerialModes
 
         /// <summary>
         /// The ADCP can be put into Compass mode
@@ -121,6 +117,21 @@ namespace RTI
             /// </summary>
             UPLOAD
         }
+
+        #endregion
+
+        #endregion
+
+        #region Variables
+
+        /// <summary>
+        /// Time to wait to see if a command
+        /// was sent.  If a timeout occurs
+        /// it means a command did not get
+        /// a response from the ADCP for sending
+        /// a command.  Value in milliseconds.
+        /// </summary>
+        private const int TIMEOUT = 2000; 
 
         #region XModem Variables
 
@@ -249,12 +260,15 @@ namespace RTI
 
         #endregion
 
+        #region Properties
+
         /// <summary>
         /// Mode the serial port is in.
         /// Either ADCP or COMPASS.
         /// </summary>
         public AdcpSerialModes Mode { get; set; }
 
+        #endregion
 
         /// <summary>
         /// Constructor
@@ -331,7 +345,7 @@ namespace RTI
         /// </summary>
         private void DownloadDirectoryListing()
         {
-            int TIMEOUT = 50;
+            int TIMEOUT = 20;
             
             // Clear the buffer
             ReceiveBufferString = "";
@@ -373,13 +387,13 @@ namespace RTI
         /// Then return the results from the serial display.
         /// </summary>
         /// <returns>List of the directory files.</returns>
-        public List<string> GetDirectoryListing()
+        public RTI.Commands.AdcpDirListing GetDirectoryListing()
         {
             // Download the directory listing to _dirListingString
             DownloadDirectoryListing();
 
             // Filter the list of directories
-            List<string> dirListing = CreateDirectoryListing(_dirListingString);
+            RTI.Commands.AdcpDirListing dirListing = RTI.Commands.AdcpCommands.DecodeDSDIR(_dirListingString);
 
             // Clear the string
             _dirListingString = "";
@@ -397,34 +411,6 @@ namespace RTI
         {
             // Store the directory listing
             _dirListingString += data;
-        }
-
-        /// <summary>
-        /// Parse the buffer of all the lines containing
-        /// a file.  This will be the complete line with the
-        /// file name, file size and date.
-        /// </summary>
-        /// <param name="buffer">Buffer containing all the file info.</param>
-        /// <returns>List of all the ENS and RAW files in the file list.</returns>
-        private List<string> CreateDirectoryListing(string buffer)
-        {
-            List<string> fileList = new List<string>();
-
-            // Parse the directory listing string for all file info
-            // Each line should contain a piece of file info
-            string[] lines = buffer.Split('\n');
-
-            // Create a list of all the ENS files
-            for (int x = 0; x < lines.Length; x++)
-            {
-                // Only add the ENS files to the list
-                if (lines[x].Contains("ENS") || lines[x].Contains("RAW"))
-                {
-                    fileList.Add(lines[x]);
-                }
-            }
-
-            return fileList;
         }
 
         /// <summary>
@@ -2067,6 +2053,8 @@ namespace RTI
             {
                 // Data exist, verify the correct files exist
                 bool helpExist = false;
+                bool engHelpExist = false;
+                bool maintExist = false;
                 bool rtisysExist = false;
                 bool bootExist = false;
                 bool sysconfExist = false;
@@ -2075,6 +2063,8 @@ namespace RTI
                 for(int x = 0; x < lines.Length; x++)
                 {
                     if (lines[x].Contains("HELP")) { helpExist = true; }            // HELP.TXT
+                    if (lines[x].Contains("EngHelp")) { engHelpExist = true; }      // EngHelp.TXT
+                    if (lines[x].Contains("maint")) { maintExist = true; }          // maint.TXT
                     if (lines[x].Contains("RTISYS")) { rtisysExist = true; }        // RTISYS.BIN
                     if (lines[x].Contains("BOOT")) { bootExist = true; }            // BOOT.BIN
                     if (lines[x].Contains("SYSCONF")) { sysconfExist = true; }      // SYSCONF.BIN
@@ -2086,6 +2076,22 @@ namespace RTI
                 {
                     result.ErrorListStrings.Add("HELP.TXT missing.");
                     result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_HELP_MISSING);
+                    result.TestResult = false;
+                }
+
+                // EngHelp.TXT missing
+                if (!engHelpExist)
+                {
+                    result.ErrorListStrings.Add("EngHelp.TXT missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_ENGHELP_MISSING);
+                    result.TestResult = false;
+                }
+
+                // maint.TXT missing
+                if (!maintExist)
+                {
+                    result.ErrorListStrings.Add("maint.TXT missing.");
+                    result.ErrorCodes.Add(SystemTestErrorCodes.FIRMWARE_MAINT_MISSING);
                     result.TestResult = false;
                 }
 

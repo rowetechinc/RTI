@@ -36,6 +36,7 @@
  * 07/10/2012      RC          2.12       Added error codes and a list to hold them all.
  * 07/17/2012      RC          2.12       Add Results to hold an object to pass with results.
  *                                         Added SystemTestErrorCodes::INCORRECT_RTC_TIME.
+ * 08/24/2012      RC          2.13       Added FIRMWARE_ENGHELP_MISSING and FIRMWARE_MAINT_MISSING.
  * 
  */
 
@@ -94,6 +95,16 @@ namespace RTI
         /// Firmware file Help.txt is missing.
         /// </summary>
         FIRMWARE_HELP_MISSING,
+
+        /// <summary>
+        /// Firmware file EngHelp.txt is missing.
+        /// </summary>
+        FIRMWARE_ENGHELP_MISSING,
+
+        /// <summary>
+        /// Firmware file maint.txt is missing.
+        /// </summary>
+        FIRMWARE_MAINT_MISSING,
 
         /// <summary>
         /// Firmware file RTISYS.bin is missing.

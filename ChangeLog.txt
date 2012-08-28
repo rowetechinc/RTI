@@ -1,5 +1,24 @@
 RTI Changelog
 
+RTI-2.13
+ - Changed the version number.
+ - Created AdcpDirListing and AdcpEnsFileInfo in AdcpCommands.cs to capture the file information on the ADCP.
+ - Created DecodeDSDIR in AdcpCommands.
+ - Created a unittest to for DecodeDSDIR.
+ - Added ToSeconds() to TimeValue object.
+ - In MathHelper, added MemorySizeString() to display file memory sizes with the highest scale factor.
+ - In AdcpSerialPort, reduced the timeout in DownloadDirectoryListing().
+ - In AdcpCommands, added CommandPayload object to pass commands as an object in events.
+ - In AdcpCommands, changed DEFAULT_CWSS (Speed of Sound) to 1490 m/s.
+ - In GpsSerialPort, added to constructor IsEnabled with a default value.
+ - In AdcpCommands, changed parsing the DateTime in DecodeSTIME() to TryParse.  If bad value, then it will use the default time.
+ - In SerialConnections, used IsAvailable() instead of checking each time for isOpen and !breakState when using the serial port.
+ - In SerialConnections, made Connect() and Reconnect return a bool if a connection could be made.
+ - Added SerialOptions::IsPortAvailable() to check if a port is usable.
+ - In ScreenVelocity.cs, added 3 beam solution check.  Also fixed bug in earth and instrument when not check if velocity is bad when threshold checking.
+ - Added test to check for maint.txt and EngHelp.txt in AdcpSerialPort::SysTestFirmwareFiles().
+ - Added FIRMWARE_ENGHELP_MISSING and FIRMWARE_MAINT_MISSING to SystemTestResult.
+
 RTI-2.12
  - Changed the version number.
  - Added IsInstrumentVelocityGood() to BottomTrackDataSet.cs.

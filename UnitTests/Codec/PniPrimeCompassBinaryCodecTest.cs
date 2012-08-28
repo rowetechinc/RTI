@@ -22,7 +22,7 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Vertion    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/29/2012      RC          2.07       Initial coding
  * 

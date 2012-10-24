@@ -85,7 +85,7 @@ namespace RTI
 
             Assert.AreEqual(false, nm.SystemStatus.IsBottomTrack3BeamSolution());
             Assert.AreEqual(true, nm.SystemStatus.IsBottomTrackHold());
-            Assert.AreEqual(false, nm.SystemStatus.IsHardwareTimeout());
+            Assert.AreEqual(false, nm.SystemStatus.IsReceiverTimeout());
             Assert.AreEqual(false, nm.SystemStatus.IsWaterTrack3BeamSolution());
             Assert.AreEqual(false, nm.SystemStatus.IsBottomTrackSearching());
         }
@@ -139,7 +139,7 @@ namespace RTI
 
             Assert.AreEqual(false, nm.SystemStatus.IsBottomTrack3BeamSolution());
             Assert.AreEqual(true, nm.SystemStatus.IsBottomTrackHold());
-            Assert.AreEqual(false, nm.SystemStatus.IsHardwareTimeout());
+            Assert.AreEqual(false, nm.SystemStatus.IsReceiverTimeout());
             Assert.AreEqual(false, nm.SystemStatus.IsWaterTrack3BeamSolution());
             Assert.AreEqual(false, nm.SystemStatus.IsBottomTrackSearching());
         }

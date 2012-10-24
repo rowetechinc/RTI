@@ -30,11 +30,12 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 11/22/2011      RC          Initial coding
- * 11/28/2011      RC          Changed ToString() to display text.
- * 01/31/2012      RC          Added new errors from User Guide Rev F.
+ * 11/22/2011      RC                     Initial coding
+ * 11/28/2011      RC                     Changed ToString() to display text.
+ * 01/31/2012      RC                     Added new errors from User Guide Rev F.
+ * 09/18/2012      RC          2.15       Updated errors from User Guide Rev H.
  * 
  */
 
@@ -48,35 +49,43 @@ namespace RTI
     /// 
     /// Good Status                             = 0x0000
     /// 
-    /// Hardware Timeout =                      = 0x8000
-    ///   The hardware did not respond to the ping request
-    /// 
-    /// Status of the Bottom Track
-    /// ---------------------------
-    /// Final value is a logical OR of each bit below.
-    /// 
-    /// Good Status                             = 0x0000
-    /// 
     /// Water Track 3 Beam Solution (DVL only)  = 0x0001
-    ///    3 or 4 beams have a valid signal
+    ///    Indicates the Water Track velocity output contains
+    ///    a 3 beam solution
     ///    
     /// Bottom Track 3 Beam Solution            = 0x0002
-    ///    3 or 4 beams located the bottom
+    ///    Indicates the Bottom Track velocity output contains
+    ///    a 3 beam solution
     ///    
     /// Bottom Track Hold (not searching yet)   = 0x0004
-    ///    Holding the search to last known Depth
+    ///    Indicates Bottom Track did not detect the bottom but
+    ///    is still using the last good detection as an estimate
+    ///    of the bottom location
     ///    
     /// Bottom Track Searching                  = 0x0008
-    ///    Actively searching for the bottom
+    ///    Indicates Bottom Track is actively changing the ping
+    ///    settings to attempt bottom detection
     ///    
-    /// Hardware Timeout                        = 0x8000
-    ///    The hardware did not respond to the ping request
+    /// Receiver Timeout                        = 0x8000
+    ///    The receiver hardware did not respond to the ping request
     /// 
-    /// STATUS_DATAERROR                        = 0x4000
+    /// Receiver Data Error                     = 0x4000
+    ///    The receiver did not output the expected amount of data
     /// 
-    /// STATUS_TEMPERATURE_ERROR                = 0x2000
+    /// Temperature Error                       = 0x2000
+    ///    The temperature sensor ADC did not respond or the temperature
+    ///    value was out of range (-30 to 70 C).
     /// 
-    /// STATUS_RTC_ERROR                        = 0x1000
+    /// Real Time Clock (RTC) Error             = 0x1000
+    ///    The RTC did not respond or the time data value contains
+    ///    illegal values i.e. month = 13
+    ///    
+    /// Non Volatile Data Error                 = 0x0800
+    ///    Non volatile memory storage checksum failed
+    ///    
+    /// Power Down Failure                      = 0x0400
+    ///    System power did not shut off between ensembles
+    ///    
     /// 
     /// </summary>
     public class Status
@@ -122,6 +131,16 @@ namespace RTI
         /// Real Time Clock error.
         /// </summary>
         public const int RTC_ERROR = 0x1000;
+
+        /// <summary>
+        /// Non Volatile Data Error.
+        /// </summary>
+        public const int NONVOLATILE_DATA_ERROR = 0x0800;
+
+        /// <summary>
+        /// Power Down Failure error.
+        /// </summary>
+        public const int POWER_DOWN_ERROR = 0x0400;
 
         #endregion
 
@@ -190,7 +209,7 @@ namespace RTI
         /// Hardware Timeout.
         /// </summary>
         /// <returns>TRUE = Hardware Timeout.</returns>
-        public bool IsHardwareTimeout()
+        public bool IsReceiverTimeout()
         {
             return (Value & HDWR_TIMEOUT) > 0;
         }
@@ -200,7 +219,7 @@ namespace RTI
         /// Data Error.
         /// </summary>
         /// <returns>TRUE = Data Error.</returns>
-        public bool IsDataError()
+        public bool IsReceiverDataError()
         {
             return (Value & DATAERROR) > 0;
         }
@@ -226,6 +245,26 @@ namespace RTI
         }
 
         /// <summary>
+        /// Check whether status bit set for
+        /// Non Volatile Data Error.
+        /// </summary>
+        /// <returns>TRUE = Non Volatile Data Error.</returns>
+        public bool IsNonVolatileDataError()
+        {
+            return (Value & NONVOLATILE_DATA_ERROR) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for
+        /// Power Down Failure error.
+        /// </summary>
+        /// <returns>TRUE = Power Down failure.</returns>
+        public bool IsPowerDownError()
+        {
+            return (Value & POWER_DOWN_ERROR) > 0;
+        }
+
+        /// <summary>
         /// Return a string representing the
         /// status.  This could be multiple statuses
         /// values in the string.
@@ -238,10 +277,12 @@ namespace RTI
                 !IsBottomTrack3BeamSolution() && 
                 !IsBottomTrackHold() && 
                 !IsBottomTrackSearching() && 
-                !IsHardwareTimeout() && 
-                !IsDataError() && 
+                !IsReceiverTimeout() && 
+                !IsReceiverDataError() && 
                 !IsTemperatureError() && 
-                !IsRealTimeClockError()
+                !IsRealTimeClockError() &&
+                !IsNonVolatileDataError() &&
+                !IsPowerDownError()
                 )
             {
                 return "Good";
@@ -265,13 +306,13 @@ namespace RTI
             {
                 result += "Searching ";
             }
-            if (IsHardwareTimeout())
+            if (IsReceiverTimeout())
             {
-                result += "Hardware Timeout ";
+                result += "Receiver Timeout ";
             }
-            if (IsDataError())
+            if (IsReceiverDataError())
             {
-                result += "Data Error ";
+                result += "Receiver Data Error ";
             }
             if (IsTemperatureError())
             {
@@ -280,6 +321,14 @@ namespace RTI
             if (IsRealTimeClockError())
             {
                 result += "RTC Error ";
+            }
+            if (IsNonVolatileDataError())
+            {
+                result += "Non volatile Storage Error ";
+            }
+            if (IsPowerDownError())
+            {
+                result += "Power Down Error ";
             }
 
             //return Value.ToString();

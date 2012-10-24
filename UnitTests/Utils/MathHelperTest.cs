@@ -29,7 +29,7 @@
  * 
  * 
  */
-namespace UnitTests.Utils
+namespace RTI
 {
     using System;
     using System.Collections.Generic;

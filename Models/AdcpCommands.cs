@@ -64,6 +64,21 @@
  * 07/31/2012      RC          2.13       Added CommandPayload object to pass commands as an object in events. 
  *                                         Changed DEFAULT_CWSS (Speed of Sound) to 1490 m/s.
  * 08/21/2012      RC          2.13       Changed parsing the DateTime in DecodeSTIME() to TryParse.  If bad value, then it will use the default time.
+ * 08/30/2012      RC          2.15       Fixed bug with DEFAULT_CEI.  Reference could change the value.  Removed DEFAULT_CEI and added DEFAULT_CEI_HOUR/MINUTE/SECOND/HUNSEC.
+ * 08/31/2012      RC          2.15       Added CMD_DSXD for high speed xmodem download.
+ * 09/06/2012      RC          2.15       Update the commands to the ADCP manual Revision G.
+ * 09/07/2012      RC          2.15       Removed EnableDisable enum and changed DEFAULT_ENGMACON to a bool.
+ *                                         Added the command CETFP to GetCommandList().  This sets the time of first ping.
+ * 09/10/2012      RC          2.15       Added DEFAULT_SALINITY_VALUE_SALT and DEFAULT_SALINITY_VALUE_FRESH.
+ * 09/11/2012      RC          2.15       Changed the DecodeBoardValues() to handle board IDs with and without a frequency.
+ * 09/24/2012      RC          2.15       Added DecodeCSHOW() to decode the CSHOW command.
+ * 09/25/2012      RC          2.15       Added CEOUTPUT command.
+ * 09/26/2012      RC          2.15       Fixed TimeValue to rollover values when exceed there minutes, seconds and HunSec range.
+ * 09/28/2012      RC          2.15       Added the command CVSF.  Check ranges for values when setting the value if ranges exist.
+ * 10/01/2012      RC          2.15       Removed requiring the serial number for the constructor.  It was only needed for CEPO, but that was incorrectly created with the serial number.
+ * 10/10/2012      RC          2.15       When creating the command list, ensure the string is set to United States English format.  This is to prevent commas from being used for decimal points.
+ * 10/11/2012      RC          2.15       Added Minimum values for CWS, CTD and CWSS command.
+ * 
  * 
  */
 
@@ -78,26 +93,6 @@ namespace RTI
     namespace Commands
     {
         #region Classes and Enums
-
-        #region EnableDisable
-
-        /// <summary>
-        /// Enum to handle commands that pass a 0 or 1 for enable for disable.
-        /// </summary>
-        public enum EnableDisable
-        {
-            /// <summary>
-            /// Disable.
-            /// </summary>
-            DISABLE = 0,
-
-            /// <summary>
-            /// Enable.
-            /// </summary>
-            ENABLE = 1
-        };
-
-        #endregion
 
         #region Baudrate
 
@@ -180,28 +175,98 @@ namespace RTI
 
         /// <summary>
         /// TimeValue used to send command CWPAI.
+        /// When setting the values individually, order matters.
+        /// Set the highest values first and must up to lower values.
         /// </summary>
         public class TimeValue
         {
+            private UInt16 _hour;
             /// <summary>
             /// Hours.
             /// </summary>
-            public UInt16 Hour { get; set; }
+            public UInt16 Hour 
+            {
+                get { return _hour; }
+                set
+                {
+                    _hour = value;
+                }
+            }
 
             /// <summary>
             /// Minutes.
             /// </summary>
-            public UInt16 Minute { get; set; }
+            private UInt16 _minute;
+            /// <summary>
+            /// Minutes.
+            /// </summary>
+            public UInt16 Minute 
+            {
+                get { return _minute; } 
+                set
+                {
+                    // Verify the value does not exceed 60 minutes
+                    if (value >= 60)
+                    {
+                        Hour += (UInt16)(value / 60);
+                        _minute = (UInt16)(value - ((value / 60) * 60));
+                    }
+                    else
+                    {
+                        _minute = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Seconds.
             /// </summary>
-            public UInt16 Second { get; set; }
+            private UInt16 _second;
+            /// <summary>
+            /// Seconds.
+            /// </summary>
+            public UInt16 Second
+            {
+                get { return _second; }
+                set
+                {
+                    // Verify the value does not exceed 60 seconds
+                    if (value >= 60)
+                    {
+                        Minute += (UInt16)(value / 60);
+                        _second = (UInt16)(value - ((value / 60) * 60));
+                    }
+                    else
+                    {
+                        _second = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Hundredths of a second.
             /// </summary>
-            public UInt16 HunSec { get; set; }
+            private UInt16 _hunSec;
+            /// <summary>
+            /// Hundredths of a second.
+            /// </summary>
+            public UInt16 HunSec
+            {
+                get { return _hunSec; }
+                set
+                {
+                    // Verify the value does not exceed 100 hun second.
+                    if (value >= 100)
+                    {
+                        Second += (UInt16)(value / 100);
+                        _hunSec = (UInt16)(value - ((value / 100) * 100));
+                    }
+                    else
+                    {
+                        _hunSec = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Default value is all zeros.
@@ -235,7 +300,7 @@ namespace RTI
             /// <returns>String version of this class.  HH:MM:SS.hh</returns>
             public override string ToString()
             {
-                return Hour.ToString("00") + ":" + Minute.ToString("00") + ":" + Second.ToString("00") + "." + HunSec.ToString("00");
+                return Hour.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + Minute.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + Second.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "." + HunSec.ToString("00", CultureInfo.CreateSpecificCulture("en-US"));
             }
 
             /// <summary>
@@ -885,12 +950,19 @@ namespace RTI
         {
             #region Varialbles
 
+            #region Salinity
+
             /// <summary>
-            /// Serial number to know how many 
-            /// subsystem exist in the current 
-            /// ADCP.
+            /// Fresh water salinity value for CWS.
             /// </summary>
-            private SerialNumber _serialNumber;
+            public const float DEFAULT_SALINITY_VALUE_FRESH = 0.0f;
+
+            /// <summary>
+            /// Salt water salinity value for CWS.
+            /// </summary>
+            public const float DEFAULT_SALINITY_VALUE_SALT = 35.0f;
+
+            #endregion
 
             #endregion
 
@@ -982,6 +1054,23 @@ namespace RTI
             public const string CMD_CERECORD = "CERECORD";
 
             /// <summary>
+            /// Ensemble output type.
+            /// 
+            /// n = 0
+            /// Disable serial output.  Saves battery energy when recording
+            /// data to the SD card during a self-contained deployment by reducing
+            /// extra on time on the system due to data transfer.
+            /// 
+            /// n= 1
+            /// Enables the standard binary output data protocol to be sent out
+            /// the serial port.
+            /// 
+            /// n=2
+            /// Enables an ASCII text serial output that is dumb terminal compatible.
+            /// </summary>
+            public const string CMD_CEOUTPUT = "CEOUTPUT";
+
+            /// <summary>
             /// Ensemble Command: Ensemble Ping Order
             /// Parameter: cccccccccccccccc
             /// Sets the order in which the various subsystems will be pinged. 
@@ -1038,6 +1127,17 @@ namespace RTI
             /// Select the heading source for ENU transformations. 
             /// </summary>
             public const string CMD_CHS = "CHS";
+
+            /// <summary>
+            /// Zero Pressure Sensor.  Sets the current pressure reading to the zero point
+            /// (if pressure sensor is installed).
+            /// </summary>
+            public const string CMD_CPZ = "CPZ";
+
+            /// <summary>
+            /// ?
+            /// </summary>
+            public const string CMD_CVSF = "CVSF";
 
             #endregion
 
@@ -1167,6 +1267,18 @@ namespace RTI
             /// maximum of 8 characters before the extension
             /// </summary>
             public const string CMD_DSXT = "DSXT";
+
+            /// <summary>
+            /// Data Storage Command: Transmit a File (High Speed Mode).
+            /// Parameter: filename.abc
+            /// High Speed Download.
+            /// Data Storage XMODEM Transmit.  This command is used 
+            /// to transfer a file, via the serial communication 
+            /// link, from an external device to the SD card contained 
+            /// within the RTI system.  File names are limited to a 
+            /// maximum of 8 characters before the extension
+            /// </summary>
+            public const string CMD_DSXD = "DSXD";
 
             /// <summary>
             /// Data Storage Command: Format SD Card
@@ -1343,7 +1455,7 @@ namespace RTI
             /// <summary>
             /// Default RS-422 Baudrate.
             /// </summary>
-            public const Baudrate DEFAULT_C422B = Baudrate.BAUD_230400;
+            public const Baudrate DEFAULT_C422B = Baudrate.BAUD_115200;
 
             /// <summary>
             /// Default ADCP mode.
@@ -1353,7 +1465,7 @@ namespace RTI
             /// <summary>
             /// Default MAC enable.
             /// </summary>
-            public const EnableDisable DEFAULT_ENGMACON = EnableDisable.DISABLE;
+            public const bool DEFAULT_ENGMACON = false;
 
             /// <summary>
             /// Default Salinity.
@@ -1386,16 +1498,30 @@ namespace RTI
             public const HeadingSrc DEFAULT_CHS = HeadingSrc.INTERNAL;
 
             /// <summary>
-            /// Default Ensemble interval.
-            /// 1 second.
+            /// Default Ensemble Interval Hour.
             /// </summary>
-            public TimeValue DEFAULT_CEI = new TimeValue(0, 0, 1, 0);
+            public const ushort DEFAULT_CEI_HOUR = 0;
+
+            /// <summary>
+            /// Default Ensemble Interval Minute.
+            /// </summary>
+            public const ushort DEFAULT_CEI_MINUTE = 0;
+
+            /// <summary>
+            /// Default Ensemble Interval Second.
+            /// </summary>
+            public const ushort DEFAULT_CEI_SECOND = 1;
+
+            /// <summary>
+            /// Default Ensemble Interval Hundredth of second.
+            /// </summary>
+            public const ushort DEFAULT_CEI_HUNSEC = 0;
 
             /// <summary>
             /// Default Year to start pinging.
             /// 2012
             /// </summary>
-            public const UInt16 DEFAULT_CETFP_YEAR = 12;
+            public const UInt16 DEFAULT_CETFP_YEAR = 2012;
 
             /// <summary>
             /// Default Month to start pinging.
@@ -1435,10 +1561,22 @@ namespace RTI
             public const bool DEFAULT_CERECORD = false;
 
             /// <summary>
-            /// Default subsystem order to ping.
-            /// At least have a value.  So choose 0.
+            /// Default whether to output data to serial port.
             /// </summary>
-            public const string DEFAULT_CEPO = "0";
+            public const int DEFAULT_CEOUTPUT = 1;
+
+            /// <summary>
+            /// Default CEPO is blank.  When the serial number
+            /// is known and if CEPO is blank, CEPO should at
+            /// least be set with a configuration for each
+            /// subsystem that exist.
+            /// </summary>
+            public const string DEFAULT_CEPO = "";
+
+            /// <summary>
+            /// Default CVSF value.
+            /// </summary>
+            public const float DEFAULT_CVSF = 1.000f;
 
             #endregion
 
@@ -1447,12 +1585,27 @@ namespace RTI
             /// <summary>
             /// Minimum heading offset.
             /// </summary>
-            public const double MIN_CHO = -180.0;
+            public const float MIN_CHO = -180.0f;
 
             /// <summary>
             /// Maximum heading offset.
             /// </summary>
-            public const double MAX_CHO = 180.0;
+            public const float MAX_CHO = 180.0f;
+
+            /// <summary>
+            /// Minimum Depth of Transducer.
+            /// </summary>
+            public const float MIN_CTD = 0.0f;
+
+            /// <summary>
+            /// Minimum Salinity.
+            /// </summary>
+            public const float MIN_CWS = 0.0f;
+
+            /// <summary>
+            /// Minimum Speed of Sound.
+            /// </summary>
+            public const float MIN_CWSS = 0.0f;
             
             /// <summary>
             /// Minimum IP value.
@@ -1525,6 +1678,16 @@ namespace RTI
             /// Maximum Hundredth of a second.
             /// </summary>
             public const int MAX_HUNSEC = 99;
+
+            /// <summary>
+            /// Minimum value for CEOUTPUT.
+            /// </summary>
+            public const UInt16 MIN_CEOUTPUT = 0;
+
+            /// <summary>
+            /// Maximum value for CEOUTPUT.
+            /// </summary>
+            public const UInt16 MAX_CEOUTPUT = 2;
 
             #endregion
 
@@ -1611,7 +1774,7 @@ namespace RTI
             /// <returns>String representation of CEI</returns>
             public string CEI_ToString()
             {
-                return CEI_Hour.ToString("00") + ":" + CEI_Minute.ToString("00") + ":" + CEI_Second.ToString("00") + "." + CEI_HunSec.ToString("00");
+                return CEI_Hour.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CEI_Minute.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CEI_Second.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "." + CEI_HunSec.ToString("00", CultureInfo.CreateSpecificCulture("en-US"));
             }
 
             /// <summary>
@@ -1704,7 +1867,7 @@ namespace RTI
             /// <returns>String representation of CETFP</returns>
             public string CETFP_ToString()
             {
-                return CETFP_Year.ToString("0000") + "/" + CETFP_Month.ToString("00") + "/" + CETFP_Day.ToString("00") + "," + CETFP_Hour.ToString("00") + ":" + CETFP_Minute.ToString("00") + ":" + CETFP_Second.ToString("00") + "." + CETFP_HunSec.ToString("00");
+                return CETFP_Year.ToString("0000", CultureInfo.CreateSpecificCulture("en-US")) + "/" + CETFP_Month.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "/" + CETFP_Day.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "," + CETFP_Hour.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CETFP_Minute.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CETFP_Second.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "." + CETFP_HunSec.ToString("00", CultureInfo.CreateSpecificCulture("en-US"));
             }
 
             /// <summary>
@@ -1715,7 +1878,26 @@ namespace RTI
             /// Scale: Years in 2000.
             /// Range: 0 to 99.
             /// </summary>
-            public UInt16 CETFP_Year { get; set; }
+            private UInt16 _cETFP_Year;
+            /// <summary>
+            /// Years in CETFP.
+            /// This starts at 2000.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Years in 2000.
+            /// Range: 2000 to 2099.
+            /// </summary>
+            public UInt16 CETFP_Year
+            {
+                get { return _cETFP_Year; }
+                set
+                {
+                    if (value >= MIN_YEAR && value <= MAX_YEAR)
+                    {
+                        _cETFP_Year = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Month in CETFP.
@@ -1724,7 +1906,25 @@ namespace RTI
             /// Scale: Months
             /// Range: 1 to 12.
             /// </summary>
-            public UInt16 CETFP_Month { get; set; }
+            private UInt16 _cETFP_Month;
+            /// <summary>
+            /// Month in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Months
+            /// Range: 1 to 12.
+            /// </summary>
+            public UInt16 CETFP_Month
+            {
+                get { return _cETFP_Month; }
+                set
+                {
+                    if (value >= MIN_MONTH && value <= MAX_MONTH)
+                    {
+                        _cETFP_Month = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Day in CETFP.
@@ -1733,7 +1933,25 @@ namespace RTI
             /// Scale: Days
             /// Range: 1 to 31.
             /// </summary>
-            public UInt16 CETFP_Day { get; set; }
+            private UInt16 _cETFP_Day;
+            /// <summary>
+            /// Day in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Days
+            /// Range: 1 to 31.
+            /// </summary>
+            public UInt16 CETFP_Day
+            {
+                get { return _cETFP_Day; }
+                set
+                {
+                    if (value >= MIN_DAY && value <= MAX_DAY)
+                    {
+                        _cETFP_Day = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Hours in CETFP.
@@ -1742,7 +1960,25 @@ namespace RTI
             /// Scale: Hours
             /// Range: 0 to 23.
             /// </summary>
-            public UInt16 CETFP_Hour { get; set; }
+            private UInt16 _cETFP_Hour;
+            /// <summary>
+            /// Hours in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Hours
+            /// Range: 0 to 23.
+            /// </summary>
+            public UInt16 CETFP_Hour
+            {
+                get { return _cETFP_Hour; }
+                set
+                {
+                    if (value >= MIN_HOUR && value <= MAX_HOUR)
+                    {
+                        _cETFP_Hour = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Minutes in CETFP.
@@ -1751,7 +1987,25 @@ namespace RTI
             /// Scale: Minutes
             /// Range: 0 to 59.
             /// </summary>
-            public UInt16 CETFP_Minute { get; set; }
+            private UInt16 _cETFP_Minute;
+            /// <summary>
+            /// Minutes in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Minutes
+            /// Range: 0 to 59.
+            /// </summary>
+            public UInt16 CETFP_Minute
+            {
+                get { return _cETFP_Minute; }
+                set
+                {
+                    if (value >= MIN_MINSEC && value <= MAX_MINSEC)
+                    {
+                        _cETFP_Minute = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Seconds in CETFP.
@@ -1760,7 +2014,25 @@ namespace RTI
             /// Scale: Second
             /// Range: 0 to 59.
             /// </summary>
-            public UInt16 CETFP_Second { get; set; }
+            private UInt16 _cETFP_Second;
+            /// <summary>
+            /// Seconds in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Second
+            /// Range: 0 to 59.
+            /// </summary>
+            public UInt16 CETFP_Second
+            {
+                get { return _cETFP_Second; }
+                set
+                {
+                    if (value >= MIN_MINSEC && value <= MAX_MINSEC)
+                    {
+                        _cETFP_Second = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Hundredth of seconds in CETFP.
@@ -1769,7 +2041,25 @@ namespace RTI
             /// Scale: Hundredth of Second
             /// Range: 0 to 59.
             /// </summary>
-            public UInt16 CETFP_HunSec {get; set;}
+            private UInt16 _cETFP_HunSec;
+            /// <summary>
+            /// Hundredth of seconds in CETFP.
+            /// Limit to 2 digits.
+            /// 
+            /// Scale: Hundredth of Second
+            /// Range: 0 to 99.
+            /// </summary>
+            public UInt16 CETFP_HunSec
+            {
+                get { return _cETFP_HunSec; }
+                set
+                {
+                    if (value >= MIN_HUNSEC && value <= MAX_HUNSEC)
+                    {
+                        _cETFP_HunSec = value;
+                    }
+                }
+            }
 
             #endregion
 
@@ -1808,6 +2098,58 @@ namespace RTI
             }
 
             /// <summary>
+            /// Ensemble output type.
+            /// 
+            /// n = 0
+            /// Disable serial output.  Saves battery energy when recording
+            /// data to the SD card during a self-contained deployment by reducing
+            /// extra on time on the system due to data transfer.
+            /// 
+            /// n= 1
+            /// Enables the standard binary output data protocol to be sent out
+            /// the serial port.
+            /// 
+            /// n=2
+            /// Enables an ASCII text serial output that is dumb terminal compatible.
+            /// 
+            /// Command: CEOUTPUT n[cr]
+            /// Scale: 0=disable, 1=enable Binary, 2=enable ASCII
+            /// Range:
+            /// </summary>
+            private UInt16 _cEOUTPUT;
+            /// <summary>
+            /// Ensemble output type.
+            /// 
+            /// n = 0
+            /// Disable serial output.  Saves battery energy when recording
+            /// data to the SD card during a self-contained deployment by reducing
+            /// extra on time on the system due to data transfer.
+            /// 
+            /// n= 1
+            /// Enables the standard binary output data protocol to be sent out
+            /// the serial port.
+            /// 
+            /// n=2
+            /// Enables an ASCII text serial output that is dumb terminal compatible.
+            /// 
+            /// Command: CEOUTPUT n[cr]
+            /// Scale: 0=disable, 1=enable Binary, 2=enable ASCII
+            /// Range:
+            /// </summary>
+            public UInt16 CEOUTPUT
+            {
+                get { return _cEOUTPUT; }
+                set
+                {
+                    // Verify the value is within range
+                    if (value >= MIN_CEOUTPUT && value <= MAX_CEOUTPUT)
+                    {
+                        _cEOUTPUT = value;
+                    }
+                }
+            }
+
+            /// <summary>
             /// Ensemble Ping Order
             /// Sets the order in which the various subsystems will be pinged. 
             /// Note: a space and at least one subsystem code must follow the 
@@ -1829,9 +2171,29 @@ namespace RTI
             /// 
             /// Command: CWS n.nn[cr]
             /// Scale: Parts per Thousand (ppt)
-            /// Range: 
+            /// Range: 0 to N
             /// </summary>
-            public float CWS { get; set; }
+            private float _cWS;
+            /// <summary>
+            /// Water Salinity
+            /// Used in the water Speed of Sound calculation.
+            /// 
+            /// Command: CWS n.nn[cr]
+            /// Scale: Parts per Thousand (ppt)
+            /// Range: 0 to N
+            /// </summary>
+            public float CWS 
+            {
+                get { return _cWS; } 
+                set
+                {
+                    // Verify the value is within range
+                    if (value >= MIN_CWS)
+                    {
+                        _cWS = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Temperature
@@ -1849,9 +2211,29 @@ namespace RTI
             /// 
             /// Command: CTD n.nn[cr]
             /// Scale: meters
-            /// Range: 
+            /// Range: 0 to N
             /// </summary>
-            public float CTD { get; set; }
+            private float _cTD;
+            /// <summary>
+            /// Transducer Depth
+            /// Used in the water Speed of Sound calculation.
+            /// 
+            /// Command: CTD n.nn[cr]
+            /// Scale: meters
+            /// Range: 0 to N
+            /// </summary>
+            public float CTD 
+            {
+                get { return _cTD; } 
+                set
+                {
+                    // Verify the value is within range
+                    if (value >= MIN_CTD)
+                    {
+                        _cTD = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Speed of Sound 
@@ -1859,9 +2241,29 @@ namespace RTI
             /// 
             /// Command CWSS n.nn[cr]
             /// Scale: meters per second (m/s)
-            /// Range: 
+            /// Range: 0 to N
             /// </summary>
-            public float CWSS { get; set; }
+            private float _cWSS;
+            /// <summary>
+            /// Water Speed of Sound 
+            /// NOT USED
+            /// 
+            /// Command CWSS n.nn[cr]
+            /// Scale: meters per second (m/s)
+            /// Range: 0 to N
+            /// </summary>
+            public float CWSS 
+            {
+                get { return _cWSS; } 
+                set
+                {
+                    // Verify the value is within range
+                    if (value >= MIN_CWSS)
+                    {
+                        _cWSS = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Heading offset
@@ -1872,7 +2274,28 @@ namespace RTI
             /// Scale: degrees
             /// Range: -180.0 to +180.0
             /// </summary>
-            public float CHO { get; set; }
+            private float _cHO;
+            /// <summary>
+            /// Heading offset
+            /// Added to the compass output 
+            /// prior to heading being used within the system.
+            /// 
+            /// Command: CHO n.nn[cr]
+            /// Scale: degrees
+            /// Range: -180.0 to +180.0
+            /// </summary>
+            public float CHO
+            {
+                get { return _cHO; }
+                set
+                {
+                    // Verify the value is within range
+                    if (value >= MIN_CHO && value <= MAX_CHO)
+                    {
+                        _cHO = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Heading Source
@@ -1900,6 +2323,17 @@ namespace RTI
 
                 return "1";
             }
+
+            /// <summary>
+            /// Velocity Scale Factor.
+            /// This scale factor is applied to all velocity
+            /// measurement data.  New Velocity = CVSF * Velocity.
+            /// 
+            /// Command: CVSF n.nn[cr]
+            /// Scale: 
+            /// Range:
+            /// </summary>
+            public float CVSF { get; set; }
 
 
             #endregion
@@ -1942,11 +2376,8 @@ namespace RTI
             /// 
             /// Initialize the ranges to there default value.
             /// </summary>
-            public AdcpCommands(SerialNumber serialNum)
-            {                
-                // Set the serial number
-                _serialNumber = serialNum;
-
+            public AdcpCommands()
+            {
                 // Set Default Values
                 SetDefaults();
             }
@@ -1962,11 +2393,11 @@ namespace RTI
                 Mode = DEFAULT_MODE;
 
                 // Ensemble defaults
-                CEI = DEFAULT_CEI;
-                CEI_Hour = CEI.Hour;
-                CEI_Minute = CEI.Minute;
-                CEI_Second = CEI.Second;
-                CEI_HunSec = CEI.HunSec;
+                CEI = new TimeValue(DEFAULT_CEI_HOUR, DEFAULT_CEI_MINUTE, DEFAULT_CEI_SECOND, DEFAULT_CEI_HUNSEC);
+                CEI_Hour = DEFAULT_CEI_HOUR;
+                CEI_Minute = DEFAULT_CEI_MINUTE;
+                CEI_Second = DEFAULT_CEI_SECOND;
+                CEI_HunSec = DEFAULT_CEI_HUNSEC;
 
                 // Time of First ping default
                 // Use the current time
@@ -1980,19 +2411,8 @@ namespace RTI
                 CETFP_HunSec = DEFAULT_CETFP_HUNSEC;
 
                 CERECORD = DEFAULT_CERECORD;
-
-                // Only display the Actual codes and not the additional 0's
-                string subsysStr = "";
-                for (int x = 0; x < _serialNumber.SubSystems.Length; x++)
-                {
-
-                    string serialNumSubSystemsSubstring = _serialNumber.SubSystems.Substring(x, 1);
-                    if (serialNumSubSystemsSubstring != "0")
-                    {
-                        subsysStr += serialNumSubSystemsSubstring;
-                    }
-                }
-                CEPO = subsysStr;
+                CEOUTPUT = DEFAULT_CEOUTPUT;
+                CEPO = DEFAULT_CEPO;
 
                 // Environmental defaults
                 CWS = DEFAULT_CWS;
@@ -2001,6 +2421,7 @@ namespace RTI
                 CWSS = DEFAULT_CWSS;
                 CHO = DEFAULT_CHO;
                 CHS = DEFAULT_CHS;
+                CVSF = DEFAULT_CVSF;
 
                 // Serial Comm defaults
                 C232B = DEFAULT_C232B;
@@ -2016,34 +2437,39 @@ namespace RTI
             /// <returns></returns>
             public static string GetTimeCommand()
             {
-                return String.Format("{0} {1}", CMD_STIME, DateTime.Now.ToString("yyyy/MM/dd,HH:mm:ss"));
+                return String.Format("{0} {1}", CMD_STIME, DateTime.Now.ToString("yyyy/MM/dd,HH:mm:ss", CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
             /// Create a list of all the commands and there value.
             /// Add all the commands to the list and there value.
+            /// 
+            /// Put all the values in United States English format.
+            /// Other formats can use a comma instead of a decimal point for
+            /// decimal numbers.
             /// </summary>
             /// <returns>List of all the commands and there value.</returns>
             public List<string> GetCommandList()
             {
                 List<string> list = new List<string>();
-                list.Add(String.Format("{0}", Mode_ToString()));                        // Mode
-                list.Add(string.Format("{0}", GetTimeCommand()));                       // Time
-                list.Add(String.Format("{0} {1}", CMD_CEI, CEI_ToString()));            // CEI
-                //list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));        // CETFP
-                list.Add(String.Format("{0} {1}", CMD_CERECORD, CERECORD_ToString()));  // CERECORD
-                list.Add(String.Format("{0} {1}", CMD_CEPO, CEPO));                     // CEPO
+                list.Add(String.Format("{0}", Mode_ToString()));                                                                                // Mode
+                list.Add(string.Format("{0}", GetTimeCommand()));                                                                               // Time
+                list.Add(String.Format("{0} {1}", CMD_CEI, CEI_ToString()));                                                                    // CEI
+                list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));                                                                // CETFP
+                list.Add(String.Format("{0} {1}", CMD_CERECORD, CERECORD_ToString()));                                                          // CERECORD  CultureInfo.CreateSpecificCulture("en-US")   Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+                list.Add(string.Format("{0} {1}", CMD_CEOUTPUT, CEOUTPUT.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                // CEOUTPUT
+                list.Add(String.Format("{0} {1}", CMD_CEPO, CEPO.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                        // CEPO
 
-                list.Add(String.Format("{0} {1}", CMD_CWS, CWS));                       // CWS
-                list.Add(String.Format("{0} {1}", CMD_CWT, CWT));                       // CWT
-                list.Add(String.Format("{0} {1}", CMD_CTD, CTD));                       // CTD
-                list.Add(String.Format("{0} {1}", CMD_CWSS, CWSS));                     // CWSS
-                list.Add(String.Format("{0} {1}", CMD_CHS, CHS_ToString()));            // CHS
-                list.Add(String.Format("{0} {1}", CMD_CHO, CHO));                       // CHO
+                list.Add(String.Format("{0} {1}", CMD_CWS, CWS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CWS
+                list.Add(String.Format("{0} {1}", CMD_CWT, CWT.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CWT
+                list.Add(String.Format("{0} {1}", CMD_CTD, CTD.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CTD
+                list.Add(String.Format("{0} {1}", CMD_CWSS, CWSS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                        // CWSS
+                list.Add(String.Format("{0} {1}", CMD_CHS, CHS_ToString()));                                                                    // CHS
+                list.Add(String.Format("{0} {1}", CMD_CHO, CHO.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CHO
 
-                list.Add(String.Format("{0} {1}", CMD_C232B, ((int)C232B).ToString())); // C232B
-                list.Add(String.Format("{0} {1}", CMD_C485B, ((int)C485B).ToString())); // C485B
-                list.Add(String.Format("{0} {1}", CMD_C422B, ((int)C422B).ToString())); // C485B
+                list.Add(String.Format("{0} {1}", CMD_C232B, ((int)C232B).ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // C232B
+                list.Add(String.Format("{0} {1}", CMD_C485B, ((int)C485B).ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // C485B
+                list.Add(String.Format("{0} {1}", CMD_C422B, ((int)C422B).ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // C485B
 
                 return list;
             }
@@ -2057,7 +2483,7 @@ namespace RTI
             {
                 List<string> list = new List<string>();
 
-                list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));        // CETFP
+                list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));                                                                // CETFP
 
                 return list;
             }
@@ -2068,25 +2494,34 @@ namespace RTI
             /// of the object.  It will also be 
             /// used to pass to the ADCP for all the 
             /// commands.
+            /// 
+            /// Put all the values in United States English format.
+            /// Other formats can use a comma instead of a decimal point for
+            /// decimal numbers.
             /// </summary>
             /// <returns>All the commands as a string.</returns>
             public override string ToString()
             {
                 string s = "";
 
-                s += Mode_ToString() + "\n";
-                s += GetTimeCommand() + "\n";
-                s += CMD_CEI + " " + CEI_ToString() + "\n";
+                s += Mode_ToString() + "\n";                                                                                                // Mode
+                s += GetTimeCommand() + "\n";                                                                                               // DateTime
+                s += CMD_CEI + " " + CEI_ToString() + "\n";                                                                                 // CEI
+                s += String.Format("{0} {1}\n", CMD_CETFP, CETFP_ToString());                                                               // CETFP
+                s += String.Format("{0} {1}\n", CMD_CERECORD, CERECORD_ToString());                                                         // CERECORD
+                s += String.Format("{0} {1}\n", CMD_CEOUTPUT, CEOUTPUT.ToString(CultureInfo.CreateSpecificCulture("en-US")));               // CERECORD
+                s += String.Format("{0} {1}\n", CMD_CEPO, CEPO.ToString(CultureInfo.CreateSpecificCulture("en-US")));                       // CEPO
 
-                s += CMD_CWS + " " + CWS + "\n";
-                s += CMD_CWT + " " + CWT + "\n";
-                s += CMD_CTD + " " + CTD + "\n";
-                s += CMD_CWSS + " " + CWSS + "\n";
-                s += CMD_CHS + " " + CHS_ToString() + "\n";
-                s += CMD_CHO + " " + CHO + "\n";
-
-                s += CMD_C232B + " " + ((int)C232B).ToString() + "\n";
-                s += CMD_C485B + " " + ((int)C485B).ToString() + "\n"; 
+                s += CMD_CWS + " " + CWS.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CWS
+                s += CMD_CWT + " " + CWT.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CWT
+                s += CMD_CTD + " " + CTD.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CTD
+                s += CMD_CWSS + " " + CWSS.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                     // CWSS
+                s += CMD_CHS + " " + CHS_ToString() + "\n";                                                                                 // CHS
+                s += CMD_CHO + " " + CHO.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CHO
+                
+                s += CMD_C232B + " " + ((int)C232B).ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                            // C232B
+                s += CMD_C485B + " " + ((int)C485B).ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                            // C485B
+                s += CMD_C422B + " " + ((int)C422B).ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                            // C422B
 
                 // Add the subsystem commands
 
@@ -2231,13 +2666,12 @@ namespace RTI
                             serial = elem[1];
                         }
                     }
+                }
 
-                    // Hardware
-                    if (lines.Length > 2)
-                    {
-                        hw = lines[1];
-                    }
-
+                // Hardware
+                if (lines.Length > 2)
+                {
+                    hw = lines[1];
                 }
 
                 // Return the break statement values
@@ -2404,7 +2838,7 @@ namespace RTI
             /// the ID will be left as Unknown.
             /// 
             /// Ex:
-            /// id = 50007  
+            /// id = 50007 or 50007-06
             /// rev = REV:XD1  
             /// serial = SER#010
             /// </summary>
@@ -2416,9 +2850,27 @@ namespace RTI
             {
                 I2cBoard board = new I2cBoard();
 
+                // Do nothing with the board frequency yet
+                string boardFreq = "";
+
                 // Try to parse the Board ID
                 // If there is an error return NULL
                 int boardId = 0;
+
+                // Newer boards will have a board ID and frequency
+                // This will convert the id if it contains the frequency also
+                if (id.Contains("-"))
+                {
+                    char[] delimiter = new char[]{'-'};
+                    string[] boardIdFreq = id.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                    if (boardIdFreq.Length >= 2)
+                    {
+                        id = boardIdFreq[0];                // Board ID
+                        boardFreq = boardIdFreq[1];         // Board Freq
+                    }
+                }
+
+                // Convert the board ID to int
                 if (int.TryParse(id, out boardId))
                 {
                     board.ID = (I2cBoardId)boardId;
@@ -2589,6 +3041,24 @@ namespace RTI
                 }
 
                 return listing;
+            }
+
+            #endregion
+
+            #region CSHOW
+
+            /// <summary>
+            /// Use the DecodeCSHOW decoder to decode the CSHOW command
+            /// result.  It will return an AdcpConfiguration with all the
+            /// Adcp configurations.
+            /// </summary>
+            /// <param name="buffer">Result string from CSHOW command.</param>
+            /// <param name="serial">Serial number for the system.</param>
+            /// <returns>AdcpConfiguration containing all the configurations found from CSHOW.</returns>
+            public static AdcpConfiguration DecodeCSHOW(string buffer, SerialNumber serial)
+            {
+                DecodeCSHOW decoder = new DecodeCSHOW();
+                return decoder.Decode(buffer, serial);
             }
 
             #endregion

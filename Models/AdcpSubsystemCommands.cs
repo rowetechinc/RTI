@@ -37,12 +37,26 @@
  *                                         Removed the CWPAI extra properties.
  *                                         Added method IsEnableCWPAI().
  * 02/10/2012      RC          2.02       Changed default values to match Adcp User Guide Rev F and CDEFAULT in firmware v0.2.04.
+ * 08/29/2012      RC          2.14       Added an default constructor.  This constructor is used when default values are not needed.
+ *                                         Check in SetFrequencyDefaults() if Subsystem is not null before setting the frequency default settings.
+ * 08/29/2012      RC          2.15       Changed how defaults are set to allow outside users to set the defaults with and without a subsystem set.
+ * 09/06/2012      RC          2.15       Update the commands to the ADCP manual Revision G.
+ * 09/10/2012      RC          2.15       Make 300Khz the default frequency if one is not set.
+ *                                         Bug in CBTMX command firmware.  Commented out so the user cannot send the setting for now.
+ * 09/26/2012      RC          2.15       Validate the values when settings.
+ *                                         Added CWPAP command.
+ * 10/03/2012      RC          2.15       Added CEPO Index property.  Give the CEPO index in the constructor.
+ * 10/04/2012      RC          2.15       Added CBI command.
+ * 10/10/2012      RC          2.15       When creating the command list, ensure the string is set to United States English format.  This is to prevent commas from being used for decimal points.
+ * 10/16/2012      RC          2.15       Validate the min and max values for the commands.
+ * 10/17/2012      RC          2.15       Added Min/Max values for the CWPAP commands.
  *
  */
 
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Globalization;
 namespace RTI
 {
     namespace Commands
@@ -68,13 +82,42 @@ namespace RTI
             public const string CMD_CWPON = "CWPON";
 
             /// <summary>
-            /// Water Profile Command: Broadband On/Off
+            /// Water Profile Command: Water Profile BroadBand.
             /// Parameter: N = 0 to 1
             /// 0=Disable 1=Enable. 
-            /// Enables or disables Water Profile boardband processing. 
-            /// Narrowband processing is used when broadband disabled
+            /// Enables or disables Water Profile boardband coded pulse transmission
+            /// and lag.
             /// </summary>
             public const string CMD_CWPBB = "CWPBB";
+
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Pulse to Pulse ping and processing is used for the
+            /// ambiguity resolver therefore (Blank + Bin Size) less than Lag
+            /// Parameters:
+            /// 1. 0 to 100 sets the number of pings that will be averaged together.
+            /// 2. Lag (meters) sets the length of the lag.
+            /// 3. Blank (meters) sets the starting position of the bin.
+            /// 4. Bin Size (meters).
+            /// 5. Time Between Ambiguity Pings (seconds).
+            /// </summary>
+            public const string CMD_CWPAP = "CWPAP";
+
+            /// <summary>
+            /// Water Profile Command: Water Profile Water Base Pings.
+            /// Parameter: n, t.t
+            /// n = 0 to 100.  Sets the number of pings that will be averaged together during each CWPP ping.
+            /// t.t = Time in seconds between the base pings.
+            /// </summary>
+            public const string CMD_CWPBP = "CWPBP";
+
+            /// <summary>
+            /// Water Profile Screening Thresholds.
+            /// Parameter: Correlation Threshold, Q Velocity Threshold, V Velocity Threshold.
+            /// Screen the water profile data.
+            /// </summary>
+            public const string CMD_CWPST = "CWPST";
 
             /// <summary>
             /// Water Profile Command: Blank
@@ -133,6 +176,15 @@ namespace RTI
             /// </summary>
             public const string CMD_CWPTBP = "CWPTBP";
 
+            /// <summary>
+            /// Burst Inteval Comand
+            /// Sets the Burst Interval values.
+            /// Parameter: HH:MM:SS.hh,n
+            /// HH:MM:SS.hh = Interval for the CBI to go off.
+            /// n = Number of ensembles to collect in a burst.
+            /// </summary>
+            public const string CMD_CBI = "CBI";
+
             #endregion
 
             #region Bottom Track
@@ -153,6 +205,19 @@ namespace RTI
             /// Narrowband processing is used when boardband is disabled
             /// </summary>
             public const string CMD_CBTBB = "CBTBB";
+
+
+            /// <summary>
+            /// Bottom Track Command: Bottom Track Screening Thresholds.
+            /// Parameters: Correlation Threshold, Q Velocity Threshold, V Velocity Threshold.
+            /// </summary>
+            public const string CMD_CBTST = "CBTST";
+
+            /// <summary>
+            /// Bottom Track Command: Bottom Track Thresholds.
+            /// Parameters: Shallow Detection Threshold, Depth Switch SNR, SNR deep detection threshold, Depth Switch Gain
+            /// </summary>
+            public const string CMD_CBTT = "CBTT";
 
             /// <summary>
             /// Bottom Track Command: Blank
@@ -226,14 +291,52 @@ namespace RTI
             #region Default Values
 
             /// <summary>
-            /// Default Bottom Track On.
+            /// Default CEPO index.  If there is only 1 subsystem and 1 configuration,
+            /// then the CEPO index would be 0.
             /// </summary>
-            public const bool DEFAULT_CBTON = true;
+            public const int DEFAULT_CEPO_INDEX = 0;
 
             /// <summary>
-            /// Default Water On.
+            /// Base Lag Length.  This is used for the 1200kHz system.
+            /// To get the Lag Length for other frequencies, multiple by
+            /// the scale factor for each frequency (RTI.Core.Commons.FREQ_DIV_1200/600/300/150...) 
+            /// vs the 1200kHz base frequency.
             /// </summary>
-            public const bool DEFAULT_CWTON = false;
+            public const float DEFAULT_LAG_LENGTH_BASE = 0.042f;
+
+            /// <summary>
+            /// Base Water Base Ping time in seconds.  This is used for the 1200kHz
+            /// system.  To get the Base Ping time for other frequencies, multiple
+            /// by the scale factor for each frequency (RTI.Core.Commons.FREQ_DIV_1200/600/300/150...) 
+            /// vs the 1200kHz base frequency.
+            /// </summary>
+            public const float DEFAULT_WATER_BASE_PING_TIME_BASE = 0.02f;
+
+            /// <summary>
+            /// Base Depth (m) at which the Bottom Track switches from using
+            /// the shallow to the deep SNR for the 1200kHz system.
+            /// To get the depth for other frequencies, multiple
+            /// by the scale factor for each frequency (RTI.Core.Commons.FREQ_DIV_1200/600/300/150...) 
+            /// vs the 1200kHz base frequency.
+            /// </summary>
+            public const float DEFAULT_DEPTH_SWITCH_SNR_BASE = 25.0f;
+
+            /// <summary>
+            /// Base Depth (m) at which the Bottom Track switches from low 
+            /// to high Gain receive for the 1200kHz system.
+            /// To get the depth for other frequencies, multiple
+            /// by the scale factor for each frequency (RTI.Core.Commons.FREQ_DIV_1200/600/300/150...) 
+            /// vs the 1200kHz base frequency.
+            /// </summary>
+            public const float DEFAULT_DEPTH_SWITCH_GAIN_BASE = 2.0f;
+
+            /// <summary>
+            /// Default number of ensembles for CBI command.
+            /// Also the value to disable the command.
+            /// </summary>
+            public const UInt16 DEFAULT_CBI_NUM_ENS = 0;
+
+            #region Water Profile
 
             /// <summary>
             /// Default Water Profile On.
@@ -241,19 +344,89 @@ namespace RTI
             public const bool DEFAULT_CWPON = true;
 
             /// <summary>
-            /// Default Bottom Track Broadband.
+            /// Default Water Profile Broadband Transmit Pulse Type.
             /// </summary>
-            public const bool DEFAULT_CBTBB = false;
+            public const eCWPBB_TransmitPulseType DEFAULT_CWPBB_TRANSMITPULSETYPE = eCWPBB_TransmitPulseType.BROADBAND;
+
+            /// <summary>
+            /// Default Water Profile Screening Threshold Correlation Threshold value.
+            /// </summary>
+            public const float DEFAULT_CWPST_CORR_THRESH = 0.400f;
+
+            /// <summary>
+            /// Default Water Profile Screening Threshold Q Velocity Threshold value.
+            /// </summary>
+            public const float DEFAULT_CWPST_QVEL_THRESH = 1.000f;
+
+            /// <summary>
+            /// Default Water Profile Screening Threshold V Velocity Threshold value.
+            /// </summary>
+            public const float DEFAULT_CWPST_VVEL_THRESH = 1.000f;
+
+            /// <summary>
+            /// Default Water Profile Water Base Pings Number of Pings averaged together.
+            /// </summary>
+            public const int DEFAULT_CWPBP_NUM_PING_AVG = 1;
+
+            #endregion
+
+            #region Bottom Track
+
+            /// <summary>
+            /// Default Bottom Track On.
+            /// </summary>
+            public const bool DEFAULT_CBTON = true;
+
+            /// <summary>
+            /// Default Bottom Track Broadband Transmit Mode.
+            /// </summary>
+            public const eCBTBB_Mode DEFAULT_CBTBB_MODE = eCBTBB_Mode.NARROWBAND_LONG_RANGE;
+
+            /// <summary>
+            /// Default Bottom Track Broadband Pulse To Pulse Lag in meters.
+            /// </summary>
+            public const float DEFAULT_CBTBB_PULSETOPULSE_LAG = 0.00f;
+
+            /// <summary>
+            /// Default Bottom Track Correlation Threshold.
+            /// </summary>
+            public const float DEFAULT_CBTST_CORR_THRESH = 0.900f;
+
+            /// <summary>
+            /// Default Bottom Track Q Velocity Threshold in meters per second.
+            /// </summary>
+            public const float DEFAULT_CBTST_QVEL_THRESHOLD = 1.000f;
+
+            /// <summary>
+            /// Default Bottom Track V Velocity Threshold in meters per second.
+            /// </summary>
+            public const float DEFAULT_CBTST_VVEL_THRESHOLD = 1.000f;
+
+            /// <summary>
+            /// Default Bottom Track Thresholds SNR (dB) shallow detection threshold.
+            /// </summary>
+            public const float DEFAULT_CBTT_SNR_SHALLOW_DET_THRESHOLD = 15.0f;
+
+            /// <summary>
+            /// Default Bottom Track Thresholds SNR (dB) deep detection threshold.
+            /// </summary>
+            public const float DEFAULT_CBTT_SNR_DEEP_DET_THRESHOLD = 5;
+
+            #endregion
+
+            #region Water Track
+
+            /// <summary>
+            /// Default Water On.
+            /// </summary>
+            public const bool DEFAULT_CWTON = false;
 
             /// <summary>
             /// Default Water Track Broadband.
             /// </summary>
             public const bool DEFAULT_CWTBB = false;
 
-            /// <summary>
-            /// Default Water Profile Broadband.
-            /// </summary>
-            public const bool DEFAULT_CWPBB = true;
+            #endregion
 
             #region Default 38 kHz
 
@@ -316,6 +489,61 @@ namespace RTI
             /// Default 40khz Water Profile Number of pings (1 pings averaged per ensemble).
             /// </summary>
             public const int DEFAULT_38_CWPP = 1;
+
+            /// <summary>
+            /// Default 20kHz Water Profile Broadband Lag Length.  Lag Length is based off the lag length base
+            /// and the frequency divsor.
+            /// </summary>
+            public const float DEFAULT_38_CWPBB_LAGLENGTH = DEFAULT_LAG_LENGTH_BASE * RTI.Core.Commons.FREQ_DIV_38;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Water Base Ping Time.  Water Base Ping time is based off the
+            /// Water Base Ping base value and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_38_CWPBP_WATER_BASE_PING_TIME = DEFAULT_WATER_BASE_PING_TIME_BASE * RTI.Core.Commons.FREQ_DIV_38;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Bottom Track Broadband Long Range Depth.
+            /// </summary>
+            public const float DEFAULT_38_CBTBB_LONGRANGEDEPTH = 1000.0f;
+
+            /// <summary>
+            /// Default 38kHz Bottom Track Thresholds Depth (m) at which the bottom Track switches from using the
+            /// shallow to the deep SNR.
+            /// </summary>
+            public const float DEFAULT_38_CBTT_DEPTH_SNR = DEFAULT_DEPTH_SWITCH_SNR_BASE * RTI.Core.Commons.FREQ_DIV_38;
+
+            /// <summary>
+            /// Default 38kHz Bottom Track Threshold Depth (m) at which the Bottom Track switches from low to high
+            /// gain receive.
+            /// </summary>
+            public const float DEFAULT_38_CBTT_DEPTH_GAIN = DEFAULT_DEPTH_SWITCH_GAIN_BASE * RTI.Core.Commons.FREQ_DIV_38;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Water Ambiguity Ping Number of pings that will be averaged together.
+            /// </summary>
+            public const int DEFAULT_38_CWPAP_NUMOFPINGSAVG = 0;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Water Ambiguity Ping Lag (meters).
+            /// </summary>
+            public const float DEFAULT_38_CWPAP_LAG = 0.00f;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Water Ambiguity Ping Blank (meters).
+            /// </summary>
+            public const float DEFAULT_38_CWPAP_BLANK = 0.00f;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Water Ambiguity Ping Bin Size (meters).
+            /// </summary>
+            public const float DEFAULT_38_CWPAP_BINSIZE = 0.00f;
+
+            /// <summary>
+            /// Default 38kHz Water Profile Water Ambiguity Ping Time Between Pings (seconds).
+            /// </summary>
+            public const float DEFAULT_38_CWPAP_TIME_BETWEEN_PINGS = 0.00f;
+
             #endregion
 
             #region Default 75 kHz
@@ -378,6 +606,61 @@ namespace RTI
             /// Default 80khz Water Profile Number of pings (1 pings averaged per ensemble).
             /// </summary>
             public const int DEFAULT_75_CWPP = 1;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Broadband Lag Length.  Lag Length is based off the lag length base
+            /// and the frequency divsor.
+            /// </summary>
+            public const float DEFAULT_75_CWPBB_LAGLENGTH = DEFAULT_LAG_LENGTH_BASE * RTI.Core.Commons.FREQ_DIV_75;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Water Base Ping Time.  Water Base Ping time is based off the
+            /// Water Base Ping base value and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_75_CWPBP_WATER_BASE_PING_TIME = DEFAULT_WATER_BASE_PING_TIME_BASE * RTI.Core.Commons.FREQ_DIV_75;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Bottom Track Broadband Long Range Depth.
+            /// </summary>
+            public const float DEFAULT_75_CBTBB_LONGRANGEDEPTH = 600.0f;
+
+            /// <summary>
+            /// Default 80kHz Bottom Track Thresholds Depth (m) at which the bottom Track switches from using the
+            /// shallow to the deep SNR.
+            /// </summary>
+            public const float DEFAULT_75_CBTT_DEPTH_SNR = DEFAULT_DEPTH_SWITCH_SNR_BASE * RTI.Core.Commons.FREQ_DIV_75;
+
+            /// <summary>
+            /// Default 80kHz Bottom Track Threshold Depth (m) at which the Bottom Track switches from low to high
+            /// gain receive.
+            /// </summary>
+            public const float DEFAULT_75_CBTT_DEPTH_GAIN = DEFAULT_DEPTH_SWITCH_GAIN_BASE * RTI.Core.Commons.FREQ_DIV_75;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Water Ambiguity Ping Number of pings that will be averaged together.
+            /// </summary>
+            public const int DEFAULT_75_CWPAP_NUMOFPINGSAVG = 0;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Water Ambiguity Ping Lag (meters).
+            /// </summary>
+            public const float DEFAULT_75_CWPAP_LAG = 0.00f;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Water Ambiguity Ping Blank (meters).
+            /// </summary>
+            public const float DEFAULT_75_CWPAP_BLANK = 0.00f;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Water Ambiguity Ping Bin Size (meters).
+            /// </summary>
+            public const float DEFAULT_75_CWPAP_BINSIZE = 0.00f;
+
+            /// <summary>
+            /// Default 80kHz Water Profile Water Ambiguity Ping Time Between Pings (seconds).
+            /// </summary>
+            public const float DEFAULT_75_CWPAP_TIME_BETWEEN_PINGS = 0.00f;
+
             #endregion
 
             #region Default 150 kHz
@@ -440,6 +723,61 @@ namespace RTI
             /// Default 160khz Water Profile Number of pings (2 pings averaged per ensemble).
             /// </summary>
             public const int DEFAULT_150_CWPP = 1;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Broadband Lag Length.  Lag Length is based off the lag length base
+            /// and the frequency divsor.
+            /// </summary>
+            public const float DEFAULT_150_CWPBB_LAGLENGTH = DEFAULT_LAG_LENGTH_BASE * RTI.Core.Commons.FREQ_DIV_150;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Water Base Ping Time.  Water Base Ping time is based off the
+            /// Water Base Ping base value and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_150_CWPBP_WATER_BASE_PING_TIME = DEFAULT_WATER_BASE_PING_TIME_BASE * RTI.Core.Commons.FREQ_DIV_150;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Bottom Track Broadband Long Range Depth.
+            /// </summary>
+            public const float DEFAULT_150_CBTBB_LONGRANGEDEPTH = 300.0f;
+
+            /// <summary>
+            /// Default 160kHz Bottom Track Thresholds Depth (m) at which the bottom Track switches from using the
+            /// shallow to the deep SNR.
+            /// </summary>
+            public const float DEFAULT_150_CBTT_DEPTH_SNR = DEFAULT_DEPTH_SWITCH_SNR_BASE * RTI.Core.Commons.FREQ_DIV_150;
+
+            /// <summary>
+            /// Default 160kHz Bottom Track Threshold Depth (m) at which the Bottom Track switches from low to high
+            /// gain receive.
+            /// </summary>
+            public const float DEFAULT_150_CBTT_DEPTH_GAIN = DEFAULT_DEPTH_SWITCH_GAIN_BASE * RTI.Core.Commons.FREQ_DIV_150;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Water Ambiguity Ping Number of pings that will be averaged together.
+            /// </summary>
+            public const int DEFAULT_150_CWPAP_NUMOFPINGSAVG = 0;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Water Ambiguity Ping Lag (meters).
+            /// </summary>
+            public const float DEFAULT_150_CWPAP_LAG = 0.00f;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Water Ambiguity Ping Blank (meters).
+            /// </summary>
+            public const float DEFAULT_150_CWPAP_BLANK = 0.00f;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Water Ambiguity Ping Bin Size (meters).
+            /// </summary>
+            public const float DEFAULT_150_CWPAP_BINSIZE = 0.00f;
+
+            /// <summary>
+            /// Default 160kHz Water Profile Water Ambiguity Ping Time Between Pings (seconds).
+            /// </summary>
+            public const float DEFAULT_150_CWPAP_TIME_BETWEEN_PINGS = 0.00f;
+
             #endregion
 
             #region Default 300 kHz
@@ -502,6 +840,61 @@ namespace RTI
             /// Default 320khz Water Profile Number of pings (1 pings averaged per ensemble).
             /// </summary>
             public const int DEFAULT_300_CWPP = 1;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Broadband Lag Length.  Lag Length is based off the lag length base
+            /// and the frequency divsor.
+            /// </summary>
+            public const float DEFAULT_300_CWPBB_LAGLENGTH = DEFAULT_LAG_LENGTH_BASE * RTI.Core.Commons.FREQ_DIV_300;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Water Base Ping Time.  Water Base Ping time is based off the
+            /// Water Base Ping base value and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_300_CWPBP_WATER_BASE_PING_TIME = DEFAULT_WATER_BASE_PING_TIME_BASE * RTI.Core.Commons.FREQ_DIV_300;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Bottom Track Broadband Long Range Depth.
+            /// </summary>
+            public const float DEFAULT_300_CBTBB_LONGRANGEDEPTH = 150.0f;
+
+            /// <summary>
+            /// Default 320kHz Bottom Track Thresholds Depth (m) at which the bottom Track switches from using the
+            /// shallow to the deep SNR.
+            /// </summary>
+            public const float DEFAULT_300_CBTT_DEPTH_SNR = DEFAULT_DEPTH_SWITCH_SNR_BASE * RTI.Core.Commons.FREQ_DIV_300;
+
+            /// <summary>
+            /// Default 320kHz Bottom Track Threshold Depth (m) at which the Bottom Track switches from low to high
+            /// gain receive.
+            /// </summary>
+            public const float DEFAULT_300_CBTT_DEPTH_GAIN = DEFAULT_DEPTH_SWITCH_GAIN_BASE * RTI.Core.Commons.FREQ_DIV_300;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Water Ambiguity Ping Number of pings that will be averaged together.
+            /// </summary>
+            public const int DEFAULT_300_CWPAP_NUMOFPINGSAVG = 0;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Water Ambiguity Ping Lag (meters).
+            /// </summary>
+            public const float DEFAULT_300_CWPAP_LAG = 0.00f;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Water Ambiguity Ping Blank (meters).
+            /// </summary>
+            public const float DEFAULT_300_CWPAP_BLANK = 0.00f;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Water Ambiguity Ping Bin Size (meters).
+            /// </summary>
+            public const float DEFAULT_300_CWPAP_BINSIZE = 0.00f;
+
+            /// <summary>
+            /// Default 320kHz Water Profile Water Ambiguity Ping Time Between Pings (seconds).
+            /// </summary>
+            public const float DEFAULT_300_CWPAP_TIME_BETWEEN_PINGS = 0.00f;
+
             #endregion
 
             #region Default 600 kHz
@@ -564,6 +957,61 @@ namespace RTI
             /// Default 640khz Water Profile Number of pings (1 pings averaged per ensemble).
             /// </summary>
             public const int DEFAULT_600_CWPP = 1;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Broadband Lag Length.  Lag Length is based off the lag length base
+            /// and the frequency divsor.
+            /// </summary>
+            public const float DEFAULT_600_CWPBB_LAGLENGTH = DEFAULT_LAG_LENGTH_BASE * RTI.Core.Commons.FREQ_DIV_600;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Water Base Ping Time.  Water Base Ping time is based off the
+            /// Water Base Ping base value and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_600_CWPBP_WATER_BASE_PING_TIME = DEFAULT_WATER_BASE_PING_TIME_BASE * RTI.Core.Commons.FREQ_DIV_600;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Bottom Track Broadband Long Range Depth.
+            /// </summary>
+            public const float DEFAULT_600_CBTBB_LONGRANGEDEPTH = 50.0f;
+
+            /// <summary>
+            /// Default 640kHz Bottom Track Thresholds Depth (m) at which the bottom Track switches from using the
+            /// shallow to the deep SNR.
+            /// </summary>
+            public const float DEFAULT_600_CBTT_DEPTH_SNR = DEFAULT_DEPTH_SWITCH_SNR_BASE * RTI.Core.Commons.FREQ_DIV_600;
+
+            /// <summary>
+            /// Default 640kHz Bottom Track Threshold Depth (m) at which the Bottom Track switches from low to high
+            /// gain receive.
+            /// </summary>
+            public const float DEFAULT_600_CBTT_DEPTH_GAIN = DEFAULT_DEPTH_SWITCH_GAIN_BASE * RTI.Core.Commons.FREQ_DIV_600;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Water Ambiguity Ping Number of pings that will be averaged together.
+            /// </summary>
+            public const int DEFAULT_600_CWPAP_NUMOFPINGSAVG = 0;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Water Ambiguity Ping Lag (meters).
+            /// </summary>
+            public const float DEFAULT_600_CWPAP_LAG = 0.00f;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Water Ambiguity Ping Blank (meters).
+            /// </summary>
+            public const float DEFAULT_600_CWPAP_BLANK = 0.00f;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Water Ambiguity Ping Bin Size (meters).
+            /// </summary>
+            public const float DEFAULT_600_CWPAP_BINSIZE = 0.00f;
+
+            /// <summary>
+            /// Default 640kHz Water Profile Water Ambiguity Ping Time Between Pings (seconds).
+            /// </summary>
+            public const float DEFAULT_600_CWPAP_TIME_BETWEEN_PINGS = 0.00f;
+
             #endregion
 
             #region Default 1.2 MHz
@@ -626,6 +1074,61 @@ namespace RTI
             /// Default 1.2 MHz Water Profile Number of pings (1 pings averaged per ensemble).
             /// </summary>
             public const int DEFAULT_1200_CWPP = 1;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Broadband Lag Length.  Lag Length is based off the lag length base
+            /// and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_1200_CWPBB_LAGLENGTH = DEFAULT_LAG_LENGTH_BASE * RTI.Core.Commons.FREQ_DIV_1200;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Water Base Ping Time.  Water Base Ping time is based off the
+            /// Water Base Ping base value and the frequency divisor.
+            /// </summary>
+            public const float DEFAULT_1200_CWPBP_WATER_BASE_PING_TIME = DEFAULT_WATER_BASE_PING_TIME_BASE * RTI.Core.Commons.FREQ_DIV_1200;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Bottom Track Broadband Long Range Depth.
+            /// </summary>
+            public const float DEFAULT_1200_CBTBB_LONGRANGEDEPTH = 30.0f;
+
+            /// <summary>
+            /// Default 1.2 MHz Bottom Track Thresholds Depth (m) at which the bottom Track switches from using the
+            /// shallow to the deep SNR.
+            /// </summary>
+            public const float DEFAULT_1200_CBTT_DEPTH_SNR = DEFAULT_DEPTH_SWITCH_SNR_BASE * RTI.Core.Commons.FREQ_DIV_1200;
+
+            /// <summary>
+            /// Default 1.2 MHz Bottom Track Threshold Depth (m) at which the Bottom Track switches from low to high
+            /// gain receive.
+            /// </summary>
+            public const float DEFAULT_1200_CBTT_DEPTH_GAIN = DEFAULT_DEPTH_SWITCH_GAIN_BASE * RTI.Core.Commons.FREQ_DIV_1200;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Water Ambiguity Ping Number of pings that will be averaged together.
+            /// </summary>
+            public const int DEFAULT_1200_CWPAP_NUMOFPINGSAVG = 10;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Water Ambiguity Ping Lag (meters).
+            /// </summary>
+            public const float DEFAULT_1200_CWPAP_LAG = 0.15f;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Water Ambiguity Ping Blank (meters).
+            /// </summary>
+            public const float DEFAULT_1200_CWPAP_BLANK = 0.06f;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Water Ambiguity Ping Bin Size (meters).
+            /// </summary>
+            public const float DEFAULT_1200_CWPAP_BINSIZE = 0.04f;
+
+            /// <summary>
+            /// Default 1.2 MHz Water Profile Water Ambiguity Ping Time Between Pings (seconds).
+            /// </summary>
+            public const float DEFAULT_1200_CWPAP_TIME_BETWEEN_PINGS = 0.01f;
+
             #endregion
 
             #endregion
@@ -633,94 +1136,256 @@ namespace RTI
             #region Min Max Values
 
             /// <summary>
+            /// Minimum CWPBB Lag Length.
+            /// </summary>
+            public const float MIN_CWPBB_LAGLENGTH = 0.0f;
+
+            /// <summary>
+            /// Maximum CWPBB Lag Length.
+            /// So far the 38kHz system has the greatest lag length.
+            /// </summary>
+            public const float MAX_CWPBB_LAGLENGTH = DEFAULT_38_CWPBB_LAGLENGTH;
+
+            /// <summary>
+            /// Minimum number of Pings averaged together in CWPAP.
+            /// </summary>
+            public const UInt16 MIN_CWPAP_NUMPINGS = 0;
+
+            /// <summary>
+            /// Maximum number of Pings averaged together in CWPAP.
+            /// </summary>
+            public const UInt16 MAX_CWPAP_NUMPINGS = 100;
+
+            /// <summary>
+            /// Minimum Lag in meters in CWPAP.
+            /// </summary>
+            public const float MIN_CWPAP_LAG = 0.0f;
+
+            /// <summary>
+            /// Maximum Lag in meters in CWPAP.
+            /// Use the same max as CWPBB lag.
+            /// </summary>
+            public const float MAX_CWPAP_LAG = MAX_CWPBB_LAGLENGTH;
+
+            /// <summary>
+            /// Minimum Blank in meters in CWPAP.
+            /// </summary>
+            public const float MIN_CWPAP_BLANK = 0.0f;
+
+            /// <summary>
+            /// Maximum Blank in meters in CWPAP.
+            /// Use the same max as CWPBL.
+            /// </summary>
+            public const float MAX_CWPAP_BLANK = MAX_CWPBL;
+
+            /// <summary>
+            /// Minimum Bin Size in meters in CWPAP.
+            /// </summary>
+            public const float MIN_CWPAP_BINSIZE = 0.0f;
+
+            /// <summary>
+            /// Maximum Bin Size in meters in CWPAP.
+            /// Use the same max as CWPBS.
+            /// </summary>
+            public const float MAX_CWPAP_BINSIZE = MAX_CWPBS;
+
+            /// <summary>
+            /// Minimum time between pings in seconds in CWPAP.
+            /// </summary>
+            public const float MIN_CWPAP_TIME_BETWEEN_PING = 0.0f;
+
+            /// <summary>
+            /// Maximum time between pings in seconds in CWPAP.
+            /// Use the max for CWPTBP.
+            /// </summary>
+            public const float MAX_CWPAP_TIME_BETWEEN_PING = MAX_CWPTBP;
+
+            /// <summary>
+            /// Mimimum CWPST Correlation Threshold value.
+            /// </summary>
+            public const float MIN_CWPST_CORR_THRESH = 0.0f;
+
+            /// <summary>
+            /// Maximum CWPST Correlation Threshold value.
+            /// </summary>
+            public const float MAX_CWPST_CORR_THRESH = 1.0f;
+
+            /// <summary>
+            /// Minimum CWPST Q Velocity Threshold value.
+            /// </summary>
+            public const float MIN_CWPST_Q_VELOCITY_THRESH = 0.0f;
+
+            /// <summary>
+            /// Minimum CWPST V Velocity Threshold value.
+            /// </summary>
+            public const float MIN_CWPST_V_VELOCITY_THRESH = 0.0f;
+
+            /// <summary>
+            /// Water Base Pings Number of pings to average togheter minimum.
+            /// </summary>
+            public const UInt16 MIN_CWPBP_NUM_PING = 0;
+
+            /// <summary>
+            /// Water Base Ping Minumim number of time between pings.
+            /// </summary>
+            public const float MIN_CWPBP_TIME_BETWEEN_PINGS = 0.0f;
+
+            /// <summary>
+            /// Water Base Ping Maximum number of time between pings.
+            /// Use the same max as CWPTBP.
+            /// </summary>
+            public const float MAX_CWPBP_TIME_BETWEEN_PINGS = MAX_CWPTBP;
+
+            /// <summary>
+            /// Water Base Pings Number of pings to average togheter minimum.
+            /// </summary>
+            public const UInt16 MAX_CWPBP_NUM_PING = 100;
+
+            /// <summary>
+            /// Mimimum CWPST Correlation Threshold value.
+            /// </summary>
+            public const float MIN_CBTST_CORR_THRESH = 0.0f;
+
+            /// <summary>
+            /// Maximum CWPST Correlation Threshold value.
+            /// </summary>
+            public const float MAX_CBTST_CORR_THRESH = 1.0f;
+
+            /// <summary>
+            /// Minimum Q Velocity Threshold in CBTST.
+            /// </summary>
+            public const float MIN_CBTST_QVEL_THRESH = 0.0f;
+
+            /// <summary>
+            /// Minimum Q Velocity Threshold in CBTST.
+            /// </summary>
+            public const float MIN_CBTST_VVEL_THRESH = 0.0f;
+
+            /// <summary>
+            /// Minimum SNR Shallow Detection Threshold for CBTT in dB.
+            /// </summary>
+            public const float MIN_CBTT_SNR_SHALLOW_THRESH = 0.0f;
+
+            /// <summary>
+            /// Minimum depth for SNR switch in meters.
+            /// </summary>
+            public const float MIN_CBTT_DEPTH_SNR = 0.0f;
+
+            /// <summary>
+            /// Minimum SNR Deep Detection Threshold for CBTT in dB.
+            /// </summary>
+            public const float MIN_CBTT_SNR_DEEP_THRESH = 0.0f;
+
+            /// <summary>
+            /// Minimum depth for Gain switch in meters.
+            /// </summary>
+            public const float MIN_CBTT_DEPTH_GAIN = 0.0f;
+
+            /// <summary>
             /// Minimum BT Time Between Ping.
             /// </summary>
-            public const double MIN_CBTTBP = 0.0;
+            public const float MIN_CBTTBP = 0.0f;
 
             /// <summary>
             /// Maximum BT Time Between Ping.
             /// </summary>
-            public const double MAX_CBTTBP = 86400.0;
+            public const float MAX_CBTTBP = 86400.0f;
 
             /// <summary>
             /// Minimum Water Track Time Between Ping.
             /// </summary>
-            public const double MIN_CWTTBP = 0.0;
+            public const float MIN_CWTTBP = 0.0f;
 
             /// <summary>
             /// Maximum Water Track Time Between Ping.
             /// </summary>
-            public const double MAX_CWTTBP = 86400.0;
+            public const float MAX_CWTTBP = 86400.0f;
 
             /// <summary>
             /// Minimum Water Profile Time Between Ping.
             /// </summary>
-            public const double MIN_CWPTBP = 0.0;
+            public const float MIN_CWPTBP = 0.0f;
 
             /// <summary>
             /// Maximum Water Profile Time Between Ping.
             /// </summary>
-            public const double MAX_CWPTBP = 86400.0;
+            public const float MAX_CWPTBP = 86400.0f;
+
+            /// <summary>
+            /// Mininimum number of ensembles for CBI command.
+            /// Also value to disable the command.
+            /// </summary>
+            public const UInt16 MIN_CBI_NUM_ENS = 0;
 
             /// <summary>
             /// Minimum BT Blank.
             /// </summary>
-            public const double MIN_CBTBL = 0.0;
+            public const float MIN_CBTBL = 0.0f;
 
             /// <summary>
             /// Maximum BT Blank.
             /// </summary>
-            public const double MAX_CBTBL = 10.0;
+            public const float MAX_CBTBL = 10.0f;
 
             /// <summary>
             /// Minimum WT Blank.
             /// </summary>
-            public const double MIN_CWTBL = 0.0;
+            public const float MIN_CWTBL = 0.0f;
 
             /// <summary>
             /// Maximum WT Blank.
             /// </summary>
-            public const double MAX_CWTBL = 100.0;
+            public const float MAX_CWTBL = 100.0f;
 
             /// <summary>
             /// Minimum WP Blank.
             /// </summary>
-            public const double MIN_CWPBL = 0.0;
+            public const float MIN_CWPBL = 0.0f;
 
             /// <summary>
             /// Maximum WP Blank.
             /// </summary>
-            public const double MAX_CWPBL = 100.0;
+            public const float MAX_CWPBL = 100.0f;
+
+            /// <summary>
+            /// Minimum Pulse To Pulse Lag in CBTBB.
+            /// </summary>
+            public const float MIN_CBTBB_PULSETOPULSE_LAG = 0.0f;
+
+            /// <summary>
+            /// Minimum Long Range Depth in CBTBB.
+            /// </summary>
+            public const float MIN_CBTBB_LONGRANGEDEPTH = 0.0f;
 
             /// <summary>
             /// Minimum BT maximum Depth.
             /// </summary>
-            public const double MIN_CBTMX = 5.0;
+            public const float MIN_CBTMX = 5.0f;
 
             /// <summary>
             /// Maximum BT maximum Depth.
             /// </summary>
-            public const double MAX_CBTMX = 10000;
+            public const float MAX_CBTMX = 10000f;
 
             /// <summary>
             /// Minimum Water Track Bin size.
             /// </summary>
-            public const double MIN_CWTBS = 0.05;
+            public const float MIN_CWTBS = 0.05f;
 
             /// <summary>
             /// Maximum Water Track Bin size.
             /// </summary>
-            public const double MAX_CWTBS = 64.0;
+            public const float MAX_CWTBS = 64.0f;
 
             /// <summary>
             /// Minimum Water Profile Bin size.
             /// </summary>
-            public const double MIN_CWPBS = 0.01;
+            public const float MIN_CWPBS = 0.01f;
 
             /// <summary>
             /// Maximum Water Profile Bin size.
             /// </summary>
-            public const double MAX_CWPBS = 100.0;
+            public const float MAX_CWPBS = 100.0f;
 
             /// <summary>
             /// Minimum Water Profile Number of bins.
@@ -745,12 +1410,51 @@ namespace RTI
             /// <summary>
             /// Minimum Water Profile Transmit (Use cell size).
             /// </summary>
-            public const double MIN_CWPX = 0.0;
+            public const float MIN_CWPX = 0.0f;
 
             /// <summary>
             /// Maximum Water Profile Transmit.
             /// </summary>
-            public const double MAX_CWPX = 100.0;
+            public const float MAX_CWPX = 100.0f;
+
+            #endregion
+
+            #region Number of Parameters Per Command
+
+            /// <summary>
+            /// NUmber of parameters for the CWPBB command.
+            /// </summary>
+            public const int CWPBB_NUM_PARAM = 2;
+
+            /// <summary>
+            /// Number of parameters for the CWPAP command.
+            /// </summary>
+            public const int CWPAP_NUM_PARAM = 5;
+
+            /// <summary>
+            /// Number of parameters for the CWPST command.
+            /// </summary>
+            public const int CWPST_NUM_PARAM = 3;
+
+            /// <summary>
+            /// Number of parameters for the CWPBL command.
+            /// </summary>
+            public const int CWPBP_NUM_PARAM = 2;
+
+            /// <summary>
+            /// Number of parameters for the CBTBB command.
+            /// </summary>
+            public const int CBTBB_NUM_PARAM = 3;
+
+            /// <summary>
+            /// Number of parameters for the CBTT command.
+            /// </summary>
+            public const int CBTT_NUM_PARAM = 4;
+
+            /// <summary>
+            /// Number of parameters for the CBI command.
+            /// </summary>
+            public const int CBI_NUM_PARAM = 2;
 
             #endregion
 
@@ -784,30 +1488,492 @@ namespace RTI
                 return "0";
             }
 
-            /// <summary>
-            /// Water Profile Broad Band. 
-            /// Enables or disables Water Profile boardband processing. 
-            /// Narrowband processing is used when broadband disabled
-            /// 
-            /// Command: CWPBB N \r
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
-            /// </summary>
-            public bool CWPBB { get; set; }
+            #region Transmit Pulse Type
 
             /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
+            /// Water Profile Broadband Pulse Types.
             /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CWPBB_ToString()
+            public enum eCWPBB_TransmitPulseType
             {
-                if (CWPBB)
-                {
-                    return "1";
-                }
+                /// <summary>
+                /// (0) Non-Coded Narrowband.
+                /// Provides long range profiles at the expense of variance.
+                /// </summary>
+                NARROWBAND = 0, 
 
-                return "0";
+                /// <summary>
+                /// (1) Coded Broadband.
+                /// Typically 15% less range than narrow band but has greatly reduced
+                /// variance (depending on lag length).
+                /// </summary>
+                BROADBAND = 1,
+
+                /// <summary>
+                /// (2) Non-Coded Pulse-To-Pulse.
+                /// Provides ultra low variance for small bin sizes.
+                /// Non-coded has slightly higher variance than the coded
+                /// transmit without the annoying autocorrelation side peaks.
+                /// </summary>
+                PULSE_TO_PULSE_NON_CODED = 2,
+
+                /// <summary>
+                /// (3) Coded Pulse-To-Pulse.
+                /// Provides ultra low variance for small bin sizes.  Coded 
+                /// has slightly lower variance than the non-coded transmit.
+                /// </summary>
+                PULSE_TO_PULSE_CODED  = 3,
+            }
+
+            /// <summary>
+            /// String for Transmit Pulse Type Narrowband.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_NARROWBAND = "NarrowBand";
+
+            /// <summary>
+            /// String for Transmit Pulse Type Broadband.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_BROADBAND = "BroadBand";
+
+            /// <summary>
+            /// String for Transmit Pulse Type Pulse to Pulse Non-Coded.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_PTP_NONCODED = "Pulse to Pulse Non-Coded";
+
+            /// <summary>
+            /// String for Transmit Pulse Type Pulse to Pulse Coded.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_PTP_CODED = "Pulse to Pulse Coded";
+
+            /// <summary>
+            /// Create a list for all the Transmit Pulse types.
+            /// </summary>
+            /// <returns>A list of all the Transmit Pulse types.</returns>
+            public static List<string> GetCwpbbTransmitPulseTypeList()
+            {
+                List<string> list = new List<string>();
+                list.Add(TRANSMIT_PULSE_TYPE_NARROWBAND);
+                list.Add(TRANSMIT_PULSE_TYPE_BROADBAND);
+                list.Add(TRANSMIT_PULSE_TYPE_PTP_NONCODED);
+                list.Add(TRANSMIT_PULSE_TYPE_PTP_CODED);
+
+                return list;
+            }
+
+            /// <summary>
+            /// Set the Water Profile Broadband transmit pulse type based off
+            /// the string given.  The string should have been found from the list
+            /// created with GetCwpbbTransmitPulseTypeList().  The default value is
+            /// set by DEFAULT_CWPBB_TRANSMITPULSETYPE.
+            /// </summary>
+            /// <param name="type">String for the Transmit Pulse type.</param>
+            public void SetCwpbbTransmitPulseType(string type)
+            {
+                switch(type)
+                {
+                    case TRANSMIT_PULSE_TYPE_NARROWBAND:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.NARROWBAND;
+                        break;
+                    case TRANSMIT_PULSE_TYPE_BROADBAND:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.BROADBAND;
+                        break;
+                    case TRANSMIT_PULSE_TYPE_PTP_NONCODED:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
+                        break;
+                    case TRANSMIT_PULSE_TYPE_PTP_CODED:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+                        break;
+                    default:
+                        CWPBB_TransmitPulseType = DEFAULT_CWPBB_TRANSMITPULSETYPE;
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Get the Transmit Pulse Type as a string based off the
+            /// current selection.
+            /// </summary>
+            /// <returns>String for the Transmit Pulse Type.</returns>
+            public string GetCwpbbTransmitPulseType()
+            {
+                switch(CWPBB_TransmitPulseType)
+                {
+                    case eCWPBB_TransmitPulseType.NARROWBAND:
+                        return TRANSMIT_PULSE_TYPE_NARROWBAND;
+                    case eCWPBB_TransmitPulseType.BROADBAND:
+                        return TRANSMIT_PULSE_TYPE_BROADBAND;
+                    case eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED:
+                        return TRANSMIT_PULSE_TYPE_PTP_NONCODED;
+                    case eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED:
+                        return TRANSMIT_PULSE_TYPE_PTP_CODED;
+                    default:
+                        return TRANSMIT_PULSE_TYPE_BROADBAND;
+                }
+            }
+
+            /// <summary>
+            /// Based off the type given as a string, return the correct enum value.
+            /// The default value is Broadband.
+            /// </summary>
+            /// <param name="type">Water Profile Transmit Pulse type as a string.</param>
+            /// <returns>Enum value for string given.</returns>
+            public static eCWPBB_TransmitPulseType GetTransmitPulseType(string type)
+            {
+                switch (type)
+                {
+                    case TRANSMIT_PULSE_TYPE_NARROWBAND:
+                        return eCWPBB_TransmitPulseType.NARROWBAND;
+                    case TRANSMIT_PULSE_TYPE_BROADBAND:
+                        return eCWPBB_TransmitPulseType.BROADBAND;
+                    case TRANSMIT_PULSE_TYPE_PTP_NONCODED:
+                        return eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
+                    case TRANSMIT_PULSE_TYPE_PTP_CODED:
+                        return eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+                    default:
+                        return DEFAULT_CWPBB_TRANSMITPULSETYPE;
+                }
+            }
+
+            #endregion
+
+            /// <summary>
+            /// Water Profile BroadBand (1).
+            /// Water Profile Broadband.  Enables or disables water profile coded pulse transmissions and lag.
+            /// 
+            /// Transmit Pulse Type for the Water Profile.
+            /// 
+            /// Command CWPBB n, 2 \r
+            /// Scale: enum Cwpbb_TransmitPulseType
+            /// Range: enum Cwpbb_TransmitPulseType
+            /// </summary>
+            public eCWPBB_TransmitPulseType CWPBB_TransmitPulseType { get; set; }
+
+            /// <summary>
+            /// Water Profile BroadBand (2).
+            /// Water Profile Broadband.  Enables or disables water profile coded pulse transmissions and lag.
+            /// 
+            /// Lag length in vertical meters.
+            /// Used with transmit Pulse Type 1, 2, and 3.  A longer lag will
+            /// have lower variance and a lower ambiguity velocity.
+            /// 
+            /// Command: CWPBB 1, n.nnn \r
+            /// Scale: meters
+            /// Range: 0.042 to 1 (1200Khz) 
+            ///        0.042 * N to 1 * N (N = Frequency Divsor AdcpPredictor.FREQ_DIV_1200, AdcpPredictor.FREQ_DIV_600, AdcpPredictor.FREQ_DIV_300, AdcpPredictor.FREQ_DIV_150)
+            /// </summary>
+            private float _cWPBB_LagLength;
+            /// <summary>
+            /// Water Profile BroadBand (2).
+            /// Water Profile Broadband.  Enables or disables water profile coded pulse transmissions and lag.
+            /// 
+            /// Lag length in vertical meters.
+            /// Used with transmit Pulse Type 1, 2, and 3.  A longer lag will
+            /// have lower variance and a lower ambiguity velocity.
+            /// 
+            /// Command: CWPBB 1, n.nnn \r
+            /// Scale: meters
+            /// Range: 0.042 to 1 (1200Khz) 
+            ///        0.042 * N to 1 * N (N = Frequency Divsor AdcpPredictor.FREQ_DIV_1200, AdcpPredictor.FREQ_DIV_600, AdcpPredictor.FREQ_DIV_300, AdcpPredictor.FREQ_DIV_150)
+            /// </summary>
+            public float CWPBB_LagLength 
+            {
+                get { return _cWPBB_LagLength; } 
+                set
+                {
+                    // Validate the command
+                    if (Validator.ValidateMinMax(value, MIN_CWPBB_LAGLENGTH, MAX_CWPBB_LAGLENGTH))
+                    {
+                        _cWPBB_LagLength = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// 0 to 100 sets the number of pings that will be averaged together.
+            /// 
+            /// Command: CWPAP n X X X X \r
+            /// Scale: Number of pings.
+            /// Range 0 to 100.
+            /// </summary>
+            private UInt16 _cWPAP_NumPingsAvg; 
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// 0 to 100 sets the number of pings that will be averaged together.
+            /// 
+            /// Command: CWPAP n X X X X \r
+            /// Scale: Number of pings.
+            /// Range 0 to 100.
+            /// </summary>
+            public UInt16 CWPAP_NumPingsAvg 
+            {
+                get { return _cWPAP_NumPingsAvg; }
+                
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPAP_NUMPINGS, MAX_CWPAP_NUMPINGS))
+                    {
+                        _cWPAP_NumPingsAvg = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Lag (meters) sets the length of the lag.
+            /// 
+            /// Command: CWPAP X n.nnn X X X \r
+            /// Scale: meters
+            /// Range: 
+            /// </summary>
+            private float _cWPAP_Lag;
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Lag (meters) sets the length of the lag.
+            /// 
+            /// Command: CWPAP X n.nnn X X X \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CWPAP_Lag 
+            {
+                get { return _cWPAP_Lag; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPAP_LAG, MAX_CWPAP_LAG))
+                    {
+                        _cWPAP_Lag = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Blank (meters) sets the starting position of the bin.
+            /// 
+            /// Command: CWPAP X X n.nnn X X \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cWPAP_Blank;
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Blank (meters) sets the starting position of the bin.
+            /// 
+            /// Command: CWPAP X X n.nnn X X \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CWPAP_Blank
+            {
+                get { return _cWPAP_Blank; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPAP_BLANK, MAX_CWPAP_BLANK))
+                    {
+                        _cWPAP_Blank = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Bin Size (meters).
+            /// 
+            /// Command: CWPAP X X X n.nnn X \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cWPAP_BinSize;
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Bin Size (meters).
+            /// 
+            /// Command: CWPAP X X X n.nnn X \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CWPAP_BinSize
+            {
+                get { return _cWPAP_BinSize; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPAP_BINSIZE, MAX_CWPAP_BINSIZE))
+                    {
+                        _cWPAP_BinSize = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Time Between Ambiguity Pings (seconds).
+            /// 
+            /// Command: CWPAP X X X X n.nnn \r
+            /// Scale: Seconds
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cWPAP_TimeBetweenPing;
+            /// <summary>
+            /// Water Ambiguity Ping.
+            /// Used when CWPBB = 5.
+            /// Time Between Ambiguity Pings (seconds).
+            /// 
+            /// Command: CWPAP X X X X n.nnn \r
+            /// Scale: Seconds
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CWPAP_TimeBetweenPing
+            {
+                get { return _cWPAP_TimeBetweenPing; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPAP_TIME_BETWEEN_PING, MAX_CWPAP_TIME_BETWEEN_PING))
+                    {
+                        _cWPAP_TimeBetweenPing = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Profile Screening Thresholds (1)
+            /// Water Profile Correlation Threshold.
+            /// 
+            /// Used for screening profile beams.  A beam with a correlation value
+            /// less than the threshold will be flagged bad and not included in the bin average.
+            /// Nominal beam correlation values are dependent on the pulse codin, the number of
+            /// repeated codes, and whether not the pulse-to-pulse processing is being used.  For Example:
+            ///  i.  The pulse-to-pulse nominal correlation is 1.00.  A correlation value of 0.50 occurs
+            ///      when the signal is equal to the noise (SNR = 1 or 0 dB).
+            ///  ii. Broadband correlation is dependent on the number of repeated code sequences in the transmission.
+            ///      If 5 repeats are transmitted the nominal correlation will be 4/5 or 0.80.  A correlation value of 0.4,
+            ///      in this case, indicates a signal to noise ratio of 1.
+            /// 
+            /// Command CWPST n.nn, 2, 3 \r
+            /// Scale: 
+            /// Range: 0.00 to 1.00
+            /// 
+            /// </summary>
+            private float _cWPST_CorrelationThresh;
+            /// <summary>
+            /// Water Profile Screening Thresholds (1)
+            /// Water Profile Correlation Threshold.
+            /// 
+            /// Used for screening profile beams.  A beam with a correlation value
+            /// less than the threshold will be flagged bad and not included in the bin average.
+            /// Nominal beam correlation values are dependent on the pulse codin, the number of
+            /// repeated codes, and whether not the pulse-to-pulse processing is being used.  For Example:
+            ///  i.  The pulse-to-pulse nominal correlation is 1.00.  A correlation value of 0.50 occurs
+            ///      when the signal is equal to the noise (SNR = 1 or 0 dB).
+            ///  ii. Broadband correlation is dependent on the number of repeated code sequences in the transmission.
+            ///      If 5 repeats are transmitted the nominal correlation will be 4/5 or 0.80.  A correlation value of 0.4,
+            ///      in this case, indicates a signal to noise ratio of 1.
+            /// 
+            /// Command CWPST n.nn, 2, 3 \r
+            /// Scale: 
+            /// Range: 0.00 to 1.00
+            /// 
+            /// </summary>
+            public float CWPST_CorrelationThresh 
+            {
+                get { return _cWPST_CorrelationThresh; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPST_CORR_THRESH, MAX_CWPST_CORR_THRESH))
+                    {
+                        _cWPST_CorrelationThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Profile Thresholds (2)
+            /// Water Profile Q Velocity Threshold.
+            /// 
+            /// Used for screening transformed profile bins.  A bin with a,
+            /// absolute Q velocity that is higher than the Q threshold will be 
+            /// flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command: CWPST 1, n.nnn, 3 \r
+            /// Scale: Meters per second.
+            /// Range: 
+            /// </summary>
+            private float _cWPST_QVelocityThresh;
+            /// <summary>
+            /// Water Profile Thresholds (2)
+            /// Water Profile Q Velocity Threshold.
+            /// 
+            /// Used for screening transformed profile bins.  A bin with a,
+            /// absolute Q velocity that is higher than the Q threshold will be 
+            /// flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command: CWPST 1, n.nnn, 3 \r
+            /// Scale: Meters per second.
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CWPST_QVelocityThresh 
+            {
+                get { return _cWPST_QVelocityThresh; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CWPST_Q_VELOCITY_THRESH))
+                    {
+                        _cWPST_QVelocityThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Profile Thresholds (3)
+            /// Water Profile V Velocity Threshold.
+            /// 
+            /// Used for screening transformed profile bins.  A bin with a,
+            /// absolute Vertical Velocity that is higher than the V threshold will
+            /// be flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command CWPST 1, 2, n.nnn \r
+            /// Scale: Meters per second.
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cWPST_VVelocityThresh;
+            /// <summary>
+            /// Water Profile Thresholds (3)
+            /// Water Profile V Velocity Threshold.
+            /// 
+            /// Used for screening transformed profile bins.  A bin with a,
+            /// absolute Vertical Velocity that is higher than the V threshold will
+            /// be flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command CWPST 1, 2, n.nnn \r
+            /// Scale: Meters per second.
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CWPST_VVelocityThresh 
+            {
+                get { return _cWPST_VVelocityThresh; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CWPST_V_VELOCITY_THRESH))
+                    {
+                        _cWPST_VVelocityThresh = value;
+                    }
+                }
             }
 
             /// <summary>
@@ -819,7 +1985,28 @@ namespace RTI
             /// Scale: meters
             /// Range: 0.00 to 100.00
             /// </summary>
-            public float CWPBL { get; set; }
+            private float _cWPBL;
+            /// <summary>
+            /// Water Profile Blank. 
+            /// Sets the vertical range from the face of the 
+            /// transducer to the first sample of the first Bin.
+            /// 
+            /// Command: CWPBL n.nn \r
+            /// Scale: meters
+            /// Range: 0.00 to 100.00
+            /// </summary>
+            public float CWPBL 
+            {
+                get { return _cWPBL; }     
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPBL, MAX_CWPBL))
+                    {
+                        _cWPBL = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Profile Bin Size 
@@ -827,9 +2014,29 @@ namespace RTI
             /// 
             /// Command CWPBS n.nnn \r
             /// Scale: meters
-            /// Range: 0.01 to 64.00
+            /// Range: 0.01 to n.nnn
             /// </summary>
-            public float CWPBS { get; set; }
+            private float _cWPBS;
+            /// <summary>
+            /// Water Profile Bin Size 
+            /// n.nn sets the vertical Bin size.
+            /// 
+            /// Command CWPBS n.nnn \r
+            /// Scale: meters
+            /// Range: 0.01 to n.nnn
+            /// </summary>
+            public float CWPBS 
+            {
+                get { return _cWPBS; } 
+                set
+                {
+                    // Verify the value is within range
+                    if (Validator.ValidateMinMax(value, MIN_CWPBS, MAX_CWPBS))
+                    {
+                        _cWPBS = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Profile Tramist 
@@ -842,7 +2049,30 @@ namespace RTI
             /// Scale: meters
             /// Range: 0.00 to 100.0 
             /// </summary>
-            public float CWPX { get; set; }
+            private float _cWPX;
+            /// <summary>
+            /// Water Profile Tramist 
+            /// n.nn sets the vertical transmit size.  
+            /// 
+            /// A value of 0.00 will cause the system to 
+            /// set transmit to the same length as the cell size.
+            /// 
+            /// Command: CWPX n.nn \r
+            /// Scale: meters
+            /// Range: 0.00 to 100.0 
+            /// </summary>
+            public float CWPX 
+            {
+                get { return _cWPX; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPX, MAX_CWPX))
+                    {
+                        _cWPX = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Profile Number of Bins
@@ -850,9 +2080,29 @@ namespace RTI
             /// 
             /// Command: CWPBN N \r
             /// Scale: Number of bins
-            /// Range: 1 to 200 
+            /// Range: 0 to 200 
             /// </summary>
-            public UInt16 CWPBN { get; set; }
+            private UInt16 _cWPBN;
+            /// <summary>
+            /// Water Profile Number of Bins
+            /// Sets the number of bins that will be processed and output.
+            /// 
+            /// Command: CWPBN N \r
+            /// Scale: Number of bins
+            /// Range: 0 to 200 
+            /// </summary>
+            public UInt16 CWPBN 
+            {
+                get { return _cWPBN; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPBN, MAX_CWPBN))
+                    {
+                        _cWPBN = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Profile Number of Pings
@@ -866,7 +2116,95 @@ namespace RTI
             /// Scale: Number of Pings
             /// Range: 0 to 10,000 
             /// </summary>
-            public UInt16 CWPP { get; set; }
+            private UInt16 _cWPP;
+            /// <summary>
+            /// Water Profile Number of Pings
+            /// Sets the number of pings that will 
+            /// be averaged together during the ensemble.
+            /// 
+            /// If CWPAI is set equal to 00:00:00.00
+            /// sets the number of pings in the ensemble.
+            /// 
+            /// Command: CWPP N \r
+            /// Scale: Number of Pings
+            /// Range: 0 to 10,000 
+            /// </summary>
+            public UInt16 CWPP 
+            {
+                get { return _cWPP; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPP, MAX_CWPP))
+                    {
+                        _cWPP = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Base Pings (1)
+            /// 
+            /// Set the number of pings that will be averaged together during each CWPP ping.
+            /// 
+            /// Command: CWPBP n, 2 \r
+            /// Scale: Number of Pings.
+            /// Range: 0 to 100
+            /// </summary>
+            private UInt16 _cWPBP_NumPingsAvg;
+            /// <summary>
+            /// Water Base Pings (1)
+            /// 
+            /// Set the number of pings that will be averaged together during each CWPP ping.
+            /// 
+            /// Command: CWPBP n, 2 \r
+            /// Scale: Number of Pings.
+            /// Range: 0 to 100
+            /// </summary>
+            public UInt16 CWPBP_NumPingsAvg 
+            {
+                get { return _cWPBP_NumPingsAvg; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPBP_NUM_PING, MAX_CWPBP_NUM_PING))
+                    {
+                        _cWPBP_NumPingsAvg = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Water Base Pings (2)
+            /// 
+            /// Time in seconds between the base pings.
+            /// 
+            /// Command: CWPBP 1, t.t \r
+            /// Scale: Time in Seconds.
+            /// Range: 0 to t.t
+            /// </summary>
+            private float _cWPBP_TimeBetweenBasePings;
+            /// <summary>
+            /// Water Base Pings (2)
+            /// 
+            /// Time in seconds between the base pings.
+            /// 
+            /// Command: CWPBP 1, t.t \r
+            /// Scale: Time in Seconds.
+            /// Range: 0 to t.t
+            /// </summary>
+            public float CWPBP_TimeBetweenBasePings 
+            {
+                get { return _cWPBP_TimeBetweenBasePings; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPBP_TIME_BETWEEN_PINGS, MAX_CWPBP_TIME_BETWEEN_PINGS))
+                    {
+                        _cWPBP_TimeBetweenBasePings = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Profile Averaging Interval
@@ -898,9 +2236,85 @@ namespace RTI
             /// Scale: seconds
             /// Range: 0.00 to 86400.0 
             /// </summary>
-            public float CWPTBP { get; set; }
+            private float _cWPTBP;
+            /// <summary>
+            /// Water Profile Time between Pings
+            /// Sets the time between profile pings
+            /// 
+            /// Command: CWPTBP n.nn \r
+            /// Scale: seconds
+            /// Range: 0.00 to 86400.0 
+            /// </summary>
+            public float CWPTBP 
+            {
+                get { return _cWPTBP; } 
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWPTBP, MAX_CWPTBP))
+                    {
+                        _cWPTBP = value;
+                    }
+                }
+            }
 
             #endregion // Water Profile
+
+            #region Burst Interval Properties
+
+            /// <summary>
+            /// Burst Interval.
+            /// Sets the time interval between a series of ensembles.
+            /// 
+            /// Used when a prices short time interval is required between
+            /// ensembles followed by a period of sleep.
+            /// 
+            /// Command: CBI HH:MM:SS.hh, n \r
+            /// Scale: TimeValue
+            /// Range: TimeValue
+            /// </summary>
+            public TimeValue CBI_BurstInterval { get; set; }
+
+            /// <summary>
+            /// Burst Inteval.
+            /// Sets the Number o ensembles that are output during each burst.  
+            /// The time between each ensemble is controlled by the CEI command.
+            /// 0 Disables the command.
+            /// 
+            /// Used when a prices short time interval is required between
+            /// ensembles followed by a period of sleep.
+            /// 
+            /// Command: CBI HH:MM:SS.hh, n \r
+            /// Scale: Number of ensembles
+            /// Range: 0 - N
+            /// </summary>
+            private UInt16 _cBI_NumEnsembles;
+            /// <summary>
+            /// Burst Inteval.
+            /// Sets the Number o ensembles that are output during each burst.  
+            /// The time between each ensemble is controlled by the CEI command.
+            /// 0 Disables the command.
+            /// 
+            /// Used when a prices short time interval is required between
+            /// ensembles followed by a period of sleep.
+            /// 
+            /// Command: CBI HH:MM:SS.hh, n \r
+            /// Scale: Number of ensembles
+            /// Range: 0 - N
+            /// </summary>
+            public UInt16 CBI_NumEnsembles
+            {
+                get { return _cBI_NumEnsembles; }
+                set
+                {
+                    if (Validator.ValidateMin(value, MIN_CBI_NUM_ENS))
+                    {
+                        _cBI_NumEnsembles = value;
+                    }
+                }
+            }
+
+            #endregion
 
             #region Bottom Track Properties
 
@@ -929,31 +2343,504 @@ namespace RTI
                 return "0";
             }
 
-            /// <summary>
-            /// Bottom Track Broadband
-            /// Enables or disables bottom track 
-            /// boardband processing.  Narrowband 
-            /// processing is used when boardband is disabled.
-            /// 
-            /// Command: CBTBB N[cr] 
-            /// Range: N = 0 or 1
-            /// 0=Disable 1=Enable. 
-            /// </summary>
-            public bool CBTBB { get; set; }
+            #region Bottom Track Broadband Mode
 
             /// <summary>
-            /// Return a string of whether
-            /// the it is enabled or disabled.
+            /// Bottom Track Broadband Mode.
             /// </summary>
-            /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CBTBB_ToString()
+            public enum eCBTBB_Mode
             {
-                if (CBTBB)
-                {
-                    return "1";
-                }
+                /// <summary>
+                /// (0) Narrowband Long Range
+                /// </summary>
+                NARROWBAND_LONG_RANGE = 0,
 
-                return "0";
+                /// <summary>
+                /// (1) Coded Broadband Transmit.
+                /// </summary>
+                BROADBAND_CODED = 1,
+
+                /// <summary>
+                /// (2) Broadband Non-coded Transmit.
+                /// </summary>
+                BROADBAND_NON_CODED = 2,
+
+                /// <summary>
+                /// (3) NA.
+                /// </summary>
+                NA_3 = 3,
+
+                /// <summary>
+                /// (4) Broadband Non-coded Pulse to Pulse
+                /// </summary>
+                BROADBAND_NON_CODED_P2P = 4,
+
+                /// <summary>
+                /// (5) NA.
+                /// </summary>
+                NA_5 = 5,
+
+                /// <summary>
+                /// (6) NA.
+                /// </summary>
+                NA_6 = 6,
+
+                /// <summary>
+                /// (7) Auto switch between Narrowband, Broadband Non-Coded and Broadband Non-Coded Pulse to Pulse.
+                /// </summary>
+                AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P= 7
+            }
+
+            /// <summary>
+            /// String for Narrowband mode.
+            /// </summary>
+            public const string BT_BB_MODE_NARROWBAND = "Narrowband";
+
+            /// <summary>
+            /// String for Broadband Coded mode.
+            /// </summary>
+            public const string BT_BB_MODE_BROADBAND_CODED = "Broadband Coded";
+
+            /// <summary>
+            /// String for Broadband Non-Coded mode.
+            /// </summary>
+            public const string BT_BB_MODE_BROADBAND_NONCODED = "Broadband Non-coded";
+
+            /// <summary>
+            /// String for Broadband Non-Coded Pulse to Pulse mode.
+            /// </summary>
+            public const string BT_BB_MODE_BROADBAND_NONCODED_P2P = "Broadband Non-coded Pulse to Pulse";
+
+            /// <summary>
+            /// String for NarrowBand, Broadband Non-coded, and Broadband Non-coded Pulse to Pulse.
+            /// </summary>
+            public const string BT_BB_MODE_NB_BBNONCODED_BBNONCODEDP2P = "NarrowBand | Broadband Non-coded | Broadband Non-coded Pulse to Pulse";
+
+            /// <summary>
+            /// String for NA 3.
+            /// </summary>
+            public const string BT_BB_MODE_NA_3 = "NA_3";
+
+            /// <summary>
+            /// String for NA 5.
+            /// </summary>
+            public const string BT_BB_MODE_NA_5 = "NA_5";
+
+            /// <summary>
+            /// String for NA 6.
+            /// </summary>
+            public const string BT_BB_MODE_NA_6 = "NA_6";
+
+            /// <summary>
+            /// Create a list for all the Transmit Pulse types.
+            /// </summary>
+            /// <returns>A list of all the Transmit Pulse types.</returns>
+            public static List<string> GetCBTBB_ModeList()
+            {
+                List<string> list = new List<string>();
+                list.Add(BT_BB_MODE_NARROWBAND);
+                list.Add(BT_BB_MODE_BROADBAND_CODED);
+                list.Add(BT_BB_MODE_BROADBAND_NONCODED);
+                list.Add(BT_BB_MODE_BROADBAND_NONCODED_P2P);
+                list.Add(BT_BB_MODE_NB_BBNONCODED_BBNONCODEDP2P);
+
+                return list;
+            }
+
+            /// <summary>
+            /// Set the Bottom Track Broadband mode based off
+            /// the string given.  The string should have been found from the list
+            /// created with GetCBTBB_ModeList().  The default value is
+            /// set by DEFAULT_CBTBB_MODE.
+            /// </summary>
+            /// <param name="type">String for the Bottom Track Broadband mode.</param>
+            public void SetCBTBB_Mode(string type)
+            {
+                switch (type)
+                {
+                    case BT_BB_MODE_NARROWBAND:
+                        CBTBB_Mode = eCBTBB_Mode.NARROWBAND_LONG_RANGE;
+                        break;
+                    case BT_BB_MODE_BROADBAND_CODED:
+                        CBTBB_Mode = eCBTBB_Mode.BROADBAND_CODED;
+                        break;
+                    case BT_BB_MODE_BROADBAND_NONCODED:
+                        CBTBB_Mode = eCBTBB_Mode.BROADBAND_NON_CODED;
+                        break;
+                    case BT_BB_MODE_BROADBAND_NONCODED_P2P:
+                        CBTBB_Mode = eCBTBB_Mode.BROADBAND_NON_CODED_P2P;
+                        break;
+                    case BT_BB_MODE_NB_BBNONCODED_BBNONCODEDP2P:
+                        CBTBB_Mode = eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P;
+                        break;
+                    case BT_BB_MODE_NA_3:
+                        CBTBB_Mode = eCBTBB_Mode.NA_3;
+                        break;
+                    case BT_BB_MODE_NA_5:
+                        CBTBB_Mode = eCBTBB_Mode.NA_5;
+                        break;
+                    case BT_BB_MODE_NA_6:
+                        CBTBB_Mode = eCBTBB_Mode.NA_6;
+                        break;
+                    default:
+                        CBTBB_Mode = DEFAULT_CBTBB_MODE;
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Get the Bottom Track Broadband Mode as a string based off the
+            /// current selection.
+            /// </summary>
+            /// <returns>String for the Bottom Track Broadband mode.</returns>
+            public string GetCBTBB_Mode()
+            {
+                switch (CBTBB_Mode)
+                {
+                    case eCBTBB_Mode.NARROWBAND_LONG_RANGE:
+                        return BT_BB_MODE_NARROWBAND;
+                    case eCBTBB_Mode.BROADBAND_CODED:
+                        return BT_BB_MODE_BROADBAND_CODED;
+                    case eCBTBB_Mode.BROADBAND_NON_CODED:
+                        return BT_BB_MODE_BROADBAND_NONCODED;
+                    case eCBTBB_Mode.BROADBAND_NON_CODED_P2P:
+                        return BT_BB_MODE_BROADBAND_NONCODED_P2P;
+                    case eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P:
+                        return BT_BB_MODE_NB_BBNONCODED_BBNONCODEDP2P;
+                    case eCBTBB_Mode.NA_3:
+                        return BT_BB_MODE_NA_3;
+                    case eCBTBB_Mode.NA_5:
+                        return BT_BB_MODE_NA_5;
+                    case eCBTBB_Mode.NA_6:
+                        return BT_BB_MODE_NA_6;
+                    default:
+                        return BT_BB_MODE_NARROWBAND;
+                }
+            }
+
+            #endregion
+
+            /// <summary>
+            /// Bottom Track BroadBand Control (1).
+            /// Bottom Track BroadBand mode.
+            /// 
+            /// Command: CWPBB n, 2, 3 \r
+            /// Scale: enum eCBTBB_Mode
+            /// Range: enum eCBTBB_Mode
+            /// </summary>
+            public eCBTBB_Mode CBTBB_Mode { get; set; }
+
+            /// <summary>
+            /// Bottom Track Broadband Control (2)
+            /// Pulse to Pulse Lag in meters.
+            /// 
+            /// Lag length in vertical meters.  When enabled bottom track will
+            /// use pulse-to-pulse transmit and processing at depths less than 1/2 the
+            /// lag length.  Allows for near bottom ultra low variance velocity measurements.
+            /// 
+            /// Command: CBTBB 1, n.nnn, 3 \r
+            /// Scale: meters
+            /// Range: 
+            /// </summary>
+            private float _cBTBB_PulseToPulseLag;
+            /// <summary>
+            /// Bottom Track Broadband Control (2)
+            /// Pulse to Pulse Lag in meters.
+            /// 
+            /// Lag length in vertical meters.  When enabled bottom track will
+            /// use pulse-to-pulse transmit and processing at depths less than 1/2 the
+            /// lag length.  Allows for near bottom ultra low variance velocity measurements.
+            /// 
+            /// Command: CBTBB 1, n.nnn, 3 \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTBB_PulseToPulseLag
+            {
+                get { return _cBTBB_PulseToPulseLag; }
+                set
+                {
+                    // Validate the command is within range
+                    if (Validator.ValidateMin(value, MIN_CBTBB_PULSETOPULSE_LAG))
+                    {
+                        _cBTBB_PulseToPulseLag = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Broadband Control (3)
+            /// Long Range Depth in meters.
+            /// 
+            /// The range in meters beyond which the bottom track will switch 
+            /// to narrow band processing.
+            /// 
+            /// Command: CBTBB 1, 2, n.nnn \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cBTBB_LongRangeDepth;
+            /// <summary>
+            /// Bottom Track Broadband Control (3)
+            /// Long Range Depth in meters.
+            /// 
+            /// The range in meters beyond which the bottom track will switch 
+            /// to narrow band processing.
+            /// 
+            /// Command: CBTBB 1, 2, n.nnn \r
+            /// Scale: meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTBB_LongRangeDepth
+            {
+                get { return _cBTBB_LongRangeDepth; }
+                set
+                {
+                    // Validate the command is within range
+                    if (Validator.ValidateMin(value, MIN_CBTBB_LONGRANGEDEPTH))
+                    {
+                        _cBTBB_LongRangeDepth = value;
+                    }
+                }
+            }
+
+
+            /// <summary>
+            /// Bottom Track Screening Thresholds (1)
+            /// Bottom Track Correlation Threshold.
+            /// 
+            /// USed for screening beam data.  A beam with a correlation value less than
+            /// the threshold will be flagged band and not included in the average.  Nominal
+            /// correlation for bottom track is 1.
+            /// 
+            /// Command: CBTST n.nnn, 2, 3 \r
+            /// Scale: 0.00 to 1.00
+            /// Range: 0.00 to 1.00
+            /// </summary>
+            private float _cBTST_CorrelationThresh; 
+            /// <summary>
+            /// Bottom Track Screening Thresholds (1)
+            /// Bottom Track Correlation Threshold.
+            /// 
+            /// USed for screening beam data.  A beam with a correlation value less than
+            /// the threshold will be flagged band and not included in the average.  Nominal
+            /// correlation for bottom track is 1.
+            /// 
+            /// Command: CBTST n.nnn, 2, 3 \r
+            /// Scale: 0.00 to 1.00
+            /// Range: 0.00 to 1.00
+            /// </summary>
+            public float CBTST_CorrelationThresh 
+            {
+                get { return _cBTST_CorrelationThresh; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CBTST_CORR_THRESH, MAX_CBTST_CORR_THRESH))
+                    {
+                        _cBTST_CorrelationThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Screening Thresholds (2)
+            /// Bottom Track Q Velocity Threshold.
+            /// 
+            /// Used for screening transformed bottom track velocities.  An
+            /// absolute Q velocity that is higher than the Q threshold will be
+            /// flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command: CBTST 1, n.nnn, 3 \r
+            /// Scale: Meters per Second.
+            /// Range: 0 to n.nnn 
+            /// </summary>
+            private float _cBTST_QVelocityThresh;
+            /// <summary>
+            /// Bottom Track Screening Thresholds (2)
+            /// Bottom Track Q Velocity Threshold.
+            /// 
+            /// Used for screening transformed bottom track velocities.  An
+            /// absolute Q velocity that is higher than the Q threshold will be
+            /// flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command: CBTST 1, n.nnn, 3 \r
+            /// Scale: Meters per Second.
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTST_QVelocityThresh
+            {
+                get { return _cBTST_QVelocityThresh; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CBTST_QVEL_THRESH))
+                    {
+                        _cBTST_QVelocityThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Screening Threshold (3)
+            /// Bottom Track V Velocity Threshold.
+            /// 
+            /// Used for screening transformed bottom track velocities.  
+            /// An absolute Vertical velocity that is higher than the V threshold
+            /// will be flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command: CBTST 1, 2, n.nnn \r
+            /// Scale: Meters per Second.
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cBTST_VVelocityThresh;
+            /// <summary>
+            /// Bottom Track Screening Threshold (3)
+            /// Bottom Track V Velocity Threshold.
+            /// 
+            /// Used for screening transformed bottom track velocities.  
+            /// An absolute Vertical velocity that is higher than the V threshold
+            /// will be flagged as bad.  Beam coordinate velocity data is not affected.
+            /// 
+            /// Command: CBTST 1, 2, n.nnn \r
+            /// Scale: Meters per Second.
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTST_VVelocityThresh
+            {
+                get { return _cBTST_VVelocityThresh; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CBTST_VVEL_THRESH))
+                    {
+                        _cBTST_VVelocityThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Thresholds (1)
+            /// Bottom Track SNR(dB) shallow detection threshold.
+            /// 
+            /// Command: CBTT n.nnn, 2, 3, 4 \r
+            /// Scale: dB
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float _cBTT_SNRShallowDetectionThresh;
+            /// <summary>
+            /// Bottom Track Thresholds (1)
+            /// Bottom Track SNR(dB) shallow detection threshold.
+            /// 
+            /// Command: CBTT n.nnn, 2, 3, 4 \r
+            /// Scale: dB
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTT_SNRShallowDetectionThresh
+            {
+                get { return _cBTT_SNRShallowDetectionThresh; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CBTT_SNR_SHALLOW_THRESH))
+                    {
+                        _cBTT_SNRShallowDetectionThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Thresholds (2)
+            /// Bottom Track Depth(m) at which the bottom track switches from
+            /// using the shallow to the deep SNR.
+            /// 
+            /// Command: CBTT 1, n.nnn, 3, 4 \r
+            /// Scale: Meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cBTT_DepthSNR;
+            /// <summary>
+            /// Bottom Track Thresholds (2)
+            /// Bottom Track Depth(m) at which the bottom track switches from
+            /// using the shallow to the deep SNR.
+            /// 
+            /// Command: CBTT 1, n.nnn, 3, 4 \r
+            /// Scale: Meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTT_DepthSNR
+            {
+                get { return _cBTT_DepthSNR; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CBTT_DEPTH_SNR))
+                    {
+                        _cBTT_DepthSNR = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Thresholds (3)
+            /// SNR(dB) deep detection threshold.
+            /// 
+            /// Command: CBTT 1, 2, n.nnn, 4 \r
+            /// Scale: dB
+            /// Range: 0 to n.nnn 
+            /// </summary>
+            private float _cBTT_SNRDeepDetectionThresh;
+            /// <summary>
+            /// Bottom Track Thresholds (3)
+            /// SNR(dB) deep detection threshold.
+            /// 
+            /// Command: CBTT 1, 2, n.nnn, 4 \r
+            /// Scale: dB
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTT_SNRDeepDetectionThresh
+            {
+                get { return _cBTT_SNRDeepDetectionThresh; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CBTT_SNR_DEEP_THRESH))
+                    {
+                        _cBTT_SNRDeepDetectionThresh = value;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Bottom Track Thresholds (4)
+            /// Bottom Track Depth(m) at which the bottom track swithes from low to high
+            /// gain receive.
+            /// 
+            /// Command: CBTT 1, 2, 3, n.nnn, \r
+            /// Scale: Meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            private float _cBTT_DepthGain;
+            /// <summary>
+            /// Bottom Track Thresholds (4)
+            /// Bottom Track Depth(m) at which the bottom track swithes from low to high
+            /// gain receive.
+            /// 
+            /// Command: CBTT 1, 2, 3, n.nnn, \r
+            /// Scale: Meters
+            /// Range: 0 to n.nnn
+            /// </summary>
+            public float CBTT_DepthGain
+            {
+                get { return _cBTT_DepthGain; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMin(value, MIN_CBTT_DEPTH_GAIN))
+                    {
+                        _cBTT_DepthGain = value;
+                    }
+                }
             }
 
             /// <summary>
@@ -967,7 +2854,30 @@ namespace RTI
             /// Scale: meters
             /// Range: 0.0 to 10.0
             /// </summary>
-            public float CBTBL { get; set; }
+            private float _cBTBL;
+            /// <summary>
+            /// Bottom Track Blank 
+            /// Sets the vertical distance 
+            /// from the face of the transducer 
+            /// at which the bottom dectection 
+            /// algorithm begins search for the bottom.
+            /// 
+            /// Command: CBTBL n.nn[cr]
+            /// Scale: meters
+            /// Range: 0.0 to 10.0
+            /// </summary>
+            public float CBTBL 
+            {
+                get { return _cBTBL; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CBTBL, MAX_CBTBL))
+                    {
+                        _cBTBL = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Bottom Track Max Depth
@@ -982,7 +2892,32 @@ namespace RTI
             /// Scale: Meters
             /// Range: 5.0 to 10,000.0 
             /// </summary>
-            public float CBTMX { get; set; }
+            private float _cBTMX;
+            /// <summary>
+            /// Bottom Track Max Depth
+            /// Sets the maximum range over 
+            /// which the bottom track 
+            /// algorithm will search for the 
+            /// bottom.  
+            /// 
+            /// A large value will slow acquistion time.
+            /// 
+            /// Command: CBTMX n.nn[cr]
+            /// Scale: Meters
+            /// Range: 5.0 to 10,000.0 
+            /// </summary>
+            public float CBTMX
+            {
+                get { return _cBTMX; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CBTMX, MAX_CBTMX))
+                    {
+                        _cBTMX = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Bottom Track Time Between Pings 
@@ -992,7 +2927,27 @@ namespace RTI
             /// Scale: seconds
             /// Range: 0.00 to 86400.0
             /// </summary>
-            public float CBTTBP { get; set; }
+            private float _cBTTBP;
+            /// <summary>
+            /// Bottom Track Time Between Pings 
+            /// Sets the time between bottom pings.
+            /// 
+            /// Command: CBTTBP n.nn[cr]
+            /// Scale: seconds
+            /// Range: 0.00 to 86400.0
+            /// </summary>
+            public float CBTTBP
+            {
+                get { return _cBTTBP; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CBTTBP, MAX_CBTTBP))
+                    {
+                        _cBTTBP = value;
+                    }
+                }
+            }
 
             #endregion
 
@@ -1058,7 +3013,29 @@ namespace RTI
             /// Scale: meters
             /// Range: 0.00 to 100.0 
             /// </summary>
-            public float CWTBL { get; set; }
+            private float _cWTBL;
+            /// <summary>
+            /// Water Track Blank
+            /// Sets the vertical range from 
+            /// the face of the transducer to 
+            /// the first sample of the Bin.
+            /// 
+            /// Command: CWTBL n.nn[cr]
+            /// Scale: meters
+            /// Range: 0.00 to 100.0 
+            /// </summary>
+            public float CWTBL
+            {
+                get { return _cWTBL; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWTBL, MAX_CWTBL))
+                    {
+                        _cWTBL = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Track Bin Size 
@@ -1068,7 +3045,27 @@ namespace RTI
             /// Scale: meters
             /// Range: 0.05 to 64.0 
             /// </summary>
-            public float CWTBS { get; set; }
+            private float _cWTBS;
+            /// <summary>
+            /// Water Track Bin Size 
+            /// Sets the vertical Bin size.
+            /// 
+            /// Command: CWTBS n.nn[cr]
+            /// Scale: meters
+            /// Range: 0.05 to 64.0 
+            /// </summary>
+            public float CWTBS
+            {
+                get { return _cWTBS; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWTBS, MAX_CWTBS))
+                    {
+                        _cWTBS = value;
+                    }
+                }
+            }
 
             /// <summary>
             /// Water Track Time Between Pings 
@@ -1078,7 +3075,27 @@ namespace RTI
             /// Scale: seconds
             /// Range: 0.00 to 86400.0 
             /// </summary>
-            public float CWTTBP { get; set; }
+            private float _cWTTBP;
+            /// <summary>
+            /// Water Track Time Between Pings 
+            /// Sets the time between bottom pings.
+            /// 
+            /// Command: CWTTBP n.nn 
+            /// Scale: seconds
+            /// Range: 0.00 to 86400.0 
+            /// </summary>
+            public float CWTTBP
+            {
+                get { return _cWTTBP; }
+                set
+                {
+                    // Verify the value is within the range
+                    if (Validator.ValidateMinMax(value, MIN_CWTTBP, MAX_CWTTBP))
+                    {
+                        _cWTTBP = value;
+                    }
+                }
+            }
 
             #endregion
 
@@ -1087,19 +3104,54 @@ namespace RTI
             /// </summary>
             public Subsystem SubSystem { get; set; }
 
+            /// <summary>
+            /// CEPO Index.  This is the index within the 
+            /// CEPO command that describes which configuration
+            /// these commands are associated with.
+            /// </summary>
+            public int CepoIndex { get; set; }
+
             #endregion
 
             /// <summary>
-            /// Set the default values and the subsystem.
+            /// Set the default values for the given subsystem.
+            /// A default value of 0 is used for CEPO index.  If there is only
+            /// 1 subsystem, then 0 should always work.
             /// </summary>
             /// <param name="ss">Subsystem associated with these options.</param>
-            public AdcpSubsystemCommands(Subsystem ss)
+            /// <param name="cepoIndex">CEPO Index.  The default value is DEFAULT_CEPO_INDEX.</param>
+            public AdcpSubsystemCommands(Subsystem ss, int cepoIndex = DEFAULT_CEPO_INDEX)
             {
                 // Set the subsystem
                 SubSystem = ss;
 
+                // Set the CEPO index
+                CepoIndex = cepoIndex;
+
                 // Set default values
                 SetDefaults();
+            }
+
+            /// <summary>
+            /// Use this constructor if all the settings are going to be
+            /// set by the user.
+            /// 
+            /// If this constructor is used, then none of the 
+            /// frequency dependent commands will be set to anything
+            /// specific.  The subsystem must be set and 
+            /// SetFrequencyDefaults() must be called for the
+            /// frequency dependent commands to be set to default values.
+            /// </summary>
+            public AdcpSubsystemCommands()
+            {
+                // Set empty subsystem.
+                SubSystem = Subsystem.Empty;
+
+                // Set empty CEPO index
+                CepoIndex = DEFAULT_CEPO_INDEX;
+
+                // Set Default values
+                SetDefaultOptions();
             }
 
             #region Methods
@@ -1113,21 +3165,41 @@ namespace RTI
             /// </summary>
             public void SetDefaults()
             {
+                SetDefaultOptions();
+                SetFrequencyDefaults();
+            }
+
+            /// <summary>
+            /// Set the default values for the non-
+            /// frequency dependent values.
+            /// </summary>
+            private void SetDefaultOptions()
+            {
                 // Water Profile defaults
                 CWPON = DEFAULT_CWPON;
-                CWPBB = DEFAULT_CWPBB;
+                CWPBB_TransmitPulseType = DEFAULT_CWPBB_TRANSMITPULSETYPE;
                 CWPAI = new TimeValue();
-                
+                CWPST_CorrelationThresh = DEFAULT_CWPST_CORR_THRESH;
+                CWPST_QVelocityThresh = DEFAULT_CWPST_QVEL_THRESH;
+                CWPST_VVelocityThresh = DEFAULT_CWPST_VVEL_THRESH;
+                CWPBP_NumPingsAvg = DEFAULT_CWPBP_NUM_PING_AVG;
+
+                CBI_BurstInterval = new TimeValue();
+                CBI_NumEnsembles = DEFAULT_CBI_NUM_ENS;
+
                 // Bottom Track defaults
                 CBTON = DEFAULT_CBTON;
-                CBTBB = DEFAULT_CBTBB;
-                
+                CBTBB_Mode = DEFAULT_CBTBB_MODE;
+                CBTBB_PulseToPulseLag = DEFAULT_CBTBB_PULSETOPULSE_LAG;
+                CBTST_CorrelationThresh = DEFAULT_CBTST_CORR_THRESH;
+                CBTST_QVelocityThresh = DEFAULT_CBTST_QVEL_THRESHOLD;
+                CBTST_VVelocityThresh = DEFAULT_CBTST_VVEL_THRESHOLD;
+                CBTT_SNRShallowDetectionThresh = DEFAULT_CBTT_SNR_SHALLOW_DET_THRESHOLD;
+                CBTT_SNRDeepDetectionThresh = DEFAULT_CBTT_SNR_DEEP_DET_THRESHOLD;
+
                 // Water Track defaults
                 CWTON = DEFAULT_CWTON;
                 CWTBB = DEFAULT_CWTBB;
-                
-                // Set the default frequency values
-                SetFrequencyDefaults();
             }
 
             /// <summary>
@@ -1136,50 +3208,51 @@ namespace RTI
             /// </summary>
             public void SetFrequencyDefaults()
             {
-
-                switch(SubSystem.Code)
+                if (SubSystem != null)
                 {
-                    case Subsystem.SUB_38KHZ_VERT_PISTON_F:
-                    case Subsystem.SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
-                    case Subsystem.SUB_38KHZ_4BEAM_15DEG_ARRAY_S:
-                    case Subsystem.SUB_38KHZ_4BEAM_30DEG_ARRAY_M:
-                        Set38Defaults();
-                        break;
-                    case Subsystem.SUB_75KHZ_1BEAM_0DEG_ARRAY_X:
-                    case Subsystem.SUB_75KHZ_4BEAM_15DEG_ARRAY_R:
-                    case Subsystem.SUB_75KHZ_4BEAM_30DEG_ARRAY_L:
-                    case Subsystem.SUB_75KHZ_VERT_PISTON_E:
-                        Set75Defaults();
-                        break;
-                    case Subsystem.SUB_150KHZ_1BEAM_0DEG_ARRAY_W:
-                    case Subsystem.SUB_150KHZ_4BEAM_15DEG_ARRAY_Q:
-                    case Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K:
-                    case Subsystem.SUB_150KHZ_VERT_PISTON_D:
-                        Set150Defaults();
-                        break;
-                    case Subsystem.SUB_300KHZ_1BEAM_0DEG_ARRAY_V:
-                    case Subsystem.SUB_300KHZ_4BEAM_15DEG_ARRAY_P:
-                    case Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4:
-                    case Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8:
-                    case Subsystem.SUB_300KHZ_4BEAM_30DEG_ARRAY_J:
-                    case Subsystem.SUB_300KHZ_VERT_PISTON_C:
-                        Set300Defaults();
-                        break;
-                    case Subsystem.SUB_600KHZ_1BEAM_0DEG_ARRAY_U:
-                    case Subsystem.SUB_600KHZ_4BEAM_15DEG_ARRAY_O:
-                    case Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3:
-                    case Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7:
-                    case Subsystem.SUB_600KHZ_4BEAM_30DEG_ARRAY_I:
-                    case Subsystem.SUB_600KHZ_VERT_PISTON_B:
-                        Set600Defaults();
-                        break;
-                    case Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2:
-                    case Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6:
-                    case Subsystem.SUB_1_2MHZ_VERT_PISTON_A:
-                        Set1200Defaults();
-                        break;
-                    default:
-                        break;
+                    switch (SubSystem.Code)
+                    {
+                        case Subsystem.SUB_38KHZ_VERT_PISTON_F:
+                        case Subsystem.SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
+                        case Subsystem.SUB_38KHZ_4BEAM_15DEG_ARRAY_S:
+                        case Subsystem.SUB_38KHZ_4BEAM_30DEG_ARRAY_M:
+                            Set38Defaults();
+                            break;
+                        case Subsystem.SUB_75KHZ_1BEAM_0DEG_ARRAY_X:
+                        case Subsystem.SUB_75KHZ_4BEAM_15DEG_ARRAY_R:
+                        case Subsystem.SUB_75KHZ_4BEAM_30DEG_ARRAY_L:
+                        case Subsystem.SUB_75KHZ_VERT_PISTON_E:
+                            Set75Defaults();
+                            break;
+                        case Subsystem.SUB_150KHZ_1BEAM_0DEG_ARRAY_W:
+                        case Subsystem.SUB_150KHZ_4BEAM_15DEG_ARRAY_Q:
+                        case Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K:
+                        case Subsystem.SUB_150KHZ_VERT_PISTON_D:
+                            Set150Defaults();
+                            break;
+                        case Subsystem.SUB_600KHZ_1BEAM_0DEG_ARRAY_U:
+                        case Subsystem.SUB_600KHZ_4BEAM_15DEG_ARRAY_O:
+                        case Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3:
+                        case Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7:
+                        case Subsystem.SUB_600KHZ_4BEAM_30DEG_ARRAY_I:
+                        case Subsystem.SUB_600KHZ_VERT_PISTON_B:
+                            Set600Defaults();
+                            break;
+                        case Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2:
+                        case Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6:
+                        case Subsystem.SUB_1_2MHZ_VERT_PISTON_A:
+                            Set1200Defaults();
+                            break;
+                        case Subsystem.SUB_300KHZ_1BEAM_0DEG_ARRAY_V:
+                        case Subsystem.SUB_300KHZ_4BEAM_15DEG_ARRAY_P:
+                        case Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4:
+                        case Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8:
+                        case Subsystem.SUB_300KHZ_4BEAM_30DEG_ARRAY_J:
+                        case Subsystem.SUB_300KHZ_VERT_PISTON_C:
+                        default:
+                            Set300Defaults();
+                            break;
+                    }
                 }
             }
 
@@ -1189,16 +3262,26 @@ namespace RTI
             /// </summary>
             private void Set38Defaults()
             {
+                CWPBB_LagLength = DEFAULT_38_CWPBB_LAGLENGTH;
                 CWPBL = DEFAULT_38_CWPBL;
                 CWPBS = DEFAULT_38_CWPBS;
                 CWPX = DEFAULT_38_CWPX;
                 CWPBN = DEFAULT_38_CWPBN;
                 CWPP = DEFAULT_38_CWPP;
                 CWPTBP = DEFAULT_38_CWPTBP;
-                
+                CWPBP_TimeBetweenBasePings = DEFAULT_38_CWPBP_WATER_BASE_PING_TIME;
+                CWPAP_NumPingsAvg = DEFAULT_38_CWPAP_NUMOFPINGSAVG;
+                CWPAP_Lag = DEFAULT_38_CWPAP_LAG;
+                CWPAP_Blank = DEFAULT_38_CWPAP_BLANK;
+                CWPAP_BinSize = DEFAULT_38_CWPAP_BINSIZE;
+                CWPAP_TimeBetweenPing = DEFAULT_38_CWPAP_TIME_BETWEEN_PINGS;
+
+                CBTBB_LongRangeDepth = DEFAULT_38_CBTBB_LONGRANGEDEPTH;
                 CBTBL = DEFAULT_38_CBTBL;
                 CBTMX = DEFAULT_38_CBTMX;
                 CBTTBP = DEFAULT_38_CBTTBP;
+                CBTT_DepthSNR = DEFAULT_38_CBTT_DEPTH_SNR;
+                CBTT_DepthGain = DEFAULT_38_CBTT_DEPTH_GAIN;
                 
                 CWTBL = DEFAULT_38_CWTBL;
                 CWTBS = DEFAULT_38_CWTBS;
@@ -1211,16 +3294,26 @@ namespace RTI
             /// </summary>
             private void Set75Defaults()
             {
+                CWPBB_LagLength = DEFAULT_75_CWPBB_LAGLENGTH;
                 CWPBL = DEFAULT_75_CWPBL;
                 CWPBS = DEFAULT_75_CWPBS;
                 CWPX = DEFAULT_75_CWPX;
                 CWPBN = DEFAULT_75_CWPBN;
                 CWPP = DEFAULT_75_CWPP;
                 CWPTBP = DEFAULT_75_CWPTBP;
+                CWPBP_TimeBetweenBasePings = DEFAULT_75_CWPBP_WATER_BASE_PING_TIME;
+                CWPAP_NumPingsAvg = DEFAULT_75_CWPAP_NUMOFPINGSAVG;
+                CWPAP_Lag = DEFAULT_75_CWPAP_LAG;
+                CWPAP_Blank = DEFAULT_75_CWPAP_BLANK;
+                CWPAP_BinSize = DEFAULT_75_CWPAP_BINSIZE;
+                CWPAP_TimeBetweenPing = DEFAULT_75_CWPAP_TIME_BETWEEN_PINGS;
 
+                CBTBB_LongRangeDepth = DEFAULT_75_CBTBB_LONGRANGEDEPTH;
                 CBTBL = DEFAULT_75_CBTBL;
                 CBTMX = DEFAULT_75_CBTMX;
                 CBTTBP = DEFAULT_75_CBTTBP;
+                CBTT_DepthSNR = DEFAULT_75_CBTT_DEPTH_SNR;
+                CBTT_DepthGain = DEFAULT_75_CBTT_DEPTH_GAIN;
 
                 CWTBL = DEFAULT_75_CWTBL;
                 CWTBS = DEFAULT_75_CWTBS;
@@ -1233,16 +3326,26 @@ namespace RTI
             /// </summary>
             private void Set150Defaults()
             {
+                CWPBB_LagLength = DEFAULT_150_CWPBB_LAGLENGTH;
                 CWPBL = DEFAULT_150_CWPBL;
                 CWPBS = DEFAULT_150_CWPBS;
                 CWPX = DEFAULT_150_CWPX;
                 CWPBN = DEFAULT_150_CWPBN;
                 CWPP = DEFAULT_150_CWPP;
                 CWPTBP = DEFAULT_150_CWPTBP;
-                
+                CWPBP_TimeBetweenBasePings = DEFAULT_150_CWPBP_WATER_BASE_PING_TIME;
+                CWPAP_NumPingsAvg = DEFAULT_150_CWPAP_NUMOFPINGSAVG;
+                CWPAP_Lag = DEFAULT_150_CWPAP_LAG;
+                CWPAP_Blank = DEFAULT_150_CWPAP_BLANK;
+                CWPAP_BinSize = DEFAULT_150_CWPAP_BINSIZE;
+                CWPAP_TimeBetweenPing = DEFAULT_150_CWPAP_TIME_BETWEEN_PINGS;
+
+                CBTBB_LongRangeDepth = DEFAULT_150_CBTBB_LONGRANGEDEPTH;
                 CBTBL = DEFAULT_150_CBTBL;
                 CBTMX = DEFAULT_150_CBTMX;
                 CBTTBP = DEFAULT_150_CBTTBP;
+                CBTT_DepthSNR = DEFAULT_150_CBTT_DEPTH_SNR;
+                CBTT_DepthGain = DEFAULT_150_CBTT_DEPTH_GAIN;
                 
                 CWTBL = DEFAULT_150_CWTBL;
                 CWTBS = DEFAULT_150_CWTBS;
@@ -1255,16 +3358,26 @@ namespace RTI
             /// </summary>
             private void Set300Defaults()
             {
+                CWPBB_LagLength = DEFAULT_300_CWPBB_LAGLENGTH;
                 CWPBL = DEFAULT_300_CWPBL;
                 CWPBS = DEFAULT_300_CWPBS;
                 CWPX = DEFAULT_300_CWPX;
                 CWPBN = DEFAULT_300_CWPBN;
                 CWPP = DEFAULT_300_CWPP;
                 CWPTBP = DEFAULT_300_CWPTBP;
-                
+                CWPBP_TimeBetweenBasePings = DEFAULT_300_CWPBP_WATER_BASE_PING_TIME;
+                CWPAP_NumPingsAvg = DEFAULT_300_CWPAP_NUMOFPINGSAVG;
+                CWPAP_Lag = DEFAULT_300_CWPAP_LAG;
+                CWPAP_Blank = DEFAULT_300_CWPAP_BLANK;
+                CWPAP_BinSize = DEFAULT_300_CWPAP_BINSIZE;
+                CWPAP_TimeBetweenPing = DEFAULT_300_CWPAP_TIME_BETWEEN_PINGS;
+
+                CBTBB_LongRangeDepth = DEFAULT_300_CBTBB_LONGRANGEDEPTH;
                 CBTBL = DEFAULT_300_CBTBL;
                 CBTMX = DEFAULT_300_CBTMX;
                 CBTTBP = DEFAULT_300_CBTTBP;
+                CBTT_DepthSNR = DEFAULT_300_CBTT_DEPTH_SNR;
+                CBTT_DepthGain = DEFAULT_300_CBTT_DEPTH_GAIN;
                 
                 CWTBL = DEFAULT_300_CWTBL;
                 CWTBS = DEFAULT_300_CWTBS;
@@ -1277,16 +3390,26 @@ namespace RTI
             /// </summary>
             private void Set600Defaults()
             {
+                CWPBB_LagLength = DEFAULT_600_CWPBB_LAGLENGTH;
                 CWPBL = DEFAULT_600_CWPBL;
                 CWPBS = DEFAULT_600_CWPBS;
                 CWPX = DEFAULT_600_CWPX;
                 CWPBN = DEFAULT_600_CWPBN;
                 CWPP = DEFAULT_600_CWPP;
                 CWPTBP = DEFAULT_600_CWPTBP;
-                
+                CWPBP_TimeBetweenBasePings = DEFAULT_600_CWPBP_WATER_BASE_PING_TIME;
+                CWPAP_NumPingsAvg = DEFAULT_600_CWPAP_NUMOFPINGSAVG;
+                CWPAP_Lag = DEFAULT_600_CWPAP_LAG;
+                CWPAP_Blank = DEFAULT_600_CWPAP_BLANK;
+                CWPAP_BinSize = DEFAULT_600_CWPAP_BINSIZE;
+                CWPAP_TimeBetweenPing = DEFAULT_600_CWPAP_TIME_BETWEEN_PINGS;
+
+                CBTBB_LongRangeDepth = DEFAULT_600_CBTBB_LONGRANGEDEPTH;
                 CBTBL = DEFAULT_600_CBTBL;
                 CBTMX = DEFAULT_600_CBTMX;
                 CBTTBP = DEFAULT_600_CBTTBP;
+                CBTT_DepthSNR = DEFAULT_600_CBTT_DEPTH_SNR;
+                CBTT_DepthGain = DEFAULT_600_CBTT_DEPTH_GAIN;
                 
                 CWTBL = DEFAULT_600_CWTBL;
                 CWTBS = DEFAULT_600_CWTBS;
@@ -1299,16 +3422,26 @@ namespace RTI
             /// </summary>
             private void Set1200Defaults()
             {
+                CWPBB_LagLength = DEFAULT_1200_CWPBB_LAGLENGTH;
                 CWPBL = DEFAULT_1200_CWPBL;
                 CWPBS = DEFAULT_1200_CWPBS;
                 CWPX = DEFAULT_1200_CWPX;
                 CWPBN = DEFAULT_1200_CWPBN;
                 CWPP = DEFAULT_1200_CWPP;
                 CWPTBP = DEFAULT_1200_CWPTBP;
+                CWPBP_TimeBetweenBasePings = DEFAULT_1200_CWPBP_WATER_BASE_PING_TIME;
+                CWPAP_NumPingsAvg = DEFAULT_1200_CWPAP_NUMOFPINGSAVG;
+                CWPAP_Lag = DEFAULT_1200_CWPAP_LAG;
+                CWPAP_Blank = DEFAULT_1200_CWPAP_BLANK;
+                CWPAP_BinSize = DEFAULT_1200_CWPAP_BINSIZE;
+                CWPAP_TimeBetweenPing = DEFAULT_1200_CWPAP_TIME_BETWEEN_PINGS;
 
+                CBTBB_LongRangeDepth = DEFAULT_1200_CBTBB_LONGRANGEDEPTH;
                 CBTBL = DEFAULT_1200_CBTBL;
                 CBTMX = DEFAULT_1200_CBTMX;
                 CBTTBP = DEFAULT_1200_CBTTBP;
+                CBTT_DepthSNR = DEFAULT_1200_CBTT_DEPTH_SNR;
+                CBTT_DepthGain = DEFAULT_1200_CBTT_DEPTH_GAIN;
 
                 CWTBL = DEFAULT_1200_CWTBL;
                 CWTBS = DEFAULT_1200_CWTBS;
@@ -1320,71 +3453,125 @@ namespace RTI
             /// <summary>
             /// Create a list of all the commands and there value.
             /// Add all the commands to the list and there value.
+            /// 
+            /// Put all the values in United States English format.
+            /// Other formats can use a comma instead of a decimal point for
+            /// decimal numbers.
             /// </summary>
             /// <returns>List of all the commands and there value.</returns>
             public List<string> GetCommandList()
             {
                 List<string> list = new List<string>();
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPON, SubSystem.Index.ToString(), CWPON_ToString()));        // CWPON
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBB, SubSystem.Index.ToString(), CWPBB_ToString()));        // CWBB
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBL, SubSystem.Index.ToString(), CWPBL));                   // CWPBL
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBS, SubSystem.Index.ToString(), CWPBS));                   // CWPBS
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPX, SubSystem.Index.ToString(), CWPX));                     // CWPX
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBN, SubSystem.Index.ToString(), CWPBN));                   // CWPBN
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPON, CepoIndex, CWPON_ToString()));                                                                                                    // CWPON
+                list.Add(String.Format("{0}[{1}] {2},{3}", CMD_CWPBB, CepoIndex, ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")), 
+                                                                                    CWPBB_LagLength.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                         // CWBB
+                list.Add(String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CWPAP, CepoIndex, CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")), 
+                                                                                            CWPAP_Lag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CWPAP_Blank.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CWPAP_BinSize.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CWPAP_TimeBetweenPing.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                           // CWPAP
+                list.Add(String.Format("{0}[{1}] {2},{3}", CMD_CWPBP, CepoIndex, CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                    CWPBP_TimeBetweenBasePings.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                              // CWPBP
+                list.Add(String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPST, CepoIndex, CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CWPST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CWPST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                               // CWPST
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBL, CepoIndex, CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWPBL
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBS, CepoIndex, CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWPBS
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPX, CepoIndex, CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                            // CWPX
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBN, CepoIndex, CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWPBN
 
                 if (!IsEnableCWPAI())
                 {
-                    list.Add(String.Format("{0}[{1}] {2}", CMD_CWPP, SubSystem.Index.ToString(), CWPP));                 // CWPP
+                    list.Add(String.Format("{0}[{1}] {2}", CMD_CWPP, CepoIndex, CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CWPP
                 }
                 else
                 {
-                    list.Add(String.Format("{0}[{1}] {2}", CMD_CWPAI, SubSystem.Index.ToString(), CWPAI.ToString()));    // CWPAI
+                    list.Add(String.Format("{0}[{1}] {2}", CMD_CWPAI, CepoIndex, CWPAI.ToString()));                                                                                                // CWPAI
                 }
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPTBP, SubSystem.Index.ToString(), CWPTBP));                 // CWPTBP
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPTBP, CepoIndex, CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CWPTBP
 
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTON, SubSystem.Index.ToString(), CBTON_ToString()));        // CBTON
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTBB, SubSystem.Index.ToString(), CBTBB_ToString()));        // CBTBB
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTBL, SubSystem.Index.ToString(), CBTBL));                   // CBTBL
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTMX, SubSystem.Index.ToString(), CBTMX));                   // CBTMX
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTTBP, SubSystem.Index.ToString(), CBTTBP));                 // CBTTBP
+                list.Add(string.Format("{0}[{1}] {2},{3}", CMD_CBI, CepoIndex, CBI_BurstInterval.ToString(),
+                                                                                CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                            // CBI
 
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTON, SubSystem.Index.ToString(), CWTON_ToString()));        // CWTON
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBB, SubSystem.Index.ToString(), CWTBB_ToString()));        // CWTBB
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBL, SubSystem.Index.ToString(), CWTBL));                   // CWTBL
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBS, SubSystem.Index.ToString(), CWTBS));                   // CWTBS
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTTBP, SubSystem.Index.ToString(), CWTTBP));                 // CWTTBP
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTON, CepoIndex, CBTON_ToString()));                                                                                                    // CBTON
+                list.Add(String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTBB, CepoIndex, ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTBB_PulseToPulseLag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTBB_LongRangeDepth.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                // CBTBB
+                list.Add(String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTST, CepoIndex, CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                               // CBTST
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTBL, CepoIndex, CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CBTBL
+                //list.Add(String.Format("{0}[{1}] {2}", CMD_CBTMX, cepoIndex, CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CBTMX          // REMOVE BECAUSE A BUG IN FIRMWARE AS OF 2.11
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTTBP, CepoIndex, CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CBTTBP
+                list.Add(String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTT, CepoIndex, CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CBTT_DepthSNR.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CBTT_SNRDeepDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CBTT_DepthGain.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                  // CBTT
+
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTON, CepoIndex, CWTON_ToString()));                                                                                                    // CWTON
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBB, CepoIndex, CWTBB_ToString()));                                                                                                    // CWTBB
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBL, CepoIndex, CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWTBL
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBS, CepoIndex, CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWTBS
+                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTTBP, CepoIndex, CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CWTTBP
 
                 return list;
             }
 
             /// <summary>
             /// String of all the commands and there value.
+            /// 
+            /// Put all the values in United States English format.
+            /// Other formats can use a comma instead of a decimal point for
+            /// decimal numbers.
             /// </summary>
             /// <returns>String of all the commands and there value.</returns>
             public override string ToString()
             {
                 StringBuilder builder = new StringBuilder();
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPON, SubSystem.Index.ToString(), CWPON_ToString()));        // CWPON
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBB, SubSystem.Index.ToString(), CWPBB_ToString()));        // CWBB
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBL, SubSystem.Index.ToString(), CWPBL));                   // CWPBL
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBS, SubSystem.Index.ToString(), CWPBS));                   // CWPBS
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPX, SubSystem.Index.ToString(), CWPX));                     // CWPX
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBN, SubSystem.Index.ToString(), CWPBN));                   // CWPBN
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPP, SubSystem.Index.ToString(), CWPP));                     // CWPP
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPAI, SubSystem.Index.ToString(), CWPAI.ToString()));        // CWPAI
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPTBP, SubSystem.Index.ToString(), CWPTBP));                 // CWPTBP
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPON, CepoIndex, CWPON_ToString()));                                                                                            // CWPON
+                builder.Append(String.Format("{0}[{1}] {2},{3}\n", CMD_CWPBB, CepoIndex, ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CWPBB_LagLength.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                 // CWPBB
+                builder.Append(String.Format("{0}[{1}] {2},{3},{4},{5},{6}\n", CMD_CWPAP, CepoIndex, CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                        CWPAP_Lag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                        CWPAP_Blank.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                        CWPAP_BinSize.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                        CWPAP_TimeBetweenPing.ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // CWPAP
+                builder.Append(String.Format("{0}[{1}] {2},{3}\n", CMD_CWPBP, CepoIndex, CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CWPBP_TimeBetweenBasePings.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                      // CWPBP
+                builder.Append(String.Format("{0}[{1}] {2},{3},{4}\n", CMD_CWPST, CepoIndex, CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                CWPST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                CWPST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                       // CWPST
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBL, CepoIndex, CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWPBL
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBS, CepoIndex, CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWPBS
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPX, CepoIndex, CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                    // CWPX
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBN, CepoIndex, CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWPBN
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPP, CepoIndex, CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                    // CWPP
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPAI, CepoIndex, CWPAI.ToString()));                                                                                            // CWPAI
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPTBP, CepoIndex, CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CWPTBP
 
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTON, SubSystem.Index.ToString(), CBTON_ToString()));        // CBTON
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTBB, SubSystem.Index.ToString(), CBTBB_ToString()));        // CBTBB
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTBL, SubSystem.Index.ToString(), CBTBL));                   // CBTBL
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTMX, SubSystem.Index.ToString(), CBTMX));                   // CBTMX
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTTBP, SubSystem.Index.ToString(), CBTTBP));                 // CBTTBP
+                builder.Append(String.Format("{0}[{1}] {2},{3}\n", CMD_CBI, CepoIndex, CBI_BurstInterval.ToString(), 
+                                                                                        CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                    // CBI
 
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTON, SubSystem.Index.ToString(), CWTON_ToString()));        // CWTON
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBB, SubSystem.Index.ToString(), CWTBB_ToString()));        // CWTBB
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBL, SubSystem.Index.ToString(), CWTBL));                   // CWTBL
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBS, SubSystem.Index.ToString(), CWTBS));                   // CWTBS
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTTBP, SubSystem.Index.ToString(), CWTTBP));                 // CWTTBP
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTON, CepoIndex, CBTON_ToString()));                                                                                            // CBTON
+                builder.Append(String.Format("{0}[{1}] {2},{3},{4}\n", CMD_CBTBB, CepoIndex, ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")), 
+                                                                                                CBTBB_PulseToPulseLag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                CBTBB_LongRangeDepth.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                        // CBTBB
+                builder.Append(String.Format("{0}[{1}] {2},{3},{4}\n", CMD_CBTST, CepoIndex, CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                CBTST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                CBTST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                       // CBTST
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTBL, CepoIndex, CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CBTBL
+                //builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTMX, CepoIndex, CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CBTMX          // REMOVE BECAUSE A BUG IN FIRMWARE AS OF 2.11
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTTBP, CepoIndex, CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CBTTBP
+                builder.Append(String.Format("{0}[{1}] {2},{3},{4},{5}\n", CMD_CBTT, CepoIndex, CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                    CBTT_DepthSNR.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                    CBTT_SNRDeepDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                    CBTT_DepthGain.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CBTT
+
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTON, CepoIndex, CWTON_ToString()));                                                                                            // CWTON
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBB, CepoIndex, CWTBB_ToString()));                                                                                            // CWTBB
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBL, CepoIndex, CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWTBL
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBS, CepoIndex, CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWTBS
+                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTTBP, CepoIndex, CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CWTTBP
 
                 return builder.ToString();
             }

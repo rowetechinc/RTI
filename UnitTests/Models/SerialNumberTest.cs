@@ -26,6 +26,7 @@
  * -----------------------------------------------------------------
  * 01/25/2012      RC          1.14       Initial coding
  * 07/11/2012      RC          2.12       Added a test for a bad string for the serial number.
+ * 10/01/2012      RC          2.15       Added a test to serialize/deserialize to JSON.
  * 
  */
 
@@ -159,6 +160,32 @@ namespace RTI
             Assert.AreEqual(0, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 0 {0}", serialNum.SubSystemsDict.Count));
 
             Assert.AreEqual(0, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 0, serialNum.SystemSerialNumber));
+        }
+
+        /// <summary>
+        /// Test serial number to/from JSON
+        /// </summary>
+        [Test]
+        public void TestSerialJSON()
+        {
+            // Create a serial number
+            string serialStr = "01300000000000000000000000000001";
+            SerialNumber serial = new SerialNumber(serialStr);
+
+
+            // Convert to JSON and back
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(serial);                            // Serialize object to JSON
+            SerialNumber serialNum = Newtonsoft.Json.JsonConvert.DeserializeObject<SerialNumber>(json);   // Deserialize the JSON
+
+            // Test the serial number
+            Assert.AreEqual(serialStr, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, serialNum.ToString()));
+            Assert.AreEqual(1, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsDict.Count));
+
+            Subsystem ss = new Subsystem("3", 0);
+            Assert.AreEqual(ss, serialNum.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsDict[0].ToString()));
+
+            Assert.AreEqual(1, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 1, serialNum.SystemSerialNumber));
+
         }
     }
 

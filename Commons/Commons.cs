@@ -52,6 +52,9 @@
  * 06/18/2012      RC          2.12       Changed version number.
  * 07/24/2012      RC          2.13       Changed version number.
  * 08/28/2012      RC          2.14       Changed version number.
+ * 08/29/2012      RC          2.15       Changed version number.
+ * 09/06/2012      RC          2.15       Added System Frequency information.
+ * 09/11/2012      RC          2.15       Made version number get retrieved from AssemblyInfo.cs.
  * 
  */
 using System;
@@ -70,14 +73,16 @@ namespace RTI
             #region Version Number
 
             /// <summary>
-            /// Application Major version number.
+            /// Pulse version number.
+            /// Version number is set in AssembleInfo.cs.
             /// </summary>
-            public const int RTI_VERSION_MAJOR = 2;
-
-            /// <summary>
-            /// Application Minor version number.
-            /// </summary>
-            public const int RTI_VERSION_MINOR = 14;
+            public static string VERSION
+            {
+                get
+                {
+                    return System.Reflection.Assembly.LoadFrom("RTI.dll").GetName().Version.ToString();
+                }
+            }
 
             /// <summary>
             /// Used to denote Beta or Alpha builds.  Or any
@@ -117,6 +122,50 @@ namespace RTI
             /// entry.
             /// </summary>
             public const string AVG_ENSEMBLE_FILE_EXT = ".ENA";
+
+            #endregion
+
+            #region Frequencies
+
+            /// <summary>
+            /// Used to calculate the system frequency.
+            /// Divide this value by 1 - 4, to get the freqencyes of 1200kHz to 150KHz.
+            /// FREQ_DIV/1 = 1200kHz.
+            /// FREQ_DIV/2 = 600kHz.
+            /// FREQ_DIV/4 = 300kHz.
+            /// FREQ_DIV/8 = 150kHz.
+            /// </summary>
+            public const float FREQ_BASE = 1245125.0f;
+
+            /// <summary>
+            /// Divsor to use with FREQ_DIV to get 1200khz frequency.
+            /// </summary>
+            public const float FREQ_DIV_1200 = 1.0f;
+
+            /// <summary>
+            /// Divsor to use with FREQ_DIV to get 600khz frequency.
+            /// </summary>
+            public const float FREQ_DIV_600 = 2.0f;
+
+            /// <summary>
+            /// Divsor to use with FREQ_DIV to get 300khz frequency.
+            /// </summary>
+            public const float FREQ_DIV_300 = 4.0f;
+
+            /// <summary>
+            /// Divsor to use with FREQ_DIV to get 150khz frequency.
+            /// </summary>
+            public const float FREQ_DIV_150 = 8.0f;
+
+            /// <summary>
+            /// Divsor to use with FREQ_DIV to get 75khz frequency.
+            /// </summary>
+            public const float FREQ_DIV_75 = 16.0f;
+
+            /// <summary>
+            /// Divsor to use with FREQ_DIV to get 38khz frequency.
+            /// </summary>
+            public const float FREQ_DIV_38 = 32.0f;
 
             #endregion
 

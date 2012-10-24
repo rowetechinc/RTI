@@ -37,6 +37,8 @@
  * 01/25/2012      RC          1.14       Fix bug decoding string to hex byte, it did not handle letters.
  * 01/31/2012      RC          1.14       Updated variables and text, replacing spares with actual values. User Guide Rev F.
  * 02/01/2012      RC          1.14       Added CodeToString().
+ * 09/17/2012      RC          2.15       Removed Private Set for Index and Code to allow JSON encode and decode.
+ * 09/24/2012      RC          2.15       Added IsEmpty() to check if the Subsystem is an empty subsystem.
  *
  */
 
@@ -334,7 +336,7 @@ namespace RTI
         /// differeniate the Subsystem, by its location
         /// within the serial number.
         /// </summary>
-        public UInt16 Index { get; private set; }
+        public UInt16 Index { get; set; }
 
         /// <summary>
         /// Sub-System code.
@@ -342,15 +344,12 @@ namespace RTI
         /// for the ensemble given.  The Subsystem ID
         /// can be found in the RTI ADCP User Guide.
         /// </summary>
-        public byte Code { get; private set; }
+        public byte Code { get; set; }
 
         #endregion
 
         /// <summary>
         /// Represents an empty or blank subsystem.
-        /// 
-        /// All SETs are set private to ensure this
-        /// value does not change.
         /// </summary>
         public static readonly Subsystem Empty = new Subsystem();
 
@@ -408,6 +407,22 @@ namespace RTI
         }
 
         /// <summary>
+        /// State if this Subsystem is empty.  This will
+        /// verify the Code and Index is the empty value.
+        /// If they are, return true.
+        /// </summary>
+        /// <returns>TRUE = Subsystem is Empty. / FALSE = Subsystem is not empty.</returns>
+        public bool IsEmpty()
+        {
+            if (Code == EMPTY_CODE && Index == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Create a string for this object.
         /// The string will contain the code and index.
         /// INDEX_CODE
@@ -420,10 +435,10 @@ namespace RTI
 
         /// <summary>
         /// Return the string version of the code.
-        /// This will conver the code from a hex byte value to 
+        /// This will convert the code from a hex byte value to 
         /// a string character.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Code as a string.</returns>
         public string CodeToString()
         {
             return Convert.ToString(Convert.ToChar(Code));

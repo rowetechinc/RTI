@@ -45,6 +45,9 @@
  * 01/11/2012      RC          1.12       Removed Pulse specific code.  
  *                                         Used Using arounnd connections to dispose.
  * 01/20/2012      RC          1.14       Added column names for Firmware versions and Subsystem.
+ * 09/14/2012      RC          2.15       Added column names for Commands and Options for a project.
+ * 09/18/2012      RC          2.15       Added COL_ENS_SUBSYS_CONFIG column to the Project database in tblEnsemble.
+ * 10/01/2012      RC          2.15       Added COL_CMD_REV column to the Project database in tblOptions.
  * 
  */
 
@@ -64,6 +67,9 @@ namespace RTI
     /// With System.Data.SQLite version 1.0.77 the error message "SQLite error (21): misuse at line 110832 of [a499ae3835]" is occuring.
     /// System.Data.SQLite admins are claiming its harmless.  http://system.data.sqlite.org/index.html/info/e30b820248e1ecdd839e462646f5c9fe5965d6df
     /// It is most likely cause when DbCommand is garbage collected before the conneciton is closed.
+    /// 
+    /// Query for specific data within specific bins.  This gives ensemble and beam data.
+    /// SELECT * FROM (SELECT * FROM tblEnsemble INNER JOIN tblBeam ON tblEnsemble.ID = tblBeam.EnsembleId) WHERE BinNum greater or equal 2;
     /// </summary>
     public class DbCommon
     {
@@ -88,6 +94,12 @@ namespace RTI
         /// Beam table name.  Table to hold all data per a beam in an ensemble.
         /// </summary>
         public const string TBL_ENS_BEAM = "tblBeam";
+
+        /// <summary>
+        /// Project Database:
+        /// Table to hold all the commands and options for the project.
+        /// </summary>
+        public const string TBL_ENS_CMDS = "tblOptions";
 
         #endregion
 
@@ -414,10 +426,16 @@ namespace RTI
 
         /// <summary>
         /// Ensemble Table:
-        /// Sub-System.  Describes which sub-system the ensemble is associated with.
+        /// Sub-System.  Describes which subsystem the ensemble is associated with.
         /// (TINYINT)
         /// </summary>
-        public const string COL_ENS_SUBSYSTEM_INDEX = "SubsystemIndex";
+        public const string COL_ENS_SUBSYSTEM_CODE = "SubsystemCode";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Subsystem Configuration.  Identifies which command setup is being used for the current subsystem.
+        /// </summary>
+        public const string COL_ENS_SUBSYS_CONFIG = "SubsystemConfig";
 
         #endregion
 
@@ -874,6 +892,31 @@ namespace RTI
         /// (REAL)
         /// </summary>
         public const string COL_BT_EARTH_GOOD_B3 = "BTEarthGoodBeam3";
+
+        #endregion
+
+        #region Commands and Options
+
+        /// <summary>
+        /// Comands and Options Table:
+        /// Adcp Commands.
+        /// (TEXT)
+        /// </summary>
+        public const string COL_CMD_ADCP_CONFIGURATION = "AdcpConfiguration";
+
+        /// <summary>
+        /// Comands and Options Table:
+        /// Revision of the database.
+        /// (TEXT)
+        /// </summary>
+        public const string COL_CMD_REV = "Revision";
+
+        /// <summary>
+        /// Comands and Options Table:
+        /// Adcp Commands.
+        /// (TEXT)
+        /// </summary>
+        public const string COL_CMD_MISC = "Misc";
 
         #endregion
 

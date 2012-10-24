@@ -29,9 +29,16 @@
  * 07/11/2012      RC          2.12       Updated Decode BREAK to pass a firmware object instead of a string.
  * 07/19/2012      RC          2.12       Added test for decoding ENGI2CSHOW and STIME.
  * 07/26/2012      RC          2.13       Added test for decoding DSDIR.
+ * 09/10/2012      RC          2.15       Updated the the test for the BB commands for WP and BT.
+ * 09/25/2012      RC          2.15       Added CEOUTPUT command to test.
+ * 09/26/2012      RC          2.15       Added TimeValue test.
+ * 09/28/2012      RC          2.15       Added test for all the commands.
+ * 10/01/2012      RC          2.15       Removed serial number from the AdcpCommand constructor.
+ * 10/11/2012      RC          2.15       Updated test with new minimum values for CWS, CWSS and CTD.
  * 
  * 
  */
+
 namespace RTI
 {
     using System;
@@ -52,8 +59,7 @@ using System.Text;
         [Test]
         public void TestConstructor()
         {
-            SerialNumber serialNum = new SerialNumber("01400000000000000000000000000015");
-            AdcpCommands commands = new AdcpCommands(serialNum);
+            AdcpCommands commands = new AdcpCommands();
 
             Commands.TimeValue tv = new TimeValue();
             Commands.TimeValue tv1 = new Commands.TimeValue(0, 0, 1, 0); 
@@ -68,6 +74,9 @@ using System.Text;
             Assert.AreEqual(tv1.Second, commands.CEI_Second);
             Assert.AreEqual(tv1.HunSec, commands.CEI_HunSec);
 
+            Assert.AreEqual(false, commands.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(1, commands.CEOUTPUT, "CEOUTPUT is incorrect.");
+
             // Environmental defaults
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CWS, commands.CWS);
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CWT, commands.CWT);
@@ -75,6 +84,7 @@ using System.Text;
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CWSS, commands.CWSS);
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CHO, commands.CHO);
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CHS, commands.CHS);
+            Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CVSF, commands.CVSF);
 
             // Serial Comm defaults
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_C232B, commands.C232B);
@@ -82,12 +92,14 @@ using System.Text;
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_C422B, commands.C422B);
 
             // Get the first subsystem (Only subsystem)
+            SerialNumber serialNum = new SerialNumber("01400000000000000000000000000015");
             Subsystem ss = serialNum.SubSystemsDict[0];
             AdcpSubsystemCommands asc = new AdcpSubsystemCommands(ss);
 
             // Water Profile Defaults
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CWPON, asc.CWPON);
-            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CWPBB, asc.CWPBB);
+            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CWPBB_TRANSMITPULSETYPE, asc.CWPBB_TransmitPulseType);
+            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CWPBB_LAGLENGTH, asc.CWPBB_LagLength);
             //Assert.AreEqual(tv, asc.CWPAI);
             Assert.AreEqual(tv.Hour, asc.CWPAI.Hour);
             Assert.AreEqual(tv.Minute, asc.CWPAI.Minute);
@@ -102,7 +114,10 @@ using System.Text;
 
             // Bottom Track defaults
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CBTON, asc.CBTON);
-            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CBTBB, asc.CBTBB);
+            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CBTBB_MODE, asc.CBTBB_Mode);
+            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CBTBB_PULSETOPULSE_LAG, asc.CBTBB_PulseToPulseLag);
+            Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CBTBB_LONGRANGEDEPTH, asc.CBTBB_LongRangeDepth);
+
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CBTBL, asc.CBTBL);
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CBTMX, asc.CBTMX);
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CBTTBP, asc.CBTTBP);
@@ -114,6 +129,1464 @@ using System.Text;
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CWTBS, asc.CWTBS);
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_300_CWTTBP, asc.CWTTBP);
         }
+
+        #region TimeValue
+
+        /// <summary>
+        /// Test creating a TimeValue
+        /// </summary>
+        [Test]
+        public void TestTimeValue()
+        {
+            TimeValue time = new TimeValue(1, 22, 3, 4);
+
+            Assert.AreEqual(new TimeValue(1, 22, 3, 4), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Test having 60 minutes, see it increment hours.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerMinute()
+        {
+            TimeValue time = new TimeValue(1, 60, 3, 4);
+
+            Assert.AreEqual(new TimeValue(2, 0, 3, 4), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Test having exceed 60 minutes, see it increment hours.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerMinute1()
+        {
+            TimeValue time = new TimeValue(1, 63, 3, 4);
+
+            Assert.AreEqual(new TimeValue(2, 3, 3, 4), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Test having 60 seconds, see it increment minutes.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerSecond()
+        {
+            TimeValue time = new TimeValue(1, 4, 60, 4);
+
+            Assert.AreEqual(new TimeValue(1, 5, 0, 4), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Test having exceed 60 seconds, see it increment minutes.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerSeconds1()
+        {
+            TimeValue time = new TimeValue(1, 3, 66, 4);
+
+            Assert.AreEqual(new TimeValue(1, 4, 6, 4), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Test having 100 HunSec, see it increment seconds.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerHunSecond()
+        {
+            TimeValue time = new TimeValue(1, 4, 10, 100);
+
+            Assert.AreEqual(new TimeValue(1, 4, 11, 0), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Test having exceed 100 HunSec, see it increment seconds.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerHunSeconds1()
+        {
+            TimeValue time = new TimeValue(1, 3, 6, 144);
+
+            Assert.AreEqual(new TimeValue(1, 3, 7, 44), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Cause all the values to overflow.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerOver()
+        {
+            TimeValue time = new TimeValue(1, 340, 66, 144);
+
+            Assert.AreEqual(new TimeValue(6, 41, 7, 44), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Cause all the values to overflow.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerOverSetValues()
+        {
+            TimeValue time = new TimeValue();
+            time.Hour = 1;
+            time.Minute = 340;
+            time.Second = 66;
+            time.HunSec = 144;
+
+            Assert.AreEqual(new TimeValue(6, 41, 7, 44), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test creating a TimeValue.
+        /// Cause all the values to overflow.  Change the order.
+        /// Order matters and this will not give the value you expect.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_CornerOverSetValuesOrder()
+        {
+            TimeValue time = new TimeValue();
+            time.HunSec = 144;
+            time.Second = 66;
+            time.Minute = 340;
+            time.Hour = 1;
+
+            Assert.AreNotEqual(new TimeValue(6, 41, 7, 44), time, "TimeValue is incorrect.");
+            Assert.AreEqual(new TimeValue(1, 40, 6, 44), time, "TimeValue is incorrect.");
+        }
+
+        /// <summary>
+        /// Test the equivalence sign.
+        /// </summary>
+        [Test]
+        public void TestTimeValue_Equal()
+        {
+            TimeValue time1 = new TimeValue(1, 2, 3, 4);
+            TimeValue time2 = new TimeValue(1, 2, 3, 4);
+            TimeValue time3 = new TimeValue(4, 2, 2, 1);
+
+            Assert.AreEqual(true, time1 == time2, "TimeValue == is incorrect.");
+            Assert.AreEqual(true, time1 != time3, "TimeValue != is incorrect.");
+            Assert.AreEqual(true, time1.Equals(time2), "TimeValue Equals is incorrect.");
+            Assert.AreEqual(false, time1.Equals(time3), "TimeValue Equals false is incorrect.");
+        }
+
+        /// <summary>
+        /// Test the ToString().
+        /// </summary>
+        [Test]
+        public void TestTimeValue_ToString()
+        {
+            TimeValue time1 = new TimeValue(1, 2, 3, 4);
+
+            Assert.AreEqual("01:02:03.04", time1.ToString(), "TimeValue ToString() is incorrect.");
+        }
+
+        /// <summary>
+        /// Test the ToSeconds().
+        /// </summary>
+        [Test]
+        public void TestTimeValue_ToSeconds()
+        {
+            TimeValue time1 = new TimeValue(1, 2, 3, 4);
+
+            Assert.AreEqual(3723, time1.ToSeconds(), "TimeValue ToSeconds() is incorrect.");
+        }
+
+        /// <summary>
+        /// Test the ToSecondsRoundUp().
+        /// </summary>
+        [Test]
+        public void TestTimeValue_ToSecondsRoundUp()
+        {
+            TimeValue time1 = new TimeValue(1, 2, 3, 70);
+
+            Assert.AreEqual(3724, time1.ToSeconds(), "TimeValue ToSeconds() is incorrect.");
+        }
+
+        /// <summary>
+        /// Test the ToSecondsRoundUpCorner().
+        /// </summary>
+        [Test]
+        public void TestTimeValue_ToSecondsRoundUpCorner()
+        {
+            TimeValue time1 = new TimeValue(1, 2, 3, 50);
+
+            Assert.AreEqual(3724, time1.ToSeconds(), "TimeValue ToSeconds() is incorrect.");
+        }
+
+        /// <summary>
+        /// Test the ToSecondsRoundUpCorner1().
+        /// </summary>
+        [Test]
+        public void TestTimeValue_ToSecondsRoundUpCorner1()
+        {
+            TimeValue time1 = new TimeValue(1, 2, 3, 51);
+
+            Assert.AreEqual(3724, time1.ToSeconds(), "TimeValue ToSeconds() is incorrect.");
+        }
+
+        #endregion
+
+        #region Mode
+
+        /// <summary>
+        /// Test setting the Mode command.
+        /// </summary>
+        [Test]
+        public void TestMode()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.Mode = AdcpCommands.AdcpMode.PROFILE;
+
+            Assert.AreEqual(AdcpCommands.AdcpMode.PROFILE, cmd.Mode, "Mode is incorrect.");
+            Assert.AreEqual("CPROFILE", cmd.Mode_ToString(), "Mode String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_CPROFILE, cmd.Mode_ToString(), "Mode String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the Mode command.
+        /// </summary>
+        [Test]
+        public void TestMode1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.Mode = AdcpCommands.AdcpMode.DVL;
+
+            Assert.AreEqual(AdcpCommands.AdcpMode.DVL, cmd.Mode, "Mode is incorrect.");
+            Assert.AreEqual("CDVL", cmd.Mode_ToString(), "Mode String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_CDVL, cmd.Mode_ToString(), "Mode String is incorrect.");
+        }
+
+        #endregion
+
+        #region CEI
+
+        /// <summary>
+        /// Test setting the CEI command.
+        /// </summary>
+        [Test]
+        public void TestCEI()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEI = new TimeValue(22,33,44,55);
+
+            Assert.AreEqual(new TimeValue(22, 33, 44, 55), cmd.CEI, "CEI is incorrect.");
+        }
+
+        #endregion
+
+        #region CEPO
+
+        /// <summary>
+        /// Test setting the CEPO command.
+        /// </summary>
+        [Test]
+        public void TestCEPO()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEPO = "333";
+
+            Assert.AreEqual("333", cmd.CEPO, "CEPO is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CEPO command.
+        /// </summary>
+        [Test]
+        public void TestCEPODefault()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CEPO, cmd.CEPO, "CEPO is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_Year
+
+        /// <summary>
+        /// Test setting the CETFP_Year command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Year()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Year = 2015;
+
+            Assert.AreEqual(2015, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Year.
+        /// Range is 2000 to 2099.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Year_BadMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Year = 15;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CETFP_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Year.
+        /// Range is 2000 to 2099.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Year_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Year = 2100;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CETFP_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_Year.
+        /// Range is 2000 to 2099.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Year_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Year = AdcpCommands.MIN_YEAR;
+
+            Assert.AreEqual(AdcpCommands.MIN_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_Year.
+        /// Range is 2000 to 2099.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Year_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Year = AdcpCommands.MAX_YEAR;
+
+            Assert.AreEqual(AdcpCommands.MAX_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_Month
+
+        /// <summary>
+        /// Test setting the CETFP_Month command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Month()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Month = 5;
+
+            Assert.AreEqual(5, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Month.
+        /// Range is 1 to 12.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Month_BadMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Month = 0;
+
+            Assert.AreEqual(DateTime.Now.Month, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Month.
+        /// Range is 1 to 12.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Month_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Month = 2100;
+
+            Assert.AreEqual(DateTime.Now.Month, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_Month.
+        /// Range is 1 to 12.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Month_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Month = AdcpCommands.MIN_MONTH;
+
+            Assert.AreEqual(AdcpCommands.MIN_MONTH, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_Month.
+        /// Range is 1 to 12.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Month_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Month = AdcpCommands.MAX_MONTH;
+
+            Assert.AreEqual(AdcpCommands.MAX_MONTH, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_Day
+
+        /// <summary>
+        /// Test setting the CETFP_Day command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Day()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Day = 5;
+
+            Assert.AreEqual(5, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Day.
+        /// Range is 1 to 31.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Day_BadMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Day = 0;
+
+            Assert.AreEqual(DateTime.Now.Day, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Day.
+        /// Range is 1 to 31.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Day_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Day = 2100;
+
+            Assert.AreEqual(DateTime.Now.Day, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_Day.
+        /// Range is 1 to 31.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Day_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Day = AdcpCommands.MIN_DAY;
+
+            Assert.AreEqual(AdcpCommands.MIN_DAY, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_Day.
+        /// Range is 1 to 31.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Day_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Day = AdcpCommands.MAX_DAY;
+
+            Assert.AreEqual(AdcpCommands.MAX_DAY, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_Hour
+
+        /// <summary>
+        /// Test setting the CETFP_Hour command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Hour()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Hour = 5;
+
+            Assert.AreEqual(5, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Hour.
+        /// Range is 0 to 23.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Hour_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Hour = 2100;
+
+            Assert.AreEqual(DateTime.Now.Hour, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_Hour.
+        /// Range is 0 to 23.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Hour_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Hour = AdcpCommands.MIN_HOUR;
+
+            Assert.AreEqual(AdcpCommands.MIN_HOUR, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_Hour.
+        /// Range is 0 to 23.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Hour_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Hour = AdcpCommands.MAX_HOUR;
+
+            Assert.AreEqual(AdcpCommands.MAX_HOUR, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_Minute
+
+        /// <summary>
+        /// Test setting the CETFP_Minute command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Minute()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Minute = 5;
+
+            Assert.AreEqual(5, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Minute.
+        /// Range is 0 to 59.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Minute_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Minute = 2100;
+
+            Assert.AreEqual(DateTime.Now.Minute, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_Minute.
+        /// Range is 0 to 59.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Minute_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Minute = AdcpCommands.MIN_MINSEC;
+
+            Assert.AreEqual(AdcpCommands.MIN_MINSEC, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_Minute.
+        /// Range is 0 to 59.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Minute_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Minute = AdcpCommands.MAX_MINSEC;
+
+            Assert.AreEqual(AdcpCommands.MAX_MINSEC, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_Second
+
+        /// <summary>
+        /// Test setting the CETFP_Second command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Second()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Second = 5;
+
+            Assert.AreEqual(5, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_Second.
+        /// Range is 0 to 59.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Second_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Second = 2100;
+
+            Assert.AreEqual(DateTime.Now.Second, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_Second.
+        /// Range is 0 to 59.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Second_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Second = AdcpCommands.MIN_MINSEC;
+
+            Assert.AreEqual(AdcpCommands.MIN_MINSEC, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_Second.
+        /// Range is 0 to 59.
+        /// </summary>
+        [Test]
+        public void TestCETFP_Second_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Second = AdcpCommands.MAX_MINSEC;
+
+            Assert.AreEqual(AdcpCommands.MAX_MINSEC, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP_HunSec
+
+        /// <summary>
+        /// Test setting the CETFP_HunSec command.
+        /// </summary>
+        [Test]
+        public void TestCETFP_HunSec()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_HunSec = 5;
+
+            Assert.AreEqual(5, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CETFP_HunSec.
+        /// Range is 0 to 99.
+        /// </summary>
+        [Test]
+        public void TestCETFP_HunSec_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Second = 2100;
+
+            Assert.AreNotEqual(2100, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CETFP_HunSec.
+        /// Range is 0 to 99.
+        /// </summary>
+        [Test]
+        public void TestCETFP_HunSec_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_HunSec = AdcpCommands.MIN_HUNSEC;
+
+            Assert.AreEqual(AdcpCommands.MIN_HUNSEC, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CETFP_HunSec.
+        /// Range is 0 to 99.
+        /// </summary>
+        [Test]
+        public void TestCETFP_HunSec_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_HunSec = AdcpCommands.MAX_HUNSEC;
+
+            Assert.AreEqual(AdcpCommands.MAX_HUNSEC, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        }
+
+        #endregion
+
+        #region CERECORD
+
+        /// <summary>
+        /// Test setting the CERECORD command.
+        /// </summary>
+        [Test]
+        public void TestCERECORD()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CERECORD = true;
+
+            Assert.AreEqual(true, cmd.CERECORD, "CERECORD is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CERECORD command.
+        /// </summary>
+        [Test]
+        public void TestCERECORD1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CERECORD = false;
+
+            Assert.AreEqual(false, cmd.CERECORD, "CERECORD is incorrect.");
+        }
+
+        #endregion
+
+        #region CEOUTPUT
+
+        /// <summary>
+        /// Test setting the CEOUTPUT command.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUT()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = 1;
+
+            Assert.AreEqual(1, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CEOUTPUT.
+        /// Range is 0 to 2.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUT_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = 5;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CEOUTPUT, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CCEOUTPUTHO.
+        /// Range is 0 to 2.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUT_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = AdcpCommands.MIN_CEOUTPUT;
+
+            Assert.AreEqual(AdcpCommands.MIN_CEOUTPUT, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CEOUTPUT.
+        /// Range is 0 to 2.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUT_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = AdcpCommands.MAX_CEOUTPUT;
+
+            Assert.AreEqual(AdcpCommands.MAX_CEOUTPUT, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+        }
+
+        #endregion
+
+        #region CWS
+
+        /// <summary>
+        /// Test setting the CWS command.
+        /// </summary>
+        [Test]
+        public void TestCWS()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWS = 15.004f;
+
+            Assert.AreEqual(15.004f, cmd.CWS, 0.0001, "CWS is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CWS command.
+        /// </summary>
+        [Test]
+        public void TestCWS_Bad()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWS = -15.004f;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CWS, cmd.CWS, 0.0001, "CWS is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CWS command.
+        /// </summary>
+        [Test]
+        public void TestCWS_Min()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWS = AdcpCommands.MIN_CWS;
+
+            Assert.AreEqual(AdcpCommands.MIN_CWS, cmd.CWS, 0.0001, "CWS is incorrect.");
+        }
+
+        #endregion
+
+        #region CWT
+
+        /// <summary>
+        /// Test setting the CWT command.
+        /// </summary>
+        [Test]
+        public void TestCWT()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWT = 15.006f;
+
+            Assert.AreEqual(15.006f, cmd.CWT, 0.0001, "CWT is incorrect.");
+        }
+
+        #endregion
+
+        #region CTD
+
+        /// <summary>
+        /// Test setting the CWT command.
+        /// </summary>
+        [Test]
+        public void TestCTD()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CTD = 15.008f;
+
+            Assert.AreEqual(15.008f, cmd.CTD, 0.0001, "CTD is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CTD command.
+        /// </summary>
+        [Test]
+        public void TestCTD_Bad()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CTD = -15.004f;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CTD, cmd.CTD, 0.0001, "CTD is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CTD command.
+        /// </summary>
+        [Test]
+        public void TestCTD_Min()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CTD = AdcpCommands.MIN_CTD;
+
+            Assert.AreEqual(AdcpCommands.MIN_CTD, cmd.CTD, 0.0001, "CTD is incorrect.");
+        }
+
+        #endregion
+
+        #region CWSS
+
+        /// <summary>
+        /// Test setting the CWSS command.
+        /// </summary>
+        [Test]
+        public void TestCWSS()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWSS = 15.009f;
+
+            Assert.AreEqual(15.009f, cmd.CWSS, 0.0001, "CWSS is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CWSS command.
+        /// </summary>
+        [Test]
+        public void TestCWSS_Bad()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWSS = -15.004f;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CWSS, cmd.CWSS, 0.0001, "CWSS is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CWSS command.
+        /// </summary>
+        [Test]
+        public void TestCWSS_Min()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWSS = AdcpCommands.MIN_CWSS;
+
+            Assert.AreEqual(AdcpCommands.MIN_CWSS, cmd.CWSS, 0.0001, "CWSS is incorrect.");
+        }
+
+        #endregion
+
+        #region CHO
+
+        /// <summary>
+        /// Test setting the CHO command.
+        /// </summary>
+        [Test]
+        public void TestCHO()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = 15.004f;
+
+            Assert.AreEqual(15.004f, cmd.CHO, 0.0001, "CHO is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CHO.
+        /// Range is -180 to 180.
+        /// </summary>
+        [Test]
+        public void TestCHO_BadMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = -256.33f;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CHO, cmd.CHO, 0.0001, "CHO is incorrect.");
+        }
+
+        /// <summary>
+        /// Give a bad CHO.
+        /// Range is -180 to 180.
+        /// </summary>
+        [Test]
+        public void TestCHO_BadMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = 86500.004f;
+
+            Assert.AreEqual(AdcpCommands.DEFAULT_CHO, cmd.CHO, 0.0001, "CHO is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Min for CHO.
+        /// Range is -180 to 180.
+        /// </summary>
+        [Test]
+        public void TestCHO_CornerMin()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = AdcpCommands.MIN_CHO;
+
+            Assert.AreEqual(AdcpCommands.MIN_CHO, cmd.CHO, "CHO is incorrect.");
+        }
+
+        /// <summary>
+        /// Test corner case Max for CHO.
+        /// Range is -180 to 180.
+        /// </summary>
+        [Test]
+        public void TestCHO_CornerMax()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = AdcpCommands.MAX_CHO;
+
+            Assert.AreEqual(AdcpCommands.MAX_CHO, cmd.CHO, "CHO is incorrect.");
+        }
+
+        #endregion
+
+        #region CHS
+
+        /// <summary>
+        /// Test setting the CHS command.
+        /// </summary>
+        [Test]
+        public void TestCHS()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHS = HeadingSrc.INTERNAL;
+
+            Assert.AreEqual(HeadingSrc.INTERNAL, cmd.CHS, "CHS is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the CHS command.
+        /// </summary>
+        [Test]
+        public void TestCHS1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHS = HeadingSrc.SERIAL;
+
+            Assert.AreEqual(HeadingSrc.SERIAL, cmd.CHS, "CHS is incorrect.");
+        }
+
+        #endregion
+
+        #region CVSF
+
+        /// <summary>
+        /// Test setting the CVSF command.
+        /// </summary>
+        [Test]
+        public void TestCVSF()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CVSF = 15.011f;
+
+            Assert.AreEqual(15.011f, cmd.CVSF, 0.0001, "CVSF is incorrect.");
+        }
+
+        #endregion
+
+        #region C232B
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_2400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_2400;
+
+            Assert.AreEqual(Baudrate.BAUD_2400, cmd.C232B, "C232B BAUD_2400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_4800()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_4800;
+
+            Assert.AreEqual(Baudrate.BAUD_4800, cmd.C232B, "C232B BAUD_4800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_9600()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_9600;
+
+            Assert.AreEqual(Baudrate.BAUD_9600, cmd.C232B, "C232B BAUD_9600 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_19200()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_19200;
+
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd.C232B, "C232B BAUD_19200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_38400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_38400;
+
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd.C232B, "C232B BAUD_38400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_115200()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_115200;
+
+            Assert.AreEqual(Baudrate.BAUD_115200, cmd.C232B, "C232B BAUD_115200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_230400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_230400;
+
+            Assert.AreEqual(Baudrate.BAUD_230400, cmd.C232B, "C232B BAUD_230400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_460800()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_460800;
+
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd.C232B, "C232B BAUD_460800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_921600()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_921600;
+
+            Assert.AreEqual(Baudrate.BAUD_921600, cmd.C232B, "C232B BAUD_921600 is incorrect.");
+        }
+
+        #endregion
+
+        #region C485B
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_2400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_2400;
+
+            Assert.AreEqual(Baudrate.BAUD_2400, cmd.C485B, "C485B BAUD_2400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_4800()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_4800;
+
+            Assert.AreEqual(Baudrate.BAUD_4800, cmd.C485B, "C485B BAUD_4800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_9600()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_9600;
+
+            Assert.AreEqual(Baudrate.BAUD_9600, cmd.C485B, "C485B BAUD_9600 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_19200()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_19200;
+
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd.C485B, "C485B BAUD_19200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_38400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_38400;
+
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd.C485B, "C485B BAUD_38400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_115200()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_115200;
+
+            Assert.AreEqual(Baudrate.BAUD_115200, cmd.C485B, "C485B BAUD_115200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_230400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_230400;
+
+            Assert.AreEqual(Baudrate.BAUD_230400, cmd.C485B, "C485B BAUD_230400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_460800()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_460800;
+
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd.C485B, "C485B BAUD_460800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_921600()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_921600;
+
+            Assert.AreEqual(Baudrate.BAUD_921600, cmd.C485B, "C485B BAUD_921600 is incorrect.");
+        }
+
+        #endregion
+
+        #region C422B
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_2400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_2400;
+
+            Assert.AreEqual(Baudrate.BAUD_2400, cmd.C422B, "C422B BAUD_2400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_4800()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_4800;
+
+            Assert.AreEqual(Baudrate.BAUD_4800, cmd.C422B, "C422B BAUD_4800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_9600()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_9600;
+
+            Assert.AreEqual(Baudrate.BAUD_9600, cmd.C422B, "C422B BAUD_9600 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_19200()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_19200;
+
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd.C422B, "C422B BAUD_19200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_38400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_38400;
+
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd.C422B, "C422B BAUD_38400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_115200()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_115200;
+
+            Assert.AreEqual(Baudrate.BAUD_115200, cmd.C422B, "C422B BAUD_115200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestCC422B_230400()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_230400;
+
+            Assert.AreEqual(Baudrate.BAUD_230400, cmd.C422B, "C422B BAUD_230400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_460800()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_460800;
+
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd.C422B, "C422B BAUD_460800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_921600()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_921600;
+
+            Assert.AreEqual(Baudrate.BAUD_921600, cmd.C422B, "C422B BAUD_921600 is incorrect.");
+        }
+
+        #endregion
+
+        #region Decode
 
         /// <summary>
         /// Test the DecodeBREAK() function.
@@ -376,6 +1849,345 @@ using System.Text;
             Assert.AreEqual(1.004, listing.DirListing[4].FileSize, "File size of file 5 is incorrect.");
             Assert.AreEqual("A0000005.ENS", listing.DirListing[4].FileName, "File name of file 5 is incorrect.");
         }
+
+        #endregion
+
+        #region Equal
+
+        /// <summary>
+        /// Test Equals sign.
+        /// </summary>
+        [Test]
+        public void TestEqual_New()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.Mode = AdcpCommands.AdcpMode.DVL;
+            cmd.CEI = new TimeValue(1, 2, 3, 4);
+            cmd.CEPO = "33";
+            cmd.CETFP_Year = 2022;
+            cmd.CETFP_Month = 4;
+            cmd.CETFP_Day = 20;
+            cmd.CETFP_Hour = 3;
+            cmd.CETFP_Minute = 2;
+            cmd.CETFP_Second = 32;
+            cmd.CETFP_HunSec = 83;
+            cmd.CERECORD = false;
+            cmd.CEOUTPUT = 1;
+            cmd.CWS = 23.234f;
+            cmd.CWT = 934.123f;
+            cmd.CTD = 945.23f;
+            cmd.CWSS = 111.345f;
+            cmd.CHO = 83.23f;
+            cmd.CHS = HeadingSrc.INTERNAL;
+            cmd.CVSF = 234.2345f;
+            cmd.C232B = Baudrate.BAUD_19200;
+            cmd.C485B = Baudrate.BAUD_460800;
+            cmd.C422B = Baudrate.BAUD_38400;
+
+            AdcpCommands cmd1 = cmd;
+
+            #region Mode
+            Assert.AreEqual(AdcpCommands.AdcpMode.DVL, cmd.Mode, "Mode is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpMode.DVL, cmd1.Mode, "Mode 1 is incorrect.");
+            Assert.AreEqual(cmd.Mode, cmd1.Mode, "Mode equal is incorrect.");
+            #endregion
+
+            #region CEI
+            Assert.AreEqual(new TimeValue(1, 2, 3, 4), cmd.CEI, "CEI is incorrect.");
+            Assert.AreEqual(new TimeValue(1, 2, 3, 4), cmd1.CEI, "CEI 1 is incorrect.");
+            Assert.AreEqual(cmd.CEI, cmd1.CEI, "CEI equal is incorrect.");
+            #endregion
+
+            #region CEPO
+            Assert.AreEqual("33", cmd.CEPO, "CEPO is incorrect.");
+            Assert.AreEqual("33", cmd1.CEPO, "CEPO 1 is incorrect.");
+            Assert.AreEqual(cmd.CEPO, cmd1.CEPO, "CEPO equal is incorrect.");
+            #endregion
+
+            #region CETFP_Year
+            Assert.AreEqual(2022, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+            Assert.AreEqual(2022, cmd1.CETFP_Year, "CETFP_Year 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Year, cmd1.CETFP_Year, "CETFP_Year equal is incorrect.");
+            #endregion
+
+            #region CETFP_Month
+            Assert.AreEqual(4, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+            Assert.AreEqual(4, cmd1.CETFP_Month, "CETFP_Month 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Month, cmd1.CETFP_Month, "CETFP_Month equal is incorrect.");
+            #endregion
+
+            #region CETFP_Day
+            Assert.AreEqual(20, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+            Assert.AreEqual(20, cmd1.CETFP_Day, "CETFP_Day 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Day, cmd1.CETFP_Day, "CETFP_Day equal is incorrect.");
+            #endregion
+
+            #region CETFP_Hour
+            Assert.AreEqual(3, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+            Assert.AreEqual(3, cmd1.CETFP_Hour, "CETFP_Hour 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Hour, cmd1.CETFP_Hour, "CETFP_Hour equal is incorrect.");
+            #endregion
+
+            #region CETFP_Minute
+            Assert.AreEqual(2, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+            Assert.AreEqual(2, cmd1.CETFP_Minute, "CETFP_Minute 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Minute, cmd1.CETFP_Minute, "CETFP_Minute equal is incorrect.");
+            #endregion
+
+            #region CETFP_Second
+            Assert.AreEqual(32, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+            Assert.AreEqual(32, cmd1.CETFP_Second, "CETFP_Second 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Second, cmd1.CETFP_Second, "CETFP_Second equal is incorrect.");
+            #endregion
+
+            #region CETFP_HunSec
+            Assert.AreEqual(83, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+            Assert.AreEqual(83, cmd1.CETFP_HunSec, "CETFP_HunSec 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_HunSec, cmd1.CETFP_HunSec, "CETFP_HunSec equal is incorrect.");
+            #endregion
+
+            #region CERECORD
+            Assert.AreEqual(false, cmd.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(false, cmd1.CERECORD, "CERECORD 1 is incorrect.");
+            Assert.AreEqual(cmd.CERECORD, cmd1.CERECORD, "CERECORD equal is incorrect.");
+            #endregion
+
+            #region CEOUTPUT
+            Assert.AreEqual(1, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(1, cmd1.CEOUTPUT, "CEOUTPUT 1 is incorrect.");
+            Assert.AreEqual(cmd.CEOUTPUT, cmd1.CEOUTPUT, "CEOUTPUT equal is incorrect.");
+            #endregion
+
+            #region CWS
+            Assert.AreEqual(23.234f, cmd.CWS, "CWS is incorrect.");
+            Assert.AreEqual(23.234f, cmd1.CWS, "CWS 1 is incorrect.");
+            Assert.AreEqual(cmd.CWS, cmd1.CWS, "CWS equal is incorrect.");
+            #endregion
+
+            #region CWT
+            Assert.AreEqual(934.123f, cmd.CWT, "CWT is incorrect.");
+            Assert.AreEqual(934.123f, cmd1.CWT, "CWT 1 is incorrect.");
+            Assert.AreEqual(cmd.CWT, cmd1.CWT, "CWT equal is incorrect.");
+            #endregion
+
+            #region CTD
+            Assert.AreEqual(945.23f, cmd.CTD, "CTD is incorrect.");
+            Assert.AreEqual(945.23f, cmd1.CTD, "CTD 1 is incorrect.");
+            Assert.AreEqual(cmd.CTD, cmd1.CTD, "CTD equal is incorrect.");
+            #endregion
+
+            #region CWSS
+            Assert.AreEqual(111.345f, cmd.CWSS, "CWSS is incorrect.");
+            Assert.AreEqual(111.345f, cmd1.CWSS, "CWSS 1 is incorrect.");
+            Assert.AreEqual(cmd.CWSS, cmd1.CWSS, "CWSS equal is incorrect.");
+            #endregion
+
+            #region CHO
+            Assert.AreEqual(83.23f, cmd.CHO, "CHO is incorrect.");
+            Assert.AreEqual(83.23f, cmd1.CHO, "CHO 1 is incorrect.");
+            Assert.AreEqual(cmd.CHO, cmd1.CHO, "CHO equal is incorrect.");
+            #endregion
+
+            #region CHS
+            Assert.AreEqual(HeadingSrc.INTERNAL, cmd.CHS, "CHS is incorrect.");
+            Assert.AreEqual(HeadingSrc.INTERNAL, cmd1.CHS, "CHS 1 is incorrect.");
+            Assert.AreEqual(cmd.CHS, cmd1.CHS, "CHS equal is incorrect.");
+            #endregion
+
+            #region CVSF
+            Assert.AreEqual(234.2345f, cmd.CVSF, "CVSF is incorrect.");
+            Assert.AreEqual(234.2345f, cmd1.CVSF, "CVSF 1 is incorrect.");
+            Assert.AreEqual(cmd.CVSF, cmd1.CVSF, "CVSF equal is incorrect.");
+            #endregion
+
+            #region C232B
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd.C232B, "C232B is incorrect.");
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd1.C232B, "C232B 1 is incorrect.");
+            Assert.AreEqual(cmd.C232B, cmd1.C232B, "C232B equal is incorrect.");
+            #endregion
+
+            #region C485B
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd.C485B, "C485B is incorrect.");
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd1.C485B, "C485B 1 is incorrect.");
+            Assert.AreEqual(cmd.C485B, cmd1.C485B, "C485B equal is incorrect.");
+            #endregion
+
+            #region C485B
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd.C422B, "C422B is incorrect.");
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd1.C422B, "C422B 1 is incorrect.");
+            Assert.AreEqual(cmd.C422B, cmd1.C422B, "C422B equal is incorrect.");
+            #endregion
+        }
+
+        /// <summary>
+        /// Test Equals sign.
+        /// </summary>
+        [Test]
+        public void TestEqual_Copy()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.Mode = AdcpCommands.AdcpMode.DVL;
+            cmd.CEI = new TimeValue(1, 2, 3, 4);
+            cmd.CEPO = "33";
+            cmd.CETFP_Year = 2022;
+            cmd.CETFP_Month = 4;
+            cmd.CETFP_Day = 20;
+            cmd.CETFP_Hour = 3;
+            cmd.CETFP_Minute = 2;
+            cmd.CETFP_Second = 32;
+            cmd.CETFP_HunSec = 83;
+            cmd.CERECORD = false;
+            cmd.CEOUTPUT = 1;
+            cmd.CWS = 23.234f;
+            cmd.CWT = 934.123f;
+            cmd.CTD = 945.23f;
+            cmd.CWSS = 111.345f;
+            cmd.CHO = 83.23f;
+            cmd.CHS = HeadingSrc.INTERNAL;
+            cmd.CVSF = 234.2345f;
+            cmd.C232B = Baudrate.BAUD_19200;
+            cmd.C485B = Baudrate.BAUD_460800;
+            cmd.C422B = Baudrate.BAUD_38400;
+
+            AdcpCommands cmd1 = new AdcpCommands();
+            cmd1 = cmd;
+
+            #region Mode
+            Assert.AreEqual(AdcpCommands.AdcpMode.DVL, cmd.Mode, "Mode is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpMode.DVL, cmd1.Mode, "Mode 1 is incorrect.");
+            Assert.AreEqual(cmd.Mode, cmd1.Mode, "Mode equal is incorrect.");
+            #endregion
+
+            #region CEI
+            Assert.AreEqual(new TimeValue(1, 2, 3, 4), cmd.CEI, "CEI is incorrect.");
+            Assert.AreEqual(new TimeValue(1, 2, 3, 4), cmd1.CEI, "CEI 1 is incorrect.");
+            Assert.AreEqual(cmd.CEI, cmd1.CEI, "CEI equal is incorrect.");
+            #endregion
+
+            #region CEPO
+            Assert.AreEqual("33", cmd.CEPO, "CEPO is incorrect.");
+            Assert.AreEqual("33", cmd1.CEPO, "CEPO 1 is incorrect.");
+            Assert.AreEqual(cmd.CEPO, cmd1.CEPO, "CEPO equal is incorrect.");
+            #endregion
+
+            #region CETFP_Year
+            Assert.AreEqual(2022, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+            Assert.AreEqual(2022, cmd1.CETFP_Year, "CETFP_Year 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Year, cmd1.CETFP_Year, "CETFP_Year equal is incorrect.");
+            #endregion
+
+            #region CETFP_Month
+            Assert.AreEqual(4, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+            Assert.AreEqual(4, cmd1.CETFP_Month, "CETFP_Month 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Month, cmd1.CETFP_Month, "CETFP_Month equal is incorrect.");
+            #endregion
+
+            #region CETFP_Day
+            Assert.AreEqual(20, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+            Assert.AreEqual(20, cmd1.CETFP_Day, "CETFP_Day 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Day, cmd1.CETFP_Day, "CETFP_Day equal is incorrect.");
+            #endregion
+
+            #region CETFP_Hour
+            Assert.AreEqual(3, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+            Assert.AreEqual(3, cmd1.CETFP_Hour, "CETFP_Hour 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Hour, cmd1.CETFP_Hour, "CETFP_Hour equal is incorrect.");
+            #endregion
+
+            #region CETFP_Minute
+            Assert.AreEqual(2, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+            Assert.AreEqual(2, cmd1.CETFP_Minute, "CETFP_Minute 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Minute, cmd1.CETFP_Minute, "CETFP_Minute equal is incorrect.");
+            #endregion
+
+            #region CETFP_Second
+            Assert.AreEqual(32, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+            Assert.AreEqual(32, cmd1.CETFP_Second, "CETFP_Second 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_Second, cmd1.CETFP_Second, "CETFP_Second equal is incorrect.");
+            #endregion
+
+            #region CETFP_HunSec
+            Assert.AreEqual(83, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+            Assert.AreEqual(83, cmd1.CETFP_HunSec, "CETFP_HunSec 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP_HunSec, cmd1.CETFP_HunSec, "CETFP_HunSec equal is incorrect.");
+            #endregion
+
+            #region CERECORD
+            Assert.AreEqual(false, cmd.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(false, cmd1.CERECORD, "CERECORD 1 is incorrect.");
+            Assert.AreEqual(cmd.CERECORD, cmd1.CERECORD, "CERECORD equal is incorrect.");
+            #endregion
+
+            #region CEOUTPUT
+            Assert.AreEqual(1, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(1, cmd1.CEOUTPUT, "CEOUTPUT 1 is incorrect.");
+            Assert.AreEqual(cmd.CEOUTPUT, cmd1.CEOUTPUT, "CEOUTPUT equal is incorrect.");
+            #endregion
+
+            #region CWS
+            Assert.AreEqual(23.234f, cmd.CWS, "CWS is incorrect.");
+            Assert.AreEqual(23.234f, cmd1.CWS, "CWS 1 is incorrect.");
+            Assert.AreEqual(cmd.CWS, cmd1.CWS, "CWS equal is incorrect.");
+            #endregion
+
+            #region CWT
+            Assert.AreEqual(934.123f, cmd.CWT, "CWT is incorrect.");
+            Assert.AreEqual(934.123f, cmd1.CWT, "CWT 1 is incorrect.");
+            Assert.AreEqual(cmd.CWT, cmd1.CWT, "CWT equal is incorrect.");
+            #endregion
+
+            #region CTD
+            Assert.AreEqual(945.23f, cmd.CTD, "CTD is incorrect.");
+            Assert.AreEqual(945.23f, cmd1.CTD, "CTD 1 is incorrect.");
+            Assert.AreEqual(cmd.CTD, cmd1.CTD, "CTD equal is incorrect.");
+            #endregion
+
+            #region CWSS
+            Assert.AreEqual(111.345f, cmd.CWSS, "CWSS is incorrect.");
+            Assert.AreEqual(111.345f, cmd1.CWSS, "CWSS 1 is incorrect.");
+            Assert.AreEqual(cmd.CWSS, cmd1.CWSS, "CWSS equal is incorrect.");
+            #endregion
+
+            #region CHO
+            Assert.AreEqual(83.23f, cmd.CHO, "CHO is incorrect.");
+            Assert.AreEqual(83.23f, cmd1.CHO, "CHO 1 is incorrect.");
+            Assert.AreEqual(cmd.CHO, cmd1.CHO, "CHO equal is incorrect.");
+            #endregion
+
+            #region CHS
+            Assert.AreEqual(HeadingSrc.INTERNAL, cmd.CHS, "CHS is incorrect.");
+            Assert.AreEqual(HeadingSrc.INTERNAL, cmd1.CHS, "CHS 1 is incorrect.");
+            Assert.AreEqual(cmd.CHS, cmd1.CHS, "CHS equal is incorrect.");
+            #endregion
+
+            #region CVSF
+            Assert.AreEqual(234.2345f, cmd.CVSF, "CVSF is incorrect.");
+            Assert.AreEqual(234.2345f, cmd1.CVSF, "CVSF 1 is incorrect.");
+            Assert.AreEqual(cmd.CVSF, cmd1.CVSF, "CVSF equal is incorrect.");
+            #endregion
+
+            #region C232B
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd.C232B, "C232B is incorrect.");
+            Assert.AreEqual(Baudrate.BAUD_19200, cmd1.C232B, "C232B 1 is incorrect.");
+            Assert.AreEqual(cmd.C232B, cmd1.C232B, "C232B equal is incorrect.");
+            #endregion
+
+            #region C485B
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd.C485B, "C485B is incorrect.");
+            Assert.AreEqual(Baudrate.BAUD_460800, cmd1.C485B, "C485B 1 is incorrect.");
+            Assert.AreEqual(cmd.C485B, cmd1.C485B, "C485B equal is incorrect.");
+            #endregion
+
+            #region C485B
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd.C422B, "C422B is incorrect.");
+            Assert.AreEqual(Baudrate.BAUD_38400, cmd1.C422B, "C422B 1 is incorrect.");
+            Assert.AreEqual(cmd.C422B, cmd1.C422B, "C422B equal is incorrect.");
+            #endregion
+        }
+
+        #endregion
 
     }
 }

@@ -58,6 +58,10 @@
  * 01/30/2012      RC          1.14       Changed subsystem in firmware to subsystem index.
  * 02/23/2012      RC          2.03       Changed Status in Ensemble DataSet and Bottom Track DataSet to a Status object.
  * 04/25/2012      RC          2.10       Fix bug, if bottom track does not exist, add 0 as paramater values.
+ * 09/14/2012      RC          2.15       Get and Set Adcp Commands and Options to the project database.
+ * 09/18/2012      RC          2.15       In WriteEnsembleDataToDatabase(), added SubsystemConfig to the database.
+ * 10/02/2012      RC          2.15       Added UpdateAdcpConfiguration() to write the AdcpConfiguration to the database.
+ * 10/22/2012      RC          2.15       When writing the ensemble data, try to get the ADCP Configurtation to also write to the project.
  * 
  */
 
@@ -70,6 +74,9 @@ using System.Data.Common;
 using System.Diagnostics;
 using log4net;
 using System.Text;
+using RTI.Commands;
+using System.Data;
+using System.Collections.Generic;
 
 namespace RTI
 {
@@ -82,8 +89,10 @@ namespace RTI
     /// Data is received by subscribing to CurrentDataSetManager.Instance.ReceiveRecordDataset.
     /// To set a new project set the property SelectedProject
     /// </summary>
-    public class AdcpDatabaseWriter    
+    public class AdcpDatabaseWriter
     {
+        #region Variables
+
         /// <summary>
         /// Logger for logging error messages.
         /// </summary>
@@ -117,11 +126,34 @@ namespace RTI
         /// </summary>
         private EventWaitHandle _eventWaitData;
 
+        #region Command and Options flags and locks
+
+        /// <summary>
+        /// Flag if the AdcpConfiguration need to be updated.
+        /// </summary>
+        private bool _isAdcpConfigurationNeedUpdate;
+
+        /// <summary>
+        /// Lock for the _isAdcpConfigurationNeedUpdate flag.
+        /// </summary>
+        private object _lockIsAdcpConfigurationNeedUpdate;
+
+
+        #endregion
+
+        #endregion
+
+        #region Properties
+
         /// <summary>
         /// Set the new Selected project and reset the database
         /// connection to the new project.
         /// </summary>
-        private Project _selectedProject;                                       /// Current project to write data to
+        private Project _selectedProject;
+        /// <summary>
+        /// Set the new Selected project and reset the database
+        /// connection to the new project.
+        /// </summary>
         public Project SelectedProject
         {
             private get { return _selectedProject; }
@@ -133,6 +165,8 @@ namespace RTI
                 _selectedProject = value;
             }
         }
+
+        #endregion
 
         /// <summary>
         /// Constructor 
@@ -150,6 +184,10 @@ namespace RTI
 
             // Create a queue to hold incoming data
             _datasetQueue = new Queue();
+
+            // Commands and options flags and locks
+            _isAdcpConfigurationNeedUpdate = false;
+            _lockIsAdcpConfigurationNeedUpdate = new object();
 
             // Initialize the thread
             _continue = true;
@@ -177,6 +215,78 @@ namespace RTI
             }
         }
 
+        #region Update AdcpConfiguration
+
+        /// <summary>
+        /// Update the database with the latest AdcpConfiguration.
+        /// </summary>
+        /// <param name="config">AdcpConfiguration to update.</param>
+        public void UpdateAdcpConfiguration(AdcpConfiguration config)
+        {
+            // Update the selected project with the latest configuration
+            // Then wake up the thread to update the commands to the database
+            SelectedProject.Configuration = config;
+
+            // Update the flag
+            lock (_lockIsAdcpConfigurationNeedUpdate)
+            {
+                _isAdcpConfigurationNeedUpdate = true;
+            }
+
+            // Wake up the thread to process data
+            _eventWaitData.Set();
+        }
+
+        /// <summary>
+        /// Update the database with the latest AdcpCommands.
+        /// This will set the AdcpConfiguration's AdcpCommand.
+        /// </summary>
+        /// <param name="commands">AdcpCommands to update.</param>
+        public void UpdateAdcpCommands(AdcpCommands commands)
+        {
+            // Set the new Commands to the AdcpConfiguration
+            SelectedProject.Configuration.Commands = commands;
+
+            // Update the database.
+            UpdateAdcpConfiguration(SelectedProject.Configuration);
+        }
+
+        /// <summary>
+        /// Update the database with the latest DeploymentOptions.
+        /// This will set the AdcpConfiguration's DeploymentOptions.
+        /// </summary>
+        /// <param name="options">DeploymentOptions to update.</param>
+        public void UpdateDeploymentOptions(DeploymentOptions options)
+        {
+            // Set the new Commands to the AdcpConfiguration
+            SelectedProject.Configuration.DeploymentOptions = options;
+
+            // Update the database.
+            UpdateAdcpConfiguration(SelectedProject.Configuration);
+        }
+
+        /// <summary>
+        /// Find the AdcpSubsystemConfig in the dictionary.  Set the commands to the correct
+        /// AdcpSubsystemConfig then write the AdcpConfiguration to the database.
+        /// </summary>
+        /// <param name="asConfig">AdcpSubsystemConfig to match and get the commands.</param>
+        public void UpdateAdcpSubsystemConfigurationCommands(AdcpSubsystemConfig asConfig)
+        {
+            // Find the SubsystemConfiguration and update the commands
+            foreach (AdcpSubsystemConfig asc in SelectedProject.Configuration.SubsystemConfigDict.Values)
+            {
+                if (asc==asConfig)
+                {
+                    asc.Commands = asConfig.Commands;
+                }
+            }
+
+            // Update the database.
+            UpdateAdcpConfiguration(SelectedProject.Configuration);
+        }
+
+        #endregion
+
         /// <summary>
         /// Decode the ADCP data received using a seperate
         /// thread.  This thread will also pass data to all
@@ -201,6 +311,9 @@ namespace RTI
 
                 if (_selectedProject != null)
                 {
+                    // Used to determine if a new Subsystem Configuration was found
+                    AdcpSubsystemConfig asConfig = null;
+
                     try
                     {
                         // Open a connection to the database
@@ -211,11 +324,34 @@ namespace RTI
                         {
                             // Write all data to the database
                             //for (int x = 0; x < count; x++)
-                            while(_datasetQueue.Count > 0)
+                            while (_datasetQueue.Count > 0)
                             {
                                 // Remove dataset from the queue and write to the database
-                                WriteEnsembleData((DataSet.Ensemble)_datasetQueue.Dequeue(), cnn);
+                                DataSet.Ensemble ensemble = (DataSet.Ensemble)_datasetQueue.Dequeue(); 
+                                WriteEnsembleData(ensemble, cnn);
+
+                                // Set the serial number if it has not been set already to the project
+                                if (_selectedProject.SerialNumber == SerialNumber.Empty)
+                                {
+                                    _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
+                                }
+
+                                // Add the ADCP Configuration to the project
+                                // Check if the configuration has already been added to the project.
+                                // If it has not been added to the project add it now.
+                                // Later it will be written to the project.
+                                // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
+                                SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
+                                Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
+                                if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ss, ssConfig))
+                                {
+                                    _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                }
                             }
+
+                            // Check if Commands and Options need to be updated
+                            CheckCommandsAndOptions(cnn, _selectedProject);
 
                             // Commit the transaction
                             dbTrans.Commit();
@@ -230,6 +366,14 @@ namespace RTI
                     catch (NullReferenceException ex)
                     {
                         log.Error("Selected Mission does not exist. ", ex);
+                    }
+
+
+                    // If there was a new Configuration found
+                    // Update the project file with the latest configuration
+                    if (asConfig != null)
+                    {
+                        UpdateAdcpConfiguration(_selectedProject.Configuration);
                     }
                 }
             }
@@ -267,7 +411,7 @@ namespace RTI
         public void Shutdown()
         {
             // Write the remaining data in the queue
-            while (_datasetQueue.Count > 0)
+            while (_datasetQueue.Count > 0 || _isAdcpConfigurationNeedUpdate)
             {
                 Flush();
             }
@@ -277,6 +421,37 @@ namespace RTI
 
             // Wake up the thread to kill thread
             _eventWaitData.Set();
+        }
+
+        /// <summary>
+        /// Firmware 2.12 and older:
+        /// In Firmware version 2.12 and previous versions, the Firmware data in EnsembleDataSet set contained
+        /// the SubsystemIndex.  Now it contains the SubsystemCode.  This will check for a SubsystemCode of 0.  0
+        /// is not a possible SubsystemCode and is a sign of older firmware.  If this is older firmware, then change
+        /// the SubsystemCode to the correct value based off the Index and the serial number.
+        /// 
+        /// 
+        /// </summary>
+        /// <param name="ensemble">Ensemble to the Subsystem and Serial number.</param>
+        /// <param name="ss">Subsystem if the value needs to change.</param>
+        /// <param name="ssConfig">SubsystemConfiguration if the value needs to change.</param>
+        private void CheckSubsystemCompatibility(DataSet.Ensemble ensemble, ref Subsystem ss, ref SubsystemConfiguration ssConfig)
+        {
+            // In firmware version greater than 2.12, a code of 0 is not possible
+            // It used to be that the code was the index from the serial number.
+            // So now get the code from the serial number.
+            // This can only work if the older system has 1 configuration.
+            if (ss.Code == 0)
+            {
+                if (ensemble.IsEnsembleAvail)
+                {
+                    if (ensemble.EnsembleData.SysSerialNumber.SubsystemsString().Length > 0)
+                    {
+                        ss.Code = Convert.ToByte(ensemble.EnsembleData.SysSerialNumber.SubsystemsString()[0]);
+                        ss.Index = 0;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -308,8 +483,7 @@ namespace RTI
             }
         }
 
-        // Write ensemble to database
-        #region EnsembleWrite
+        #region Write Ensembles to Database
 
         /// <summary>
         /// Write the Ensemble dataset to the project database.
@@ -372,7 +546,8 @@ namespace RTI
                         builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_MAJOR));
                         builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_MINOR));
                         builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_REVISION));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYSTEM_INDEX));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYSTEM_CODE));
+                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYS_CONFIG));
 
                         builder.Append(string.Format("{0},", DbCommon.COL_BT_FIRST_PING_TIME));
                         builder.Append(string.Format("{0},", DbCommon.COL_BT_LAST_PING_TIME));
@@ -433,7 +608,7 @@ namespace RTI
                         builder.Append("@firstBinRange, @binSize, @profileFirstPingTime, @profileLastPingTime, @heading, @pitch, @roll, ");
                         builder.Append("@waterTemp, @sysTemp, @salinity, @pressure, @Depth, @sos, @dbTime, ");
                         builder.Append("@isBeamVelAvail, @isInstrVelAvail, @isEarthVelAvail, @isAmpAvail, @isCorrAvail, @isGoodBeamAvail, @isGoodEarthAvail, @isAncillaryAvail, @isBottomTrackAvail, @isNmeaAvail, ");
-                        builder.Append("@nmeaData, @sysSerialNum, @firmwareMajor, @firmwareMinor, @firmwareRevision, @subsystem, ");
+                        builder.Append("@nmeaData, @sysSerialNum, @firmwareMajor, @firmwareMinor, @firmwareRevision, @subsystem, @subConfig, ");
                         
                         builder.Append("@btFirstPingTime, @btLastPingTime, @btHeading, @btPitch, @btRoll, @btWaterTemp, @btSysTemp, ");
                         builder.Append("@btSalinity, @btPressure, @btSos, @btStatus, @btActualPingCount, ");
@@ -496,7 +671,8 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareMajor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMajor });
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareMinor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMinor });
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareRevision", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareRevision });
-                        cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.SubsystemIndex });
+                        cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.SubsystemCode });
+                        cmd.Parameters.Add(new SQLiteParameter("@subConfig", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SubsystemConfig.CommandSetup });
 
                         // Bottom Track parameters
                         if (dataset.IsBottomTrackAvail)
@@ -760,6 +936,54 @@ namespace RTI
             catch (SQLiteException e)
             {
                 log.Error("Error adding Beam BeamVelocity data to database.", e);
+            }
+        }
+
+        #endregion
+
+        #region Set AdcpConfiguration To Database
+
+        /// <summary>
+        /// Check if the AdcpConfiguration needs to be updated in the database.
+        /// If it needs to be updated, the query will be run against the database.
+        /// The flag will then be reset.
+        /// 
+        /// The flag is locked because of a multithreaded environment.
+        /// </summary>
+        /// <param name="cnn">Database connection.</param>
+        /// <param name="selectedProject">Selected Project to get the lateset AdcpConfiguration.</param>
+        private void CheckCommandsAndOptions(SQLiteConnection cnn, Project selectedProject)
+        {
+            // Check if the ADCP Commands needs to be updated
+            if (_isAdcpConfigurationNeedUpdate)
+            {
+                // Send the query to the database
+                UpdateAdcpConfiguration(cnn, selectedProject);
+
+                // Lock the flag and reset the value
+                lock (_lockIsAdcpConfigurationNeedUpdate)
+                {
+                    _isAdcpConfigurationNeedUpdate = false;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Update the row with the latest ADCP Configuration.
+        /// </summary>
+        /// <param name="cnn">Connection to the database.</param>
+        /// <param name="project">Project to set configuration to.</param>
+        private void UpdateAdcpConfiguration(SQLiteConnection cnn, Project project)
+        {
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(project.Configuration);                                    // Serialize object to JSON
+            string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_ADCP_CONFIGURATION, json);
+            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_CMDS, jsonCmd);                 // Create query string
+
+            using (DbCommand cmd = cnn.CreateCommand())
+            {
+                cmd.CommandText = query;                // Set query string
+                cmd.ExecuteNonQuery();                  // Execute the query
             }
         }
 

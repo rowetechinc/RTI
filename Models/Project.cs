@@ -45,6 +45,11 @@
  * 01/27/2012      RC          1.14       Added Serial number to the project properties.
  * 02/03/2012      RC          2.00       Added equal, hashcode and ToString method.
  * 05/10/2012      RC          2.11       Added PRAGMA to database creation.
+ * 09/14/2012      RC          2.15       Added AdcpCommands, AdcpSubsystemCommand list and Deployment Options property.
+ *                                         Get the commands and options from the database if it exist.
+ * 09/18/2012      RC          2.15       Added SubsystemConfig column to tblEnsemble for the subsystem configuration.
+ * 10/01/2012      RC          2.15       Removed AdcpCommands, DeploymentOptions and AdcpSubsystemCommadns and replaced with AdcpConfiguration.
+ * 10/15/2012      RC          2.15       In tblEnsemble changed column SubsystemIndex to SubsystemCode.
  */
 
 using System;
@@ -52,6 +57,9 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 using log4net;
+using RTI.Commands;
+using System.Collections.Generic;
+using System.Data;
 
 namespace RTI
 {
@@ -70,6 +78,12 @@ namespace RTI
         /// Logger for logging error messages.
         /// </summary>
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// Revision for the Project database.
+        /// Revision B includes the Adcp commands and options.
+        /// </summary>
+        public const string REV = "B1";
 
         /// <summary>
         /// ID for project if no project 
@@ -115,7 +129,33 @@ namespace RTI
         /// Serial for the system the project is associated with.
         /// This will determine the subsystems for the project.
         /// </summary>
-        public SerialNumber SysSerialNumber { get; set; }
+        private SerialNumber _serialNumber;
+        /// <summary>
+        /// Serial for the system the project is associated with.
+        /// This will determine the subsystems for the project.
+        /// </summary>
+        public SerialNumber SerialNumber 
+        {
+            get { return _serialNumber; } 
+            set
+            {
+                _serialNumber = value;
+
+                // Set the AdcpConfiguration serial number also
+                // Check to verify configuration has been initialized
+                // it may not have been if the project was created.
+                if (Configuration != null && Configuration.SerialNumber != value)
+                {
+                    Configuration.SerialNumber = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adcp Configuration.  This is all the command options and
+        /// deployment options set for the ADCP.
+        /// </summary>
+        public AdcpConfiguration Configuration { get; set; }
 
         /// <summary>
         /// Constructor
@@ -191,6 +231,33 @@ namespace RTI
         }
 
         /// <summary>
+        /// Create a project with a given project database file.
+        /// This will copy the given project database file instead
+        /// of creating an new empty database file.  The database file
+        /// will be renamed to the new project name, but the content within
+        /// the database file will not be modified.
+        /// </summary>
+        /// <param name="name">Name of the project.</param>
+        /// <param name="dir">Directory of the projects.</param>
+        /// <param name="serialNum">Serial number of the project.</param>
+        /// <param name="dbFilePath">File path to the database file.</param>
+        public Project(string name, string dir, string serialNum, string dbFilePath)
+        {
+            // Set the initial settings
+            ProjectID = Project.EmptyID;
+            SetFolders(name, dir);
+            DateCreated = DateTime.Now;
+            LastDateModified = DateTime.Now;
+            CreateSerialNumber(serialNum);
+
+            // Create the directory if it does not exist
+            Directory.CreateDirectory(ProjectFolderPath);
+
+            // Copy the database file
+            CopyProjectDatabase(dbFilePath);
+        }
+
+        /// <summary>
         /// Create the serial number based off the
         /// serial number string.  If the serial number
         /// is empty, then create an empty serial number.
@@ -200,11 +267,11 @@ namespace RTI
         {
             if (string.IsNullOrEmpty(serialNumStr))
             {
-                SysSerialNumber = SerialNumber.Empty;
+                SerialNumber = SerialNumber.Empty;
             }
             else
             {
-                SysSerialNumber = new SerialNumber(serialNumStr);
+                SerialNumber = new SerialNumber(serialNumStr);
             }
         }
 
@@ -222,6 +289,8 @@ namespace RTI
             ProjectFolderPath = dir + @"\" + name;
         }
 
+        #region Database
+
         /// <summary>
         /// Create a new Project database that will
         /// store ensemble data.
@@ -230,15 +299,63 @@ namespace RTI
         {
             // Check if the database exist
             // If it does not, create it
-            if (!File.Exists(GetProjectFullPath( )))
+            if (!File.Exists(GetProjectFullPath()))
             {
-                CreateProjectTables( );
+                // Create the database
+                CreateProjectTables();
+
+                // Create all the commands and options with default values
+                CreateAdcpConfiguration();
+            }
+            else
+            {
+                // Get the command and options from the database
+                GetAdcpConfiguration();
+            }
+        }
+
+        /// <summary>
+        /// Copy the Project database file.  If a project is being
+        /// imported, then the project database file will need to be
+        /// copied to the new project location.  Copy the file to the new
+        /// project folder.  Rename the new file to the new project name.
+        /// Then get the configuration from the project database.
+        /// </summary>
+        /// <param name="dbFilePath">File path to the project DB to copy.</param>
+        private void CopyProjectDatabase(string dbFilePath)
+        {
+            // Check if the database exist
+            // If it does not, create it
+            if (!File.Exists(GetProjectFullPath()))
+            {
+                // Copy the database file to the project folder
+                // This will rename the database file given to the
+                // the new project name
+                FileInfo file = new FileInfo(dbFilePath);
+                file.CopyTo(GetProjectFullPath());
+
+                // Get the command and options from the database
+                GetAdcpConfiguration();
             }
         }
 
         /// <summary>
         /// Create the project table.  This will be the database
         /// and all the tables needed to recorded.
+        /// 
+        /// With synchronous OFF (0), SQLite continues without syncing as soon as it 
+        /// has handed data off to the operating system. If the application running 
+        /// SQLite crashes, the data will be safe, but the database might become 
+        /// corrupted if the operating system crashes or the computer loses power 
+        /// before that data has been written to the disk surface. On the other hand, 
+        /// some operations are as much as 50 or more times faster with synchronous OFF.
+        /// 
+        /// The MEMORY journaling mode stores the rollback journal in volatile RAM. This 
+        /// saves disk I/O but at the expense of database safety and integrity. If the 
+        /// application using SQLite crashes in the middle of a transaction when the 
+        /// MEMORY journaling mode is set, then the database file will very likely go 
+        /// corrupt.
+        /// 
         /// </summary>
         private void CreateProjectTables( )
         {
@@ -247,9 +364,11 @@ namespace RTI
             {
                 "PRAGMA synchronous = OFF",
                 "PRAGMA journal_mode = MEMORY",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER, NumBins INTEGER NOT NULL, NumBeams INTEGER NOT NULL, DesiredPingCount INTEGER NOT NULL, ActualPingCount INTEGER NOT NULL, Status INTEGER NOT NULL, Year INTEGER NOT NULL, Month INTEGER NOT NULL, Day INTEGER NOT NULL, Hour INTEGER NOT NULL, Minute INTEGER NOT NULL, Second INTEGER NOT NULL, HundSec INTEGER NOT NULL, DateTime DATETIME NOT NULL, FirstBinRange FLOAT NOT NULL, BinSize FLOAT NOT NULL, ProfileFirstPingTime FLOAT NOT NULL, ProfileLastPingTime FLOAT NOT NULL, Heading FLOAT NOT NULL, Pitch FLOAT NOT NULL, Roll FLOAT NOT NULL, WaterTemp FLOAT NOT NULL, SysTemp FLOAT NOT NULL, Salinity FLOAT NOT NULL, Pressure FLOAT NOT NULL, TransducerDepth FLOAT NOT NULL, SpeedOfSound FLOAT NOT NULL, DbTime DATETIME NOT NULL, IsBeamVelAvail BOOLEAN, IsInstrVelAvail BOOLEAN, IsEarthVelAvail BOOLEAN, IsAmpAvail BOOLEAN, IsCorrAvail BOOLEAN, IsGoodBeamAvail BOOLEAN, IsGoodEarthAvail BOOLEAN, IsAncillaryAvail BOOLEAN, IsBottomTrackAvail BOOLEAN, IsNmeaAvail BOOLEAN, NmeaData TEXT, SysSerialNum TEXT, FirmwareMajor TINYINT, FirmwareMinor TINYINT, FirmwareRevision TINYINT, SubsystemIndex TINYINT, BTFirstPingTime FLOAT, BTLastPingTime FLOAT, BTHeading FLOAT, BTPitch FLOAT, BTRoll FLOAT, BTWaterTemp FLOAT, BTSysTemp FLOAT, BTSalinity FLOAT, BTPressure FLOAT, BTSpeedOfSound FLOAT, BTStatus INTEGER, BTActualPingCount FLOAT, BTRangeBeam0 FLOAT, BTRangeBeam1 FLOAT, BTRangeBeam2 FLOAT, BTRangeBeam3 FLOAT, BTSNRBeam0 FLOAT, BTSNRBeam1 FLOAT, BTSNRBeam2 FLOAT, BTSNRBEAM3 FLOAT, BTAmpBeam0 FLOAT, BTAmpBeam1 FLOAT, BTAmpBeam2 FLOAT, BTAmpBeam3 FLOAT, BTCorrBeam0 FLOAT, BTCorrBeam1 FLOAT, BTCorrBeam2 FLOAT, BTCorrBeam3 FLOAT, BTBeamVelBeam0 FLOAT, BTBeamVelBeam1 FLOAT, BTBeamVelBeam2 FLOAT, BTBeamVelBeam3 FLOAT, BTBeamGoodBeam0 FLOAT, BTBeamGoodBeam1 FLOAT, BTBeamGoodBeam2 FLOAT, BTBeamGoodBeam3 FLOAT, BTInstrVelBeam0 FLOAT, BTInstrVelBeam1 FLOAT, BTInstrVelBeam2 FLOAT, BTInstrVelBeam3 FLOAT,  BTInstrGoodBeam0 FLOAT, BTInstrGoodBeam1 FLOAT, BTInstrGoodBeam2 FLOAT, BTInstrGoodBeam3 FLOAT, BTEarthVelBeam0 FLOAT, BTEarthVelBeam1 FLOAT, BTEarthVelBeam2 FLOAT, BTEarthVelBeam3 FLOAT, BTEarthGoodBeam0 FLOAT, BTEarthGoodBeam1 FLOAT, BTEarthGoodBeam2 FLOAT, BTEarthGoodBeam3 FLOAT)",
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER, NumBins INTEGER NOT NULL, NumBeams INTEGER NOT NULL, DesiredPingCount INTEGER NOT NULL, ActualPingCount INTEGER NOT NULL, Status INTEGER NOT NULL, Year INTEGER NOT NULL, Month INTEGER NOT NULL, Day INTEGER NOT NULL, Hour INTEGER NOT NULL, Minute INTEGER NOT NULL, Second INTEGER NOT NULL, HundSec INTEGER NOT NULL, DateTime DATETIME NOT NULL, FirstBinRange FLOAT NOT NULL, BinSize FLOAT NOT NULL, ProfileFirstPingTime FLOAT NOT NULL, ProfileLastPingTime FLOAT NOT NULL, Heading FLOAT NOT NULL, Pitch FLOAT NOT NULL, Roll FLOAT NOT NULL, WaterTemp FLOAT NOT NULL, SysTemp FLOAT NOT NULL, Salinity FLOAT NOT NULL, Pressure FLOAT NOT NULL, TransducerDepth FLOAT NOT NULL, SpeedOfSound FLOAT NOT NULL, DbTime DATETIME NOT NULL, IsBeamVelAvail BOOLEAN, IsInstrVelAvail BOOLEAN, IsEarthVelAvail BOOLEAN, IsAmpAvail BOOLEAN, IsCorrAvail BOOLEAN, IsGoodBeamAvail BOOLEAN, IsGoodEarthAvail BOOLEAN, IsAncillaryAvail BOOLEAN, IsBottomTrackAvail BOOLEAN, IsNmeaAvail BOOLEAN, NmeaData TEXT, SysSerialNum TEXT, FirmwareMajor TINYINT, FirmwareMinor TINYINT, FirmwareRevision TINYINT, SubsystemCode TINYINT, SubsystemConfig TINYINT, BTFirstPingTime FLOAT, BTLastPingTime FLOAT, BTHeading FLOAT, BTPitch FLOAT, BTRoll FLOAT, BTWaterTemp FLOAT, BTSysTemp FLOAT, BTSalinity FLOAT, BTPressure FLOAT, BTSpeedOfSound FLOAT, BTStatus INTEGER, BTActualPingCount FLOAT, BTRangeBeam0 FLOAT, BTRangeBeam1 FLOAT, BTRangeBeam2 FLOAT, BTRangeBeam3 FLOAT, BTSNRBeam0 FLOAT, BTSNRBeam1 FLOAT, BTSNRBeam2 FLOAT, BTSNRBEAM3 FLOAT, BTAmpBeam0 FLOAT, BTAmpBeam1 FLOAT, BTAmpBeam2 FLOAT, BTAmpBeam3 FLOAT, BTCorrBeam0 FLOAT, BTCorrBeam1 FLOAT, BTCorrBeam2 FLOAT, BTCorrBeam3 FLOAT, BTBeamVelBeam0 FLOAT, BTBeamVelBeam1 FLOAT, BTBeamVelBeam2 FLOAT, BTBeamVelBeam3 FLOAT, BTBeamGoodBeam0 FLOAT, BTBeamGoodBeam1 FLOAT, BTBeamGoodBeam2 FLOAT, BTBeamGoodBeam3 FLOAT, BTInstrVelBeam0 FLOAT, BTInstrVelBeam1 FLOAT, BTInstrVelBeam2 FLOAT, BTInstrVelBeam3 FLOAT,  BTInstrGoodBeam0 FLOAT, BTInstrGoodBeam1 FLOAT, BTInstrGoodBeam2 FLOAT, BTInstrGoodBeam3 FLOAT, BTEarthVelBeam0 FLOAT, BTEarthVelBeam1 FLOAT, BTEarthVelBeam2 FLOAT, BTEarthVelBeam3 FLOAT, BTEarthGoodBeam0 FLOAT, BTEarthGoodBeam1 FLOAT, BTEarthGoodBeam2 FLOAT, BTEarthGoodBeam3 FLOAT)",
                 "CREATE TABLE tblBeam(ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleId INTEGER, BinNum INTEGER NOT NULL, BeamNum SAMLLINT NOT NULL, BeamVel FLOAT, EarthVel FLOAT, InstrVel FLOAT, Amplitude FLOAT, Correlation FLOAT, GoodBeam SMALLINT, GoodEarth SMALLINT, Orientation TINYINT NOT NULL, FOREIGN KEY(EnsembleId) REFERENCES tblEnsemble(ID))",
+                "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, AdcpConfiguration TEXT, Revision TEXT, Misc TEXT)",
                 "CREATE INDEX idxBeam ON tblBeam(EnsembleId, BinNum)",
+                string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, {4});", DbCommon.TBL_ENS_CMDS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", "'B1'"),   // Put at least 1 entry so an insert does not have to be done later
             };
 
             //SQLiteConnection cnn = DbCommon.OpenProjectDB(project);
@@ -287,13 +406,121 @@ namespace RTI
             cnn.Close();
         }
 
+        #endregion
+
+        #region Commands and Options
+
+        /// <summary>
+        /// Create the commands for the project.
+        /// These are all the commands for the project and they are set to default.
+        /// </summary>
+        private void CreateAdcpConfiguration()
+        {
+            // Create the Adcp Configuration
+            Configuration = new AdcpConfiguration(SerialNumber);
+        }
+
+        /// <summary>
+        /// Get the Commands and deployment options from the database.
+        /// If they could not be found in the database, then it will 
+        /// give default values.
+        /// </summary>
+        public void GetAdcpConfiguration()
+        {
+            //SubsystemCommandList = GetAllAdcpSubsystemCommands();
+
+            // Get the configuration from the database
+            Configuration = GetAdcpConfigurationFromDb();
+        }
+
+        /// <summary>
+        /// Get the AdcpSubsystemCommands from the list of commands stored in the project.
+        /// This will assume the list of AdcpSubsystemCommands has already been populated.
+        /// It will then search for the AdcpSubsystemCommands for the given subsystem.
+        /// If the AdcpSubsystemCommands cannot be found, a default set of commands will
+        /// be returned.
+        /// </summary>
+        /// <param name="asConfig">AdcpSubsystemConfig for the commands that are requested.</param>
+        /// <returns>Adcp Subsystem Commands from the list of AdcpSubsystemCommands.</returns>
+        public AdcpSubsystemCommands GetAdcpSubsystemCommands(AdcpSubsystemConfig asConfig)
+        {
+            foreach (AdcpSubsystemConfig config in Configuration.SubsystemConfigDict.Values)
+            {
+                if (config == asConfig)
+                {
+                    return config.Commands;
+                }
+            }
+
+            return new AdcpSubsystemCommands(asConfig.Subsystem, asConfig.CepoIndex);
+        }
+
+        #endregion
+
+        #region AdcpConfiguration
+
+        /// <summary>
+        /// Get the Adcp Configuration from the database.  This will read the database
+        /// table for the configuration.  If one exist, it will set the configuration.
+        /// If one does not exist, it will return the default values.
+        /// </summary>
+        /// <returns>Adcp Configurations found in the project DB file.</returns>
+        private AdcpConfiguration GetAdcpConfigurationFromDb()
+        {
+            AdcpConfiguration config = new AdcpConfiguration(SerialNumber);
+
+            string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_CMDS);
+            try
+            {
+                // Query the database for the ADCP settings
+                DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
+
+                // Go through the result settings the settings
+                // If more than 1 result is found, return the first one found
+                foreach (DataRow r in dt.Rows)
+                {
+                    // Check if there is data
+                    if (r[DbCommon.COL_CMD_ADCP_CONFIGURATION] == DBNull.Value)
+                    {
+                        break;
+                    }
+
+                    // This will call the default constructor or pass to the constructor parameter a null
+                    // The constructor parameter must be set after creating the object.
+                    string json = Convert.ToString(r[DbCommon.COL_CMD_ADCP_CONFIGURATION]);
+                    if (!String.IsNullOrEmpty(json))
+                    {
+                        config = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpConfiguration>(json);
+                    }
+
+
+                    // Only read the first row
+                    break;
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error("SQL Error getting ADCP Configuration from the project.", e);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error getting ADCP Configuration from the project.", ex);
+            }
+
+            return config;
+        }
+
+        #endregion
+
+        #region Folder Paths
+
         /// <summary>
         /// Create the full path of the project.  Use
         /// the project information to generate the 
         /// project database file name including directory.
         /// </summary>
         /// <returns>String of the full path of the project.</returns>
-        public string GetProjectFullPath( )
+        public string GetProjectFullPath()
         {
             return ProjectFolderPath + @"\" + ProjectName + ".db";
         }
@@ -308,6 +535,9 @@ namespace RTI
             return ProjectFolderPath + @"\" + ProjectName + ".png";
         }
 
+        #endregion
+
+        #region Override Methods
 
         /// <summary>
         /// Check if two projects are equal by checking if
@@ -381,5 +611,8 @@ namespace RTI
         {
             return base.GetHashCode();
         }
+
+        #endregion
+
     }
 }

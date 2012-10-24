@@ -47,6 +47,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>packages\log4net.1.2.10.0\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Packages\Newtonsoft.Json.4.5.8.15215\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework, Version=2.6.0.12051, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>packages\NUnit.2.6.0.12054\lib\nunit.framework.dll</HintPath>
@@ -105,7 +108,9 @@
     <Compile Include="DotSpatial\Positioning\SignalToNoiseRatio.cs" />
     <Compile Include="DotSpatial\Positioning\Speed.cs" />
     <Compile Include="Models\AdcpCommands.cs" />
+    <Compile Include="Models\AdcpConfiguration.cs" />
     <Compile Include="Models\AdcpSubsystemCommands.cs" />
+    <Compile Include="Models\AdcpSubsystemConfig.cs" />
     <Compile Include="Models\DataSet\Ensemble.cs" />
     <Compile Include="Models\DataSet\AmplitudeDataSet.cs" />
     <Compile Include="Models\DataSet\AncillaryDataSet.cs" />
@@ -116,6 +121,8 @@
     <Compile Include="Models\DataSet\EarthVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\EarthWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\EnsembleDataSet.cs" />
+    <Compile Include="Models\DecodeCSHOW.cs" />
+    <Compile Include="Models\DeploymentOptions.cs" />
     <Compile Include="Models\Firmware.cs" />
     <Compile Include="Models\DataSet\GoodBeamDataSet.cs" />
     <Compile Include="Models\DataSet\GoodEarthDataSet.cs" />
@@ -125,6 +132,7 @@
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />
     <Compile Include="Models\Subsystem.cs" />
+    <Compile Include="Models\SubsystemConfiguration.cs" />
     <Compile Include="Models\SystemTestResult.cs" />
     <Compile Include="Models\UniqueID.cs" />
     <Compile Include="Models\VelocityVector.cs" />

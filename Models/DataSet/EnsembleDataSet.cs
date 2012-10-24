@@ -55,7 +55,8 @@
  *                                         Created a special serial number for the DVL constructors.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 04/10/2012      RC          2.08       Fixed bug decoding a 32bit int as an 8bit int.
- *       
+ * 09/18/2012      RC          2.15       Updated data to ADCP User Guide Rev H.  Added Subsystem Configuration.
+ * 10/09/2012      RC          2.15       In Decode(), changed SubsystemIndex to SubsystemCode and changed from an UInt16 to a byte.      
  * 
  */
 
@@ -75,22 +76,27 @@ namespace RTI
             #region Variables
 
             /// <summary>
-            /// NUmber of elements as of User Guide Rev C.
+            /// Number of elements as of User Guide Rev C.
             /// </summary>
             public const int NUM_DATA_ELEMENTS_REV_C = 13;
 
             /// <summary>
-            /// NUmber of elements as of User Guide Rev D.
+            /// Number of elements as of User Guide Rev D.
             /// </summary>
             public const int NUM_DATA_ELEMENTS_REV_D = 22;
 
             /// <summary>
-            /// Number of elements within this data set
+            /// Number of elements as of User Guide Rev H.
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = NUM_DATA_ELEMENTS_REV_D;
+            public const int NUM_DATA_ELEMENTS_REV_H = 23;
 
             /// <summary>
-            /// Number of bytes in the serial number for 
+            /// Number of elements within this data set
+            /// </summary>
+            public const int NUM_DATA_ELEMENTS = NUM_DATA_ELEMENTS_REV_H;
+
+            /// <summary>
+            /// Number of Int32 in the serial number for 
             /// revision D.
             /// </summary>
             public const int SERIAL_NUM_INT_REV_D = 8;
@@ -101,9 +107,14 @@ namespace RTI
             public const int SERIAL_NUM_INT = SERIAL_NUM_INT_REV_D;
 
             /// <summary>
-            /// Number of bytes in the firmware.
+            /// Number of Int32 in the firmware.
             /// </summary>
             public const int FIRMWARE_NUM_INT = 1;
+
+            /// <summary>
+            /// Number of Int32 in the Subsystem Configuration.
+            /// </summary>
+            public const int SUBSYSTEM_CONFIG_NUM_INT = 1;
 
             /// <summary>
             /// Status value for Hardware timeout.
@@ -154,6 +165,11 @@ namespace RTI
             /// System Firmware number.
             /// </summary>
             public Firmware SysFirmware { get; set; }
+
+            /// <summary>
+            /// Subsystem configuration.
+            /// </summary>
+            public SubsystemConfiguration SubsystemConfig { get; set; }
 
             /// <summary>
             /// Status of the system.
@@ -295,6 +311,9 @@ namespace RTI
                 // Create blank firmware
                 SysFirmware = new Firmware();
 
+                // Create Blank Subsystem configuration
+                SubsystemConfig = new SubsystemConfiguration();
+
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
 
@@ -330,6 +349,9 @@ namespace RTI
 
                 // Create blank firmware
                 SysFirmware = new Firmware();
+
+                // Create blank Subsystem Configuration
+                SubsystemConfig = new SubsystemConfiguration();
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -395,8 +417,7 @@ namespace RTI
                     SysSerialNumber = new SerialNumber(serial);
 
                     // Get the firmware number 
-                    //Firmware = BitConverter.ToString(data, 21, FIRMWARE_NUM_INT);
-                    //Firmware = Firmware.Replace("-", "");
+                    // Start at index 21
                     byte[] firmware = new byte[FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32];
                     System.Buffer.BlockCopy(data, GenerateIndex(21), firmware, 0, FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32);
                     SysFirmware = new Firmware(firmware);
@@ -405,6 +426,21 @@ namespace RTI
                 {
                     SysSerialNumber = new SerialNumber();
                     SysFirmware = new Firmware();
+                    
+                }
+
+                // Revision H additions
+                if (NumElements >= NUM_DATA_ELEMENTS_REV_H && data.Length >= NUM_DATA_ELEMENTS_REV_H * Ensemble.BYTES_IN_INT32)
+                {
+                    // Get the Subsystem Configuration
+                    // Start at index 22
+                    byte[] subConfig = new byte[SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32];
+                    System.Buffer.BlockCopy(data, GenerateIndex(22), subConfig, 0, SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32);
+                    SubsystemConfig = new SubsystemConfiguration(subConfig);
+                }
+                else
+                {
+                    SubsystemConfig = new SubsystemConfiguration();
                 }
 
                 // Set the time and date
@@ -443,7 +479,13 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(Second), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT32);
                 System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(HSec), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT32);
                 System.Buffer.BlockCopy(SysSerialNumber.Encode(), 0, payload, GeneratePayloadIndex(index), SerialNumber.NUM_BYTES);
-                System.Buffer.BlockCopy(SysFirmware.Encode(), 0, payload, GeneratePayloadIndex(index) + (SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32), Firmware.NUM_BYTES);
+
+                // Generate new index
+                int newIndex = GeneratePayloadIndex(index) + (SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32);                                                // Last index plus the size of the serial number in bytes
+                System.Buffer.BlockCopy(SysFirmware.Encode(), 0, payload, newIndex, Firmware.NUM_BYTES);
+
+                newIndex = GeneratePayloadIndex(index) + (SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32) + (FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32);     // Last index plus the size of the serial number and firmware
+                System.Buffer.BlockCopy(SubsystemConfig.Encode(), 0, payload, newIndex, SubsystemConfiguration.NUM_BYTES);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NumElements);
@@ -511,12 +553,12 @@ namespace RTI
                     UInt16 firmMjr = 0;
                     UInt16 firmMnr = 0;
                     UInt16 firmRev = 0;
-                    UInt16 subSysIndex = 0; 
+                    byte subSysCode = 0; 
                     firmMjr = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_MAJOR]));
                     firmMnr = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_MINOR]));
                     firmRev = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_REVISION]));
-                    subSysIndex = (Convert.ToUInt16(data[DbCommon.COL_ENS_SUBSYSTEM_INDEX]));
-                    SysFirmware = new Firmware(subSysIndex, firmMjr, firmMnr, firmRev);
+                    subSysCode = (Convert.ToByte(data[DbCommon.COL_ENS_SUBSYSTEM_CODE]));
+                    SysFirmware = new Firmware(subSysCode, firmMjr, firmMnr, firmRev);
 
                     // Set NumElements
                     NumElements = NUM_DATA_ELEMENTS_REV_D;
@@ -528,6 +570,29 @@ namespace RTI
 
                     // Set NumElements
                     NumElements = NUM_DATA_ELEMENTS_REV_C;
+                }
+
+                // Check if Rev H columns exist
+                if (data.Table.Columns.Contains(DbCommon.COL_ENS_SUBSYS_CONFIG))
+                {
+                    // Verify data exist in the column
+                    if (data[DbCommon.COL_ENS_SUBSYS_CONFIG] != DBNull.Value)
+                    {
+                        // Set Subsystem Configuration
+                        byte subConfig = Convert.ToByte(data[DbCommon.COL_ENS_SUBSYS_CONFIG]);
+                        SubsystemConfig = new SubsystemConfiguration(subConfig);
+                    }
+                    else
+                    {
+                        SubsystemConfig = new SubsystemConfiguration();
+                    }
+
+                    // Set NumElements
+                    NumElements = NUM_DATA_ELEMENTS_REV_H;
+                }
+                else
+                {
+                    SubsystemConfig = new SubsystemConfiguration();
                 }
 
                 // Set the time and date
@@ -579,7 +644,7 @@ namespace RTI
             /// <returns>Subsystem for this ensemble.</returns>
             public Subsystem GetSubSystem( )
             {
-                return SysSerialNumber.GetSubsystem(SysFirmware.SubsystemIndex);
+                return SysSerialNumber.GetSubsystem(SysFirmware.SubsystemCode);
             }
 
             /// <summary>
@@ -592,7 +657,8 @@ namespace RTI
                 s += "Ensemble: "  + EnsembleNumber + "\n";
                 s += "Serial: " + SysSerialNumber.ToString() + "\n";
                 s += "Firmware: " + SysFirmware.ToString() + "\n";
-                s += "SubSystem: " + SysFirmware.SubsystemIndex.ToString();
+                s += "SubSystem: " + SysFirmware.SubsystemCode.ToString() + "\n";
+                s += "Subsystem Config: " + SubsystemConfig.ToString() + "\n";
                 s += EnsDateTime.ToString() + "\n";
                 s += "Bins: " + NumBins + " Beams: " + NumBeams + "\n";
                 s += "Pings Desired: " + DesiredPingCount + " actual: " + ActualPingCount + "\n";

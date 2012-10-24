@@ -59,6 +59,7 @@
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 04/10/2012      RC          2.08       Changed BYTES_IN_INT to BYTES_IN_INT8 and BYTES_IN_INT32.
  * 06/14/2012      RC          2.11       Added variable MAX_NUM_BINS.
+ * 10/05/2012      RC          2.15       Added more description for BEAM_Q_INDEX.
  *                                         
  *       
  * 
@@ -285,6 +286,13 @@ namespace RTI
             /// <summary>
             /// Index of beams in Earth transformation.
             /// Beam Q.
+            /// 
+            /// Q value is Earth is the Error velocity.
+            /// This is calculated by taking the vertical velocity
+            /// of Beams 0-1 and Beams 2-3.  Beams 0-1 are opposites sides of each other and
+            /// the same for 2-3.  Subtract the vertical velocity between Beams 0-1 and Beams 2-3.  This 
+            /// value if there is no error should be 0.  If there is any error, then the result is the error
+            /// value set for Q.
             /// </summary>
             public const int BEAM_Q_INDEX = BEAM_3_INDEX;
 

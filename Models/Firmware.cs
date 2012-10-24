@@ -35,6 +35,7 @@
  * 01/20/2012      RC          1.14       Initial coding
  * 01/26/2012      RC          1.14       Changed constructor to take a byte instead of string for subsystem.
  * 07/20/2012      Rc          2.12       Added FirmwareVersionList() to get a list of all possible firmware major, minor and revision values.
+ * 10/09/2012      RC          2.15       Changed SubsystemIndex to SubsystemCode.
  *
  */
 
@@ -83,11 +84,10 @@ namespace RTI
         #region Properties
 
         /// <summary>
-        /// Sub-system index of the ensemble.  This is a
-        /// number representing the index within the list
-        /// of subsystems in the serial number.
+        /// Subsystem Code.  This represent the
+        /// system type.
         /// </summary>
-        public UInt16 SubsystemIndex { get; set; }
+        public byte SubsystemCode { get; set; }
 
         /// <summary>
         /// Major Firmware version.
@@ -118,7 +118,7 @@ namespace RTI
             FirmwareMajor = 0;
             FirmwareMinor = 0;
             FirmwareRevision = 0;
-            SubsystemIndex = 0;
+            SubsystemCode = Subsystem.EMPTY_CODE;
         }
 
         /// <summary>
@@ -138,18 +138,18 @@ namespace RTI
         /// <param name="major">Firmware major version.</param>
         /// <param name="minor">Firmware minor version.</param>
         /// <param name="revision">Firmware revision.</param>
-        public Firmware(UInt16 subSystem, UInt16 major, UInt16 minor, UInt16 revision)
+        public Firmware(byte subSystem, UInt16 major, UInt16 minor, UInt16 revision)
         {
             FirmwareMajor = major;
             FirmwareMinor = minor;
             FirmwareRevision = revision;
-            SubsystemIndex = subSystem;
+            SubsystemCode = subSystem;
         }
 
         /// <summary>
         /// Decode the firmware into its 
         /// parts.  There will be 4 bytes.
-        /// Most significant[3]: Hardware Sub-system.
+        /// Most significant[3]: Hardware Sub-system code.
         /// [2]: Major Firmware Version.
         /// [1]: Minor Firmware Version.
         /// Least significant[0]: Firmware Revision
@@ -157,10 +157,10 @@ namespace RTI
         /// <param name="firmware">Firmware data.</param>
         private void Decode(byte[] firmware)
         {
-            FirmwareMajor = firmware[MAJOR_START];
-            FirmwareMinor = firmware[MINOR_START];
-            FirmwareRevision = firmware[REVISION_START];
-            SubsystemIndex = firmware[SUBSYSTEM_START];
+            FirmwareMajor = Convert.ToUInt16(firmware[MAJOR_START]);
+            FirmwareMinor = Convert.ToUInt16(firmware[MINOR_START]);
+            FirmwareRevision = Convert.ToUInt16(firmware[REVISION_START]);
+            SubsystemCode = firmware[SUBSYSTEM_START];
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace RTI
             result[MAJOR_START] = (byte)FirmwareMajor;
             result[MINOR_START] = (byte)FirmwareMinor;
             result[REVISION_START] = (byte)FirmwareRevision;
-            result[SUBSYSTEM_START] = (byte)SubsystemIndex;
+            result[SUBSYSTEM_START] = (byte)SubsystemCode;
 
             return result;
         }
@@ -185,7 +185,7 @@ namespace RTI
         /// <returns>String of the version number.</returns>
         public override string ToString()
         {
-            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, SubsystemIndex.ToString());
+            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, (Convert.ToChar(SubsystemCode)).ToString());
         }
 
         /// <summary>

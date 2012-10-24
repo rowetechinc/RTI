@@ -1,5 +1,80 @@
 RTI Changelog
 
+RTI-2.15
+ - Changed the version number.
+ - In AdcpSubsystemCommands, changed how defaults are set to allow outside users to set the defaults with and without a subsystem set.
+ - In AdcpCommands, fixed bug with DEFAULT_CEI.  Reference could change the value.  Removed DEFAULT_CEI and added DEFAULT_CEI_HOUR/MINUTE/SECOND/HUNSEC.
+ - In SerialConnection, changed the serial port ReadBufferSize to handle faster download speeds.
+ - In AdcpSerialPort::SysTestFirmwareFiles(), made it check for all capitals for the file MAINT.txt and ENGHELP.txt.
+ - Update AdcpCommands and AdcpSubsystemCommands to the ADCP manual Revision G.
+ - Added system frequency information to Commons.cs.
+ - In AdcpCommands, removed EnableDisable enum and changed DEFAULT_ENGMACON to a bool. 
+ - In AdcpCommands, added the command CETFP to GetCommandList().  This sets the time of first ping.
+ - Updated the the UnitTest for the BB commands for WP and BT in AdcpSubsystemCommandsTest.cs.
+ - In AdcpSubsystemCommands.cs, make 300kHz the default frequency if no frequency is set.
+ - In AdcpCommands.cs, added DEFAULT_SALINITY_VALUE_SALT and DEFAULT_SALINITY_VALUE_FRESH.
+ - Bug in CBTMX command firmware.  AdcpSubsystemCommands.cs commented out so the user cannot send the setting for now.
+ - In Commons.cs, made version number get retrieved from AssemblyInfo.cs.
+ - In AdcpCommands.cs, changed the DecodeBoardValues() to handle board IDs with and without a frequency.
+ - Store the Adcp Commands, Adcp Subsystem Commands and Deployment options to the project database file.
+ - Created Deployment Option to save with the Project database.
+ - In Project.cs, Get and Set Adcp Commands and Options to the project database.
+ - In Subsystem.cs, removed Private Set for Index and Code to allow JSON encode and decode.
+ - Changed to version 2.15.1.
+ - Updated Status.cs to ADCP User Guide Rev H.
+ - In Project.cs, added SubsystemConfig column to tblEnsemble for the subsystem configuration.
+ - In DbCommon.cs, added COL_ENS_SUBSYS_CONFIG column to the Project database in tblEnsemble.
+ - In AdcpDatabaseWriter::WriteEnsembleDataToDatabase(), added SubsystemConfig to the database.
+ - Added SerialConnection::SendDataGetReply() to send data and get the response back.
+ - Added AdcpSubystemConfig and AdcpConfiguration.
+ - Added AdcpCommands::DecodeCSHOW() to decode the CSHOW command.
+ - Added DecodeCSHOW.cs to decode the CSHOW command.
+ - Added Subsystem::IsEmpty() to check if the Subsystem is an empty subsystem.
+ - Added CEOUTPUT command to AdcpCommands.
+ - Added TimeValue test to AdcpCommandsTest.cs.
+ - Fixed TimeValue to rollover values when exceed there minutes, seconds and HunSec range in AdcpCommands.cs.
+ - In DecodeCSHOW, fixed bug in Decoding Indexed values.  It did not handle spaces correctly.
+ - Created DecodeCSHOWTest.cs.
+ - In AdcpCommands, added the command CVSF.  Check ranges for values when setting the value if ranges exist.
+ - Added DeploymentOptions to AdcpConfiguration.
+ - In AdcpCommands, removed requiring the serial number for the constructor.  It was only needed for CEPO, but that was incorrectly created with the serial number.
+ - Added AdcpConfiguration:ValidateCEPO() to verify the given CEPO is correct for the serial number.
+ - In SerialNumber, Needed to remove all private Set so that the object can be Serialized and Deserialized to JSON.
+ - Added COL_CMD_REV column to the Project database in tblOptions.
+ - In Project.cs, removed AdcpCommands, DeploymentOptions and AdcpSubsystemCommadns and replaced with AdcpConfiguration.
+ - In AdcpConfiguration.cs, added methods AdcpSubsystemConfigExist() and GetAdcpSubsystemConfig().
+ - In AdcpConfiguration.cs, added method AddConfiguration().
+ - In AdcpDatabaseWriter.cs, added UpdateAdcpConfiguration() to write the AdcpConfiguration to the database.
+ - In AdcpSubsystemCommands.cs, added CEPO Index property.  Give the CEPO index in the constructor.
+ - Fixed bug in AdcpConfiguration::SetCepo() when setting the serial number, the CEPO was being reset.
+ - In Validator, fixed misspelling of ValidateNumericMinMax() and rounding numbers in error message.
+ - Added Validator::ValidatePositiveNumeric() to check for positive numbers.
+ - Added CBI command to AdcpSubsystemCommands.
+ - Added CBI command to DecodeCSHOW.cs.
+ - Added AdcpConfiguration::RemoveConfiguration().
+ - In AdcpSubsystemConfig, set the Command's CEPO index when CEPO index is set.
+ - In DeploymentOptions, added new Battery Types.
+ - In SubsystemConfiguration, changed the COMMAND_SETUP_START.
+ - In Firmware, changed SubsystemIndex to SubsystemCode.
+ - In EnsembleDataSet::Decode(), changed SubsystemIndex to SubsystemCode and changed from an UInt16 to a byte.    
+ - In SerialNumber, changed the SubSystemsDict to have the key as the Code and not the index.
+ - In DeploymentOptions, changed Ints to UInt32.  Add Min values.
+ - Added Validator::ValidateMin(int value, int min, out bool isGood).
+ - In DeploymentOptions, added GetBatteryList().
+ - In AdcpCommands and AdcpSubsystemCommands, when creating the command list, ensure the string is set to United States English format.  This is to prevent commas from being used for decimal points.
+ - In AdcpCommands, added Minimum values for CWS, CTD and CWSS command.
+ - In AdcpSubsystemConfig, made ToString() only use Subsystem and SubystemConfiguration.
+ - In AdcpSubsystemConfig, added static GetString() to generate a string for a AdcpSubsystemConfig based off a Subsystem and SubsystemConfiguration given.
+ - In AdcpConfiguration, improved performance in GetAdcpSubsystemConfig() and AdcpSubsystemConfigExist().
+ - In Project and DbCommons, in tblEnsemble changed column SubsystemIndex to SubsystemCode.
+ - In AdcpSubsystemCommands, validate the min and max values for the commands.
+ - In Validator, fixed showing all the decimal places for the result in ValidateMinMax().
+ - In AdcpSubsystemCommands, added Min/Max values for the CWPAP commands.
+ - In SerialConnection::SendDataWaitReply(), when checking if the reponse matches the command, make the command and response both lower case so they will match in case.
+ - In AdcpSerialPort, when canceling or stopping a download, send the D command to stop the current download.
+ - In AdcpSerialPort, remove the Download watchdog.
+ - In AdcpDataWriter, when writing the ensemble data to the database, try to get the ADCP Configurtation to also write to the project.
+
 RTI-2.14
  - Changed the version number.
 

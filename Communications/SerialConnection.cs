@@ -62,6 +62,9 @@
  * 07/09/2012      RC          2.12       Added locks to read and write methods for multithreading.
  * 08/21/2012      RC          2.12       Used IsAvailable() instead of checking each time for isOpen and !breakState when using the serial port.
  *                                         Made Connect() and Reconnect return a bool if a connection could be made.
+ * 08/31/2012      RC          2.12       Changed the serial port ReadBufferSize to handle faster download speeds.
+ * 09/21/2012      RC          2.15       Added SendDataGetReply() to send data and get the response back.
+ * 10/18/2012      RC          2.15       In SendDataWaitReply(), when checking if the reponse matches the command, make the command and response both lower case so they will match in case.
  * 
  */
 
@@ -227,7 +230,7 @@ namespace RTI
         /// 
         /// Ensure the buffer size does not get to large.
         /// </summary>
-        private string _receiveBufferString;
+        protected string _receiveBufferString;
         /// <summary>
         /// Store the receive buffer as a string.
         /// This will keep in tact all the new lines.
@@ -285,6 +288,17 @@ namespace RTI
             // Wake up the thread to stop thread
             //_threadWait.Set();
             //_threadWait.Dispose();
+
+            SubShutdown();
+        }
+
+        /// <summary>
+        /// Virtual method to extend the shutdown method.
+        /// </summary>
+        protected virtual void SubShutdown()
+        {
+            // Put shutdown process in here for any objects that
+            // extend this object.
         }
 
         #region Methods
@@ -295,7 +309,7 @@ namespace RTI
         /// <returns>TRUE = Connection could be made.  / FALSE = Conneciton could not be made.</returns>
         public bool Reconnect()
         {
-            Debug.WriteLine("Reconnect Serial port: " + _serialOptions.Port);
+            log.Debug("Reconnect Serial port: " + _serialOptions.Port);
 
             // Disconnect the serial port
             Disconnect();
@@ -322,7 +336,12 @@ namespace RTI
                 _serialPort.Parity = _serialOptions.Parity;         // Set Parity
                 _serialPort.StopBits = _serialOptions.StopBits;     // Set stop bits
                 _serialPort.Handshake = Handshake.None;             // No handshake (Flow Control None)
+                _serialPort.ReadBufferSize = 16 * 65536;
                 ReceiveBufferString = "";                           // Clear the buffer
+
+                //Set the read/write timeouts
+                _serialPort.ReadTimeout = 50;
+                _serialPort.WriteTimeout = 500;
 
                 if (!_serialPort.IsOpen)
                 {
@@ -478,13 +497,24 @@ namespace RTI
                     // And not pasued
                     if (IsAvailable() && !_isSendingData && !_pauseReadThread)
                     {
+                        // Block until data is available
                         int bytesAvail = _serialPort.BytesToRead;
+
+                        // Verify data was read from the serial port
                         if (bytesAvail > 0)
                         {
+                            // Create a buffer to hold the data
                             byte[] buffer = new byte[bytesAvail];
 
                             //Debug.WriteLine("Reading data from Serial Port");
                             int bytesRead = _serialPort.Read(buffer, 0, buffer.Length);
+
+                            // Determine if we need to continue to read because not all the bytes were reads
+                            if (bytesRead != bytesAvail)
+                            {
+                                Debug.WriteLine(string.Format("Bytes Read {0},  Bytes Available {1]", bytesRead, bytesAvail));
+                                log.Warn(string.Format("Bytes Read {0},  Bytes Available {1]", bytesRead, bytesAvail));
+                            }
 
                             // Pass the data to all subscribers
                             if (this.ReceiveRawSerialDataEvent != null)
@@ -502,7 +532,7 @@ namespace RTI
                 {
                     // If the port is already in use, do not
                     // start the thread
-                    Debug.WriteLine("COMM Port Error Reading: " + _serialOptions.Port, ex);
+                    log.Warn("COMM Port Error Reading: " + _serialOptions.Port, ex);
 
                     if (_serialPort != null)
                     {
@@ -511,7 +541,7 @@ namespace RTI
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine("Error Reading in COMM Port: " + _serialOptions.Port, ex);
+                    log.Warn("Error Reading in COMM Port: " + _serialOptions.Port, ex);
 
                     if (_serialPort != null)
                     {
@@ -679,7 +709,8 @@ namespace RTI
             if (_validateMsg.Length >= data.Length)
             {
                 // Compare sent vs what was echoed back
-                if (data.CompareTo(_validateMsg.Substring(0, data.Length)) != 0)
+                //if (data.ToLower().CompareTo(_validateMsg.Substring(0, data.Length).ToLower()) != 0)
+                if(!_validateMsg.ToLower().Contains(data.ToLower()))
                 {
                     log.Warn(string.Format("Error sending data to serial port. Sent data: {0} length: {1}  Received Data: {2} length: {3}", data, data.Length, _validateMsg, _validateMsg.Length));
                     result = false;
@@ -697,6 +728,48 @@ namespace RTI
             this.ReceiveSerialData -= WaitForAck;
 
             return result;
+        }
+
+        /// <summary>
+        /// Send data to the serial port.  Then wait for a response.  Get the
+        /// response back from the serial port from the data sent.  The
+        /// wait time is based on how long the data sent needs to be processed 
+        /// on the other end before it sends a response back.  The waitTime is in
+        /// milliseconds.  The default value for waitTime is RTI.AdcpSerialPort.WAIT_STATE.
+        /// 
+        /// sendBreak is used to send a BREAK before the command is sent.  This is useful to 
+        /// wake the system up before sending the command or to get the BREAK result.
+        /// </summary>
+        /// <param name="data">Data to send to the serial port.</param>
+        /// <param name="sendBreak">Flag to send a BREAK or not.</param>
+        /// <param name="waitTime">Time to wait for a response in milliseconds.  DEFAULT=RTI.AdcpSerialPort.WAIT_STATE</param>
+        /// <returns>Data sent back from the serial port after the data was sent.</returns>
+        public string SendDataGetReply(string data, bool sendBreak = false, int waitTime = RTI.AdcpSerialPort.WAIT_STATE)
+        {
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send a BREAK if set
+            if (sendBreak)
+            {
+                SendBreak();
+
+                // Wait for an output
+                Thread.Sleep(waitTime);
+            }
+
+            // If data is given, send it to the serial port
+            if (!string.IsNullOrEmpty(data))
+            {
+                // Send the data
+                SendData(data);
+            }
+
+            // Wait for an output
+            Thread.Sleep(waitTime);
+
+            // Return the buffer output
+            return ReceiveBufferString;
         }
 
         /// <summary>

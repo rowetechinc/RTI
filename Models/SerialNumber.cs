@@ -43,6 +43,9 @@
  *                                         Made a special serial number for a DVL message.
  * 05/01/2012      RC          2.11       Made serial number string public.
  * 07/11/2012      RC          2.12       Fix bug if the serial number string given is bad.
+ * 09/21/2012      RC          2.15       Added GetSubsystem(byte) to get the Subsystem in the list based off the Subsystem code.
+ * 10/01/2012      RC          2.15       Needed to remove all private Set so that the object can be Serialized and Deserialized to JSON.
+ * 10/09/2012      RC          2.15       Changed the SubSystemsDict to have the key as the Code and not the index.
  *
  */
 
@@ -132,33 +135,33 @@ namespace RTI
         /// <summary>
         /// The serial number for the system.
         /// </summary>
-        public UInt32 SystemSerialNumber { get; private set; }
+        public UInt32 SystemSerialNumber { get; set; }
 
         /// <summary>
         /// Spare in the serial number.
         /// </summary>
-        public string Spare { get; private set; }
+        public string Spare { get; set; }
 
         /// <summary>
         /// The Base Electronics hardware architecture.
         /// </summary>
-        public string BaseHardware { get; private set; }
+        public string BaseHardware { get; set; }
 
         /// <summary>
         /// The Sub-systems set for the system.
         /// </summary>
-        public string SubSystems { get; private set; }
+        public string SubSystems { get; set; }
 
         /// <summary>
         /// Dictionary of all subsystems.  This Dictionary is based off
         /// the subsystems given in the serial number.
         /// </summary>
-        public Dictionary<UInt16, Subsystem> SubSystemsDict { get; private set; }
+        public Dictionary<byte, Subsystem> SubSystemsDict { get; set; }
 
         /// <summary>
         /// Complete serial number stored as a string.
         /// </summary>
-        public string SerialNumberString { get; private set; }
+        public string SerialNumberString { get; set; }
 
         #endregion
 
@@ -187,7 +190,7 @@ namespace RTI
             Spare = "";
             BaseHardware = "";
             SubSystems = "";
-            SubSystemsDict = new Dictionary<UInt16, Subsystem>();
+            SubSystemsDict = new Dictionary<byte, Subsystem>();
         }
 
         /// <summary>
@@ -225,27 +228,47 @@ namespace RTI
                 Spare = "";
                 BaseHardware = "";
                 SubSystems = "";
-                SubSystemsDict = new Dictionary<UInt16, Subsystem>();
+                SubSystemsDict = new Dictionary<byte, Subsystem>();
             }
         }
 
         #region Decode
 
+        ///// <summary>
+        ///// Get the subsystem from the dictionary.  If the
+        ///// key does not exist in the list, a static empty
+        ///// subsystem will be returned.
+        ///// </summary>
+        ///// <param name="index">Index of the subsystem.</param>
+        ///// <returns>Subsystem within the dictionary or an empty subsystem.</returns>
+        //public Subsystem GetSubsystem(UInt16 index)
+        //{
+        //    // Try to get the value, if it fails
+        //    // return empty.
+        //    Subsystem ss = Subsystem.Empty;
+        //    if (SubSystemsDict.TryGetValue(index, out ss))
+        //    {
+        //        return ss;
+        //    }
+
+        //    return Subsystem.Empty;
+        //}
+
         /// <summary>
-        /// Get the subsystem from the dictionary.  If the
-        /// key does not exist in the list, a static empty
-        /// subsystem will be returned.
+        /// Get the Subsystem based off the code given.
+        /// If the Subsystem cannot be found, return an
+        /// empty Subsystem.
         /// </summary>
-        /// <param name="index">Index of the subsystem.</param>
-        /// <returns>Subsystem within the dictionary or an empty subsystem.</returns>
-        public Subsystem GetSubsystem(UInt16 index)
+        /// <param name="code">Code to look for.</param>
+        /// <returns>Subsystem if found, if not found, return empty Subsystem.</returns>
+        public Subsystem GetSubsystem(byte code)
         {
-            // Try to get the value, if it fails
-            // return empty.
-            Subsystem ss = Subsystem.Empty;
-            if (SubSystemsDict.TryGetValue(index, out ss))
+            foreach (Subsystem ss in SubSystemsDict.Values)
             {
-                return ss;
+                if (ss.Code == code)
+                {
+                    return ss;
+                }
             }
 
             return Subsystem.Empty;
@@ -347,7 +370,7 @@ namespace RTI
             catch (Exception)
             {
                 SubSystems = "";
-                SubSystemsDict = new Dictionary<UInt16, Subsystem>();
+                SubSystemsDict = new Dictionary<byte, Subsystem>();
             }
         }
 
@@ -385,10 +408,10 @@ namespace RTI
         /// Create a Dictionary of all the subsystems.
         /// </summary>
         /// <returns>List of all the subsystems.</returns>
-        private Dictionary<UInt16, Subsystem> GetSubsystemList(string subsystems)
+        private Dictionary<byte, Subsystem> GetSubsystemList(string subsystems)
         {
             //List<Subsystem> list = new List<Subsystem>();
-            Dictionary<UInt16, Subsystem> ssDict = new Dictionary<UInt16,Subsystem>();
+            Dictionary<byte, Subsystem> ssDict = new Dictionary<byte,Subsystem>();
 
             // Get each character from the subsystem string
             // If the character is not an empty subsystem,
@@ -400,7 +423,7 @@ namespace RTI
                 {
                     //list.Add(new Subsystem(ss, (UInt16)x));
                     //list.AddLast(new Subsystem(Convert.ToUInt16(x), ss));
-                    ssDict.Add((UInt16)x, new Subsystem(ss, (UInt16)x));
+                    ssDict.Add(Convert.ToByte(x), new Subsystem(ss, (UInt16)x));
                 }
             }
 

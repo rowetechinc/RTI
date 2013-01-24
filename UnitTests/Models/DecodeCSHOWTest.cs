@@ -36,6 +36,9 @@
  * 09/26/2012      RC          2.15       Added WP commands.
  * 09/28/2012      RC          2.15       Added BT, WT and Environmental commands.
  * 10/04/2012      RC          2.15       Added CBI command.
+ * 12/28/2012      RC          2.17       Made SubsystemConfiguration take a Subsystem in its constructor.
+ *                                         Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ *                                         AdcpSubsystemConfigExist() take only 1 argument.
  *
  */
 
@@ -280,8 +283,8 @@ namespace RTI
             }
 
             Assert.IsNotNull(ssConfig, "SubsystemConfiguration is null");
-            Assert.AreEqual('2', Convert.ToChar(ssConfig.Subsystem.Code), "SubsystemConfiguration Subsystem Code is incorrect.");       // Code of subsystem
-            Assert.AreEqual(0, ssConfig.Subsystem.Index, "SubsystemConfiguration Subsystem Index is incorrect.");                       // Index of Subsystem Code within SerialNumber
+            Assert.AreEqual('2', Convert.ToChar(ssConfig.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration Subsystem Code is incorrect.");       // Code of subsystem
+            Assert.AreEqual(0, ssConfig.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration Subsystem Index is incorrect.");                       // Index of Subsystem Code within SerialNumber
             Assert.AreEqual(0, ssConfig.CepoIndex, "Subsystem Configuration Index is incorrect.");                                          // Index of Config within CEPO
         }
 
@@ -328,20 +331,20 @@ namespace RTI
 
             // SubsystemConfiguration 1
             Assert.IsNotNull(resultConfig1, "SubsystemConfiguration 1 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig1.Subsystem.Code), "SubsystemConfiguration 1 Subsystem Code is incorrect.");        // Code of Subsystem
-            Assert.AreEqual(0, resultConfig1.Subsystem.Index, "SubsystemConfiguration 1 Subsystem Index is incorrect.");                        // Index of Subsystem Code within SerialNumber
+            Assert.AreEqual('2', Convert.ToChar(resultConfig1.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 1 Subsystem Code is incorrect.");        // Code of Subsystem
+            Assert.AreEqual(0, resultConfig1.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 1 Subsystem Index is incorrect.");                        // Index of Subsystem Code within SerialNumber
             Assert.AreEqual(0, resultConfig1.CepoIndex, "SubsystemConfiguration 1 Index is incorrect.");                                            // Index of SubsystemConfiguration within CEPO
 
             // SubsystemConfiguration 2
             Assert.IsNotNull(resultConfig2, "SubsystemConfiguration 2 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2.Subsystem.Code), "SubsystemConfiguration 2 Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2.Subsystem.Index, "SubsystemConfiguration 2 Subsystem Index is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2 Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2 Subsystem Index is incorrect.");
             Assert.AreEqual(1, resultConfig2.CepoIndex, "SubsystemConfiguration 2 Index is incorrect.");
 
             // SubsystemConfiguration 3
             Assert.IsNotNull(resultConfig3, "SubsystemConfiguration 3 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig3.Subsystem.Code), "SubsystemConfiguration 3 Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig3.Subsystem.Index, "SubsystemConfiguration 3 Subsystem Index is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig3.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3 Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig3.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3 Subsystem Index is incorrect.");
             Assert.AreEqual(2, resultConfig3.CepoIndex, "SubsystemConfiguration 3 Index is incorrect.");
         }
 
@@ -370,7 +373,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -400,7 +403,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -426,26 +429,26 @@ namespace RTI
 
             // SubsystemConfiguration 2_1
             Assert.IsNotNull(resultConfig2_1, "SubsystemConfiguration 2_1 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_1.Subsystem.Code), "SubsystemConfiguration 2_1 Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_1.Subsystem.Index, "SubsystemConfiguration 2_1 Subsystem Index is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_1.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_1 Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_1.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_1 Subsystem Index is incorrect.");
             Assert.AreEqual(0, resultConfig2_1.CepoIndex, "SubsystemConfiguration 2_1 Index is incorrect.");
 
             // SubsystemConfiguration 2_2
             Assert.IsNotNull(resultConfig2_2, "SubsystemConfiguration 2_2 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_2.Subsystem.Code), "SubsystemConfiguration 2_2 Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_2.Subsystem.Index, "SubsystemConfiguration 2_2 Subsystem Index is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_2.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_2 Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_2.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_2 Subsystem Index is incorrect.");
             Assert.AreEqual(1, resultConfig2_2.CepoIndex, "SubsystemConfiguration 2_2 Index is incorrect.");
 
             // SubsystemConfiguration 2_3
             Assert.IsNotNull(resultConfig2_3, "SubsystemConfiguration 2_3 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_3.Subsystem.Code), "SubsystemConfiguration 2_3 Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_3.Subsystem.Index, "SubsystemConfiguration 2_3 Subsystem Index is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_3.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_3 Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_3.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_3 Subsystem Index is incorrect.");
             Assert.AreEqual(3, resultConfig2_3.CepoIndex, "SubsystemConfiguration 2_3 Index is incorrect.");
 
             // SubsystemConfiguration 2_4
             Assert.IsNotNull(resultConfig2_4, "SubsystemConfiguration 2_4 is null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_4.Subsystem.Code), "SubsystemConfiguration 2_4 Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_4.Subsystem.Index, "SubsystemConfiguration 2_4 Subsystem Index is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_4.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_4 Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_4.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_4 Subsystem Index is incorrect.");
             Assert.AreEqual(6, resultConfig2_4.CepoIndex, "SubsystemConfiguration 2_4 Index is incorrect.");
 
 
@@ -453,20 +456,20 @@ namespace RTI
 
             // SubsystemConfiguration 3_1
             Assert.IsNotNull(resultConfig3_1, "SubsystemConfiguration 3_1 is null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_1.Subsystem.Code), "SubsystemConfiguration 3_1 Subsystem Code is incorrect.");            // Subsystem Code
-            Assert.AreEqual(1, resultConfig3_1.Subsystem.Index, "SubsystemConfiguration 3_1 Subsystem Index is incorrect.");                            // Index within serial number of Subsystem code
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_1.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3_1 Subsystem Code is incorrect.");            // Subsystem Code
+            Assert.AreEqual(1, resultConfig3_1.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3_1 Subsystem Index is incorrect.");                            // Index within serial number of Subsystem code
             Assert.AreEqual(2, resultConfig3_1.CepoIndex, "SubsystemConfiguration 3_1 Index is incorrect.");                                                // Index within CEPO of configuration
 
             // SubsystemConfiguration 3_2
             Assert.IsNotNull(resultConfig3_2, "SubsystemConfiguration 3_2 is null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_2.Subsystem.Code), "SubsystemConfiguration 3_2 Subsystem Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3_2.Subsystem.Index, "SubsystemConfiguration 3_2 Subsystem Index is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_2.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3_2 Subsystem Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3_2.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3_2 Subsystem Index is incorrect.");
             Assert.AreEqual(4, resultConfig3_2.CepoIndex, "SubsystemConfiguration 3_2 Index is incorrect.");
 
             // SubsystemConfiguration 3_3
             Assert.IsNotNull(resultConfig3_3, "SubsystemConfiguration 3_3 is null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_3.Subsystem.Code), "SubsystemConfiguration 3_3 Subsystem Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3_3.Subsystem.Index, "SubsystemConfiguration 3_3 Subsystem Index is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_3.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3_3 Subsystem Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3_3.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3_3 Subsystem Index is incorrect.");
             Assert.AreEqual(5, resultConfig3_3.CepoIndex, "SubsystemConfiguration 3_3 Index is incorrect.");
         }
 
@@ -563,7 +566,7 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_singleSubsystemConfiguration, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual(1, config.Commands.CEOUTPUT, "CEOUTPUT is incorrect");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, config.Commands.CEOUTPUT, "CEOUTPUT is incorrect");
         }
 
         /// <summary>
@@ -575,7 +578,7 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemConfigurations, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual(0, config.Commands.CEOUTPUT, "CEOUTPUT is incorrect");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Disable, config.Commands.CEOUTPUT, "CEOUTPUT is incorrect");
         }
 
         /// <summary>
@@ -587,7 +590,7 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemMultipleConfigurations, _multipleSubsystemSerialNumber);
 
-            Assert.AreEqual(1, config.Commands.CEOUTPUT, "CEOUTPUT is incorrect");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, config.Commands.CEOUTPUT, "CEOUTPUT is incorrect");
         }
 
         #endregion
@@ -806,7 +809,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -836,7 +839,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -971,7 +974,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -1001,7 +1004,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -1166,7 +1169,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -1196,7 +1199,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -1380,7 +1383,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -1410,7 +1413,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -1564,7 +1567,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -1594,7 +1597,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -1734,7 +1737,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -1764,7 +1767,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -1904,7 +1907,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -1934,7 +1937,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -2074,7 +2077,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -2104,7 +2107,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -2244,7 +2247,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -2274,7 +2277,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -2420,7 +2423,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -2450,7 +2453,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -2597,7 +2600,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -2627,7 +2630,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -2767,7 +2770,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -2797,7 +2800,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -2865,6 +2868,7 @@ namespace RTI
             }
             #endregion
 
+            Assert.IsNotNull(ssConfig, "Adcp Subsystem Configuration was not found.");
             Assert.AreEqual(new TimeValue(00, 00, 01, 00), ssConfig.Commands.CBI_BurstInterval, "CBI_BurstInterval is incorrect");
             Assert.AreEqual(100, ssConfig.Commands.CBI_NumEnsembles, "CBI_NumEnsembles is incorrect.");
         }
@@ -2943,7 +2947,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -2973,7 +2977,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -3121,7 +3125,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -3151,7 +3155,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -3295,7 +3299,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -3325,7 +3329,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -3498,7 +3502,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -3528,7 +3532,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -3682,7 +3686,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -3712,7 +3716,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -3852,7 +3856,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -3882,7 +3886,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -4022,7 +4026,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -4052,7 +4056,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -4206,7 +4210,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -4236,7 +4240,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -4400,7 +4404,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -4430,7 +4434,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -4559,7 +4563,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -4589,7 +4593,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -4720,7 +4724,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -4750,7 +4754,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -4890,7 +4894,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -4920,7 +4924,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -5060,7 +5064,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in config.SubsystemConfigDict.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -5090,7 +5094,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {

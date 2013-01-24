@@ -36,6 +36,12 @@
  * 01/26/2012      RC          1.14       Changed constructor to take a byte instead of string for subsystem.
  * 07/20/2012      Rc          2.12       Added FirmwareVersionList() to get a list of all possible firmware major, minor and revision values.
  * 10/09/2012      RC          2.15       Changed SubsystemIndex to SubsystemCode.
+ * 12/28/2012      RC          2.17       Added GetSubsystem() to get the subsystem for this firmware.
+ * 01/04/2013      RC          2.17       Added equal, == and != to the object.
+ *                                         Fixed ToString() for the subsystem code.
+ * 01/09/2013      RC          2.17       Made SubsystemCode private and you now must get the code using the function GetSubsystemCode().
+ *                                         In GetSubsystemCode() and GetSubsystem() converted the code to a byte correctly.
+ * 01/17/2013      RC          2.17       Added DEBUG_MAJOR_VER for a debug firmware flag.
  *
  */
 
@@ -62,32 +68,50 @@ namespace RTI
         /// <summary>
         /// Location of the Hardware sub-system.
         /// </summary>
-        private const int SUBSYSTEM_START = 3;
+        public const int SUBSYSTEM_START = 3;
 
         /// <summary>
         /// Location of the Major Firmware version.
         /// </summary>
-        private const int MAJOR_START = 2;
+        public const int MAJOR_START = 2;
 
         /// <summary>
         /// Location of the Minor Firmware version.
         /// </summary>
-        private const int MINOR_START = 1;
+        public const int MINOR_START = 1;
 
         /// <summary>
         /// Location of the Firmware revsion.
         /// </summary>
-        private const int REVISION_START = 0;
+        public const int REVISION_START = 0;
+
+        /// <summary>
+        /// If the firmware is a debug version, 
+        /// the Major version number would be set to 99.
+        /// </summary>
+        public const int DEBUG_MAJOR_VER = 99;
+
+        /// <summary>
+        /// The code should be the hex value for the character in the serial number 
+        /// for the subsystem.  
+        /// You can convert the character to the hex byte 
+        /// with the following code:
+        /// (byte)System.Convert.ToUInt32(code[0]);
+        /// or
+        /// decimal subsysCode = Convert.ToChar(cepo.Substring(x, 1));
+        /// (byte)subsysCode;
+        /// 
+        /// Because this value can vary in its meaning based off firmware versions,
+        /// i have made it private.  You now must use GetSubsystemCode() and give a 
+        /// serial number to get the true SubsystemCode.  Before firmware version 0.2.13,
+        /// the value given in the ensemble was the SubsystemIndex within the serial number.
+        /// Afterwards it changed to the actual SubsystemCode.
+        /// </summary>
+        private byte _subsystemCode;
 
         #endregion
 
         #region Properties
-
-        /// <summary>
-        /// Subsystem Code.  This represent the
-        /// system type.
-        /// </summary>
-        public byte SubsystemCode { get; set; }
 
         /// <summary>
         /// Major Firmware version.
@@ -118,7 +142,7 @@ namespace RTI
             FirmwareMajor = 0;
             FirmwareMinor = 0;
             FirmwareRevision = 0;
-            SubsystemCode = Subsystem.EMPTY_CODE;
+            _subsystemCode = Subsystem.EMPTY_CODE;
         }
 
         /// <summary>
@@ -143,7 +167,7 @@ namespace RTI
             FirmwareMajor = major;
             FirmwareMinor = minor;
             FirmwareRevision = revision;
-            SubsystemCode = subSystem;
+            _subsystemCode = subSystem;
         }
 
         /// <summary>
@@ -160,7 +184,7 @@ namespace RTI
             FirmwareMajor = Convert.ToUInt16(firmware[MAJOR_START]);
             FirmwareMinor = Convert.ToUInt16(firmware[MINOR_START]);
             FirmwareRevision = Convert.ToUInt16(firmware[REVISION_START]);
-            SubsystemCode = firmware[SUBSYSTEM_START];
+            _subsystemCode = firmware[SUBSYSTEM_START];
         }
 
         /// <summary>
@@ -173,20 +197,101 @@ namespace RTI
             result[MAJOR_START] = (byte)FirmwareMajor;
             result[MINOR_START] = (byte)FirmwareMinor;
             result[REVISION_START] = (byte)FirmwareRevision;
-            result[SUBSYSTEM_START] = (byte)SubsystemCode;
+            result[SUBSYSTEM_START] = (byte)_subsystemCode;
 
             return result;
         }
 
         /// <summary>
-        /// Print out the firmware version.
-        /// Format: Major.Minor.Revision.
+        /// Return a subsystem for this firmware version.
+        /// This will use the SubsystemCode to create a
+        /// subsystem to return.
+        /// 
+        /// FOR BACKWARDS COMPATITBILITY
+        /// Old subsystems in the ensemble were set by the Subsystem Index in Firmware.
+        /// This means the that a subsystem code of 0 could be passed because
+        /// the index was 0 to designate the first subsystem index.  Firmware revision 0.2.13 changed
+        /// SubsystemIndex to SubsystemCode.  This will check which Firmware version this ensemble is
+        /// and convert to the new type using SubsystemCode.
+        /// 
+        /// If the firmwawre is a debug firmware, the Major number will be set to 99.  So also 99.2.13 or less uses the old form.
+        /// </summary>
+        /// <param name="serial">Serial number to get the subsystem code if the firmware version is less than 0.2.13.</param>
+        /// <returns>Subsystem for this firmware.</returns>
+        public Subsystem GetSubsystem(SerialNumber serial)
+        {
+            if ((FirmwareMajor <= 0 || FirmwareMajor == DEBUG_MAJOR_VER) && FirmwareMinor <= 2 && FirmwareRevision <= 13)
+            {
+                // Set the correct subsystem based off the serial number
+                // Get the index for the subsystem
+                byte index = _subsystemCode;
+
+                // Ensure the index is not out of range of the subsystem string
+                if (serial.SubSystems.Length > index)
+                {
+                    // Get the Subsystem code from the serialnumber based off the index found
+                    string code = serial.SubSystems.Substring(index, 1);
+
+                    // Create a subsystem with the code and index
+                    return new Subsystem(Subsystem.ConvertSubsystemCode(code[0]), index);
+                }
+            }
+
+            return new Subsystem(_subsystemCode);
+        }
+
+        /// <summary>
+        /// Get the Subsystem code.  The subsystem code is gotten in 2
+        /// different ways depending on the firmware version.
+        /// 
+        /// Firmare Version less than or equal to 0.2.13
+        /// The code stored is the index within the serial number.
+        /// Get the serial numbers subsystems and use the index
+        /// to get the code.
+        /// 
+        /// If the firmwawre is a debug firmware, the Major number will be set to 99.  So also 99.2.13 or less uses the old form.
+        /// 
+        /// Firmware Version greater than 0.2.13
+        /// The code stored is the code.
+        /// </summary>
+        /// <param name="serial">Serial number used if the firmware version is less than 0.2.13</param>
+        /// <returns>Subsystem code.</returns>
+        public byte GetSubsystemCode(SerialNumber serial)
+        {
+            // If the firmware version is less than 0.2.13, 
+            // then the code store is actually the index and we must use
+            // the serial number to get the code
+            if ((FirmwareMajor <= 0 || FirmwareMajor == DEBUG_MAJOR_VER) && FirmwareMinor <= 2 && FirmwareRevision <= 13 && !serial.IsEmpty())
+            {
+                // Set the correct subsystem based off the serial number
+                // Get the index for the subsystem
+                byte index = _subsystemCode;
+
+                // Ensure the index is not out of range of the subsystem string
+                if (serial.SubSystems.Length > index)
+                {
+                    // Get the Subsystem code from the serialnumber based off the index found
+                    string code = serial.SubSystems.Substring(index, 1);
+
+                    return Subsystem.ConvertSubsystemCode(code[0]);
+                }
+            }
+
+            // Based off the firmware version, the code stored is the correct code
+            return _subsystemCode;
+        }
+
+        /// <summary>
+        /// Print out the firmware version and Subsystem.
+        /// Format: Major.Minor.Revision - SubsystemCode.
         /// </summary>
         /// <returns>String of the version number.</returns>
         public override string ToString()
         {
-            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, (Convert.ToChar(SubsystemCode)).ToString());
+            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, _subsystemCode.ToString());
         }
+
+
 
         /// <summary>
         /// Create a list of all the possible major, minor and revision values.
@@ -204,6 +309,78 @@ namespace RTI
 
             return list;
         }
+
+        #region Overrides
+
+        /// <summary>
+        /// Hashcode for the object.
+        /// This will return the hashcode for the
+        /// this object's string.
+        /// </summary>
+        /// <returns>Hashcode for the object.</returns>
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+        /// <summary>
+        /// Determine if the given object is equal to this
+        /// object.  This will check if the firmware version match.
+        /// </summary>
+        /// <param name="obj">Object to compare with this object.</param>
+        /// <returns>TRUE = Firmware Versions matched.</returns>
+        public override bool Equals(object obj)
+        {
+            //Check for null and compare run-time types.
+            if (obj == null || GetType() != obj.GetType()) return false;
+
+            Firmware p = (Firmware)obj;
+
+            return (FirmwareMajor == p.FirmwareMajor) &&
+                    (FirmwareMinor == p.FirmwareMinor) &&
+                    (FirmwareRevision == p.FirmwareRevision) &&
+                    (_subsystemCode == p._subsystemCode);
+        }
+
+        /// <summary>
+        /// Determine if the two Firmware given are the equal.
+        /// </summary>
+        /// <param name="fw1">First Firmware to check.</param>
+        /// <param name="fw2">Firmware to check against.</param>
+        /// <returns>True if there strings match.</returns>
+        public static bool operator ==(Firmware fw1, Firmware fw2)
+        {
+            // If both are null, or both are same instance, return true.
+            if (System.Object.ReferenceEquals(fw1, fw2))
+            {
+                return true;
+            }
+
+            // If one is null, but not both, return false.
+            if (((object)fw1 == null) || ((object)fw2 == null))
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return (fw1.FirmwareMajor == fw2.FirmwareMajor) &&
+                    (fw1.FirmwareMinor == fw2.FirmwareMinor) &&
+                    (fw1.FirmwareRevision == fw2.FirmwareRevision) &&
+                    (fw1._subsystemCode == fw2._subsystemCode);
+        }
+
+        /// <summary>
+        /// Return the opposite of ==.
+        /// </summary>
+        /// <param name="fw1">First Firmware to check.</param>
+        /// <param name="fw2">Firmware to check against.</param>
+        /// <returns>Return the opposite of ==.</returns>
+        public static bool operator !=(Firmware fw1, Firmware fw2)
+        {
+            return !(fw1 == fw2);
+        }
+
+        #endregion
     }
 }
 

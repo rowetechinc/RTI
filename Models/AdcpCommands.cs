@@ -78,7 +78,12 @@
  * 10/01/2012      RC          2.15       Removed requiring the serial number for the constructor.  It was only needed for CEPO, but that was incorrectly created with the serial number.
  * 10/10/2012      RC          2.15       When creating the command list, ensure the string is set to United States English format.  This is to prevent commas from being used for decimal points.
  * 10/11/2012      RC          2.15       Added Minimum values for CWS, CTD and CWSS command.
- * 
+ * 11/21/2012      RC          2.16       Changed CEOUTPUT from a ushort to AdcpCommands.AdcpOutputMode.
+ *                                         Added command strings for each command.
+ * 12/20/2012      RC          2.17       Updated comments to ADCP User Guide Rev H.
+ * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
+ * 01/02/2013      RC          2.17       Added list functions for all the commands that have a list of options. 
+ * 01/22/2013      RC          2.17       Made CEPO command the first command in the list because CEPO will change all values to defaults.
  * 
  */
 
@@ -86,6 +91,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
+using System.ComponentModel;
 
 
 namespace RTI
@@ -909,7 +915,7 @@ namespace RTI
             {
                 Command = "";
                 Parameter = null;
-                SubSystem = Subsystem.Empty;
+                SubSystem = new Subsystem();
             }
 
             /// <summary>
@@ -1521,7 +1527,7 @@ namespace RTI
             /// Default Year to start pinging.
             /// 2012
             /// </summary>
-            public const UInt16 DEFAULT_CETFP_YEAR = 2012;
+            public const UInt16 DEFAULT_CETFP_YEAR = 2013;
 
             /// <summary>
             /// Default Month to start pinging.
@@ -1563,7 +1569,7 @@ namespace RTI
             /// <summary>
             /// Default whether to output data to serial port.
             /// </summary>
-            public const int DEFAULT_CEOUTPUT = 1;
+            public const AdcpOutputMode DEFAULT_CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
 
             /// <summary>
             /// Default CEPO is blank.  When the serial number
@@ -1709,7 +1715,26 @@ namespace RTI
                 PROFILE
             };
 
+            /// <summary>
+            /// Output mode to the serial port. 
+            /// </summary>
+            public enum AdcpOutputMode
+            {
+                /// <summary>
+                /// Disable output mode to the serial port.
+                /// </summary>
+                Disable = 0,
 
+                /// <summary>
+                /// Binary output to the serial port.
+                /// </summary>
+                Binary = 1,
+
+                /// <summary>
+                /// ASCII output to the serial port.
+                /// </summary>
+                ASCII = 2
+            }
 
             #endregion
 
@@ -2074,7 +2099,10 @@ namespace RTI
             /// is appended to the current file. The 7 digit number 
             /// following the “A” is incremented each time the 
             /// system is (re)started or when the file size exceeds 
-            /// 16777216 bytes.
+            /// 16777216 bytes (16 Mbytes).
+            /// 
+            /// Note: Internal data recording during burst sampling only
+            /// occurs at the end of the burst.
             /// 
             /// Command: CERECORD n[cr]
             /// Scale: 0=disable, 1=enable.
@@ -2116,7 +2144,7 @@ namespace RTI
             /// Scale: 0=disable, 1=enable Binary, 2=enable ASCII
             /// Range:
             /// </summary>
-            private UInt16 _cEOUTPUT;
+            private AdcpOutputMode _cEOUTPUT;
             /// <summary>
             /// Ensemble output type.
             /// 
@@ -2136,16 +2164,13 @@ namespace RTI
             /// Scale: 0=disable, 1=enable Binary, 2=enable ASCII
             /// Range:
             /// </summary>
-            public UInt16 CEOUTPUT
+            public AdcpOutputMode CEOUTPUT
             {
                 get { return _cEOUTPUT; }
                 set
                 {
                     // Verify the value is within range
-                    if (value >= MIN_CEOUTPUT && value <= MAX_CEOUTPUT)
-                    {
-                        _cEOUTPUT = value;
-                    }
+                    _cEOUTPUT = value;
                 }
             }
 
@@ -2452,24 +2477,26 @@ namespace RTI
             public List<string> GetCommandList()
             {
                 List<string> list = new List<string>();
-                list.Add(String.Format("{0}", Mode_ToString()));                                                                                // Mode
-                list.Add(string.Format("{0}", GetTimeCommand()));                                                                               // Time
-                list.Add(String.Format("{0} {1}", CMD_CEI, CEI_ToString()));                                                                    // CEI
-                list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));                                                                // CETFP
-                list.Add(String.Format("{0} {1}", CMD_CERECORD, CERECORD_ToString()));                                                          // CERECORD  CultureInfo.CreateSpecificCulture("en-US")   Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
-                list.Add(string.Format("{0} {1}", CMD_CEOUTPUT, CEOUTPUT.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                // CEOUTPUT
-                list.Add(String.Format("{0} {1}", CMD_CEPO, CEPO.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                        // CEPO
+                list.Add(CEPO_CmdStr());                                // CEPO     THIS WILL SET DEFAULTS SO IT MUST BE SET FIRST
+                list.Add(Mode_CmdStr());                                // Mode
+                list.Add(CEI_CmdStr());                                 // CEI
+                list.Add(CETFP_CmdStr());                               // CETFP
+                list.Add(CERECORD_CmdStr());                            // CERECORD  CultureInfo.CreateSpecificCulture("en-US")   Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
+                list.Add(CEOUTPUT_CmdStr());                            // CEOUTPUT
 
-                list.Add(String.Format("{0} {1}", CMD_CWS, CWS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CWS
-                list.Add(String.Format("{0} {1}", CMD_CWT, CWT.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CWT
-                list.Add(String.Format("{0} {1}", CMD_CTD, CTD.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CTD
-                list.Add(String.Format("{0} {1}", CMD_CWSS, CWSS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                        // CWSS
-                list.Add(String.Format("{0} {1}", CMD_CHS, CHS_ToString()));                                                                    // CHS
-                list.Add(String.Format("{0} {1}", CMD_CHO, CHO.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CHO
+                list.Add(CWS_CmdStr());                                 // CWS
+                list.Add(CWT_CmdStr());                                 // CWT
+                list.Add(CTD_CmdStr());                                 // CTD
+                list.Add(CWSS_CmdStr());                                // CWSS
+                list.Add(CHS_CmdStr());                                 // CHS
+                list.Add(CHO_CmdStr());                                 // CHO
+                list.Add(CVSF_CmdStr());                                // CVSF
 
-                list.Add(String.Format("{0} {1}", CMD_C232B, ((int)C232B).ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // C232B
-                list.Add(String.Format("{0} {1}", CMD_C485B, ((int)C485B).ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // C485B
-                list.Add(String.Format("{0} {1}", CMD_C422B, ((int)C422B).ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // C485B
+                list.Add(C232B_CmdStr());                               // C232B
+                list.Add(C485B_CmdStr());                               // C485B
+                list.Add(C422B_CmdStr());                               // C422B
+
+                list.Add(Time_CmdStr());                                // Time         SET THE TIME LAST, IT TAKES THE LONGEST TO SET
 
                 return list;
             }
@@ -2502,31 +2529,390 @@ namespace RTI
             /// <returns>All the commands as a string.</returns>
             public override string ToString()
             {
-                string s = "";
+                StringBuilder sb = new StringBuilder();
 
-                s += Mode_ToString() + "\n";                                                                                                // Mode
-                s += GetTimeCommand() + "\n";                                                                                               // DateTime
-                s += CMD_CEI + " " + CEI_ToString() + "\n";                                                                                 // CEI
-                s += String.Format("{0} {1}\n", CMD_CETFP, CETFP_ToString());                                                               // CETFP
-                s += String.Format("{0} {1}\n", CMD_CERECORD, CERECORD_ToString());                                                         // CERECORD
-                s += String.Format("{0} {1}\n", CMD_CEOUTPUT, CEOUTPUT.ToString(CultureInfo.CreateSpecificCulture("en-US")));               // CERECORD
-                s += String.Format("{0} {1}\n", CMD_CEPO, CEPO.ToString(CultureInfo.CreateSpecificCulture("en-US")));                       // CEPO
+                sb.AppendLine(Mode_ToString());                     // Mode
+                sb.AppendLine(Time_CmdStr());                       // DateTime
+                sb.AppendLine(CEI_CmdStr());                        // CEI
+                sb.AppendLine(CETFP_CmdStr());                      // CETFP
+                sb.AppendLine(CERECORD_CmdStr());                   // CERECORD
+                sb.AppendLine(CEOUTPUT_CmdStr());                   // CEOUTPUT
+                sb.AppendLine(CEPO_CmdStr());                       // CEPO
 
-                s += CMD_CWS + " " + CWS.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CWS
-                s += CMD_CWT + " " + CWT.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CWT
-                s += CMD_CTD + " " + CTD.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CTD
-                s += CMD_CWSS + " " + CWSS.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                     // CWSS
-                s += CMD_CHS + " " + CHS_ToString() + "\n";                                                                                 // CHS
-                s += CMD_CHO + " " + CHO.ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                                       // CHO
+                sb.AppendLine(CWS_CmdStr());                        // CWS
+                sb.AppendLine(CWT_CmdStr());                        // CWT
+                sb.AppendLine(CTD_CmdStr());                        // CTD
+                sb.AppendLine(CWSS_CmdStr());                       // CWSS
+                sb.AppendLine(CHS_CmdStr());                        // CHS
+                sb.AppendLine(CHO_CmdStr());                        // CHO
+                sb.AppendLine(CVSF_CmdStr());                       // CVSF
                 
-                s += CMD_C232B + " " + ((int)C232B).ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                            // C232B
-                s += CMD_C485B + " " + ((int)C485B).ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                            // C485B
-                s += CMD_C422B + " " + ((int)C422B).ToString(CultureInfo.CreateSpecificCulture("en-US")) + "\n";                            // C422B
+                sb.AppendLine(C232B_CmdStr());                      // C232B
+                sb.AppendLine(C485B_CmdStr());                      // C485B
+                sb.AppendLine(C422B_CmdStr());                      // C422B
 
                 // Add the subsystem commands
 
-                return s;
+                return sb.ToString();
             }
+
+            #region Lists
+
+            /// <summary>
+            /// Get a list of all the mode types.
+            /// </summary>
+            /// <returns>List of all the modes.</returns>
+            public static BindingList<AdcpCommands.AdcpMode> GetModeList()
+            {
+                BindingList<AdcpCommands.AdcpMode>  ModeList = new BindingList<AdcpCommands.AdcpMode>();
+                ModeList.Add(AdcpCommands.AdcpMode.PROFILE);
+                ModeList.Add(AdcpCommands.AdcpMode.DVL);
+
+                return ModeList;
+            }
+
+            /// <summary>
+            /// Get a list for all the years.
+            /// </summary>
+            /// <returns>List of all the years.</returns>
+            public static BindingList<UInt16> GetYearList()
+            {
+                BindingList<UInt16> YearList = new BindingList<UInt16>();
+                for (UInt16 x = AdcpCommands.MIN_YEAR; x <= AdcpCommands.MAX_YEAR; x++)
+                {
+                    YearList.Add(x);
+                }
+
+                return YearList;
+            }
+
+            /// <summary>
+            /// Get a list for all the hours.
+            /// </summary>
+            /// <returns>List of all the hours.</returns>
+            public static BindingList<UInt16> GetHourList()
+            {
+                BindingList<UInt16> HourList = new BindingList<UInt16>();
+                for (UInt16 x = AdcpCommands.MIN_HOUR; x <= AdcpCommands.MAX_HOUR; x++)
+                {
+                    HourList.Add(x);
+                }
+
+                return HourList;
+            }
+
+            /// <summary>
+            /// Get a list for all the Minutes and Seconds.
+            /// </summary>
+            /// <returns>List for all the Minutes and Seconds.</returns>
+            public static BindingList<UInt16> GetMinSecList()
+            {
+                BindingList<UInt16>  MinSecsList = new BindingList<UInt16>();
+                for (UInt16 x = AdcpCommands.MIN_MINSEC; x <= AdcpCommands.MAX_MINSEC; x++)
+                {
+                    MinSecsList.Add(x);
+                }
+
+                return MinSecsList;
+            }
+
+            /// <summary>
+            /// Get a list for all the Hundredth of a second.
+            /// </summary>
+            public static BindingList<UInt16> GetHunSecList()
+            {
+                BindingList<UInt16> HunSecList = new BindingList<UInt16>();
+                for (UInt16 x = AdcpCommands.MIN_HUNSEC; x <= AdcpCommands.MAX_HUNSEC; x++)
+                {
+                    HunSecList.Add(x);
+                }
+
+                return HunSecList;
+            }
+
+            /// <summary>
+            /// Get a list for all the Months.
+            /// </summary>
+            /// <returns>List of all the months.</returns>
+            public static BindingList<UInt16> GetMonthList()
+            {
+                BindingList<UInt16> MonthList = new BindingList<UInt16>();
+                for (UInt16 x = AdcpCommands.MIN_MONTH; x <= AdcpCommands.MAX_MONTH; x++)
+                {
+                    MonthList.Add(x);
+                }
+
+                return MonthList;
+            }
+
+            /// <summary>
+            /// Get a list for all the days.
+            /// </summary>
+            /// <returns>List for all the days.</returns>
+            public static BindingList<UInt16> GetDayList()
+            {
+                BindingList<UInt16> DayList = new BindingList<UInt16>();
+                for (UInt16 x = AdcpCommands.MIN_DAY; x <= AdcpCommands.MAX_DAY; x++)
+                {
+                    DayList.Add(x);
+                }
+
+                return DayList;
+            }
+
+            /// <summary>
+            /// Get a list for all the heading sources.
+            /// </summary>
+            /// <returns>Get a list for all the heading sources.</returns>
+            public static BindingList<Commands.HeadingSrc> GetHeadingSourceList()
+            {
+                BindingList<Commands.HeadingSrc> HeadingSourceList = new BindingList<Commands.HeadingSrc>();
+                HeadingSourceList.Add(Commands.HeadingSrc.INTERNAL);
+                HeadingSourceList.Add(Commands.HeadingSrc.SERIAL);
+
+                return HeadingSourceList;
+            }
+
+            /// <summary>
+            /// Get a list for all the Output.
+            /// </summary>
+            /// <returns>Get a list for all the Output.</returns>
+            public static BindingList<AdcpOutputMode> GetOutputList()
+            {
+                BindingList<AdcpOutputMode> OutputList = new BindingList<AdcpOutputMode>();
+                OutputList.Add(AdcpCommands.AdcpOutputMode.Disable);
+                OutputList.Add(AdcpCommands.AdcpOutputMode.Binary);
+                OutputList.Add(AdcpCommands.AdcpOutputMode.ASCII);
+
+                return OutputList;
+            }
+
+            #endregion
+
+            #region Command Strings
+
+            #region Mode
+
+            /// <summary>
+            /// Return the Mode command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string Mode_CmdStr()
+            {
+                return String.Format("{0}", Mode_ToString());
+            }
+
+            #endregion
+
+            #region Time
+
+            /// <summary>
+            /// Return the Time command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string Time_CmdStr()
+            {
+                return string.Format("{0}", GetTimeCommand());
+            }
+
+            #endregion
+
+            #region CEI
+
+            /// <summary>
+            /// Return the CEI command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CEI_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CEI, CEI_ToString());
+            }
+
+            #endregion
+
+            #region CETFP
+
+            /// <summary>
+            /// Return the CETFP command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CETFP_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CETFP, CETFP_ToString());
+            }
+
+            #endregion
+
+            #region CERECORD
+
+            /// <summary>
+            /// Return the CERECORD command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CERECORD_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CERECORD, CERECORD_ToString());
+            }
+
+            #endregion
+
+            #region CEOUTPUT
+
+            /// <summary>
+            /// Return the CEOUTPUT command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CEOUTPUT_CmdStr()
+            {
+                return string.Format("{0} {1}", CMD_CEOUTPUT, ((int)CEOUTPUT).ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CEPO
+
+            /// <summary>
+            /// Return the CEPO command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CEPO_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CEPO, CEPO.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CWS
+
+            /// <summary>
+            /// Return the CWS command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWS_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CWS, CWS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CWT
+
+            /// <summary>
+            /// Return the CWT command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWT_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CWT, CWT.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CTD
+
+            /// <summary>
+            /// Return the CTD command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CTD_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CTD, CTD.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CWSS
+
+            /// <summary>
+            /// Return the CWSS command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWSS_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CWSS, CWSS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CHS
+
+            /// <summary>
+            /// Return the CHS command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CHS_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CHS, CHS_ToString());
+            }
+
+            #endregion
+
+            #region CHO
+
+            /// <summary>
+            /// Return the CHO command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CHO_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CHO, CHO.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region CVSF
+
+            /// <summary>
+            /// Return the CVSF command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CVSF_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_CVSF, CVSF.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region C232B
+
+            /// <summary>
+            /// Return the C232B command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string C232B_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_C232B, ((int)C232B).ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region C485B
+
+            /// <summary>
+            /// Return the C485B command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string C485B_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_C485B, ((int)C485B).ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region C422B
+
+            /// <summary>
+            /// Return the C422B command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string C422B_CmdStr()
+            {
+                return String.Format("{0} {1}", CMD_C422B, ((int)C422B).ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #endregion
 
             #endregion
 

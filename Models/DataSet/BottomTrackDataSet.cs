@@ -284,6 +284,22 @@ namespace RTI
 
 
             /// <summary>
+            /// Create a Bottom Track data set.  This will create an empty dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public BottomTrackDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
+                base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Initialize arrays
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
+            }
+
+            /// <summary>
             /// Create a Bottom Track data set.  Includes all the information
             /// about the current Bottom Track data.
             /// </summary>
@@ -298,16 +314,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize arrays
-                Range = new float[4];
-                SNR = new float[4];
-                Amplitude = new float[4];
-                Correlation = new float[4];
-                BeamVelocity = new float[4];
-                BeamGood = new float[4];
-                InstrumentVelocity = new float[4];
-                InstrumentGood = new float[4];
-                EarthVelocity = new float[4];
-                EarthGood = new float[4];
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
 
                 // Decode the information
                 Decode(ancData);
@@ -328,16 +335,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize arrays
-                Range = new float[4];
-                SNR = new float[4];
-                Amplitude = new float[4];
-                Correlation = new float[4];
-                BeamVelocity = new float[4];
-                BeamGood = new float[4];
-                InstrumentVelocity = new float[4];
-                InstrumentGood = new float[4];
-                EarthVelocity = new float[4];
-                EarthGood = new float[4];
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
 
                 // Decode the information
                 Decode(btData);
@@ -349,19 +347,10 @@ namespace RTI
             /// </summary>
             /// <param name="sentence"></param>
             public BottomTrackDataSet(Prti01Sentence sentence) :
-                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
             {
                 // Initialize arrays
-                Range = new float[4];
-                SNR = new float[4];
-                Amplitude = new float[4];
-                Correlation = new float[4];
-                BeamVelocity = new float[4];
-                BeamGood = new float[4];
-                InstrumentVelocity = new float[4];
-                InstrumentGood = new float[4];
-                EarthVelocity = new float[4];
-                EarthGood = new float[4];
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
 
                 // Decode the information
                 DecodeBottomTrackData(sentence);
@@ -373,19 +362,10 @@ namespace RTI
             /// </summary>
             /// <param name="sentence"></param>
             public BottomTrackDataSet(Prti02Sentence sentence) :
-                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
             {
                 // Initialize arrays
-                Range = new float[4];
-                SNR = new float[4];
-                Amplitude = new float[4];
-                Correlation = new float[4];
-                BeamVelocity = new float[4];
-                BeamGood = new float[4];
-                InstrumentVelocity = new float[4];
-                InstrumentGood = new float[4];
-                EarthVelocity = new float[4];
-                EarthGood = new float[4];
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
 
                 // Decode the information
                 DecodeBottomTrackData(sentence);
@@ -400,6 +380,43 @@ namespace RTI
             {
                 // Decode the information
                 DecodeBottomTrackData(sentence);
+            }
+
+            /// <summary>
+            /// Initialize all the arrays for the Bottom Track dataset.
+            /// This will create the arrays based off the number of beams
+            /// given.
+            /// </summary>
+            /// <param name="numBeams">Number of beams.</param>
+            public void Init(int numBeams)
+            {
+                Range = new float[numBeams];
+                SNR = new float[numBeams];
+                Amplitude = new float[numBeams];
+                Correlation = new float[numBeams];
+                BeamVelocity = new float[numBeams];
+                BeamGood = new float[numBeams];
+                InstrumentVelocity = new float[numBeams];
+                InstrumentGood = new float[numBeams];
+                EarthVelocity = new float[numBeams];
+                EarthGood = new float[numBeams];
+
+                FirstPingTime = 0.0f;
+                LastPingTime = 0.0f;
+
+                Heading = 0.0f;
+                Pitch = 0.0f;
+                Roll = 0.0f;
+                WaterTemp = 0.0f;
+                SystemTemp = 0.0f;
+                Salinity = 0.0f;
+                Pressure = 0.0f;
+                TransducerDepth = 0.0f;
+                SpeedOfSound = 0.0f;
+
+                Status = new Status(0);
+                NumBeams = numBeams;
+                ActualPingCount = 0.0f;
             }
 
             /// <summary>

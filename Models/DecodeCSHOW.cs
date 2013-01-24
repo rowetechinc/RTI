@@ -546,7 +546,22 @@ namespace RTI
                 UInt16 flag = 0;
                 if (UInt16.TryParse(result[1], out flag))
                 {
-                    config.Commands.CEOUTPUT = flag;
+                    switch(flag)
+                    {
+                        case (ushort)AdcpCommands.AdcpOutputMode.Disable:
+                            config.Commands.CEOUTPUT = AdcpCommands.AdcpOutputMode.Disable;
+                            break;
+                        case (ushort)AdcpCommands.AdcpOutputMode.Binary:
+                            config.Commands.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
+                            break;
+                        case (ushort)AdcpCommands.AdcpOutputMode.ASCII:
+                            config.Commands.CEOUTPUT = AdcpCommands.AdcpOutputMode.ASCII;
+                            break;
+                        default:
+                            config.Commands.CEOUTPUT = AdcpCommands.DEFAULT_CEOUTPUT;
+                            break;
+
+                    }
                 }
             }
         }

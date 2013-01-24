@@ -46,11 +46,21 @@
  * 09/21/2012      RC          2.15       Added GetSubsystem(byte) to get the Subsystem in the list based off the Subsystem code.
  * 10/01/2012      RC          2.15       Needed to remove all private Set so that the object can be Serialized and Deserialized to JSON.
  * 10/09/2012      RC          2.15       Changed the SubSystemsDict to have the key as the Code and not the index.
+ * 11/16/2012      RC          2.16       Allow the public strings to be changed and update all the values.
+ *                                         Added AddSubsystem() to add a subsystem properly to the serial number.
+ *                                         Added RemoveSubsystem() to remove a subsystem properly from the serial number.
+ * 11/19/2012      RC          2.16       Added BASE_ELEC_TYPE_ADCP1.
+ * 12/03/2012      RC          2.17       Replaced SerialNumber.Empty with IsEmpty().
+ * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
+ * 01/23/2013      RC          2.17       Changed IsEmpty() to only check if a Subsystem is set for the serial number.
  *
  */
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Text;
+
 namespace RTI
 {
     /// <summary>
@@ -71,6 +81,11 @@ namespace RTI
         /// Serial number for an empty serial number.
         /// </summary>
         public const int EMPTY_SERIAL_NUM = 0;
+
+        /// <summary>
+        /// Maximum size for the serial number.
+        /// </summary>
+        public int MAX_SERIAL_NUMBER = 999999;
 
         #region Sizes
 
@@ -128,6 +143,15 @@ namespace RTI
 
         #endregion
 
+        #region Base Electronic Types
+
+        /// <summary>
+        /// Base Electronic type for ADCP1.
+        /// </summary>
+        public const string BASE_ELEC_TYPE_ADCP1 = "01";
+
+        #endregion
+
         #endregion
 
         #region Properties
@@ -135,43 +159,139 @@ namespace RTI
         /// <summary>
         /// The serial number for the system.
         /// </summary>
-        public UInt32 SystemSerialNumber { get; set; }
+        private UInt32 _systemSerialNumber;
+        /// <summary>
+        /// The serial number for the system.
+        /// </summary>
+        public UInt32 SystemSerialNumber 
+        {
+            get { return _systemSerialNumber; } 
+            set
+            {
+                // Verify the given value is valid
+                if(value >= 0 && value <= MAX_SERIAL_NUMBER )
+                {
+                    _systemSerialNumber = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Spare in the serial number.
         /// </summary>
-        public string Spare { get; set; }
+        private string _spare;
+        /// <summary>
+        /// Spare in the serial number.
+        /// </summary>
+        public string Spare 
+        {
+            get { return _spare; } 
+            set
+            {
+                // Verify the value given is valid
+                if (value.Length <= SPARE_NUM_BYTES)
+                {
+                    _spare = value;
+                }
+            }
+        }
 
         /// <summary>
         /// The Base Electronics hardware architecture.
         /// </summary>
-        public string BaseHardware { get; set; }
+        private string _baseHardware;
+        /// <summary>
+        /// The Base Electronics hardware architecture.
+        /// </summary>
+        public string BaseHardware 
+        {
+            get { return _baseHardware; } 
+            set
+            {
+                // Verify the value given is valid
+                if (value.Length <= BASE_HDWR_NUM_BYTES)
+                {
+                    _baseHardware = value;
+                }
+            }
+        }
 
         /// <summary>
-        /// The Sub-systems set for the system.
+        /// The Subsystems set for the ADCP.
+        /// The ADCP can have multiple frequencies.  Each
+        /// frequency would be a subsystem.
         /// </summary>
-        public string SubSystems { get; set; }
+        private string _subsytems;
+        /// <summary>
+        /// The Subsystems set for the ADCP.
+        /// The ADCP can have multiple frequencies.  Each
+        /// frequency would be a subsystem.
+        /// </summary>
+        public string SubSystems 
+        {
+            get { return _subsytems; } 
+            set
+            {
+                // Verify the value given is valid
+                if (value.Length <= SUBSYSTEM_NUM_BYTES)
+                {
+                    // Set the subsystem string
+                    _subsytems = value;
+
+                    // Decode the Subsystem string
+                    // To create the SubsystemsDict
+                    DecodeSubsystem(value);
+                }
+            }
+        }
 
         /// <summary>
         /// Dictionary of all subsystems.  This Dictionary is based off
         /// the subsystems given in the serial number.
         /// </summary>
-        public Dictionary<byte, Subsystem> SubSystemsDict { get; set; }
+        private Dictionary<byte, Subsystem> _subsystemsDict;
+        /// <summary>
+        /// Dictionary of all subsystems.  This Dictionary is based off
+        /// the subsystems given in the serial number.
+        /// </summary>
+        public Dictionary<byte, Subsystem> SubSystemsDict 
+        {
+            get { return _subsystemsDict; } 
+            set
+            {
+                _subsystemsDict = value;
 
+                // Update the Subsystem string
+                UpdateSubsystemString();
+            }
+        }
+
+        //private string _serialNumberString;
         /// <summary>
         /// Complete serial number stored as a string.
         /// </summary>
-        public string SerialNumberString { get; set; }
+        public string SerialNumberString
+        {
+            get
+            {
+                return GetSerialNumberString();
+            }
+            set
+            {
+                //_serialNumberString = value;
+                SetSerialNumberString(value);
+            }
+        }
 
         #endregion
 
-        /// <summary>
-        /// Static object to represent and empty 
-        /// serial number.
-        /// All SETs are set private to ensure this
-        /// value does not change.
-        /// </summary>
-        public static readonly SerialNumber Empty = new SerialNumber();
+        ///// <summary>
+        ///// Static object to represent and empty 
+        ///// serial number.
+        ///// All SETs are set private to ensure this
+        ///// value does not change.
+        ///// </summary>
+        ////public static readonly SerialNumber Empty = new SerialNumber();
 
         /// <summary>
         /// Create a special serial number for a DVL message.
@@ -185,7 +305,6 @@ namespace RTI
         /// </summary>
         public SerialNumber()
         {
-            SerialNumberString = EMPTY_SERIAL_NUM_STRING;
             SystemSerialNumber = EMPTY_SERIAL_NUM;
             Spare = "";
             BaseHardware = "";
@@ -213,46 +332,83 @@ namespace RTI
         /// <param name="serialNum">String of the serial number.</param>
         public SerialNumber(string serialNum)
         {
-            if (!string.IsNullOrEmpty(serialNum))
-            {
-                // Set the string
-                SerialNumberString = serialNum;
+            // Set the serial number based off a string given
+            SetSerialNumberString(serialNum);
+        }
 
-                // Decode the serial number
-                Decode(serialNum);
-            }
-            else
+        /// <summary>
+        /// Add a subsystem to the serial number.
+        /// This will add the subsystem to the dictionary 
+        /// and update the Subsystem string.
+        /// </summary>
+        /// <param name="ss">Subsystem to add.</param>
+        public void AddSubsystem(Subsystem ss)
+        {
+            // Ensure we have not exceeded the maximum allowed subsystems
+            if (SubSystemsDict.Count < SUBSYSTEM_NUM_BYTES)
             {
-                SerialNumberString = EMPTY_SERIAL_NUM_STRING;
-                SystemSerialNumber = EMPTY_SERIAL_NUM;
-                Spare = "";
-                BaseHardware = "";
-                SubSystems = "";
-                SubSystemsDict = new Dictionary<byte, Subsystem>();
+                // Add the subsystem to the dictionary
+                _subsystemsDict.Add(Convert.ToByte(_subsystemsDict.Count), ss);
+
+                // Update the Subsystem string
+                UpdateSubsystemString();
             }
         }
 
+        /// <summary>
+        /// Remove the subsystem from the dictionary of subsystems.
+        /// This will also update the subsystem string.
+        /// </summary>
+        /// <param name="ss">Subsystem to remove.</param>
+        public void RemoveSubsystem(Subsystem ss)
+        {
+            List<Subsystem> list = new List<Subsystem>();
+
+            // Get a list of all the subsystems
+            // But do not include the subsystem given
+            foreach (Subsystem subsys in SubSystemsDict.Values)
+            {
+                if (ss != subsys)
+                {
+                    list.Add(subsys);
+                }
+            }
+
+            // Create a new dictionary
+            _subsystemsDict = new Dictionary<byte, Subsystem>();
+
+            // Add back all the subsystems
+            foreach (Subsystem subsys in list)
+            {
+                // Update the new index for the subsystem 
+                subsys.Index = (ushort)_subsystemsDict.Count;
+
+                // Add the new subsystem
+                AddSubsystem(subsys);
+            }
+
+            // Update the Subsystem string
+            UpdateSubsystemString();
+        }
+
+        /// <summary>
+        /// Determine if the serial number is correctly set.
+        /// This will determine if the Subsystem.  If it is empty, then
+        /// the serial number is empty.
+        /// </summary>
+        /// <returns>TRUE = The serial number is empty.</returns>
+        public bool IsEmpty()
+        {
+            if (SubSystemsDict.Count == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+
         #region Decode
-
-        ///// <summary>
-        ///// Get the subsystem from the dictionary.  If the
-        ///// key does not exist in the list, a static empty
-        ///// subsystem will be returned.
-        ///// </summary>
-        ///// <param name="index">Index of the subsystem.</param>
-        ///// <returns>Subsystem within the dictionary or an empty subsystem.</returns>
-        //public Subsystem GetSubsystem(UInt16 index)
-        //{
-        //    // Try to get the value, if it fails
-        //    // return empty.
-        //    Subsystem ss = Subsystem.Empty;
-        //    if (SubSystemsDict.TryGetValue(index, out ss))
-        //    {
-        //        return ss;
-        //    }
-
-        //    return Subsystem.Empty;
-        //}
 
         /// <summary>
         /// Get the Subsystem based off the code given.
@@ -271,7 +427,7 @@ namespace RTI
                 }
             }
 
-            return Subsystem.Empty;
+            return new Subsystem();
         }
 
         /// <summary>
@@ -280,11 +436,8 @@ namespace RTI
         /// <param name="serialNum"></param>
         private void Decode(byte[] serialNum)
         {
-            // Convert the byte array to a string
-            SerialNumberString = System.Text.Encoding.ASCII.GetString(serialNum);
-
             // Decode the serial number
-            Decode(SerialNumberString);
+            Decode(System.Text.Encoding.ASCII.GetString(serialNum));
         }
 
         /// <summary>
@@ -331,7 +484,6 @@ namespace RTI
             }
             catch (Exception)
             {
-                SerialNumberString = EMPTY_SERIAL_NUM_STRING;
                 SystemSerialNumber = EMPTY_SERIAL_NUM;
             }
         }
@@ -363,15 +515,40 @@ namespace RTI
             {
                 SubSystems = serialNum.Substring(SUBSYSTEM_START, SUBSYSTEM_NUM_BYTES);
 
-                // Decode the subsystem string into a list
-                // of subsystems
-                SubSystemsDict = GetSubsystemList(SubSystems);
+                // Decode the subsystem string
+                DecodeSubsystem(SubSystems);
             }
             catch (Exception)
             {
                 SubSystems = "";
                 SubSystemsDict = new Dictionary<byte, Subsystem>();
             }
+        }
+
+        /// <summary>
+        /// Decode the subsystem string.
+        /// </summary>
+        /// <param name="subsystem">Subsystem string.</param>
+        private void DecodeSubsystem(string subsystem)
+        {
+            // Decode the subsystem string into a list
+            // of subsystems
+            SubSystemsDict = GetSubsystemList(subsystem);
+        }
+
+        /// <summary>
+        /// If the Subsystem Dictionary has changed,
+        /// reset the Subsystem string.
+        /// </summary>
+        private void UpdateSubsystemString()
+        {
+            string ssStr = "";
+            foreach (Subsystem ss in SubSystemsDict.Values)
+            {
+                ssStr += ss.CodeToString();
+            }
+
+            _subsytems = ssStr.PadRight(SUBSYSTEM_NUM_BYTES, '0');
         }
 
         /// <summary>
@@ -398,7 +575,7 @@ namespace RTI
         /// Decode the base hardware string into the 
         /// base hardware type.
         /// </summary>
-        /// <param name="baseHardware"></param>
+        /// <param name="baseHardware">Base Hardware string.</param>
         private void DecodeBaseHardware(string baseHardware)
         {
 
@@ -428,6 +605,90 @@ namespace RTI
             }
 
             return ssDict;
+        }
+
+        #endregion
+
+        #region Set/Get Strings
+
+        /// <summary>
+        /// Set the serial number based off the string given.
+        /// </summary>
+        /// <param name="serialNum">String of the serial number.</param>
+        private void SetSerialNumberString(string serialNum)
+        {
+            if (!string.IsNullOrEmpty(serialNum))
+            {
+                // Set the string
+                //SerialNumberString = serialNum;
+
+                // Decode the serial number
+                Decode(serialNum);
+            }
+            else
+            {
+                //SerialNumberString = EMPTY_SERIAL_NUM_STRING;
+                SystemSerialNumber = EMPTY_SERIAL_NUM;
+                Spare = "";
+                BaseHardware = "";
+                SubSystems = "";
+                SubSystemsDict = new Dictionary<byte, Subsystem>();
+            }
+        }
+
+        /// <summary>
+        /// Generate the serial number string based off the serial number
+        /// values.
+        /// </summary>
+        /// <returns>String of the serial number.</returns>
+        private string GetSerialNumberString()
+        {
+            StringBuilder result = new StringBuilder();
+
+            // Base Electronics
+            if (string.IsNullOrEmpty(BaseHardware))
+            {
+                result.Append("00");
+            }
+            else
+            {
+                result.Append(BaseHardware.PadLeft(BASE_HDWR_NUM_BYTES, '0'));
+            }
+
+            // Subsystems
+            if (string.IsNullOrEmpty(SubSystems))
+            {
+                result.Append("000000000000000");
+            }
+            else
+            {
+                // Set the subsystems, padding the end with 0's
+                result.Append(SubSystems.PadRight(SUBSYSTEM_NUM_BYTES, '0'));
+            }
+
+            // Spare
+            if (string.IsNullOrEmpty(Spare))
+            {
+                result.Append("000000000");
+            }
+            else
+            {
+                result.Append(Spare.PadRight(SPARE_NUM_BYTES, '0'));
+            }
+
+            // Serial number
+            if (SystemSerialNumber == EMPTY_SERIAL_NUM)
+            {
+                result.Append("000000");
+            }
+            else
+            {
+                string serial = SystemSerialNumber.ToString();
+                result.Append(serial.PadLeft(SERIAL_NUM_BYTES, '0'));
+            }
+
+
+            return result.ToString();
         }
 
         #endregion

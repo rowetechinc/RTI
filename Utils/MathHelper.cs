@@ -44,6 +44,7 @@
  * 07/06/2012      RC          2.12       Added ByteArrayToDouble() and ByteArrayToFloat64().
  * 07/19/2012      RC          2.12       When parsing the byte arrays, verify the byte arrays given are the correct size.
  * 07/30/2012      RC          2.13       Added MemorySizeString() to display file memory sizes with the highest scale factor.
+ * 12/21/2012      RC          2.17       Removed the abolute value from PercentError per Steve Maier request.  He wants negative percent error.
  * 
  */
 
@@ -837,13 +838,14 @@ namespace RTI
                 return 0;
             }
 
-            return Math.Abs((correctValue - experimentalValue) / correctValue) * 100;
+            //return Math.Abs((correctValue - experimentalValue) / correctValue) * 100;
+            return ((correctValue - experimentalValue) / correctValue) * 100;
         }
 
         /// <summary>
         /// Applied when comparing two experimental quantities, E1 and E2, neither
         /// of which can be considered the "correct" value.  The percent difference
-        /// is the absolute value of the difference over themean times 100.
+        /// is the absolute value of the difference over the mean times 100.
         /// </summary>
         /// <param name="exp1Value">Experimental Value 1.</param>
         /// <param name="exp2Value">Experimental Value 2.</param>

@@ -68,6 +68,8 @@
  * 09/04/2012      RC          2.15       In SysTestFirmwareFiles(), made it check for all capitals for the file MAINT.txt and ENGHELP.txt.
  * 10/18/2012      RC          2.15       When canceling or stopping a download, send the D command to stop the current download.
  * 10/19/2012      RC          2.15       Remove the Download watchdog.
+ * 12/11/2012      RC          2.17       In SetSystemDateTime(), wait about 5 seconds after setting the ADCP time.
+ * 01/23/2013      RC          2.17       Added the Reboot() command.
  * 
  */
 
@@ -366,6 +368,29 @@ namespace RTI
                 }
             }
         }
+
+        #region Reboot
+
+        /// <summary>
+        /// Reboot the ADCP.  Give the command SLEEP, then a BREAK
+        /// then STOP.
+        /// </summary>
+        public void Reboot()
+        {
+            if (IsAvailable())
+            {
+                // Put the ADCP to Sleep
+                SendData("SLEEP");
+
+                // Wait for it to sleep
+                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
+                
+                // Send the BREAK and STOP using StopPinging
+                StopPinging();
+            }
+        }
+
+        #endregion
 
         #region XModem Download
 
@@ -1787,7 +1812,8 @@ namespace RTI
             }
 
             // Allow some time for the ADCP to set the time
-            System.Threading.Thread.Sleep(WAIT_STATE * 8);
+            // Wait about 5 seconds
+            System.Threading.Thread.Sleep(WAIT_STATE * 20);
 
             return timeResult;
         }

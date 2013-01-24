@@ -34,6 +34,9 @@
  * -----------------------------------------------------------------
  * 09/18/2012      RC          2.15       Initial coding
  * 10/09/2012      RC          2.15       Changed the COMMAND_SETUP_START.
+ * 12/28/2012      RC          2.17       Removed SubsystemConfiguration.Empty and replaced is IsEmpty().
+ *                                         Made SubsystemConfiguration take a Subsystem in its constructor.
+ *                                         Added DescString().
  * 
  */
 
@@ -75,18 +78,18 @@ namespace RTI
         #region Properties
 
         /// <summary>
-        /// Number that identifies which command setup is being
-        /// used for the current subsystem.
+        /// Subsystem associated with this configuration.
+        /// A Subsystem can have mulitple configurations.
         /// </summary>
-        public byte CommandSetup { get; set; }
-
-
-        #endregion
+        public Subsystem SubSystem { get; set; }
 
         /// <summary>
-        /// Represents an empty or blank subsystem configuration.
+        /// Number that identifies which configuration is being
+        /// used for the current subsystem.
         /// </summary>
-        public static readonly SubsystemConfiguration Empty = new SubsystemConfiguration();
+        public byte ConfigNumber { get; set; }
+
+        #endregion
 
         /// <summary>
         /// Default constructor sets the default command setup.
@@ -99,20 +102,40 @@ namespace RTI
         /// <summary>
         /// Set the Command Setup value.
         /// </summary>
+        /// <param name="ss">Subsystem for the configuration.</param>
         /// <param name="cmdSetup">Set the command setup.</param>
-        public SubsystemConfiguration(byte cmdSetup)
+        public SubsystemConfiguration(Subsystem ss, byte cmdSetup)
         {
-            CommandSetup = cmdSetup;
+            SubSystem = ss;
+            ConfigNumber = cmdSetup;
         }
 
         /// <summary>
         /// Receive the Subsystem configuration as a byte 
         /// array and decode the data.
         /// </summary>
+        /// <param name="ss">Subsystem for the configuration.</param>
         /// <param name="data">Byte array containing the subsystem configuration data.</param>
-        public SubsystemConfiguration(byte[] data)
+        public SubsystemConfiguration(Subsystem ss, byte[] data)
         {
+            SubSystem = ss;
             Decode(data);
+        }
+
+        /// <summary>
+        /// Determine if the configuration is empty.  The
+        /// configuration is empty if the default value is
+        /// set for the command setup.
+        /// </summary>
+        /// <returns>TRUE = Empty Configuration.</returns>
+        public bool IsEmpty()
+        {
+            if (SubSystem.IsEmpty() && ConfigNumber == DEFAULT_SETUP)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #region Methods
@@ -127,7 +150,7 @@ namespace RTI
             result[0] = (byte)0;
             result[1] = (byte)0;
             result[2] = (byte)0;
-            result[COMMAND_SETUP_START] = CommandSetup;
+            result[COMMAND_SETUP_START] = ConfigNumber;
 
             return result;
         }
@@ -142,7 +165,7 @@ namespace RTI
         {
             if (data.Length >= NUM_BYTES)
             {
-                CommandSetup = data[COMMAND_SETUP_START];
+                ConfigNumber = data[COMMAND_SETUP_START];
             }
             else
             {
@@ -155,7 +178,8 @@ namespace RTI
         /// </summary>
         private void SetDefault()
         {
-            CommandSetup = DEFAULT_SETUP;
+            ConfigNumber = DEFAULT_SETUP;
+            SubSystem = new Subsystem();
         }
 
         /// <summary>
@@ -167,7 +191,18 @@ namespace RTI
         public string CommandSetupToString()
         {
             //return Convert.ToString(Convert.ToChar(CommandSetup));
-            return Convert.ToString(CommandSetup);
+            return Convert.ToString(ConfigNumber);
+        }
+
+        /// <summary>
+        /// Return a description string of this object.  This will
+        /// include the configuration number in brackets and the
+        /// subsystem description.
+        /// </summary>
+        /// <returns>Description string for this object.</returns>
+        public string DescString()
+        {
+            return String.Format("[{0}] {1}", CommandSetupToString(), SubSystem.DescString());
         }
 
         #endregion
@@ -204,7 +239,7 @@ namespace RTI
             }
 
             // Return true if the fields match:
-            return (config1.CommandSetup == config2.CommandSetup);
+            return (config1.SubSystem == config2.SubSystem && config1.ConfigNumber == config2.ConfigNumber);
         }
 
         /// <summary>
@@ -224,7 +259,7 @@ namespace RTI
         /// <returns>Hash the Code.</returns>
         public override int GetHashCode()
         {
-            return CommandSetup.GetHashCode();
+            return ConfigNumber.GetHashCode();
         }
 
         /// <summary>
@@ -240,7 +275,7 @@ namespace RTI
 
             SubsystemConfiguration p = (SubsystemConfiguration)obj;
 
-            return (CommandSetup == p.CommandSetup);
+            return (SubSystem == p.SubSystem && ConfigNumber == p.ConfigNumber);
         }
 
         #endregion

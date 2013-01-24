@@ -40,6 +40,11 @@
  * 10/03/2012      RC          2.15       Fixed bug in SetCepo() when setting the serial number, the CEPO was being reset.
  * 10/08/2012      RC          2.15       Added RemoveConfiguration().
  * 10/12/2012      RC          2.15       Improved performance in GetAdcpSubsystemConfig() and AdcpSubsystemConfigExist().
+ * 12/28/2012      RC          2.17       Made SubsystemConfiguration take a Subsystem in its constructor.
+ *                                         Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ *                                         AdcpSubsystemConfigExist(), RemoveAdcpSubsystemConfig() and GetAdcpSubsystemConfig()  take only 1 argument.
+ * 01/02/2013      RC          2.17       Set a default CEPO when a serial number is give in the constructor.
+ * 01/14/2013      RC          2.17       In DecodeCepo() fixed converting the subsystem code from a char to a decimal using MathHelper.
  * 
  */
 
@@ -151,8 +156,8 @@ namespace RTI
             // Initialize values
             SubsystemConfigDict = new Dictionary<string, AdcpSubsystemConfig>();
             Commands = new AdcpCommands();
-            _serialNumber = serial;
-            CEPO = AdcpCommands.DEFAULT_CEPO;               // Must go after Commands is created
+            _serialNumber = serial; 
+            SetCepo(_serialNumber.SubsystemsString(), _serialNumber);       // Must go after Commands is created
             DeploymentOptions = new DeploymentOptions();
         }
 
@@ -187,18 +192,17 @@ namespace RTI
         /// a key based off the Subsystem and SubsystemConfiguration given.  It will then
         /// check if the key exist in the dictionary.
         /// </summary>
-        /// <param name="ss">Subsystem.</param>
         /// <param name="ssConfig">SubsystemConfiguration.</param>
         /// <returns>TRUE = Subsystem and SubsystemConfiguration key found.  /  FALSE = No AdcpSubsystemConfig key.</returns>
-        public bool AdcpSubsystemConfigExist(Subsystem ss, SubsystemConfiguration ssConfig)
+        public bool AdcpSubsystemConfigExist(SubsystemConfiguration ssConfig)
         {
             // Check for null
-            if (ss == null || ssConfig == null)
+            if (ssConfig == null)
             {
                 return false;
             }
 
-            return SubsystemConfigDict.ContainsKey(AdcpSubsystemConfig.GetString(ss, ssConfig));
+            return SubsystemConfigDict.ContainsKey(AdcpSubsystemConfig.GetString(ssConfig));
         }
 
         /// <summary>
@@ -237,7 +241,7 @@ namespace RTI
                     for (int x = 0; x < tempList.Count; x++)
                     {
                         // Redo the cepo value
-                        CEPO += Convert.ToChar(tempList.Values[x].Subsystem.Code);
+                        CEPO += Convert.ToChar(tempList.Values[x].SubsystemConfig.SubSystem.Code);
 
                         // Change the configs CEPO index
                         tempList.Values[x].CepoIndex = x;
@@ -258,19 +262,18 @@ namespace RTI
         /// Get the AdcpSubsystemConfig from the dictionary if it exist.  If it does not
         /// exist in the dictionary, null will be returned.
         /// </summary>
-        /// <param name="ss">Subsystem.</param>
         /// <param name="ssConfig">SubsystemConfiguration.</param>
         /// <returns>If the AdcpSubystemConfig is found, it will return the AdcpSubsystemConfig.  If it is not found, it will return null.</returns>
-        public AdcpSubsystemConfig GetAdcpSubsystemConfig(Subsystem ss, SubsystemConfiguration ssConfig)
+        public AdcpSubsystemConfig GetAdcpSubsystemConfig(SubsystemConfiguration ssConfig)
         {
             // Check for null
-            if (ss == null || ssConfig == null)
+            if (ssConfig == null)
             {
                 return null;
             }
 
             // Generate the key for the Subsystem and SubsystemConfiguration
-            string key = AdcpSubsystemConfig.GetString(ss, ssConfig);
+            string key = AdcpSubsystemConfig.GetString(ssConfig);
 
             // If the key exist, return the object
             if (SubsystemConfigDict.ContainsKey(key))
@@ -397,7 +400,7 @@ namespace RTI
             // Add each configuration in the command
             for (int x = 0; x < cepo.Length; x++)
             {
-                AddConfig(cepo[x], x, serial);
+                AddConfig(Subsystem.ConvertSubsystemCode(cepo, x), x, serial);
             }
             
             // Return the populated dictionary
@@ -419,14 +422,14 @@ namespace RTI
         /// <param name="cepoIndex">Location in the CEPO command of the Subsystem Code.</param>
         /// <param name="serial">Serial number for the ADCP.</param>
         /// <returns>Return the AdcpSubsystemConfig created or null if one could not be created.</returns>
-        private AdcpSubsystemConfig AddConfig(char ssCode, int cepoIndex, SerialNumber serial)
+        private AdcpSubsystemConfig AddConfig(byte ssCode, int cepoIndex, SerialNumber serial)
         {
             AdcpSubsystemConfig asConfig = null;
 
             // Get the Subsystem index from the serial number
             // If it cannot be found in the serial number, then it is
             // a bad Subsystem and we can not use the command.
-            Subsystem ss = serial.GetSubsystem((byte)ssCode);
+            Subsystem ss = serial.GetSubsystem(ssCode);
             if (!ss.IsEmpty())
             {
 
@@ -438,15 +441,15 @@ namespace RTI
                 foreach (AdcpSubsystemConfig configuration in SubsystemConfigDict.Values)
                 {
                     // If the subsystems are the same, then increment the value
-                    if (configuration.Subsystem.Code == ssCode)
+                    if (configuration.SubsystemConfig.SubSystem.Code == ssCode)
                     {
                         ssCount++;
                     }
                 }
 
                 // Create all the subsystem configurations and add to the dictionary
-                SubsystemConfiguration ssConfig = new SubsystemConfiguration((byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
-                asConfig = new AdcpSubsystemConfig(ss, ssConfig, cepoIndex);                    // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
+                SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, (byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
+                asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);                        // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
                 SubsystemConfigDict.Add(asConfig.ToString(), asConfig);
             }
 
@@ -470,14 +473,14 @@ namespace RTI
             foreach (AdcpSubsystemConfig configuration in SubsystemConfigDict.Values)
             {
                 // If the subsystems are the same, then increment the value
-                if (configuration.Subsystem.Code == asConfig.Subsystem.Code)
+                if (configuration.SubsystemConfig.SubSystem.Code == asConfig.SubsystemConfig.SubSystem.Code)
                 {
                     ssCount++;
                 }
             }
 
             // Set the new Configuration index
-            asConfig.SubsystemConfig.CommandSetup = (byte)ssCount;
+            asConfig.SubsystemConfig.ConfigNumber = (byte)ssCount;
 
             // Add it to the dictionary
             SubsystemConfigDict.Add(asConfig.ToString(), asConfig);
@@ -507,16 +510,19 @@ namespace RTI
                 foreach (AdcpSubsystemConfig configuration in SubsystemConfigDict.Values)
                 {
                     // If the subsystems are the same, then increment the value
-                    if (configuration.Subsystem.Code == ss.Code)
+                    if (configuration.SubsystemConfig.SubSystem.Code == ss.Code)
                     {
                         ssCount++;
                     }
                 }
 
                 // Create all the subsystem configurations and add to the dictionary
-                SubsystemConfiguration ssConfig = new SubsystemConfiguration((byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
-                asConfig = new AdcpSubsystemConfig(ss, ssConfig, cepoIndex);    // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
-                SubsystemConfigDict.Add(asConfig.ToString(), asConfig);
+                SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, (byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
+                asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);                        // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
+                if (!SubsystemConfigDict.ContainsKey(asConfig.ToString()))
+                {
+                    SubsystemConfigDict.Add(asConfig.ToString(), asConfig);
+                }
             }
 
             return asConfig;

@@ -56,7 +56,13 @@
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 04/10/2012      RC          2.08       Fixed bug decoding a 32bit int as an 8bit int.
  * 09/18/2012      RC          2.15       Updated data to ADCP User Guide Rev H.  Added Subsystem Configuration.
- * 10/09/2012      RC          2.15       In Decode(), changed SubsystemIndex to SubsystemCode and changed from an UInt16 to a byte.      
+ * 10/09/2012      RC          2.15       In Decode(), changed SubsystemIndex to SubsystemCode and changed from an UInt16 to a byte.
+ * 12/27/2012      RC          2.17       In Decode(), check for Firmware revision 0.2.13.  This will fix the SubsystemIndex to SubsystemCode change.
+ * 12/28/2012      RC          2.17       Made SubsystemConfiguration take a Subsystem in its constructor.
+ * 01/04/2013      RC          2.17       Created a constructor that take no data.
+ *                                         Fixed BACKWARDS COMPATITBILITY in Decode where it did not check the Major number and it did not convert the subsystem to a byte correctly.
+ * 01/09/2013      RC          2.17       Moved the backwards compatibility to the Firmware object.
+ * 01/14/2013      RC          2.17       In UpdateAverageEnsemble(), set the ping count based off the number of samples and the number of pings per ensemble.
  * 
  */
 
@@ -74,6 +80,11 @@ namespace RTI
         public class EnsembleDataSet : BaseDataSet
         {
             #region Variables
+
+            /// <summary>
+            /// Default ensemble number if one is not given.
+            /// </summary>
+            public const int DEFAULT_ENS_NUM = 0;
 
             /// <summary>
             /// Number of elements as of User Guide Rev C.
@@ -243,6 +254,54 @@ namespace RTI
             #endregion
 
             /// <summary>
+            /// Create a Ensemble data set.  This will create a blank dataset.  The user must fill in the data for all
+            /// the important values.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public EnsembleDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
+                base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Set the ensemble number to the default ensemble number
+                EnsembleNumber = DEFAULT_ENS_NUM;
+
+                // Set time to the current time
+                EnsDateTime = DateTime.Now;
+                Year = EnsDateTime.Year;
+                Month = EnsDateTime.Month;
+                Day = EnsDateTime.Day;
+                Hour = EnsDateTime.Hour;
+                Minute = EnsDateTime.Minute;
+                Second = EnsDateTime.Second;
+                HSec = EnsDateTime.Millisecond * 10;
+
+                // Create UniqueId
+                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+
+                // Set the number of beams
+                NumBeams = numBeams;
+
+                // Set the number of bins
+                NumBins = numBins;
+
+                // Use a blank serial number
+                SysSerialNumber = new SerialNumber();
+
+                // Create blank firmware
+                SysFirmware = new Firmware();
+
+                // Create Blank Subsystem configuration
+                SubsystemConfig = new SubsystemConfiguration();
+
+                // Create a blank status
+                Status = new Status(0);
+            }
+
+            /// <summary>
             /// Create a Ensemble data set.  Includes all the information
             /// about the current Ensemble.
             /// </summary>
@@ -298,6 +357,13 @@ namespace RTI
                 EnsDateTime = new DateTime();
                 TimeSpan span = new TimeSpan(0, 0, 0, 0, sentence.StartTime * 10);      // Multiply by 10 because value is 1/100 of a second
                 EnsDateTime = EnsDateTime + span;
+                Year = EnsDateTime.Year;
+                Month = EnsDateTime.Month;
+                Day = EnsDateTime.Day;
+                Hour = EnsDateTime.Hour;
+                Minute = EnsDateTime.Minute;
+                Second = EnsDateTime.Second;
+                HSec = EnsDateTime.Millisecond * 10;
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
@@ -383,8 +449,10 @@ namespace RTI
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
 
                 // Set the number of samples in the averaged ensemble
-                DesiredPingCount = numSamples;
-                ActualPingCount = numSamples;
+                // To get the ping count, take the number of samples times the number pf pings per sample
+                int pingCount = ActualPingCount* numSamples;
+                DesiredPingCount = pingCount;
+                ActualPingCount = pingCount;
             }
 
             /// <summary>
@@ -421,6 +489,42 @@ namespace RTI
                     byte[] firmware = new byte[FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32];
                     System.Buffer.BlockCopy(data, GenerateIndex(21), firmware, 0, FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32);
                     SysFirmware = new Firmware(firmware);
+
+
+                    // FOR BACKWARDS COMPATITBILITY
+                    // Old subsystems in the ensemble were set by the Subsystem Index in Firmware.
+                    // This means the that a subsystem code of 0 could be passed because
+                    // the index was 0 to designate the first subsystem index.  Firmware revision 0.2.13 changed
+                    // SubsystemIndex to SubsystemCode.  This will check which Firmware version this ensemble is
+                    // and convert to the new type using SubsystemCode.
+                    //
+                    // Get the correct subsystem by getting the index found in the firmware and getting
+                    // subsystem code from the serial number.
+                    //if (SysFirmware.FirmwareMajor <= 0 && SysFirmware.FirmwareMinor <= 2 && SysFirmware.FirmwareRevision <= 13 && GetSubSystem().IsEmpty())
+                    //{
+                    //    // Set the correct subsystem based off the serial number
+                    //    // Get the index for the subsystem
+                    //    byte index = SysFirmware.SubsystemCode;
+
+                    //    // Ensure the index is not out of range of the subsystem string
+                    //    if (SysSerialNumber.SubSystems.Length > index)
+                    //    {
+                    //        // Get the Subsystem code from the serialnumber based off the index found
+                    //        string code = SysSerialNumber.SubSystems.Substring(index, 1);
+
+                    //        // Create a subsystem with the code and index
+                    //        Subsystem ss = new Subsystem(Convert.ToByte(code), index);
+
+                    //        // Set the new subsystem code to the firmware
+                    //        //SysFirmware.SubsystemCode = Convert.ToByte(code);
+
+                    //        // Remove the old subsystem and add the new one to the dictionary
+                    //        SysSerialNumber.SubSystemsDict.Remove(Convert.ToByte(index));
+                    //        SysSerialNumber.SubSystemsDict.Add(Convert.ToByte(index), ss);
+
+                    //    }
+                    //}
+
                 }
                 else
                 {
@@ -436,7 +540,7 @@ namespace RTI
                     // Start at index 22
                     byte[] subConfig = new byte[SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32];
                     System.Buffer.BlockCopy(data, GenerateIndex(22), subConfig, 0, SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32);
-                    SubsystemConfig = new SubsystemConfiguration(subConfig);
+                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), subConfig);
                 }
                 else
                 {
@@ -580,7 +684,7 @@ namespace RTI
                     {
                         // Set Subsystem Configuration
                         byte subConfig = Convert.ToByte(data[DbCommon.COL_ENS_SUBSYS_CONFIG]);
-                        SubsystemConfig = new SubsystemConfiguration(subConfig);
+                        SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), subConfig);
                     }
                     else
                     {
@@ -644,7 +748,7 @@ namespace RTI
             /// <returns>Subsystem for this ensemble.</returns>
             public Subsystem GetSubSystem( )
             {
-                return SysSerialNumber.GetSubsystem(SysFirmware.SubsystemCode);
+                return SysSerialNumber.GetSubsystem(SysFirmware.GetSubsystemCode(SysSerialNumber));
             }
 
             /// <summary>
@@ -657,7 +761,7 @@ namespace RTI
                 s += "Ensemble: "  + EnsembleNumber + "\n";
                 s += "Serial: " + SysSerialNumber.ToString() + "\n";
                 s += "Firmware: " + SysFirmware.ToString() + "\n";
-                s += "SubSystem: " + SysFirmware.SubsystemCode.ToString() + "\n";
+                s += "SubSystem: " + SysFirmware.GetSubsystemCode(SysSerialNumber).ToString() + "\n";
                 s += "Subsystem Config: " + SubsystemConfig.ToString() + "\n";
                 s += EnsDateTime.ToString() + "\n";
                 s += "Bins: " + NumBins + " Beams: " + NumBeams + "\n";

@@ -36,6 +36,9 @@
  * 10/08/2012      RC          2.15       Set the Command's CEPO index when CEPO index is set.
  * 10/12/2012      RC          2.15       Made ToString() only use Subsystem and SubystemConfiguration.
  *                                         Added static GetString() to generate a string for a AdcpSubsystemConfig based off a Subsystem and SubsystemConfiguration given.
+ * 11/30/2012      RC          2.17       Changed ToString() and GetString() to [Config] SSDesc.
+ *                                         Added a note about the subsystem code being EMPTY.
+ * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
  * 
  * 
  */
@@ -46,19 +49,16 @@ namespace RTI
     using System.Collections.Generic;
     using RTI.Commands;
 
-    /// <summary>
-    /// Object to hold a complete configuration on the ADCP.  A configuration 
-    /// consists of a Subsystem and SubsystemConfiguration.  The configurations
-    /// are defined by the CEPO command.
+    /// <summary> 
+    /// A Configuration is a setup on the ADCP.  An ADCP can have multiple configurations.
+    /// Each configuration will have different command settings.  A configuration is based 
+    /// off a subsystem type.  The CEPO command determine the ping order of each configuration.
+    /// This object will store the subsytem type and configuration number.  It will also store all
+    /// the command settings for this configuration.
     /// </summary>
     public class AdcpSubsystemConfig
     {
         #region Properties
-
-        /// <summary>
-        /// Subsystem for the ADCP.
-        /// </summary>
-        public Subsystem Subsystem { get; set; }
 
         /// <summary>
         /// SubsystemConfiguration for the ADCP.
@@ -105,14 +105,12 @@ namespace RTI
         /// Set the Subsystem, SubsystemConfiguration and index for the object.
         /// This will also create SubsystemCommands with default values.
         /// </summary>
-        /// <param name="ss">Subsystem.</param>
         /// <param name="ssConfig">Subsystem Configuration.</param>
         /// <param name="cepoIndex">CEPO index.</param>
-        public AdcpSubsystemConfig(Subsystem ss, SubsystemConfiguration ssConfig, int cepoIndex)
+        public AdcpSubsystemConfig(SubsystemConfiguration ssConfig, int cepoIndex)
         {
-            Subsystem = ss;
             SubsystemConfig = ssConfig;
-            Commands = new AdcpSubsystemCommands(ss, cepoIndex);            // Create commands before settings CepoIndex
+            Commands = new AdcpSubsystemCommands(ssConfig.SubSystem, cepoIndex);            // Create commands before settings CepoIndex
             CepoIndex = cepoIndex;
         }
 
@@ -124,9 +122,9 @@ namespace RTI
         /// </summary>
         public void SetDefault()
         {
-            Subsystem = new Subsystem();
+            //Subsystem = new Subsystem();
             SubsystemConfig = new SubsystemConfiguration();
-            Commands = new AdcpSubsystemCommands(Subsystem, CepoIndex);            // Create commands before settings CepoIndex
+            Commands = new AdcpSubsystemCommands(SubsystemConfig.SubSystem, CepoIndex);            // Create commands before settings CepoIndex
             CepoIndex = 0;
         }
 
@@ -135,25 +133,52 @@ namespace RTI
         /// ToString() is used as a key for the AdcpSubsystemConfig object.
         /// This will generate a string for the key so that an AdcpSubsystemConfig
         /// can be found in a dictionary.
+        /// 
+        /// [SSCONFIG] SSDesc
+        /// 
+        /// NOTE
+        /// If the subsystem is an old revision of firmware,
+        /// the subsystem code will be an index
+        /// instead of the code.  Use the index and the
+        /// serial number to determine the string. 
+        /// 
         /// </summary>
-        /// <param name="ss">Subsystem for the AdcpSubsystemConfig.</param>
         /// <param name="ssConfig">SubsystemConfiguration for the AdcpSubsystemConfig.</param>
         /// <returns>String for the AdcpSubsystemConfig if it used the given Subsystem and SubsystemConfiguration.</returns>
-        public static string GetString(Subsystem ss, SubsystemConfiguration ssConfig)
+        public static string GetString(SubsystemConfiguration ssConfig)
         {
-            return string.Format("{0}_{1}", ss.CodeToString(), ssConfig.ToString());
+            // NOTE
+            // If the subsystem is an old revision of firmware,
+            // the subsystem code will be an index
+            // instead of the code.  Use the index and the
+            // serial number to determine the string
+
+            return ssConfig.DescString();
         }
 
         #region Overrides
 
         /// <summary>
         /// Get a string for this object.  It will contain:
-        /// SSCODE_SSCONFIG.
+        /// [SSCONFIG] SSDesc
+        /// 
+        /// NOTE
+        /// If the subsystem is an old revision of firmware,
+        /// the subsystem code will be an index
+        /// instead of the code.  Use the index and the
+        /// serial number to determine the string. 
+        /// 
         /// </summary>
         /// <returns>String of this object.</returns>
         public override string ToString()
         {
-            return string.Format("{0}_{1}", Subsystem.CodeToString(), SubsystemConfig.ToString());
+            // NOTE
+            // If the subsystem is an old revision of firmware,
+            // the subsystem code will be an index
+            // instead of the code.  Use the index and the
+            // serial number to determine the string
+
+            return SubsystemConfig.DescString();
         }
 
         /// <summary>
@@ -164,7 +189,7 @@ namespace RTI
         /// <returns>Hashcode for the object.</returns>
         public override int GetHashCode()
         {
-            return Subsystem.GetHashCode() + SubsystemConfig.GetHashCode() + CepoIndex;
+            return SubsystemConfig.SubSystem.GetHashCode() + SubsystemConfig.GetHashCode() + CepoIndex;
         }
 
         /// <summary>
@@ -181,7 +206,7 @@ namespace RTI
 
             AdcpSubsystemConfig p = (AdcpSubsystemConfig)obj;
 
-            return (Subsystem == p.Subsystem) && (SubsystemConfig == p.SubsystemConfig) && (CepoIndex == p.CepoIndex);
+            return (SubsystemConfig == p.SubsystemConfig) && (CepoIndex == p.CepoIndex);
         }
 
         /// <summary>
@@ -205,7 +230,7 @@ namespace RTI
             }
 
             // Return true if the fields match:
-            return (asConfig1.Subsystem == asConfig2.Subsystem) && (asConfig1.SubsystemConfig == asConfig2.SubsystemConfig) && (asConfig1.CepoIndex == asConfig2.CepoIndex);
+            return (asConfig1.SubsystemConfig == asConfig2.SubsystemConfig) && (asConfig1.CepoIndex == asConfig2.CepoIndex);
         }
 
         /// <summary>

@@ -39,10 +39,19 @@
  * 02/01/2012      RC          1.14       Added CodeToString().
  * 09/17/2012      RC          2.15       Removed Private Set for Index and Code to allow JSON encode and decode.
  * 09/24/2012      RC          2.15       Added IsEmpty() to check if the Subsystem is an empty subsystem.
+ * 11/16/2012      RC          2.16       When checking if subsystems are equal, only check if the codes are equal.
+ *                                         Added == and != for SubsystemCodeDesc.
+ * 11/19/2012      RC          2.16       Updated the SubsystemList.
+ *                                         Set a default value of 0 for the index in the Subsystem Constructor.
+ *                                         Add a SubsystemCodeDesc constructor that only takes the code.
+ * 11/30/2012      RC          2.17       Added a note about the subsystem code being EMPTY.
+ * 12/27/2012      RC          2.17       Removed Subsystem.Empty.  It was not readonly.
+ * 01/14/2013      RC          2.17       Convert the subsystem char to a decimal using ConvertSubsystemCode().
  *
  */
 
 using System;
+using System.Collections.ObjectModel;
 namespace RTI
 {
     /// <summary>
@@ -349,11 +358,6 @@ namespace RTI
         #endregion
 
         /// <summary>
-        /// Represents an empty or blank subsystem.
-        /// </summary>
-        public static readonly Subsystem Empty = new Subsystem();
-
-        /// <summary>
         /// Do not take a code.
         /// </summary>
         public Subsystem()
@@ -368,7 +372,7 @@ namespace RTI
         /// </summary>
         /// <param name="code">Subsystem ID.</param>
         /// <param name="index">Index of the subsystem within the serial number.</param>
-        public Subsystem(byte code, UInt16 index)
+        public Subsystem(byte code, UInt16 index = 0)
         {
             Index = index;
             Code = code;
@@ -392,7 +396,7 @@ namespace RTI
             }
             else
             {
-                Code = (byte)System.Convert.ToUInt32(code[0]);
+                Code = Subsystem.ConvertSubsystemCode(code[0]);
                 Index = index;
             }
         }
@@ -445,12 +449,30 @@ namespace RTI
         }
 
         /// <summary>
-        /// Convert the code into a string.
+        /// Get the description string based off
+        /// the code for this object.
         /// </summary>
-        /// <returns>String representing the code.</returns>
+        /// <returns>String of the subsystem description.</returns>
         public string DescString()
         {
-            switch(Code)
+            return DescString(Code);
+        }
+
+        /// <summary>
+        /// Convert the code into a string.
+        /// 
+        /// NOTE
+        /// If the subsystem is an old revision of firmware,
+        /// the subsystem code will be an index
+        /// instead of the code.  Use the index and the
+        /// serial number to determine the string. 
+        ///
+        /// </summary>
+        /// <param name="code">Subsystem code.</param>
+        /// <returns>String representing the code.</returns>
+        public static string DescString(byte code)
+        {
+            switch(code)
             {
                 case EMPTY_CODE:
                     return EMPTY;
@@ -556,8 +578,10 @@ namespace RTI
             }
 
             // Return true if the fields match:
-            //return (code1.Code == code2.Code);
-            return (code1.Code == code2.Code) && (code1.Index == code2.Index);
+            // Only 1 code is possible per system
+            // It is not possible to have the same subsystem 1 ADCP
+            return (code1.Code == code2.Code);
+            //return (code1.Code == code2.Code) && (code1.Index == code2.Index);
         }
 
         /// <summary>
@@ -593,8 +617,202 @@ namespace RTI
             
             Subsystem p = (Subsystem)obj;
 
-            //return (Code == p.Code);
-            return (Code == p.Code) && (Index == p.Index);
+            return (Code == p.Code);
+            //return (Code == p.Code) && (Index == p.Index);
         }
+
+        #region Convert String or Char to Decimal for SubsystemCode
+
+        /// <summary>
+        /// Convert the given string index to a subsystem code decimal value.
+        /// Usually the serial number is given as a string.  This will convert
+        /// the serial number subsystem string to its decimal value which
+        /// is stored in the ensemble as a byte.
+        /// </summary>
+        /// <param name="value">String containing the subsystem code.</param>
+        /// <param name="index">Index within the value to convert.</param>
+        /// <returns>Char converted to its decimal byte value.</returns>
+        public static byte ConvertSubsystemCode(string value, int index)
+        {
+            decimal subsysCode = Convert.ToChar(value.Substring(index, 1));
+            return (byte)subsysCode;
+        }
+
+        /// <summary>
+        /// Convert the given char to a subsystem code decimal value.
+        /// Usually the serial number is given as a string.  This will
+        /// convert the serial number subsystem string char to its 
+        /// decimal value which is stored in the ensemble as a byte.
+        /// </summary>
+        /// <param name="value">Char which is the subsystem code.</param>
+        /// <returns>Decimal value for the char value given.</returns>
+        public static byte ConvertSubsystemCode(char value)
+        {
+            return (byte)System.Convert.ToUInt32(value);
+        }
+
+        #endregion
+    }
+
+
+    /// <summary>
+    /// Create a list of subsystem with there description.
+    /// </summary>
+    public class SubsystemList : ObservableCollection<RTI.SubsystemList.SubsystemCodeDesc>
+    {
+        /// <summary>
+        /// Add all the subsystems and descriptions to this object.
+        /// </summary>
+        public SubsystemList()
+            : base()
+        {
+            Add(new SubsystemCodeDesc(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_1));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_5));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_2MHZ_VERT_PISTON_9));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_1_2MHZ_VERT_PISTON_A));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_VERT_PISTON_B));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_VERT_PISTON_C));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_VERT_PISTON_D));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_VERT_PISTON_E));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_VERT_PISTON_F));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_VERT_PISTON_G));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_30DEG_ARRAY_I));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_30DEG_ARRAY_J));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_4BEAM_30DEG_ARRAY_L));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_4BEAM_30DEG_ARRAY_M));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_4BEAM_30DEG_ARRAY_N));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_15DEG_ARRAY_O));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_15DEG_ARRAY_P));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_4BEAM_15DEG_ARRAY_Q));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_4BEAM_15DEG_ARRAY_R));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_4BEAM_15DEG_ARRAY_S));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_4BEAM_15DEG_ARRAY_T));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_1BEAM_0DEG_ARRAY_U));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_1BEAM_0DEG_ARRAY_V));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_1BEAM_0DEG_ARRAY_W));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_1BEAM_0DEG_ARRAY_X));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_1BEAM_0DEG_ARRAY_Y));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_1BEAM_0DEG_ARRAY_Z));
+        }
+
+        /// <summary>
+        /// Object to hold the subsystem code and description.
+        /// </summary>
+        public class SubsystemCodeDesc
+        {
+            /// <summary>
+            /// Add the Code and description for the subsystem.
+            /// </summary>
+            /// <param name="code">Subsystem code.</param>
+            /// <param name="desc">Subsystem description.</param>
+            public SubsystemCodeDesc(byte code, string desc)
+            {
+                Code = code;
+                Desc = desc;
+            }
+
+            /// <summary>
+            /// Set the code and get the desciption based off
+            /// the code.
+            /// </summary>
+            /// <param name="code">Subsystem code.</param>
+            public SubsystemCodeDesc(byte code)
+            {
+                Code = code;
+                Desc = Subsystem.DescString(code);
+            }
+
+            /// <summary>
+            /// Subsystem Code.
+            /// </summary>
+            public byte Code { get; set; }
+
+            /// <summary>
+            /// Subsystem Description.
+            /// </summary>
+            public string Desc { get; set; }
+
+            /// <summary>
+            /// Return the description as the string for this object.
+            /// </summary>
+            /// <returns>Return the description as the string for this object.</returns>
+            public override string ToString()
+            {
+                return string.Format("{0}\t{1}", Convert.ToString(Convert.ToChar(Code)), Desc);
+            }
+
+            /// <summary>
+            /// Determine if the 2 ids given are the equal.
+            /// </summary>
+            /// <param name="code1">First subsystem to check.</param>
+            /// <param name="code2">SubSystem to check against.</param>
+            /// <returns>True if there codes match.</returns>
+            public static bool operator ==(SubsystemCodeDesc code1, SubsystemCodeDesc code2)
+            {
+                // If both are null, or both are same instance, return true.
+                if (System.Object.ReferenceEquals(code1, code2))
+                {
+                    return true;
+                }
+
+                // If one is null, but not both, return false.
+                if (((object)code1 == null) || ((object)code2 == null))
+                {
+                    return false;
+                }
+
+                // Return true if the fields match:
+                // Only 1 code is possible per system
+                // It is not possible to have the same subsystem 1 ADCP
+                return (code1.Code == code2.Code);
+                //return (code1.Code == code2.Code) && (code1.Index == code2.Index);
+            }
+
+            /// <summary>
+            /// Return the opposite of ==.
+            /// </summary>
+            /// <param name="code1">First sub-system to check.</param>
+            /// <param name="code2">Sub-system to check against.</param>
+            /// <returns>Return the opposite of ==.</returns>
+            public static bool operator !=(SubsystemCodeDesc code1, SubsystemCodeDesc code2)
+            {
+                return !(code1 == code2);
+            }
+
+            /// <summary>
+            /// Create a hashcode based off the Code stored.
+            /// </summary>
+            /// <returns>Hash the Code.</returns>
+            public override int GetHashCode()
+            {
+                return Code.GetHashCode();
+            }
+
+            /// <summary>
+            /// Check if the given object is 
+            /// equal to this object.
+            /// </summary>
+            /// <param name="obj">Object to check.</param>
+            /// <returns>If the codes are the same, then they are equal.</returns>
+            public override bool Equals(object obj)
+            {
+                //Check for null and compare run-time types.
+                if (obj == null || GetType() != obj.GetType()) return false;
+
+                SubsystemCodeDesc p = (SubsystemCodeDesc)obj;
+
+                return (Code == p.Code);
+                //return (Code == p.Code) && (Index == p.Index);
+            }
+
+        }
+
     }
 }

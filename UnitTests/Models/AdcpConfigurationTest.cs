@@ -30,6 +30,10 @@
  *                                         Added test for AddConfiguration().
  * 10/03/2012      RC          2.15       Updated test for AddConfiguration().
  * 10/08/2012      RC          2.15       Added test for RemoveConfiguration().
+ * 12/03/2012      RC          2.17       Updated AdcpSubsystemConfig.ToString().
+ * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ *                                         Made SubsystemConfiguration take a Subsystem in its constructor.
+ *                                         Make AdcpConfiguration::AdcpSubsystemConfigExist() take only 1 argument.
  * 
  * 
  */
@@ -70,11 +74,11 @@ namespace RTI
 
             Assert.AreEqual(1, result.Count, "Number of configurations is incorrect.");
             Assert.NotNull(resultConfig, "Dictionary entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig.Subsystem.Code), "Subsystem Code is incorrect.");
-            Assert.AreEqual(0, resultConfig.Subsystem.Index, "Subsystem index is incorrect.");
-            Assert.AreEqual(0, resultConfig.SubsystemConfig.CommandSetup, "SubsystemConfiguration CommandSetup is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig.SubsystemConfig.SubSystem.Code), "Subsystem Code is incorrect.");
+            Assert.AreEqual(0, resultConfig.SubsystemConfig.SubSystem.Index, "Subsystem index is incorrect.");
+            Assert.AreEqual(0, resultConfig.SubsystemConfig.ConfigNumber, "SubsystemConfiguration CommandSetup is incorrect.");
             Assert.AreEqual(0, resultConfig.CepoIndex, "AdcpSubsystemConfig index is incorrect.");
-            Assert.AreEqual("2_0", resultConfig.ToString(), "AdcpSubsystemConfig toString is incorrect.");
+            Assert.AreEqual("[0] 1.2 MHz 4 beam 20 degree piston", resultConfig.ToString(), "AdcpSubsystemConfig toString is incorrect.");
 
             Assert.AreEqual("2", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("2", config.Commands.CEPO, "Commands CEPO is incorrect.");
@@ -95,12 +99,12 @@ namespace RTI
             AdcpSubsystemConfig resultConfig3 = null;
             foreach (AdcpSubsystemConfig asConfig in result.Values)
             {
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     resultConfig2 = asConfig;
                 }
 
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     resultConfig3 = asConfig;
                 }
@@ -109,16 +113,16 @@ namespace RTI
             Assert.AreEqual(2, result.Count, "Number of configurations is incorrect.");
 
             Assert.NotNull(resultConfig2, "Dictionary 2 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2.Subsystem.Code), "Subsystem 2 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2.Subsystem.Index, "Subsystem 2 index is incorrect.");
-            Assert.AreEqual(0, resultConfig2.SubsystemConfig.CommandSetup, "SubsystemConfiguration 2 CommandSetup is incorrect.");
-            Assert.AreEqual("2_0", resultConfig2.ToString(), "AdcpSubsystemConfig 2 toString is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2.SubsystemConfig.SubSystem.Code), "Subsystem 2 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2.SubsystemConfig.SubSystem.Index, "Subsystem 2 index is incorrect.");
+            Assert.AreEqual(0, resultConfig2.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 2 CommandSetup is incorrect.");
+            Assert.AreEqual("[0] 1.2 MHz 4 beam 20 degree piston", resultConfig2.ToString(), "AdcpSubsystemConfig 2 toString is incorrect.");
 
             Assert.NotNull(resultConfig3, "Dictionary 3 entry is not null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3.Subsystem.Code), "Subsystem 3 Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3.Subsystem.Index, "Subsystem 3 index is incorrect.");
-            Assert.AreEqual(0, resultConfig3.SubsystemConfig.CommandSetup, "SubsystemConfiguration 3 CommandSetup is incorrect.");
-            Assert.AreEqual("3_0", resultConfig3.ToString(), "AdcpSubsystemConfig 3 toString is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3.SubsystemConfig.SubSystem.Code), "Subsystem 3 Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3.SubsystemConfig.SubSystem.Index, "Subsystem 3 index is incorrect.");
+            Assert.AreEqual(0, resultConfig3.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 3 CommandSetup is incorrect.");
+            Assert.AreEqual("[0] 600 kHz 4 beam 20 degree piston", resultConfig3.ToString(), "AdcpSubsystemConfig 3 toString is incorrect.");
 
             Assert.AreEqual("23", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("23", config.Commands.CEPO, "Commands CEPO is incorrect.");
@@ -172,28 +176,28 @@ namespace RTI
             Assert.AreEqual(4, result.Count, "Number of configurations is incorrect.");
 
             Assert.NotNull(resultConfig1, "Dictionary 1 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig1.Subsystem.Code), "Subsystem 1 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig1.Subsystem.Index, "Subsystem 1 index is incorrect.");
-            Assert.AreEqual(0, resultConfig1.SubsystemConfig.CommandSetup, "SubsystemConfiguration 1 CommandSetup is incorrect.");
-            Assert.AreEqual("2_0", resultConfig1.ToString(), "AdcpSubsystemConfig 1 toString is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig1.SubsystemConfig.SubSystem.Code), "Subsystem 1 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig1.SubsystemConfig.SubSystem.Index, "Subsystem 1 index is incorrect.");
+            Assert.AreEqual(0, resultConfig1.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 1 CommandSetup is incorrect.");
+            Assert.AreEqual("[0] 1.2 MHz 4 beam 20 degree piston", resultConfig1.ToString(), "AdcpSubsystemConfig 1 toString is incorrect.");
 
             Assert.NotNull(resultConfig2, "Dictionary 2 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2.Subsystem.Code), "Subsystem 2 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2.Subsystem.Index, "Subsystem 2 index is incorrect.");
-            Assert.AreEqual(1, resultConfig2.SubsystemConfig.CommandSetup, "SubsystemConfiguration 2 CommandSetup is incorrect.");
-            Assert.AreEqual("2_1", resultConfig2.ToString(), "AdcpSubsystemConfig 2 toString is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2.SubsystemConfig.SubSystem.Code), "Subsystem 2 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2.SubsystemConfig.SubSystem.Index, "Subsystem 2 index is incorrect.");
+            Assert.AreEqual(1, resultConfig2.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 2 CommandSetup is incorrect.");
+            Assert.AreEqual("[1] 1.2 MHz 4 beam 20 degree piston", resultConfig2.ToString(), "AdcpSubsystemConfig 2 toString is incorrect.");
 
             Assert.NotNull(resultConfig3, "Dictionary 3 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig3.Subsystem.Code), "Subsystem 3 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig3.Subsystem.Index, "Subsystem 3 index is incorrect.");
-            Assert.AreEqual(2, resultConfig3.SubsystemConfig.CommandSetup, "SubsystemConfiguration 3 CommandSetup is incorrect.");
-            Assert.AreEqual("2_2", resultConfig3.ToString(), "AdcpSubsystemConfig 3 toString is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig3.SubsystemConfig.SubSystem.Code), "Subsystem 3 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig3.SubsystemConfig.SubSystem.Index, "Subsystem 3 index is incorrect.");
+            Assert.AreEqual(2, resultConfig3.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 3 CommandSetup is incorrect.");
+            Assert.AreEqual("[2] 1.2 MHz 4 beam 20 degree piston", resultConfig3.ToString(), "AdcpSubsystemConfig 3 toString is incorrect.");
 
             Assert.NotNull(resultConfig4, "Dictionary 4 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig4.Subsystem.Code), "Subsystem 4 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig4.Subsystem.Index, "Subsystem 4 index is incorrect.");
-            Assert.AreEqual(3, resultConfig4.SubsystemConfig.CommandSetup, "SubsystemConfiguration 4 CommandSetup is incorrect.");
-            Assert.AreEqual("2_3", resultConfig4.ToString(), "AdcpSubsystemConfig 4 toString is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig4.SubsystemConfig.SubSystem.Code), "Subsystem 4 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig4.SubsystemConfig.SubSystem.Index, "Subsystem 4 index is incorrect.");
+            Assert.AreEqual(3, resultConfig4.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 4 CommandSetup is incorrect.");
+            Assert.AreEqual("[3] 1.2 MHz 4 beam 20 degree piston", resultConfig4.ToString(), "AdcpSubsystemConfig 4 toString is incorrect.");
 
             Assert.AreEqual("2222", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("2222", config.Commands.CEPO, "Commands CEPO is incorrect.");
@@ -222,7 +226,7 @@ namespace RTI
             foreach (AdcpSubsystemConfig asConfig in result.Values)
             {
                 // Subsystem 2
-                if (asConfig.Subsystem.Code == '2')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '2')
                 {
                     if (resultConfig2_1 == null)
                     {
@@ -252,7 +256,7 @@ namespace RTI
                 }
 
                 // Subsystem 3
-                if (asConfig.Subsystem.Code == '3')
+                if (asConfig.SubsystemConfig.SubSystem.Code == '3')
                 {
                     if (resultConfig3_1 == null)
                     {
@@ -286,62 +290,62 @@ namespace RTI
             Assert.AreEqual(8, result.Count, "Number of configurations is incorrect.");
 
             Assert.NotNull(resultConfig2_1, "Dictionary 2_1 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_1.Subsystem.Code), "Subsystem 2_1 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_1.Subsystem.Index, "Subsystem 2_1 index is incorrect.");
-            Assert.AreEqual(0, resultConfig2_1.SubsystemConfig.CommandSetup, "SubsystemConfiguration 2_1 CommandSetup is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_1.SubsystemConfig.SubSystem.Code), "Subsystem 2_1 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_1.SubsystemConfig.SubSystem.Index, "Subsystem 2_1 index is incorrect.");
+            Assert.AreEqual(0, resultConfig2_1.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 2_1 CommandSetup is incorrect.");
             Assert.AreEqual(0, resultConfig2_1.CepoIndex, "CEPO 2_1 index is incorrect.");
-            Assert.AreEqual("2_0", resultConfig2_1.ToString(), "AdcpSubsystemConfig 2_1 toString is incorrect.");
+            Assert.AreEqual("[0] 1.2 MHz 4 beam 20 degree piston", resultConfig2_1.ToString(), "AdcpSubsystemConfig 2_1 toString is incorrect.");
 
             Assert.NotNull(resultConfig2_2, "Dictionary 2_2 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_2.Subsystem.Code), "Subsystem 2_2 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_2.Subsystem.Index, "Subsystem 2_2 index is incorrect.");
-            Assert.AreEqual(1, resultConfig2_2.SubsystemConfig.CommandSetup, "SubsystemConfiguration 2_2 CommandSetup is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_2.SubsystemConfig.SubSystem.Code), "Subsystem 2_2 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_2.SubsystemConfig.SubSystem.Index, "Subsystem 2_2 index is incorrect.");
+            Assert.AreEqual(1, resultConfig2_2.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 2_2 CommandSetup is incorrect.");
             Assert.AreEqual(2, resultConfig2_2.CepoIndex, "CEPO 2_2 index is incorrect.");
-            Assert.AreEqual("2_1", resultConfig2_2.ToString(), "AdcpSubsystemConfig 2_2 toString is incorrect.");
+            Assert.AreEqual("[1] 1.2 MHz 4 beam 20 degree piston", resultConfig2_2.ToString(), "AdcpSubsystemConfig 2_2 toString is incorrect.");
 
             Assert.NotNull(resultConfig2_3, "Dictionary 2_3 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_3.Subsystem.Code), "Subsystem 2_3 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_3.Subsystem.Index, "Subsystem 2_3 index is incorrect.");
-            Assert.AreEqual(2, resultConfig2_3.SubsystemConfig.CommandSetup, "SubsystemConfiguration 2_3 CommandSetup is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_3.SubsystemConfig.SubSystem.Code), "Subsystem 2_3 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_3.SubsystemConfig.SubSystem.Index, "Subsystem 2_3 index is incorrect.");
+            Assert.AreEqual(2, resultConfig2_3.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 2_3 CommandSetup is incorrect.");
             Assert.AreEqual(3, resultConfig2_3.CepoIndex, "CEPO 2_3 index is incorrect.");
-            Assert.AreEqual("2_2", resultConfig2_3.ToString(), "AdcpSubsystemConfig 2_3 toString is incorrect.");
+            Assert.AreEqual("[2] 1.2 MHz 4 beam 20 degree piston", resultConfig2_3.ToString(), "AdcpSubsystemConfig 2_3 toString is incorrect.");
 
             Assert.NotNull(resultConfig2_4, "Dictionary 2_4 entry is not null");
-            Assert.AreEqual('2', Convert.ToChar(resultConfig2_4.Subsystem.Code), "Subsystem 2_4 Code is incorrect.");
-            Assert.AreEqual(0, resultConfig2_4.Subsystem.Index, "Subsystem 2_4 index is incorrect.");
-            Assert.AreEqual(3, resultConfig2_4.SubsystemConfig.CommandSetup, "SubsystemConfiguration 2_4 CommandSetup is incorrect.");
+            Assert.AreEqual('2', Convert.ToChar(resultConfig2_4.SubsystemConfig.SubSystem.Code), "Subsystem 2_4 Code is incorrect.");
+            Assert.AreEqual(0, resultConfig2_4.SubsystemConfig.SubSystem.Index, "Subsystem 2_4 index is incorrect.");
+            Assert.AreEqual(3, resultConfig2_4.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 2_4 CommandSetup is incorrect.");
             Assert.AreEqual(5, resultConfig2_4.CepoIndex, "CEPO 2_4 index is incorrect.");
-            Assert.AreEqual("2_3", resultConfig2_4.ToString(), "AdcpSubsystemConfig 2_4 toString is incorrect.");
+            Assert.AreEqual("[3] 1.2 MHz 4 beam 20 degree piston", resultConfig2_4.ToString(), "AdcpSubsystemConfig 2_4 toString is incorrect.");
 
 
 
             Assert.NotNull(resultConfig3_1, "Dictionary 3_1 entry is not null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_1.Subsystem.Code), "Subsystem 3_1 Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3_1.Subsystem.Index, "Subsystem 3_1 index is incorrect.");
-            Assert.AreEqual(0, resultConfig3_1.SubsystemConfig.CommandSetup, "SubsystemConfiguration 3_1 CommandSetup is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_1.SubsystemConfig.SubSystem.Code), "Subsystem 3_1 Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3_1.SubsystemConfig.SubSystem.Index, "Subsystem 3_1 index is incorrect.");
+            Assert.AreEqual(0, resultConfig3_1.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 3_1 CommandSetup is incorrect.");
             Assert.AreEqual(1, resultConfig3_1.CepoIndex, "CEPO 3_1 index is incorrect.");
-            Assert.AreEqual("3_0", resultConfig3_1.ToString(), "AdcpSubsystemConfig 3_1 toString is incorrect.");
+            Assert.AreEqual("[0] 600 kHz 4 beam 20 degree piston", resultConfig3_1.ToString(), "AdcpSubsystemConfig 3_1 toString is incorrect.");
 
             Assert.NotNull(resultConfig3_2, "Dictionary 3_2 entry is not null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_2.Subsystem.Code), "Subsystem 3_2 Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3_2.Subsystem.Index, "Subsystem 3_2 index is incorrect.");
-            Assert.AreEqual(1, resultConfig3_2.SubsystemConfig.CommandSetup, "SubsystemConfiguration 3_2 CommandSetup is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_2.SubsystemConfig.SubSystem.Code), "Subsystem 3_2 Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3_2.SubsystemConfig.SubSystem.Index, "Subsystem 3_2 index is incorrect.");
+            Assert.AreEqual(1, resultConfig3_2.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 3_2 CommandSetup is incorrect.");
             Assert.AreEqual(4, resultConfig3_2.CepoIndex, "CEPO 3_2 index is incorrect.");
-            Assert.AreEqual("3_1", resultConfig3_2.ToString(), "AdcpSubsystemConfig 3_2 toString is incorrect.");
+            Assert.AreEqual("[1] 600 kHz 4 beam 20 degree piston", resultConfig3_2.ToString(), "AdcpSubsystemConfig 3_2 toString is incorrect.");
 
             Assert.NotNull(resultConfig3_3, "Dictionary 3_3 entry is not null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_3.Subsystem.Code), "Subsystem 3_3 Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3_3.Subsystem.Index, "Subsystem 3_3 index is incorrect.");
-            Assert.AreEqual(2, resultConfig3_3.SubsystemConfig.CommandSetup, "SubsystemConfiguration 3_3 CommandSetup is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_3.SubsystemConfig.SubSystem.Code), "Subsystem 3_3 Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3_3.SubsystemConfig.SubSystem.Index, "Subsystem 3_3 index is incorrect.");
+            Assert.AreEqual(2, resultConfig3_3.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 3_3 CommandSetup is incorrect.");
             Assert.AreEqual(6, resultConfig3_3.CepoIndex, "CEPO 3_3 index is incorrect.");
-            Assert.AreEqual("3_2", resultConfig3_3.ToString(), "AdcpSubsystemConfig 3_3 toString is incorrect.");
+            Assert.AreEqual("[2] 600 kHz 4 beam 20 degree piston", resultConfig3_3.ToString(), "AdcpSubsystemConfig 3_3 toString is incorrect.");
 
             Assert.NotNull(resultConfig3_4, "Dictionary 3_4 entry is not null");
-            Assert.AreEqual('3', Convert.ToChar(resultConfig3_4.Subsystem.Code), "Subsystem 3_4 Code is incorrect.");
-            Assert.AreEqual(1, resultConfig3_4.Subsystem.Index, "Subsystem 3_4 index is incorrect.");
-            Assert.AreEqual(3, resultConfig3_4.SubsystemConfig.CommandSetup, "SubsystemConfiguration 3_4 CommandSetup is incorrect.");
+            Assert.AreEqual('3', Convert.ToChar(resultConfig3_4.SubsystemConfig.SubSystem.Code), "Subsystem 3_4 Code is incorrect.");
+            Assert.AreEqual(1, resultConfig3_4.SubsystemConfig.SubSystem.Index, "Subsystem 3_4 index is incorrect.");
+            Assert.AreEqual(3, resultConfig3_4.SubsystemConfig.ConfigNumber, "SubsystemConfiguration 3_4 CommandSetup is incorrect.");
             Assert.AreEqual(7, resultConfig3_4.CepoIndex, "CEPO 3_4 index is incorrect.");
-            Assert.AreEqual("3_3", resultConfig3_4.ToString(), "AdcpSubsystemConfig 3_4 toString is incorrect.");
+            Assert.AreEqual("[3] 600 kHz 4 beam 20 degree piston", resultConfig3_4.ToString(), "AdcpSubsystemConfig 3_4 toString is incorrect.");
 
             Assert.AreEqual("23223233", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("23223233", config.Commands.CEPO, "Commands CEPO is incorrect.");
@@ -681,7 +685,7 @@ namespace RTI
             config.Commands.CETFP_HunSec = 2;
 
             config.Commands.CERECORD = false;
-            config.Commands.CEOUTPUT = 2;
+            config.Commands.CEOUTPUT = AdcpCommands.AdcpOutputMode.ASCII;
 
             config.Commands.CWS = 33;
             config.Commands.CWT = 3.33f;
@@ -779,7 +783,7 @@ namespace RTI
 
 
             Assert.AreEqual(false, newConfig.Commands.CERECORD, "CERECORD is incorrect.");
-            Assert.AreEqual(2, newConfig.Commands.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.ASCII, newConfig.Commands.CEOUTPUT, "CEOUTPUT is incorrect.");
 
             Assert.AreEqual(33, newConfig.Commands.CWS, 0.0001, "CWS is incorrect.");
             Assert.AreEqual(3.33f, newConfig.Commands.CWT, 0.0001, "CWT is incorrect.");
@@ -803,7 +807,7 @@ namespace RTI
                 newSsConfig = asConfig;
             }
 
-            Assert.AreEqual("2_0", newSsConfig.ToString(), "SubsystemConfig string is incorrect.");
+            Assert.AreEqual("[0] 1.2 MHz 4 beam 20 degree piston", newSsConfig.ToString(), "SubsystemConfig string is incorrect.");
 
             #region SubsystemConfig
 
@@ -877,9 +881,9 @@ namespace RTI
             Dictionary<string, AdcpSubsystemConfig> result = config.SetCepo("2", serial);
 
             Subsystem ss = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, 0);        // Number of configurations for a given subsystem
 
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss, ssConfig), "AdcpSubsystemConfigExist() is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig), "AdcpSubsystemConfigExist() is incorrect.");
         }
 
         /// <summary>
@@ -896,13 +900,15 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
         }
 
         /// <summary>
@@ -919,13 +925,15 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
         }
 
         /// <summary>
@@ -942,16 +950,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);       // A third configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "AdcpSubsystemConfigExist() 2 2 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "AdcpSubsystemConfigExist() 3 2 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig22), "AdcpSubsystemConfigExist() 2 2 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig32), "AdcpSubsystemConfigExist() 3 2 is incorrect.");
         }
 
         /// <summary>
@@ -968,16 +979,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);        // A third configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "AdcpSubsystemConfigExist() 2 2 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "AdcpSubsystemConfigExist() 3 2 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig22), "AdcpSubsystemConfigExist() 2 2 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig32), "AdcpSubsystemConfigExist() 3 2 is incorrect.");
         }
 
         /// <summary>
@@ -994,16 +1008,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);        // A third configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "AdcpSubsystemConfigExist() 2 2 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "AdcpSubsystemConfigExist() 3 2 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig22), "AdcpSubsystemConfigExist() 2 2 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig32), "AdcpSubsystemConfigExist() 3 2 is incorrect.");
         }
 
         /// <summary>
@@ -1016,7 +1033,7 @@ namespace RTI
         {
             AdcpConfiguration config = new AdcpConfiguration();
 
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(null, null), "AdcpSubsystemConfigExist() is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(null), "AdcpSubsystemConfigExist() is incorrect.");
         }
 
         /// <summary>
@@ -1029,9 +1046,9 @@ namespace RTI
         {
             AdcpConfiguration config = new AdcpConfiguration();
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(ss2, 0);        // Number of configurations for a given subsystem
 
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, null), "AdcpSubsystemConfigExist() is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(null), "AdcpSubsystemConfigExist() is incorrect.");
         }
 
         /// <summary>
@@ -1044,9 +1061,9 @@ namespace RTI
         {
             AdcpConfiguration config = new AdcpConfiguration();
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(ss2, 0);        // Number of configurations for a given subsystem
 
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(null, ssConfig0), "AdcpSubsystemConfigExist() is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig0), "AdcpSubsystemConfigExist() is incorrect.");
         }
 
         #endregion
@@ -1064,9 +1081,9 @@ namespace RTI
             Dictionary<string, AdcpSubsystemConfig> result = config.SetCepo("2", serial);
 
             Subsystem ss = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, 0);        // Number of configurations for a given subsystem
 
-            AdcpSubsystemConfig asConfig = config.GetAdcpSubsystemConfig(ss, ssConfig);
+            AdcpSubsystemConfig asConfig = config.GetAdcpSubsystemConfig(ssConfig);
 
             Assert.NotNull(asConfig, "GetAdcpSubsystemConfig() is incorrect.");
         }
@@ -1085,13 +1102,15 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
         }
 
         /// <summary>
@@ -1108,13 +1127,15 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
         }
 
         /// <summary>
@@ -1131,13 +1152,15 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
         }
 
         /// <summary>
@@ -1154,13 +1177,15 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
         }
 
         /// <summary>
@@ -1177,16 +1202,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);        // A third configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig2), "GetAdcpSubsystemConfig() 2 2 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig2), "GetAdcpSubsystemConfig() 3 2 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig22), "GetAdcpSubsystemConfig() 2 2 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig32), "GetAdcpSubsystemConfig() 3 2 is incorrect.");
         }
 
         /// <summary>
@@ -1200,9 +1228,9 @@ namespace RTI
             AdcpConfiguration config = new AdcpConfiguration();
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(ss2, 0);        // Number of configurations for a given subsystem
 
-            Assert.IsNull(config.GetAdcpSubsystemConfig(null, null), "GetAdcpSubsystemConfig() is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(null), "GetAdcpSubsystemConfig() is incorrect.");
         }
 
         /// <summary>
@@ -1216,9 +1244,9 @@ namespace RTI
             AdcpConfiguration config = new AdcpConfiguration();
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(ss2, 0);        // Number of configurations for a given subsystem
 
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, null), "GetAdcpSubsystemConfig() is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(null), "GetAdcpSubsystemConfig() is incorrect.");
         }
 
         /// <summary>
@@ -1232,9 +1260,9 @@ namespace RTI
             AdcpConfiguration config = new AdcpConfiguration();
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(ss2, 0);        // Number of configurations for a given subsystem
 
-            Assert.IsNull(config.GetAdcpSubsystemConfig(null, ssConfig0), "GetAdcpSubsystemConfig() is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig0), "GetAdcpSubsystemConfig() is incorrect.");
         }
 
         #endregion
@@ -1251,15 +1279,15 @@ namespace RTI
             Dictionary<string, AdcpSubsystemConfig> result = config.SetCepo("2", serial);
 
             Subsystem ss = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);       // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);       // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(ss, 0);       // Number of configurations for a given subsystem
+            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(ss, 1);       // A second configuration for a subsystem
 
             AdcpSubsystemConfig asConfig1 = null;                                   // Create an AdcpSubsystemConfig to get the result
             bool addConfigResult = config.AddConfiguration(ss, out asConfig1);      // Add another configuration for Subsystem 2
 
             Assert.IsTrue(addConfigResult, "AddConfiguration() is incorrect.");
             Assert.IsNotNull(asConfig1, "asConfig1 is incorrect.");
-            Assert.AreEqual(ss, asConfig1.Subsystem, "asConfig1 Subsystem is incorrect.");
+            Assert.AreEqual(ss, asConfig1.SubsystemConfig.SubSystem, "asConfig1 Subsystem is incorrect.");
             Assert.AreEqual(1, asConfig1.CepoIndex, "asConfig1 CEPO index is incorrect.");
             Assert.AreEqual(ssConfig1, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
             Assert.IsNotNull(asConfig1.Commands, "asConfig1 Commands is incorrect.");
@@ -1269,10 +1297,10 @@ namespace RTI
             Assert.AreEqual("22", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("22", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(2, config.SubsystemConfigDict.Count, "SubsystemConfigDict Count is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss, ssConfig0), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss, ssConfig1), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig0), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig1), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
         }
 
         /// <summary>
@@ -1288,17 +1316,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
             AdcpSubsystemConfig asConfig1 = null;
             bool addConfigResult = config.AddConfiguration(ss3, out asConfig1);      // Add another configuration for Subsystem 2
 
             Assert.IsTrue(addConfigResult, "AddConfiguration() is incorrect.");
             Assert.IsNotNull(asConfig1, "asConfig1 is incorrect.");
-            Assert.AreEqual(ss3, asConfig1.Subsystem, "asConfig1 Subsystem is incorrect.");
+            Assert.AreEqual(ss3, asConfig1.SubsystemConfig.SubSystem, "asConfig1 Subsystem is incorrect.");
             Assert.AreEqual(1, asConfig1.CepoIndex, "asConfig1 CEPO index is incorrect.");
-            Assert.AreEqual(ssConfig1, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
+            Assert.AreEqual(ssConfig31, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
             Assert.IsNotNull(asConfig1.Commands, "asConfig1 Commands is incorrect.");
             Assert.AreEqual(ss3, asConfig1.Commands.SubSystem, "asConfig1 Commands Subsystem is incorrect.");
             Assert.AreEqual(1, asConfig1.Commands.CepoIndex, "asConfig1 Commands CEPO index is incorrect.");
@@ -1306,14 +1336,14 @@ namespace RTI
             Assert.AreEqual("23", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("23", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(2, config.SubsystemConfigDict.Count, "SubsystemConfigDict Count is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0  is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1  is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 3 0  is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 3 1  is incorrect.");
         }
 
         /// <summary>
@@ -1329,17 +1359,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
             AdcpSubsystemConfig asConfig1 = null;
             bool addConfigResult = config.AddConfiguration(ss3, out asConfig1);      // Add another configuration for Subsystem 3
 
             Assert.IsTrue(addConfigResult, "AddConfiguration() is incorrect.");
             Assert.IsNotNull(asConfig1, "asConfig1 is incorrect.");
-            Assert.AreEqual(ss3, asConfig1.Subsystem, "asConfig1 Subsystem is incorrect.");
+            Assert.AreEqual(ss3, asConfig1.SubsystemConfig.SubSystem, "asConfig1 Subsystem is incorrect.");
             Assert.AreEqual(2, asConfig1.CepoIndex, "asConfig1 CEPO index is incorrect.");
-            Assert.AreEqual(ssConfig1, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
+            Assert.AreEqual(ssConfig31, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
             Assert.IsNotNull(asConfig1.Commands, "asConfig1 Commands is incorrect.");
             Assert.AreEqual(ss3, asConfig1.Commands.SubSystem, "asConfig1 Commands Subsystem is incorrect.");
             Assert.AreEqual(2, asConfig1.Commands.CepoIndex, "asConfig1 Commands CEPO index is incorrect.");
@@ -1347,14 +1379,14 @@ namespace RTI
             Assert.AreEqual("223", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("223", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(3, config.SubsystemConfigDict.Count, "SubsystemConfigDict Count is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0  is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1  is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0  is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1  is incorrect.");
         }
 
         /// <summary>
@@ -1370,17 +1402,19 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
 
             AdcpSubsystemConfig asConfig1 = null;
             bool addConfigResult = config.AddConfiguration(ss3, out asConfig1);      // Add another configuration for Subsystem 2
 
             Assert.IsTrue(addConfigResult, "AddConfiguration() is incorrect.");
             Assert.IsNotNull(asConfig1, "asConfig1 is incorrect.");
-            Assert.AreEqual(ss3, asConfig1.Subsystem, "asConfig1 Subsystem is incorrect.");
+            Assert.AreEqual(ss3, asConfig1.SubsystemConfig.SubSystem, "asConfig1 Subsystem is incorrect.");
             Assert.AreEqual(2, asConfig1.CepoIndex, "asConfig1 CEPO index is incorrect.");
-            Assert.AreEqual(ssConfig1, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
+            Assert.AreEqual(ssConfig31, asConfig1.SubsystemConfig, "asConfig1 SubsystemConfiguration is incorrect.");
             Assert.IsNotNull(asConfig1.Commands, "asConfig1 Commands is incorrect.");
             Assert.AreEqual(ss3, asConfig1.Commands.SubSystem, "asConfig1 Commands Subsystem is incorrect.");
             Assert.AreEqual(2, asConfig1.Commands.CepoIndex, "asConfig1 Commands CEPO index is incorrect.");
@@ -1388,14 +1422,14 @@ namespace RTI
             Assert.AreEqual("22", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("22", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(2, config.SubsystemConfigDict.Count, "SubsystemConfigDict Count is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig0), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
-            Assert.NotNull(config.GetAdcpSubsystemConfig(ss2, ssConfig1), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig0), "GetAdcpSubsystemConfig() 3 0  is incorrect.");
-            Assert.IsNull(config.GetAdcpSubsystemConfig(ss3, ssConfig1), "GetAdcpSubsystemConfig() 3 1  is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "AdcpSubsystemConfigExist() 2 0 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "AdcpSubsystemConfigExist() 2 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig30), "AdcpSubsystemConfigExist() 3 0 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "AdcpSubsystemConfigExist() 3 1 is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig20), "GetAdcpSubsystemConfig() 2 0  is incorrect.");
+            Assert.NotNull(config.GetAdcpSubsystemConfig(ssConfig21), "GetAdcpSubsystemConfig() 2 1  is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig30), "GetAdcpSubsystemConfig() 3 0  is incorrect.");
+            Assert.IsNull(config.GetAdcpSubsystemConfig(ssConfig31), "GetAdcpSubsystemConfig() 3 1  is incorrect.");
         }
 
         #endregion
@@ -1414,33 +1448,36 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);        // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            AdcpSubsystemConfig asConfig3_0 = config.GetAdcpSubsystemConfig(ss3, ssConfig0);        // Get the Subsystem 3 Configuration 0
-            AdcpSubsystemConfig asConfig3_2 = config.GetAdcpSubsystemConfig(ss3, ssConfig2);        // Get the Subsystem 3 Configuration 2
+            AdcpSubsystemConfig asConfig3_0 = config.GetAdcpSubsystemConfig(ssConfig30);        // Get the Subsystem 3 Configuration 0
+            AdcpSubsystemConfig asConfig3_2 = config.GetAdcpSubsystemConfig(ssConfig32);        // Get the Subsystem 3 Configuration 2
 
             // Verify 3 configuration exist for Subsystem 3 and Subsystem 2
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "Config Exist 2_0 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "Config Exist 2_1 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "Config Exist 2_2 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "Config Exist 3_0 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "Config Exist 3_1 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "Config Exist 3_2 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "Config Exist 2_0 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "Config Exist 2_1 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig22), "Config Exist 2_2 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "Config Exist 3_0 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig31), "Config Exist 3_1 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig32), "Config Exist 3_2 True is incorrect.");
             Assert.AreEqual(6, config.SubsystemConfigDict.Count, "SubsystemConfigDict pre count is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).CepoIndex, "CEPO index 2_0 pre is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).Commands.CepoIndex, "Commands CEPO index 2_0 pre is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss3, ssConfig0).CepoIndex, "CEPO index 3_0 pre is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss3, ssConfig0).Commands.CepoIndex, "Commands CEPO index 3_0 pre is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss3, ssConfig1).CepoIndex, "CEPO index 3_1 pre is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss3, ssConfig1).Commands.CepoIndex, "Commands CEPO index 3_1 pre is incorrect.");
-            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ss2, ssConfig1).CepoIndex, "CEPO index 2_1 pre is incorrect.");
-            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ss2, ssConfig1).Commands.CepoIndex, "Commands CEPO index 2_1 pre is incorrect.");
-            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ss3, ssConfig2).CepoIndex, "CEPO index 3_2 pre is incorrect.");
-            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ss3, ssConfig2).Commands.CepoIndex, "Commands CEPO index 3_2 pre is incorrect.");
-            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ss2, ssConfig2).CepoIndex, "CEPO index 2_2 pre is incorrect.");
-            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ss2, ssConfig2).Commands.CepoIndex, "Commands CEPO index 2_2 pre is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).CepoIndex, "CEPO index 2_0 pre is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).Commands.CepoIndex, "Commands CEPO index 2_0 pre is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig30).CepoIndex, "CEPO index 3_0 pre is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig30).Commands.CepoIndex, "Commands CEPO index 3_0 pre is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig31).CepoIndex, "CEPO index 3_1 pre is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig31).Commands.CepoIndex, "Commands CEPO index 3_1 pre is incorrect.");
+            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ssConfig21).CepoIndex, "CEPO index 2_1 pre is incorrect.");
+            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ssConfig21).Commands.CepoIndex, "Commands CEPO index 2_1 pre is incorrect.");
+            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ssConfig32).CepoIndex, "CEPO index 3_2 pre is incorrect.");
+            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ssConfig32).Commands.CepoIndex, "Commands CEPO index 3_2 pre is incorrect.");
+            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ssConfig22).CepoIndex, "CEPO index 2_2 pre is incorrect.");
+            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ssConfig22).Commands.CepoIndex, "Commands CEPO index 2_2 pre is incorrect.");
 
 
             bool resultRemove = config.RemoveAdcpSubsystemConfig(asConfig3_0);                                                      // Remove the first Subsystem 3 Configuration
@@ -1448,23 +1485,23 @@ namespace RTI
             Assert.AreEqual(true, resultRemove, "ResultRemove is incorrect.");
             Assert.AreEqual("23232", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("23232", config.Commands.CEPO, "Commands CEPO is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "Config Exist 2_0 True 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "Config Exist 2_1 True 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "Config Exist 2_2 True 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "Config Exist 3_0 True 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "Config Exist 3_1 True 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "Config Exist 3_2 False 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "Config Exist 2_0 True 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "Config Exist 2_1 True 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig22), "Config Exist 2_2 True 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "Config Exist 3_0 True 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig31), "Config Exist 3_1 True 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig32), "Config Exist 3_2 False 1 is incorrect.");
             Assert.AreEqual(5, config.SubsystemConfigDict.Count, "SubsystemConfigDict post count is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).CepoIndex, "CEPO index 2_0 is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).Commands.CepoIndex, "Commands CEPO index 2_0 pre is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss3, ssConfig0).CepoIndex, "CEPO index 3_0 is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss3, ssConfig0).Commands.CepoIndex, "Commands CEPO index 3_0 pre is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss2, ssConfig1).CepoIndex, "CEPO index 2_1 is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss2, ssConfig1).Commands.CepoIndex, "Commands CEPO index 2_1 pre is incorrect.");
-            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ss3, ssConfig1).CepoIndex, "CEPO index 3_1 is incorrect.");
-            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ss3, ssConfig1).Commands.CepoIndex, "Commands CEPO index 3_1 pre is incorrect.");
-            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ss2, ssConfig2).CepoIndex, "CEPO index 2_2 is incorrect.");
-            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ss2, ssConfig2).Commands.CepoIndex, "Commands CEPO index 2_2 pre is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).CepoIndex, "CEPO index 2_0 is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).Commands.CepoIndex, "Commands CEPO index 2_0 pre is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig30).CepoIndex, "CEPO index 3_0 is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig30).Commands.CepoIndex, "Commands CEPO index 3_0 pre is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig21).CepoIndex, "CEPO index 2_1 is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig21).Commands.CepoIndex, "Commands CEPO index 2_1 pre is incorrect.");
+            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ssConfig31).CepoIndex, "CEPO index 3_1 is incorrect.");
+            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ssConfig31).Commands.CepoIndex, "Commands CEPO index 3_1 pre is incorrect.");
+            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ssConfig22).CepoIndex, "CEPO index 2_2 is incorrect.");
+            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ssConfig22).Commands.CepoIndex, "Commands CEPO index 2_2 pre is incorrect.");
         }
 
         /// <summary>
@@ -1479,11 +1516,14 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);        // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            AdcpSubsystemConfig asConfig3_2 = config.GetAdcpSubsystemConfig(ss3, ssConfig2);        // Get the Subsystem 3 Configuration 0
+            AdcpSubsystemConfig asConfig3_2 = config.GetAdcpSubsystemConfig(ssConfig32);        // Get the Subsystem 3 Configuration 0
 
             bool resultRemove = config.RemoveAdcpSubsystemConfig(asConfig3_2);
 
@@ -1505,34 +1545,37 @@ namespace RTI
 
             Subsystem ss2 = new Subsystem("2", 0);                                   // Subsystem code and Index within serial number
             Subsystem ss3 = new Subsystem("3", 1);                                   // Subsystem code and Index within serial number
-            SubsystemConfiguration ssConfig0 = new SubsystemConfiguration(0);        // Number of configurations for a given subsystem
-            SubsystemConfiguration ssConfig1 = new SubsystemConfiguration(1);        // A second configuration for a subsystem
-            SubsystemConfiguration ssConfig2 = new SubsystemConfiguration(2);        // A second configuration for a subsystem
+            SubsystemConfiguration ssConfig20 = new SubsystemConfiguration(ss2, 0);         // Configuration SS2 with Config Number 0
+            SubsystemConfiguration ssConfig21 = new SubsystemConfiguration(ss2, 1);         // Configuration SS2 with Config Number 1
+            SubsystemConfiguration ssConfig22 = new SubsystemConfiguration(ss2, 2);         // Configuration SS2 with Config Number 2
+            SubsystemConfiguration ssConfig30 = new SubsystemConfiguration(ss3, 0);         // Configuration SS3 with Config Number 0
+            SubsystemConfiguration ssConfig31 = new SubsystemConfiguration(ss3, 1);         // Configuration SS3 with Config Number 1
+            SubsystemConfiguration ssConfig32 = new SubsystemConfiguration(ss3, 2);         // Configuration SS3 with Config Number 2
 
-            AdcpSubsystemConfig asConfig3_0 = config.GetAdcpSubsystemConfig(ss3, ssConfig0);        // Get the Subsystem 3 Configuration 0
-            AdcpSubsystemConfig asConfig3_1 = config.GetAdcpSubsystemConfig(ss3, ssConfig1);        // Get the Subsystem 3 Configuration 0
-            AdcpSubsystemConfig asConfig3_2 = config.GetAdcpSubsystemConfig(ss3, ssConfig2);        // Get the Subsystem 3 Configuration 2
+            AdcpSubsystemConfig asConfig3_0 = config.GetAdcpSubsystemConfig(ssConfig30);        // Get the Subsystem 3 Configuration 0
+            AdcpSubsystemConfig asConfig3_1 = config.GetAdcpSubsystemConfig(ssConfig31);        // Get the Subsystem 3 Configuration 0
+            AdcpSubsystemConfig asConfig3_2 = config.GetAdcpSubsystemConfig(ssConfig32);        // Get the Subsystem 3 Configuration 2
 
             // Verify 3 configuration exist for Subsystem 3 and Subsystem 2
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "Config Exist 2_0 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "Config Exist 2_1 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "Config Exist 2_2 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "Config Exist 3_0 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "Config Exist 3_1 True is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "Config Exist 3_2 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "Config Exist 2_0 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "Config Exist 2_1 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig22), "Config Exist 2_2 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig30), "Config Exist 3_0 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig31), "Config Exist 3_1 True is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig32), "Config Exist 3_2 True is incorrect.");
             Assert.AreEqual(6, config.SubsystemConfigDict.Count, "SubsystemConfigDict pre count is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).CepoIndex, "CEPO index 2_0 pre is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).Commands.CepoIndex, "Commands CEPO index 2_0 pre is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss3, ssConfig0).CepoIndex, "CEPO index 3_0 pre is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss3, ssConfig0).Commands.CepoIndex, "Commands CEPO index 3_0 pre is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss3, ssConfig1).CepoIndex, "CEPO index 3_1 pre is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss3, ssConfig1).Commands.CepoIndex, "Commands CEPO index 3_1 pre is incorrect.");
-            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ss2, ssConfig1).CepoIndex, "CEPO index 2_1 pre is incorrect.");
-            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ss2, ssConfig1).Commands.CepoIndex, "Commands CEPO index 2_1 pre is incorrect.");
-            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ss3, ssConfig2).CepoIndex, "CEPO index 3_2 pre is incorrect.");
-            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ss3, ssConfig2).Commands.CepoIndex, "Commands CEPO index 3_2 pre is incorrect.");
-            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ss2, ssConfig2).CepoIndex, "CEPO index 2_2 pre is incorrect.");
-            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ss2, ssConfig2).Commands.CepoIndex, "Commands CEPO index 2_2 pre is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).CepoIndex, "CEPO index 2_0 pre is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).Commands.CepoIndex, "Commands CEPO index 2_0 pre is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig30).CepoIndex, "CEPO index 3_0 pre is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig30).Commands.CepoIndex, "Commands CEPO index 3_0 pre is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig31).CepoIndex, "CEPO index 3_1 pre is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig31).Commands.CepoIndex, "Commands CEPO index 3_1 pre is incorrect.");
+            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ssConfig21).CepoIndex, "CEPO index 2_1 pre is incorrect.");
+            Assert.AreEqual(3, config.GetAdcpSubsystemConfig(ssConfig21).Commands.CepoIndex, "Commands CEPO index 2_1 pre is incorrect.");
+            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ssConfig32).CepoIndex, "CEPO index 3_2 pre is incorrect.");
+            Assert.AreEqual(4, config.GetAdcpSubsystemConfig(ssConfig32).Commands.CepoIndex, "Commands CEPO index 3_2 pre is incorrect.");
+            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ssConfig22).CepoIndex, "CEPO index 2_2 pre is incorrect.");
+            Assert.AreEqual(5, config.GetAdcpSubsystemConfig(ssConfig22).Commands.CepoIndex, "Commands CEPO index 2_2 pre is incorrect.");
 
 
             bool resultRemove0 = config.RemoveAdcpSubsystemConfig(asConfig3_0);                                                      // Remove the first Subsystem 3 Configuration
@@ -1544,19 +1587,19 @@ namespace RTI
             Assert.AreEqual(true, resultRemove2, "ResultRemove is incorrect.");
             Assert.AreEqual("222", config.CEPO, "CEPO is incorrect.");
             Assert.AreEqual("222", config.Commands.CEPO, "Commands CEPO is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig0), "Config Exist 2_0 True 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig1), "Config Exist 2_1 True 1 is incorrect.");
-            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ss2, ssConfig2), "Config Exist 2_2 True 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig0), "Config Exist 3_0 True 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig1), "Config Exist 3_1 True 1 is incorrect.");
-            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ss3, ssConfig2), "Config Exist 3_2 False 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig20), "Config Exist 2_0 True 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig21), "Config Exist 2_1 True 1 is incorrect.");
+            Assert.AreEqual(true, config.AdcpSubsystemConfigExist(ssConfig22), "Config Exist 2_2 True 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig30), "Config Exist 3_0 True 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig31), "Config Exist 3_1 True 1 is incorrect.");
+            Assert.AreEqual(false, config.AdcpSubsystemConfigExist(ssConfig32), "Config Exist 3_2 False 1 is incorrect.");
             Assert.AreEqual(3, config.SubsystemConfigDict.Count, "SubsystemConfigDict post count is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).CepoIndex, "CEPO index 2_0 is incorrect.");
-            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ss2, ssConfig0).Commands.CepoIndex, "Commands CEPO index 2_0 is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss2, ssConfig1).CepoIndex, "CEPO index 2_1 is incorrect.");
-            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ss2, ssConfig1).Commands.CepoIndex, "Commands CEPO index 2_1 is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss2, ssConfig2).CepoIndex, "CEPO index 2_2 is incorrect.");
-            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ss2, ssConfig2).Commands.CepoIndex, "Commands CEPO index 2_2 is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).CepoIndex, "CEPO index 2_0 is incorrect.");
+            Assert.AreEqual(0, config.GetAdcpSubsystemConfig(ssConfig20).Commands.CepoIndex, "Commands CEPO index 2_0 is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig21).CepoIndex, "CEPO index 2_1 is incorrect.");
+            Assert.AreEqual(1, config.GetAdcpSubsystemConfig(ssConfig21).Commands.CepoIndex, "Commands CEPO index 2_1 is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig22).CepoIndex, "CEPO index 2_2 is incorrect.");
+            Assert.AreEqual(2, config.GetAdcpSubsystemConfig(ssConfig22).Commands.CepoIndex, "Commands CEPO index 2_2 is incorrect.");
         }
 
         #endregion

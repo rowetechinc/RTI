@@ -50,6 +50,8 @@
  * 09/18/2012      RC          2.15       Added SubsystemConfig column to tblEnsemble for the subsystem configuration.
  * 10/01/2012      RC          2.15       Removed AdcpCommands, DeploymentOptions and AdcpSubsystemCommadns and replaced with AdcpConfiguration.
  * 10/15/2012      RC          2.15       In tblEnsemble changed column SubsystemIndex to SubsystemCode.
+ * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ * 
  */
 
 using System;
@@ -267,7 +269,7 @@ namespace RTI
         {
             if (string.IsNullOrEmpty(serialNumStr))
             {
-                SerialNumber = SerialNumber.Empty;
+                SerialNumber = new SerialNumber();
             }
             else
             {
@@ -452,7 +454,7 @@ namespace RTI
                 }
             }
 
-            return new AdcpSubsystemCommands(asConfig.Subsystem, asConfig.CepoIndex);
+            return new AdcpSubsystemCommands(asConfig.SubsystemConfig.SubSystem, asConfig.CepoIndex);
         }
 
         #endregion

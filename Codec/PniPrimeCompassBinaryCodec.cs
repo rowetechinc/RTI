@@ -52,6 +52,7 @@
  *                                         Check size of buffer before trying to remove the data.
  * 04/06/2012      RC           2.08      Changed serial port read thread, so make the codec decode in a while loop again.
  * 07/06/2012      RC           2.12      Added SIZE_OF_FLOAT64, GetParamCommand(), SetTaps0Commands(), SetTaps4Commands() and DecodeKParamResp() to get and set Compass Taps.
+ * 11/13/2012      RC           2.16      Updated the pitch and roll values to use.
  * 
  */
 
@@ -2088,6 +2089,9 @@ namespace RTI
         /// <summary>
         /// Give the calibration positions for
         /// the next sample taken.
+        /// Hdg:   XXX
+        /// Pitch: XXX
+        /// Roll:  XXX
         /// </summary>
         /// <param name="sample">Position Sample.</param>
         /// <returns>String of next position for each sample given.</returns>
@@ -2096,29 +2100,29 @@ namespace RTI
             switch(sample)
             {
                 case 0:
-                    return "0°";
+                    return "Hdg:  0°\n\n";
                 case 1:
-                    return "90°";
+                    return "Hdg:  90°\n\n";
                 case 2:
-                    return "180°";
+                    return "Hdg:  180°\n\n";
                 case 3:
-                    return "270°";
+                    return "Hdg:  270°\n\n";
                 case 4:
-                    return "30° Roll: 20°";
+                    return "Hdg:  30°\nPitch: 50°\nRoll:   -20°";
                 case 5:
-                    return "120° Roll: 20°";
+                    return "Hdg:  120°\nPitch: 50°\nRoll:   20°";
                 case 6:
-                    return "210° Roll: 20°";
+                    return "Hdg:  210°\nPitch: 50°\nRoll:   -20°";
                 case 7:
-                    return "300° Roll: 20°";
+                    return "Hdg:  300°\nPitch: 50°\nRoll:   20°";
                 case 8:
-                    return "60° Roll: -20°";
+                    return "Hdg:  60°\nPitch: -50°\nRoll:   20°";
                 case 9:
-                    return "150° Roll -20°";
+                    return "Hdg:  150°\nPitch: -50°\nRoll:   -20°";
                 case 10:
-                    return "240° Roll -20°";
+                    return "Hdg:  240°\nPitch: -50°\nRoll:   20°";
                 case 11:
-                    return "330° Roll -20°";
+                    return "Hdg:  330°\nPitch: -50°\nRoll:   -20°";
                 default:
                     return "-";
             }

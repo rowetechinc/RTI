@@ -35,6 +35,7 @@
  * 09/28/2012      RC          2.15       Added test for all the commands.
  * 10/01/2012      RC          2.15       Removed serial number from the AdcpCommand constructor.
  * 10/11/2012      RC          2.15       Updated test with new minimum values for CWS, CWSS and CTD.
+ * 11/21/2012      RC          2.16       Added Command Strings for every command.
  * 
  * 
  */
@@ -45,6 +46,7 @@ namespace RTI
     using NUnit.Framework;
     using RTI.Commands;
 using System.Text;
+    using System.Globalization;
 
     /// <summary>
     /// Create test to test the AdcpCommand object.
@@ -75,7 +77,7 @@ using System.Text;
             Assert.AreEqual(tv1.HunSec, commands.CEI_HunSec);
 
             Assert.AreEqual(false, commands.CERECORD, "CERECORD is incorrect.");
-            Assert.AreEqual(1, commands.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, commands.CEOUTPUT, "CEOUTPUT is incorrect.");
 
             // Environmental defaults
             Assert.AreEqual(Commands.AdcpCommands.DEFAULT_CWS, commands.CWS);
@@ -908,9 +910,9 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CEOUTPUT = 1;
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
 
-            Assert.AreEqual(1, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
         }
 
         /// <summary>
@@ -921,8 +923,6 @@ using System.Text;
         public void TestCEOUTPUT_BadMax()
         {
             AdcpCommands cmd = new AdcpCommands();
-
-            cmd.CEOUTPUT = 5;
 
             Assert.AreEqual(AdcpCommands.DEFAULT_CEOUTPUT, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
         }
@@ -936,9 +936,9 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CEOUTPUT = AdcpCommands.MIN_CEOUTPUT;
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Disable;
 
-            Assert.AreEqual(AdcpCommands.MIN_CEOUTPUT, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Disable, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
         }
 
         /// <summary>
@@ -950,9 +950,9 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CEOUTPUT = AdcpCommands.MAX_CEOUTPUT;
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.ASCII;
 
-            Assert.AreEqual(AdcpCommands.MAX_CEOUTPUT, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.ASCII, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
         }
 
         #endregion
@@ -1873,7 +1873,7 @@ using System.Text;
             cmd.CETFP_Second = 32;
             cmd.CETFP_HunSec = 83;
             cmd.CERECORD = false;
-            cmd.CEOUTPUT = 1;
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
             cmd.CWS = 23.234f;
             cmd.CWT = 934.123f;
             cmd.CTD = 945.23f;
@@ -1954,8 +1954,8 @@ using System.Text;
             #endregion
 
             #region CEOUTPUT
-            Assert.AreEqual(1, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
-            Assert.AreEqual(1, cmd1.CEOUTPUT, "CEOUTPUT 1 is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, cmd1.CEOUTPUT, "CEOUTPUT 1 is incorrect.");
             Assert.AreEqual(cmd.CEOUTPUT, cmd1.CEOUTPUT, "CEOUTPUT equal is incorrect.");
             #endregion
 
@@ -2039,7 +2039,7 @@ using System.Text;
             cmd.CETFP_Second = 32;
             cmd.CETFP_HunSec = 83;
             cmd.CERECORD = false;
-            cmd.CEOUTPUT = 1;
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
             cmd.CWS = 23.234f;
             cmd.CWT = 934.123f;
             cmd.CTD = 945.23f;
@@ -2121,8 +2121,8 @@ using System.Text;
             #endregion
 
             #region CEOUTPUT
-            Assert.AreEqual(1, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
-            Assert.AreEqual(1, cmd1.CEOUTPUT, "CEOUTPUT 1 is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, cmd.CEOUTPUT, "CEOUTPUT is incorrect.");
+            Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, cmd1.CEOUTPUT, "CEOUTPUT 1 is incorrect.");
             Assert.AreEqual(cmd.CEOUTPUT, cmd1.CEOUTPUT, "CEOUTPUT equal is incorrect.");
             #endregion
 
@@ -2189,5 +2189,706 @@ using System.Text;
 
         #endregion
 
+        #region Mode Command String
+
+        /// <summary>
+        /// Test getting the Mode command string.
+        /// </summary>
+        [Test]
+        public void TestModeCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.Mode = AdcpCommands.AdcpMode.PROFILE;
+
+            Assert.AreEqual(AdcpCommands.AdcpMode.PROFILE, cmd.Mode, "Mode is incorrect.");
+            Assert.AreEqual("CPROFILE", cmd.Mode_ToString(), "Mode String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_CPROFILE, cmd.Mode_ToString(), "Mode String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_CPROFILE, cmd.Mode_CmdStr(), "Mode Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the Mode command.
+        /// </summary>
+        [Test]
+        public void TestModeCmdStr1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.Mode = AdcpCommands.AdcpMode.DVL;
+
+            Assert.AreEqual(AdcpCommands.AdcpMode.DVL, cmd.Mode, "Mode is incorrect.");
+            Assert.AreEqual("CDVL", cmd.Mode_ToString(), "Mode String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_CDVL, cmd.Mode_ToString(), "Mode String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_CDVL, cmd.Mode_CmdStr(), "Mode Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region Time Command String
+
+        /// <summary>
+        /// Test getting the Time command string.
+        /// </summary>
+        [Test]
+        public void TestTimeCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            string dateTime = DateTime.Now.ToString("yyyy/MM/dd,HH:mm:ss", CultureInfo.CreateSpecificCulture("en-US"));
+
+            Assert.AreEqual(AdcpCommands.CMD_STIME + " " + dateTime, cmd.Time_CmdStr(), "Time Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CEI Command String
+
+        /// <summary>
+        /// Test getting the CEI command string.
+        /// </summary>
+        [Test]
+        public void TestCEICmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEI = new TimeValue(1, 2, 3, 4);
+
+            Assert.AreEqual("CEI 01:02:03.04", cmd.CEI_CmdStr(), "CEI Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CETFP Command String
+
+        /// <summary>
+        /// Test getting the CETFP command string.
+        /// </summary>
+        [Test]
+        public void TestCETFPCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CETFP_Year = 2012;
+            cmd.CETFP_Month = 11;
+            cmd.CETFP_Day = 21;
+            cmd.CETFP_Hour = 12;
+            cmd.CETFP_Minute = 03;
+            cmd.CETFP_Second = 15;
+            cmd.CETFP_HunSec = 67;
+
+            Assert.AreEqual("CETFP 2012/11/21,12:03:15.67", cmd.CETFP_CmdStr(), "CETFP Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CERECORD Command String
+
+        /// <summary>
+        /// Test getting the CERECORD command string.
+        /// </summary>
+        [Test]
+        public void TestCERECORDCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CERECORD = false;
+
+            Assert.AreEqual("CERECORD 0", cmd.CERECORD_CmdStr(), "CERECORD Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the CERECORD command string.
+        /// </summary>
+        [Test]
+        public void TestCERECORDCmdStr1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CERECORD = true;
+
+            Assert.AreEqual("CERECORD 1", cmd.CERECORD_CmdStr(), "CERECORD Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CEOUTPUT Command String
+
+        /// <summary>
+        /// Test getting the CEOUTPUT command string.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUTCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Disable;
+
+            Assert.AreEqual("CEOUTPUT 0", cmd.CEOUTPUT_CmdStr(), "CEOUTPUT Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the CEOUTPUT command string.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUTCmdStr1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
+
+            Assert.AreEqual("CEOUTPUT 1", cmd.CEOUTPUT_CmdStr(), "CEOUTPUT Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the CEOUTPUT command string.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUTCmdStr2()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.ASCII;
+
+            Assert.AreEqual("CEOUTPUT 2", cmd.CEOUTPUT_CmdStr(), "CEOUTPUT Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the CEOUTPUT command string.
+        /// </summary>
+        [Test]
+        public void TestCEOUTPUTCmdStr3()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            Assert.AreEqual("CEOUTPUT 1", cmd.CEOUTPUT_CmdStr(), "CEOUTPUT Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CEPO Command String
+
+        /// <summary>
+        /// Test getting the CEPO command string.
+        /// </summary>
+        [Test]
+        public void TestCEPOCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CEPO = "2323";
+
+            Assert.AreEqual("CEPO 2323", cmd.CEPO_CmdStr(), "CEPO Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CWS Command String
+
+        /// <summary>
+        /// Test getting the CWS command string.
+        /// </summary>
+        [Test]
+        public void TestCWSCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWS = 0.02456f;
+
+            Assert.AreEqual("CWS 0.02456", cmd.CWS_CmdStr(), "CWS Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CWT Command String
+
+        /// <summary>
+        /// Test getting the CWT command string.
+        /// </summary>
+        [Test]
+        public void TestCWTCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWT = 0.024564f;
+
+            Assert.AreEqual("CWT 0.024564", cmd.CWT_CmdStr(), "CWT Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CTD Command String
+
+        /// <summary>
+        /// Test getting the CTD command string.
+        /// </summary>
+        [Test]
+        public void TestCTDCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CTD = 0.0245645f;
+
+            Assert.AreEqual("CTD 0.0245645", cmd.CTD_CmdStr(), "CTD Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CWSS Command String
+
+        /// <summary>
+        /// Test getting the CTD command string.
+        /// </summary>
+        [Test]
+        public void TestCWSSCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CWSS = 0.02456456f;
+
+            Assert.AreEqual("CWSS 0.02456456", cmd.CWSS_CmdStr(), "CWSS Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CHS Command String
+
+        /// <summary>
+        /// Test getting the CHS command string.
+        /// </summary>
+        [Test]
+        public void TestCHSCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHS = HeadingSrc.INTERNAL;
+
+            Assert.AreEqual("CHS 1", cmd.CHS_CmdStr(), "CHS Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the CHS command string.
+        /// </summary>
+        [Test]
+        public void TestCHSCmdStr1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHS = HeadingSrc.SERIAL;
+
+            Assert.AreEqual("CHS 2", cmd.CHS_CmdStr(), "CHS Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CHO Command String
+
+        /// <summary>
+        /// Test getting the CHO command string.
+        /// </summary>
+        [Test]
+        public void TestCHOCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = -126.254f;
+
+            Assert.AreEqual("CHO -126.254", cmd.CHO_CmdStr(), "CHO Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the CHO command string.
+        /// </summary>
+        [Test]
+        public void TestCHOCmdStr1()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CHO = 126.254f;
+
+            Assert.AreEqual("CHO 126.254", cmd.CHO_CmdStr(), "CHO Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region CVSF Command String
+
+        /// <summary>
+        /// Test getting the CVSF command string.
+        /// </summary>
+        [Test]
+        public void TestCVSFCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.CVSF = -126.254f;
+
+            Assert.AreEqual("CVSF -126.254", cmd.CVSF_CmdStr(), "CVSF Command String is incorrect.");
+        }
+
+        #endregion
+
+        #region C232B Command String
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_2400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_2400;
+
+            Assert.AreEqual("C232B 2400", cmd.C232B_CmdStr(), "C232B Command String BAUD_2400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_4800_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_4800;
+
+            Assert.AreEqual("C232B 4800", cmd.C232B_CmdStr(), "C232B Command String BAUD_4800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_9600_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_9600;
+
+            Assert.AreEqual("C232B 9600", cmd.C232B_CmdStr(), "C232B Command String BAUD_9600 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_19200_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_19200;
+
+            Assert.AreEqual("C232B 19200", cmd.C232B_CmdStr(), "C232B Command String BAUD_19200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_38400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_38400;
+
+            Assert.AreEqual("C232B 38400", cmd.C232B_CmdStr(), "C232B Command String BAUD_38400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_115200_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_115200;
+
+            Assert.AreEqual("C232B 115200", cmd.C232B_CmdStr(), "C232B Command String BAUD_115200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_230400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_230400;
+
+            Assert.AreEqual("C232B 230400", cmd.C232B_CmdStr(), "C232B Command String BAUD_230400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_460800_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_460800;
+
+            Assert.AreEqual("C232B 460800", cmd.C232B_CmdStr(), "C232B Command String BAUD_460800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C232B command.
+        /// </summary>
+        [Test]
+        public void TestC232B_921600_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C232B = Baudrate.BAUD_921600;
+
+            Assert.AreEqual("C232B 921600", cmd.C232B_CmdStr(), "C232B Command String BAUD_921600 is incorrect.");
+        }
+
+        #endregion
+
+        #region C485B Command String
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485BB_2400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_2400;
+
+            Assert.AreEqual("C485B 2400", cmd.C485B_CmdStr(), "C485B Command String BAUD_2400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_4800_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_4800;
+
+            Assert.AreEqual("C485B 4800", cmd.C485B_CmdStr(), "C485B Command String BAUD_4800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_9600_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_9600;
+
+            Assert.AreEqual("C485B 9600", cmd.C485B_CmdStr(), "C485B Command String BAUD_9600 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_19200_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_19200;
+
+            Assert.AreEqual("C485B 19200", cmd.C485B_CmdStr(), "C485B Command String BAUD_19200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_38400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_38400;
+
+            Assert.AreEqual("C485B 38400", cmd.C485B_CmdStr(), "C485B Command String BAUD_38400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_115200_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_115200;
+
+            Assert.AreEqual("C485B 115200", cmd.C485B_CmdStr(), "C485B Command String BAUD_115200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_230400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_230400;
+
+            Assert.AreEqual("C485B 230400", cmd.C485B_CmdStr(), "C485B Command String BAUD_230400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_460800_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_460800;
+
+            Assert.AreEqual("C485B 460800", cmd.C485B_CmdStr(), "C485B Command String BAUD_460800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C485B command.
+        /// </summary>
+        [Test]
+        public void TestC485B_921600_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C485B = Baudrate.BAUD_921600;
+
+            Assert.AreEqual("C485B 921600", cmd.C485B_CmdStr(), "C485B Command String BAUD_921600 is incorrect.");
+        }
+
+        #endregion
+
+        #region C422B Command String
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_2400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_2400;
+
+            Assert.AreEqual("C422B 2400", cmd.C422B_CmdStr(), "C422B Command String BAUD_2400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_4800_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_4800;
+
+            Assert.AreEqual("C422B 4800", cmd.C422B_CmdStr(), "C422B Command String BAUD_4800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_9600_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_9600;
+
+            Assert.AreEqual("C422B 9600", cmd.C422B_CmdStr(), "C422B Command String BAUD_9600 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_19200_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_19200;
+
+            Assert.AreEqual("C422B 19200", cmd.C422B_CmdStr(), "C422B Command String BAUD_19200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_38400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_38400;
+
+            Assert.AreEqual("C422B 38400", cmd.C422B_CmdStr(), "C422B Command String BAUD_38400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_115200_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_115200;
+
+            Assert.AreEqual("C422B 115200", cmd.C422B_CmdStr(), "C422B Command String BAUD_115200 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_230400_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_230400;
+
+            Assert.AreEqual("C422B 230400", cmd.C422B_CmdStr(), "C422B Command String BAUD_230400 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_460800_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_460800;
+
+            Assert.AreEqual("C422B 460800", cmd.C422B_CmdStr(), "C422B Command String BAUD_460800 is incorrect.");
+        }
+
+        /// <summary>
+        /// Test setting the C422B command.
+        /// </summary>
+        [Test]
+        public void TestC422B_921600_CmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            cmd.C422B = Baudrate.BAUD_921600;
+
+            Assert.AreEqual("C422B 921600", cmd.C422B_CmdStr(), "C422B Command String BAUD_921600 is incorrect.");
+        }
+
+        #endregion
     }
 }

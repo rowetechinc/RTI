@@ -55,10 +55,12 @@
  * 08/29/2012      RC          2.15       Changed version number.
  * 09/06/2012      RC          2.15       Added System Frequency information.
  * 09/11/2012      RC          2.15       Made version number get retrieved from AssemblyInfo.cs.
+ * 01/16/2013      RC          2.17       Added list for Transform types and Measurement standard types.
  * 
  */
 using System;
 using System.IO;
+using System.ComponentModel;
 
 namespace RTI
 {
@@ -194,6 +196,19 @@ namespace RTI
             }
 
             /// <summary>
+            /// Get the binding list for all the coordinate transforms.
+            /// <returns>Return a list of all the Transform types.</returns>
+            /// </summary>
+            public static BindingList<Core.Commons.Transforms> GetTransformList()
+            {
+                BindingList<Core.Commons.Transforms> TransformList = new BindingList<Core.Commons.Transforms>();
+                TransformList.Add(Core.Commons.Transforms.BEAM);
+                TransformList.Add(Core.Commons.Transforms.EARTH);
+                TransformList.Add(Core.Commons.Transforms.INSTRUMENT);
+                return TransformList;
+            }
+
+            /// <summary>
             /// Options for which standard of measure
             /// to display.
             /// </summary>
@@ -208,6 +223,18 @@ namespace RTI
                 /// Imperial measurement system.
                 /// </summary>
                 IMPERIAL
+            }
+
+            /// <summary>
+            /// Binding list of all the measurement standards.
+            /// <returns>List of all the measurement standards.</returns>
+            /// </summary>
+            public static BindingList<Core.Commons.MeasurementStandards> GetMeasurementStandardList()
+            {
+                BindingList<Core.Commons.MeasurementStandards> MeasurementStandardList = new BindingList<Core.Commons.MeasurementStandards>();
+                MeasurementStandardList.Add(Core.Commons.MeasurementStandards.METRIC);
+                MeasurementStandardList.Add(Core.Commons.MeasurementStandards.IMPERIAL);
+                return MeasurementStandardList;
             }
 
             #endregion

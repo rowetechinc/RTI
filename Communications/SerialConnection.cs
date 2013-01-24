@@ -65,6 +65,7 @@
  * 08/31/2012      RC          2.12       Changed the serial port ReadBufferSize to handle faster download speeds.
  * 09/21/2012      RC          2.15       Added SendDataGetReply() to send data and get the response back.
  * 10/18/2012      RC          2.15       In SendDataWaitReply(), when checking if the reponse matches the command, make the command and response both lower case so they will match in case.
+ * 10/25/2012      RC          2.16       Added a check for IO exception in Connect(), to see if the port exist.
  * 
  */
 
@@ -364,6 +365,12 @@ namespace RTI
                     {
                         // Not sure what is causing this exception yet
                         log.Error("Error COMM Port: " + _serialOptions.Port, ex_range);
+                        return false;
+                    }
+                    catch (System.IO.IOException io_ex)
+                    {
+                        // The Serial port does not exist
+                        log.Warn(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port), io_ex);
                         return false;
                     }
                     catch (Exception ex)

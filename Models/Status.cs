@@ -36,6 +36,9 @@
  * 11/28/2011      RC                     Changed ToString() to display text.
  * 01/31/2012      RC                     Added new errors from User Guide Rev F.
  * 09/18/2012      RC          2.15       Updated errors from User Guide Rev H.
+ * 12/20/2012      RC          2.17       Added the new errors from ADCP User Guide Rev H.
+ * 01/04/2013      RC          2.17       Added equal, == and != to the object.
+ *                                         Fixed bug with ERR_RCVR_DATA code.  Was 0x400 should have been 0x4000.
  * 
  */
 
@@ -66,81 +69,192 @@ namespace RTI
     ///    Indicates Bottom Track is actively changing the ping
     ///    settings to attempt bottom detection
     ///    
-    /// Receiver Timeout                        = 0x8000
-    ///    The receiver hardware did not respond to the ping request
+    /// Heading Sensor Error                    = 0x0100
+    ///    Heading Sensor Error.
+    ///    
+    /// Pressure Ensor Error                    = 0x0200
+    ///    Pressure Ensor Error.
     /// 
-    /// Receiver Data Error                     = 0x4000
-    ///    The receiver did not output the expected amount of data
+    /// Power Down Failure                      = 0x0400
+    ///    System power did not shut off between ensembles
     /// 
-    /// Temperature Error                       = 0x2000
-    ///    The temperature sensor ADC did not respond or the temperature
-    ///    value was out of range (-30 to 70 C).
+    /// Non Volatile Data Error                 = 0x0800
+    ///    Non volatile memory storage checksum failed
     /// 
     /// Real Time Clock (RTC) Error             = 0x1000
     ///    The RTC did not respond or the time data value contains
     ///    illegal values i.e. month = 13
     ///    
-    /// Non Volatile Data Error                 = 0x0800
-    ///    Non volatile memory storage checksum failed
+    /// Temperature Error                       = 0x2000
+    ///    The temperature sensor ADC did not respond or the temperature
+    ///    value was out of range (-30 to 70 C).
     ///    
-    /// Power Down Failure                      = 0x0400
-    ///    System power did not shut off between ensembles
-    ///    
+    /// Receiver Data Error                     = 0x4000
+    ///    The receiver did not output the expected amount of data
+    /// 
+    /// Receiver Timeout                        = 0x8000
+    ///    The receiver hardware did not respond to the ping request
     /// 
     /// </summary>
     public class Status
     {
         #region Variables
 
+        #region Error Codes
+
+        /// <summary>
+        /// A good value for status.
+        /// </summary>
+        public const int GOOD = 0x0000;
+
         /// <summary>
         /// Water Track 3 Beam solution STATUS value (DVL only).
+        /// Indicates the water track velocity output contains a 
+        /// 3 beam solution.
         /// </summary>
         public const int BT_WT_3BEAM_SOLUTION = 0x0001;
 
         /// <summary>
         /// Bottom Track 3 Beam solution STATUS value.
+        /// Indicates the bottom track velocity output contains
+        /// a 3 beam solution.
         /// </summary>
         public const int BT_BT_3BEAM_SOLUTION = 0x0002;
 
         /// <summary>
         /// Bottom Track Hold STATUS value.
+        /// Indicates bottom track did not detect the bottom
+        /// but is still using the last good detection as an 
+        /// estimate of the bottom location.
         /// </summary>
         public const int BT_HOLD = 0x0004;
 
         /// <summary>
         /// Bottom Track Searching STATUS value.
+        /// Indicates bottom track is actively changing the
+        /// ping settings to attempt bottom detection.
         /// </summary>
         public const int BT_SEARCHING = 0x0008;
 
         /// <summary>
-        /// Hardware timeout STATUS value.
+        /// Heading sensor error.
         /// </summary>
-        public const int HDWR_TIMEOUT = 0x8000;
+        public const int ERR_HEADING_SENSOR = 0x0100;
 
         /// <summary>
-        /// Data error.
+        /// Pressure sensor error.
         /// </summary>
-        public const int DATAERROR = 0x400;
-
-        /// <summary>
-        /// Temperature error.
-        /// </summary>
-        public const int TEMPERATURE_ERROR = 0x2000;
-
-        /// <summary>
-        /// Real Time Clock error.
-        /// </summary>
-        public const int RTC_ERROR = 0x1000;
-
-        /// <summary>
-        /// Non Volatile Data Error.
-        /// </summary>
-        public const int NONVOLATILE_DATA_ERROR = 0x0800;
+        public const int ERR_PRESSURE_SENSOR = 0x0200;
 
         /// <summary>
         /// Power Down Failure error.
+        /// System power did not shut off between ensembles.
         /// </summary>
-        public const int POWER_DOWN_ERROR = 0x0400;
+        public const int ERR_POWER_DOWN_FAILURE = 0x0400;
+
+        /// <summary>
+        /// Non Volatile Data Error.
+        /// Non volatile memory storage checksum failed.
+        /// </summary>
+        public const int ERR_NONVOLATILE_DATA = 0x0800;
+
+        /// <summary>
+        /// Real Time Clock error.
+        /// The RTC did not respond on the time data value
+        /// contained illegal values i.e. month = 13.
+        /// </summary>
+        public const int ERR_RTC = 0x1000;
+
+        /// <summary>
+        /// Temperature Sensor error.
+        /// The temperature sensor ADC did not respond or the
+        /// temperature value was out of range (-30 to 70 C).
+        /// </summary>
+        public const int ERR_TEMPERATURE = 0x2000;
+
+        /// <summary>
+        /// Reciever data error.
+        /// The receiver did not output the expected amount
+        /// of data.
+        /// </summary>
+        public const int ERR_RCVR_DATA = 0x4000;
+
+        /// <summary>
+        /// Receiver timeout.
+        /// The receiver hardware did not respond to the ping request.
+        /// </summary>
+        public const int ERR_RCVR_TIMEOUT = 0x8000;
+
+        #endregion
+
+        #region Strings
+
+        /// <summary>
+        /// Good string.
+        /// </summary>
+        public static readonly string STR_GOOD = "Good";
+
+        /// <summary>
+        /// Water Track 3 Beam Solution string.
+        /// </summary>
+        public static readonly string STR_WT_3_BEAM_SOLUTION = "WT 3 Beam Solution";
+
+        /// <summary>
+        /// Bottom Track 3 Beam Solution string.
+        /// </summary>
+        public static readonly string STR_BT_3_BEAM_SOLUTION = "BT 3 Beam Solution";
+
+        /// <summary>
+        /// Bottom Track Hold string.
+        /// </summary>
+        public static readonly string STR_BT_HOLD = "Hold";
+
+        /// <summary>
+        /// Bottom Track Searching string.
+        /// </summary>
+        public static readonly string STR_BT_SEARCHING = "Searching";
+
+        /// <summary>
+        /// Heading Sensor Error string.
+        /// </summary>
+        public static readonly string STR_HDG_SENSOR_ERR = "Heading Sensor Error";
+
+        /// <summary>
+        /// Pressure Sensor Error string.
+        /// </summary>
+        public static readonly string STR_PRESSURE_SENSOR_ERR = "Pressure Sensor Error";
+
+        /// <summary>
+        /// Power Down Error string.
+        /// </summary>
+        public static readonly string STR_PWR_DOWN_ERR = "Power Down Error";
+
+        /// <summary>
+        /// Non-Volatile Storage Error string.
+        /// </summary>
+        public static readonly string STR_NONVOLATILE_STORAGE_ERR = "Non-volatile Storage Error";
+
+        /// <summary>
+        /// Real Time Clock Error string.
+        /// </summary>
+        public static readonly string STR_RTC_ERR = "RTC Error";
+
+        /// <summary>
+        /// Temperature Error string.
+        /// </summary>
+        public static readonly string STR_TEMP_ERR = "Temperature Error";
+
+        /// <summary>
+        /// Receiver Data Error string.
+        /// </summary>
+        public static readonly string STR_RCVR_DATA_ERR = "Receiver Data Error";
+
+        /// <summary>
+        /// Receiver Timeout Error string.
+        /// </summary>
+        public static readonly string STR_RCVR_TIMEOUT_ERR = "Receiver Timeout";
+
+        #endregion
 
         #endregion
 
@@ -205,43 +319,33 @@ namespace RTI
         }
 
         /// <summary>
-        /// Check whether status bit set for
-        /// Hardware Timeout.
+        /// Check whether status bit set for 
+        /// Heading Sensor Error.
         /// </summary>
-        /// <returns>TRUE = Hardware Timeout.</returns>
-        public bool IsReceiverTimeout()
+        /// <returns>TRUE = Heading Sensor Error.</returns>
+        public bool IsHeadingSensorError()
         {
-            return (Value & HDWR_TIMEOUT) > 0;
+            return (Value & ERR_HEADING_SENSOR) > 0;
         }
 
         /// <summary>
-        /// Check whether status bit set for
-        /// Data Error.
+        /// Check whether status bit set for 
+        /// Pressure Sensor Error.
         /// </summary>
-        /// <returns>TRUE = Data Error.</returns>
-        public bool IsReceiverDataError()
+        /// <returns>TRUE = Pressure Sensor Error.</returns>
+        public bool IsPressureSensorError()
         {
-            return (Value & DATAERROR) > 0;
+            return (Value & ERR_PRESSURE_SENSOR) > 0;
         }
 
         /// <summary>
-        /// Check whether status bit set for
-        /// Temperature Error.
+        /// Check whether status bit set for 
+        /// Power Dowm Failure.
         /// </summary>
-        /// <returns>TRUE = Temperature Error.</returns>
-        public bool IsTemperatureError()
+        /// <returns>TRUE = Power Down Failure.</returns>
+        public bool IsPowerDownFailure()
         {
-            return (Value & TEMPERATURE_ERROR) > 0;
-        }
-
-        /// <summary>
-        /// Check whether status bit set for
-        /// Real Time Clock Error.
-        /// </summary>
-        /// <returns>TRUE = Real time clock error.</returns>
-        public bool IsRealTimeClockError()
-        {
-            return (Value & RTC_ERROR) > 0;
+            return (Value & ERR_POWER_DOWN_FAILURE) > 0;
         }
 
         /// <summary>
@@ -251,17 +355,47 @@ namespace RTI
         /// <returns>TRUE = Non Volatile Data Error.</returns>
         public bool IsNonVolatileDataError()
         {
-            return (Value & NONVOLATILE_DATA_ERROR) > 0;
+            return (Value & ERR_NONVOLATILE_DATA) > 0;
         }
 
         /// <summary>
         /// Check whether status bit set for
-        /// Power Down Failure error.
+        /// Real Time Clock Error.
         /// </summary>
-        /// <returns>TRUE = Power Down failure.</returns>
-        public bool IsPowerDownError()
+        /// <returns>TRUE = Real time clock error.</returns>
+        public bool IsRealTimeClockError()
         {
-            return (Value & POWER_DOWN_ERROR) > 0;
+            return (Value & ERR_RTC) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for
+        /// Temperature Error.
+        /// </summary>
+        /// <returns>TRUE = Temperature Error.</returns>
+        public bool IsTemperatureError()
+        {
+            return (Value & ERR_TEMPERATURE) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for
+        /// Receiver Data Error.
+        /// </summary>
+        /// <returns>TRUE = Receiver Data Error.</returns>
+        public bool IsReceiverDataError()
+        {
+            return (Value & ERR_RCVR_DATA) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for
+        /// Hardware Timeout.
+        /// </summary>
+        /// <returns>TRUE = Hardware Timeout.</returns>
+        public bool IsReceiverTimeout()
+        {
+            return (Value & ERR_RCVR_TIMEOUT) > 0;
         }
 
         /// <summary>
@@ -273,66 +407,129 @@ namespace RTI
         public override string ToString()
         {
             // No errors, return good
-            if (!IsWaterTrack3BeamSolution() && 
-                !IsBottomTrack3BeamSolution() && 
-                !IsBottomTrackHold() && 
-                !IsBottomTrackSearching() && 
-                !IsReceiverTimeout() && 
-                !IsReceiverDataError() && 
-                !IsTemperatureError() && 
-                !IsRealTimeClockError() &&
-                !IsNonVolatileDataError() &&
-                !IsPowerDownError()
-                )
+            if (Value == GOOD)
             {
-                return "Good";
+                return STR_GOOD;
+            }
+            else
+            { 
+                string result = "";
+
+                // Check for all warnings.
+                if (IsWaterTrack3BeamSolution())
+                {
+                    result += STR_WT_3_BEAM_SOLUTION + " ";
+                }
+                if (IsBottomTrack3BeamSolution())
+                {
+                    result += STR_BT_3_BEAM_SOLUTION + " ";
+                }
+                if (IsBottomTrackHold())
+                {
+                    result += STR_BT_HOLD + " ";
+                }
+                if (IsBottomTrackSearching())
+                {
+                    result += STR_BT_SEARCHING + " ";
+                }
+                if (IsHeadingSensorError())
+                {
+                    result += STR_HDG_SENSOR_ERR + " ";
+                }
+                if (IsPressureSensorError())
+                {
+                    result += STR_PRESSURE_SENSOR_ERR + " ";
+                }
+                if (IsPowerDownFailure())
+                {
+                    result += STR_PWR_DOWN_ERR + " ";
+                }
+                if (IsNonVolatileDataError())
+                {
+                    result += STR_NONVOLATILE_STORAGE_ERR + " ";
+                }
+                if (IsRealTimeClockError())
+                {
+                    result += STR_RTC_ERR + " ";
+                }
+                if (IsTemperatureError())
+                {
+                    result += STR_TEMP_ERR + " ";
+                }
+                if (IsReceiverDataError())
+                {
+                    result += STR_RCVR_DATA_ERR + " ";
+                }
+                if (IsReceiverTimeout())
+                {
+                    result += STR_RCVR_TIMEOUT_ERR + " ";
+                }
+
+                //return Value.ToString();
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Hashcode for the object.
+        /// This will return the hashcode for the
+        /// this object's string.
+        /// </summary>
+        /// <returns>Hashcode for the object.</returns>
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+        /// <summary>
+        /// Determine if the given object is equal to this
+        /// object.  This will check if the Status Value match.
+        /// </summary>
+        /// <param name="obj">Object to compare with this object.</param>
+        /// <returns>TRUE = Status Value matched.</returns>
+        public override bool Equals(object obj)
+        {
+            //Check for null and compare run-time types.
+            if (obj == null || GetType() != obj.GetType()) return false;
+
+            Status p = (Status)obj;
+
+            return Value == p.Value;
+        }
+
+        /// <summary>
+        /// Determine if the two Status Value given are the equal.
+        /// </summary>
+        /// <param name="stat1">First Status to check.</param>
+        /// <param name="stat2">Status to check against.</param>
+        /// <returns>True if there strings match.</returns>
+        public static bool operator ==(Status stat1, Status stat2)
+        {
+            // If both are null, or both are same instance, return true.
+            if (System.Object.ReferenceEquals(stat1, stat2))
+            {
+                return true;
             }
 
-            string result = "";
-            // Check for all warnings.
-            if (IsWaterTrack3BeamSolution())
+            // If one is null, but not both, return false.
+            if (((object)stat1 == null) || ((object)stat2 == null))
             {
-                result += "WT 3 Beam Solution ";
-            }
-            if (IsBottomTrack3BeamSolution())
-            {
-                result += "BT 3 Beam Solution ";
-            }
-            if (IsBottomTrackHold())
-            {
-                result += "Hold ";
-            }
-            if (IsBottomTrackSearching())
-            {
-                result += "Searching ";
-            }
-            if (IsReceiverTimeout())
-            {
-                result += "Receiver Timeout ";
-            }
-            if (IsReceiverDataError())
-            {
-                result += "Receiver Data Error ";
-            }
-            if (IsTemperatureError())
-            {
-                result += "Temperature Error ";
-            }
-            if (IsRealTimeClockError())
-            {
-                result += "RTC Error ";
-            }
-            if (IsNonVolatileDataError())
-            {
-                result += "Non volatile Storage Error ";
-            }
-            if (IsPowerDownError())
-            {
-                result += "Power Down Error ";
+                return false;
             }
 
-            //return Value.ToString();
-            return result;
+            // Return true if the fields match:
+            return stat1.Value == stat2.Value;
+        }
+
+        /// <summary>
+        /// Return the opposite of ==.
+        /// </summary>
+        /// <param name="stat1">First Status to check.</param>
+        /// <param name="stat2">Status to check against.</param>
+        /// <returns>Return the opposite of ==.</returns>
+        public static bool operator !=(Status stat1, Status stat2)
+        {
+            return !(stat1 == stat2);
         }
 
         #endregion

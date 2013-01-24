@@ -1,5 +1,72 @@
 RTI Changelog
 
+RTI-2.17
+ - Changed the version number.
+ - In Subsystem and AdcpSubsystemConfig, added a note about the subsystem code being EMPTY.
+ - In AdcpSubsystemConfig, changed ToString() and GetString() to [Config] SSDesc.
+ - In SerialNumber, Replaced SerialNumber.Empty with IsEmpty().
+ - In SystemTest, added 5 second wait to SysTest_RtcTime() to ensure the time has been set to the ADCP.
+ - In AdcpSerialPort:SetSystemDateTime(), wait about 5 seconds after setting the ADCP time.
+ - In AdcpCommands and AdcpSubsystemCommands, updated comments to ADCP User Guide Rev H.
+ - In AdcpSubsystemCommands, added 2 new WP broadband pulse types based off ADCP User Guide Rev H.
+ - Added ScreenErrorVelocityThreshold and ScreenVerticalVelocityThreshold to screen the data.
+ - Added EnsembleHelper to create ensemble stubs.
+ - In ScreenMarkBadBelowBottom, moved SetVelocitiesBad() to EnsembleHelper.
+ - In Subsystem, removed Subsystem.Empty.  It was not readonly.
+ - In EnsembleDataSet::Decode(), check for Firmware revision 0.2.13.  This will fix the SubsystemIndex to SubsystemCode change.
+ - Removed SubsystemConfiguration.Empty and replaced is IsEmpty().
+ - In Firmware, added GetSubsystem() to get the subsystem for this firmware.
+ - In AdcpSubsystemConfig, moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ - Make AdcpConfiguration::AdcpSubsystemConfigExist(), AdcpConfiguration::RemoveAdcpSubsystemConfig() and AdcpConfiguration::GetAdcpSubsystemConfig()  take only 1 argument.
+ - Made a Post Process folder and put Screen and Average folder within.
+ - Set a default CEPO when a serial number is give in the constructor.
+ - Added AverageCorrelation and use AverageBase.
+ - In AdcpCommands, added list functions for all the commands that have a list of options. 
+ - Added AverageBase and AverageCorrelation.
+ - In EnsembleDataSet, created a constructor that take no data.
+ - Added Ensemble::AddEnsembleData() that takes no data.
+ - In Firmware, added equal, == and != to the object.
+ - In Firmware, fixed ToString() for the subsystem code.
+ - In Status, added equal, == and != to the object.
+ - In Status, fixed bug with ERR_RCVR_DATA code.  Was 0x400 should have been 0x4000.
+ - In EnsembleDataSet, fixed BACKWARDS COMPATITBILITY in Decode where it did not check the Major number and it did not convert the subsystem to a byte correctly.
+ - Put more average logic into AverageBase to reduce redundant code.
+ - Added AverageAmplitude and use AverageBase.
+ - In AverageManager, set the parameters of the averaging to the averaged ensemble (num samples, first/last ping time).
+ - In Firmware, made SubsystemCode private and you now must get the code using the function GetSubsystemCode().
+ - In EnsembleDataSet, moved the backwards compatibility for Firmware SubsystemCode to the Firmware object.
+ - In Firmware, in GetSubsystemCode() and GetSubsystem() converted the code to a byte correctly.
+ - In AverageManager, fixed setting the first and last ping time.
+ - In EnsembleDataSet::UpdateAverageEnsemble(), set the ping count based off the number of samples and the number of pings per ensemble.
+ - In AdcpConfiguration::DecodeCepo() fixed converting the subsystem code from a char to a decimal using Subsystem.ConvertSubsystemCode().
+ - In Firmware and Subsystem, convert the subsystem char to a decimal using Subsystem.ConvertSubsystemCode().
+ - In Commons, added list for Transform types and Measurement standard types.
+ - In ScreenBottomTrackRange, fixed bug in how the screening for bad ranges was done.
+ - In ScreenBottomTrackRange, made it return an object with all the screening details.
+ - In Firmware, added DEBUG_MAJOR_VER for a debug firmware flag.
+ - Added AddBottomTrack that takes no data to BottomTrackDataSet, and EnsembleHelper. 
+ - In AdcpCommands, made CEPO command the first command in the list because CEPO will change all values to defaults.
+ - In AdcpSerialPort, added the Reboot() command.
+ - In SerialNumber, changed IsEmpty() to only check if a Subsystem is set for the serial number.
+
+RTI-2.16
+ - Changed the version number.
+ - In SerialConnection, added a check for IO exception in Connect(), to see if the port exist.
+ - In PniPrimeCompassBinaryCodec, updated the pitch and roll values to display to use when compass cal is done.
+ - In SerialNumber, allow the public strings to be changed and update all the values.
+ - In SerialNumber, added AddSubsystem() to add a subsystem properly to the serial number.
+ - In SerialNumber, added RemoveSubsystem() to remove a subsystem properly from the serial number.
+ - In Subsystem, when checking if subsystems are equal, only check if the codes are equal.
+ - In Subsystem, added == and != for SubsystemCodeDesc.
+ - In SerialNumber, added BASE_ELEC_TYPE_ADCP1.
+ - In Subsystems, updated the SubsystemList.
+ - In Subsystems, set a default value of 0 for the index in the Subsystem Constructor.
+ - In Subsystems, add a SubsystemCodeDesc constructor that only takes the code.
+ - In AdcpSubsystemCommands, created CmdStr to output the command string for reach command with the command, CEPO index and the values.
+ - In AdcpCommands, changed CEOUTPUT from a ushort to AdcpCommands.AdcpOutputMode.
+ - In AdcpCommands, added command strings for each command.
+ - In Status, Added new Error codes from ADCP User Guide Rev H.
+
 RTI-2.15
  - Changed the version number.
  - In AdcpSubsystemCommands, changed how defaults are set to allow outside users to set the defaults with and without a subsystem set.

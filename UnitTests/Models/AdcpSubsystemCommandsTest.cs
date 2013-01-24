@@ -3253,6 +3253,8 @@ namespace RTI
 
         #endregion
 
+        #region To String
+
         /// <summary>
         /// Test the ToString output.
         /// </summary>
@@ -3294,6 +3296,10 @@ namespace RTI
             Assert.IsTrue(result.Contains(AdcpSubsystemCommands.CMD_CWTBS), "CMD_CWTBS is missing.");
             Assert.IsTrue(result.Contains(AdcpSubsystemCommands.CMD_CWTTBP), "CMD_CWTTBP is missing.");
         }
+
+        #endregion
+
+        #region Command List
 
         /// <summary>
         /// Test the Command List output.
@@ -3344,5 +3350,973 @@ namespace RTI
             Assert.IsTrue(result.Contains(AdcpSubsystemCommands.CMD_CWTBS), "CMD_CWTBS is missing.");
             Assert.IsTrue(result.Contains(AdcpSubsystemCommands.CMD_CWTTBP), "CMD_CWTTBP is missing.");
         }
+
+        #endregion
+
+        #region CWPON Command Str
+
+        /// <summary>
+        /// Test CWPON Command String.
+        /// </summary>
+        [Test]
+        public void CWPON_CmdStr()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            ssc.CWPON = false;
+
+            Assert.AreEqual("CWPON[7] 0", ssc.CWPON_CmdStr(7), "CWPON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPON Command String.
+        /// </summary>
+        [Test]
+        public void CWPON_CmdStr1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPON = true;
+
+            Assert.AreEqual("CWPON[3] 1", ssc.CWPON_CmdStr(3), "CWPON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPON Command String.
+        /// </summary>
+        [Test]
+        public void CWPON_CmdStr2()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPON = true;
+
+            Assert.AreEqual("CWPON[4] 1", ssc.CWPON_CmdStr(), "CWPON Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPBB Command Str
+
+        /// <summary>
+        /// Test CWPBB Command String.
+        /// </summary>
+        [Test]
+        public void CWPBB()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssc.CWPBB_LagLength = 0.0023f;
+
+            Assert.AreEqual("CWPBB[7] 3,0.0023", ssc.CWPBB_CmdStr(7), "CWPBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPBB Command String.
+        /// </summary>
+        [Test]
+        public void CWPBB1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssc.CWPBB_LagLength = 0.0024f;
+
+            Assert.AreEqual("CWPBB[4] 3,0.0024", ssc.CWPBB_CmdStr(), "CWPBB Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPAP Command Str
+
+        /// <summary>
+        /// Test CWPAP Command String.
+        /// </summary>
+        [Test]
+        public void CWPAP()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPAP_NumPingsAvg = 2;
+            ssc.CWPAP_Lag = 0.04565f;
+            ssc.CWPAP_Blank = 1.5f;
+            ssc.CWPAP_BinSize = 3.3f;
+            ssc.CWPAP_TimeBetweenPing = 0.025f;
+
+            Assert.AreEqual("CWPAP[7] 2,0.04565,1.5,3.3,0.025", ssc.CWPAP_CmdStr(7), "CWPAP Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPAP Command String.
+        /// </summary>
+        [Test]
+        public void CWPAP1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPAP_NumPingsAvg = 3;
+            ssc.CWPAP_Lag = 0.04565f;
+            ssc.CWPAP_Blank = 1.5f;
+            ssc.CWPAP_BinSize = 3.3f;
+            ssc.CWPAP_TimeBetweenPing = 0.025f;
+
+            Assert.AreEqual("CWPAP[4] 3,0.04565,1.5,3.3,0.025", ssc.CWPAP_CmdStr(), "CWPAP Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPBP Command Str
+
+        /// <summary>
+        /// Test CWPBP Command String.
+        /// </summary>
+        [Test]
+        public void CWPBP()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPBP_NumPingsAvg = 2;
+            ssc.CWPBP_TimeBetweenBasePings = 0.025f;
+
+            Assert.AreEqual("CWPBP[7] 2,0.025", ssc.CWPBP_CmdStr(7), "CWPBP Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPBP Command String.
+        /// </summary>
+        [Test]
+        public void CWPBP1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPBP_NumPingsAvg = 3;
+            ssc.CWPBP_TimeBetweenBasePings = 0.025f;
+
+            Assert.AreEqual("CWPBP[4] 3,0.025", ssc.CWPBP_CmdStr(), "CWPBP Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPST Command Str
+
+        /// <summary>
+        /// Test CWPST Command String.
+        /// </summary>
+        [Test]
+        public void CWPST()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPST_CorrelationThresh = 0.33f;
+            ssc.CWPST_QVelocityThresh = 0.44f;
+            ssc.CWPST_VVelocityThresh = 0.55f;
+            
+            Assert.AreEqual("CWPST[7] 0.33,0.44,0.55", ssc.CWPST_CmdStr(7), "CWPST Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPST Command String.
+        /// </summary>
+        [Test]
+        public void CWPST1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPST_CorrelationThresh = 0.33f;
+            ssc.CWPST_QVelocityThresh = 0.44f;
+            ssc.CWPST_VVelocityThresh = 0.55f;
+
+            Assert.AreEqual("CWPST[4] 0.33,0.44,0.55", ssc.CWPST_CmdStr(), "CWPST Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPBL Command Str
+
+        /// <summary>
+        /// Test CWPBL Command String.
+        /// </summary>
+        [Test]
+        public void CWPBL()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPBL = 0.2345f;
+
+            Assert.AreEqual("CWPBL[7] 0.2345", ssc.CWPBL_CmdStr(7), "CWPBL Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPBL Command String.
+        /// </summary>
+        [Test]
+        public void CWPBL1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPBL = 0.2345f;
+
+            Assert.AreEqual("CWPBL[4] 0.2345", ssc.CWPBL_CmdStr(), "CWPBL Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPBS Command Str
+
+        /// <summary>
+        /// Test CWPBS Command String.
+        /// </summary>
+        [Test]
+        public void CWPBS()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPBS = 0.2345f;
+
+            Assert.AreEqual("CWPBS[7] 0.2345", ssc.CWPBS_CmdStr(7), "CWPBS Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPBS Command String.
+        /// </summary>
+        [Test]
+        public void CWPBS1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPBS = 0.2345f;
+
+            Assert.AreEqual("CWPBS[4] 0.2345", ssc.CWPBS_CmdStr(), "CWPBS Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPX Command Str
+
+        /// <summary>
+        /// Test CWPX Command String.
+        /// </summary>
+        [Test]
+        public void CWPX()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPX = 0.2345f;
+
+            Assert.AreEqual("CWPX[7] 0.2345", ssc.CWPX_CmdStr(7), "CWPX Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPX Command String.
+        /// </summary>
+        [Test]
+        public void CWPX1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPX = 0.2345f;
+
+            Assert.AreEqual("CWPX[4] 0.2345", ssc.CWPX_CmdStr(), "CWPX Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPBN Command Str
+
+        /// <summary>
+        /// Test CWPBN Command String.
+        /// </summary>
+        [Test]
+        public void CWPBN()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPBN = 33;
+
+            Assert.AreEqual("CWPBN[7] 33", ssc.CWPBN_CmdStr(7), "CWPBN Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPBN Command String.
+        /// </summary>
+        [Test]
+        public void CWPBN1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPBN = 33;
+
+            Assert.AreEqual("CWPBN[4] 33", ssc.CWPBN_CmdStr(), "CWPBN Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPP Command Str
+
+        /// <summary>
+        /// Test CWPP Command String.
+        /// </summary>
+        [Test]
+        public void CWPP()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPP = 33;
+
+            Assert.AreEqual("CWPP[7] 33", ssc.CWPP_CmdStr(7), "CWPP Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPP Command String.
+        /// </summary>
+        [Test]
+        public void CWPP1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPP = 33;
+
+            Assert.AreEqual("CWPP[4] 33", ssc.CWPP_CmdStr(), "CWPP Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPAI Command Str
+
+        /// <summary>
+        /// Test CWPAI Command String.
+        /// </summary>
+        [Test]
+        public void CWPAI()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPAI = new TimeValue(0,0,1,0);
+
+            Assert.AreEqual("CWPAI[7] 00:00:01.00", ssc.CWPAI_CmdStr(7), "CWPAI Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPAI Command String.
+        /// </summary>
+        [Test]
+        public void CWPAI1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPAI = new TimeValue(0, 0, 1, 0);
+
+            Assert.AreEqual("CWPAI[4] 00:00:01.00", ssc.CWPAI_CmdStr(), "CWPAI Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWPTBP Command Str
+
+        /// <summary>
+        /// Test CWPTBP Command String.
+        /// </summary>
+        [Test]
+        public void CWPTBP()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWPTBP = 0.001f;
+
+            Assert.AreEqual("CWPTBP[7] 0.001", ssc.CWPTBP_CmdStr(7), "CWPTBP Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWPTBP Command String.
+        /// </summary>
+        [Test]
+        public void CWPTBP1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWPTBP = 0.001f;
+
+            Assert.AreEqual("CWPTBP[4] 0.001", ssc.CWPTBP_CmdStr(), "CWPTBP Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBI Command Str
+
+        /// <summary>
+        /// Test CBI Command String.
+        /// </summary>
+        [Test]
+        public void CBI()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBI_NumEnsembles = 3;
+            ssc.CBI_BurstInterval = new TimeValue(0, 0, 1, 0);
+
+            Assert.AreEqual("CBI[7] 00:00:01.00,3", ssc.CBI_CmdStr(7), "CBI Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBI Command String.
+        /// </summary>
+        [Test]
+        public void CBI1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBI_NumEnsembles = 3;
+            ssc.CBI_BurstInterval = new TimeValue(0, 0, 1, 0);
+
+            Assert.AreEqual("CBI[4] 00:00:01.00,3", ssc.CBI_CmdStr(), "CBI Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBI Command String.
+        /// </summary>
+        [Test]
+        public void CBI2()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBI_NumEnsembles = 3;
+            ssc.CBI_BurstInterval = new TimeValue(0, 0, 3, 0);
+
+            Assert.AreEqual("CBI[4] 00:00:03.00,3", ssc.CBI_CmdStr(4), "CBI Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTON Command Str
+
+        /// <summary>
+        /// Test CBTON Command String.
+        /// </summary>
+        [Test]
+        public void CBTON_CmdStr()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            ssc.CBTON = false;
+
+            Assert.AreEqual("CBTON[0] 0", ssc.CBTON_CmdStr(0), "CBTON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTON Command String.
+        /// </summary>
+        [Test]
+        public void CBTON_CmdStr1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTON = true;
+
+            Assert.AreEqual("CBTON[7] 1", ssc.CBTON_CmdStr(7), "CBTON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTON Command String.
+        /// </summary>
+        [Test]
+        public void CBTON_CmdStr2()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTON = true;
+
+            Assert.AreEqual("CBTON[4] 1", ssc.CBTON_CmdStr(), "CBTON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTON Command String.
+        /// </summary>
+        [Test]
+        public void CBTON_CmdStr23()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTON = true;
+
+            Assert.AreEqual("CBTON[23] 1", ssc.CBTON_CmdStr(23), "CBTON Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTBB Command Str
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NARROWBAND_LONG_RANGE;
+            ssc.CBTBB_PulseToPulseLag = 0.0023f;
+            ssc.CBTBB_LongRangeDepth = 0.123456f;
+
+            Assert.AreEqual("CBTBB[3] 0,0.0023,0.123456", ssc.CBTBB_CmdStr(3), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED;
+            ssc.CBTBB_PulseToPulseLag = 0.0021f;
+            ssc.CBTBB_LongRangeDepth = 0.1234561f;
+
+            Assert.AreEqual("CBTBB[4] 1,0.0021,0.1234561", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB2()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED;
+            ssc.CBTBB_PulseToPulseLag = 0.0023f;
+            ssc.CBTBB_LongRangeDepth = 0.123456f;
+
+            Assert.AreEqual("CBTBB[4] 2,0.0023,0.123456", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB3()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_3;
+            ssc.CBTBB_PulseToPulseLag = 0.0023f;
+            ssc.CBTBB_LongRangeDepth = 0.1234563f;
+
+            Assert.AreEqual("CBTBB[4] 3,0.0023,0.1234563", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB4()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED_P2P;
+            ssc.CBTBB_PulseToPulseLag = 0.0024f;
+            ssc.CBTBB_LongRangeDepth = 0.1234564f;
+
+            Assert.AreEqual("CBTBB[4] 4,0.0024,0.1234564", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB5()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 5);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_5;
+            ssc.CBTBB_PulseToPulseLag = 0.0025f;
+            ssc.CBTBB_LongRangeDepth = 0.1234565f;
+
+            Assert.AreEqual("CBTBB[5] 5,0.0025,0.1234565", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB6()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 5);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_6;
+            ssc.CBTBB_PulseToPulseLag = 0.0026f;
+            ssc.CBTBB_LongRangeDepth = 0.1234566f;
+
+            Assert.AreEqual("CBTBB[5] 6,0.0026,0.1234566", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB7()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 7);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P;
+            ssc.CBTBB_PulseToPulseLag = 0.0027f;
+            ssc.CBTBB_LongRangeDepth = 0.1234567f;
+
+            Assert.AreEqual("CBTBB[7] 7,0.0027,0.1234567", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBB Command String.
+        /// </summary>
+        [Test]
+        public void CBTBB77()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 7);
+            ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P;
+            ssc.CBTBB_PulseToPulseLag = 0.0027f;
+            ssc.CBTBB_LongRangeDepth = 0.1234567f;
+
+            Assert.AreEqual("CBTBB[77] 7,0.0027,0.1234567", ssc.CBTBB_CmdStr(77), "CBTBB Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTST Command Str
+
+        /// <summary>
+        /// Test CBTST Command String.
+        /// </summary>
+        [Test]
+        public void CBTST()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTST_CorrelationThresh = 0.33f;
+            ssc.CBTST_QVelocityThresh = 0.44f;
+            ssc.CBTST_VVelocityThresh = 0.55f;
+
+            Assert.AreEqual("CBTST[6] 0.33,0.44,0.55", ssc.CBTST_CmdStr(6), "CBTST Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTST Command String.
+        /// </summary>
+        [Test]
+        public void CBTST1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTST_CorrelationThresh = 0.33f;
+            ssc.CBTST_QVelocityThresh = 0.44f;
+            ssc.CBTST_VVelocityThresh = 0.55f;
+
+            Assert.AreEqual("CBTST[4] 0.33,0.44,0.55", ssc.CBTST_CmdStr(), "CBTST Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTBL Command Str
+
+        /// <summary>
+        /// Test CBTBL Command String.
+        /// </summary>
+        [Test]
+        public void CBTBL()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTBL = 0.2345f;
+
+            Assert.AreEqual("CBTBL[7] 0.2345", ssc.CBTBL_CmdStr(7), "CBTBL Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTBL Command String.
+        /// </summary>
+        [Test]
+        public void CBTBL1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTBL = 0.2345f;
+
+            Assert.AreEqual("CBTBL[4] 0.2345", ssc.CBTBL_CmdStr(), "CBTBL Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTMX Command Str
+
+        /// <summary>
+        /// Test CBTMX Command String.
+        /// </summary>
+        [Test]
+        public void CBTMX()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTMX = 5.2345f;
+
+            Assert.AreEqual("CBTMX[7] 5.2345", ssc.CBTMX_CmdStr(7), "CBTMX Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTMX Command String.
+        /// </summary>
+        [Test]
+        public void CBTMX1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTMX = 5.2345f;
+
+            Assert.AreEqual("CBTMX[4] 5.2345", ssc.CBTMX_CmdStr(), "CBTMX Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTTBP Command Str
+
+        /// <summary>
+        /// Test CBTTBP Command String.
+        /// </summary>
+        [Test]
+        public void CBTTBP()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTTBP = 0.001f;
+
+            Assert.AreEqual("CBTTBP[7] 0.001", ssc.CBTTBP_CmdStr(7), "CBTTBP Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTTBP Command String.
+        /// </summary>
+        [Test]
+        public void CBTTBP1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTTBP = 0.001f;
+
+            Assert.AreEqual("CBTTBP[4] 0.001", ssc.CBTTBP_CmdStr(), "CBTTBP Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CBTT Command Str
+
+        /// <summary>
+        /// Test CBTT Command String.
+        /// </summary>
+        [Test]
+        public void CBTT()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CBTT_SNRShallowDetectionThresh = 0.001f;
+            ssc.CBTT_DepthSNR = 0.002f;
+            ssc.CBTT_SNRDeepDetectionThresh = 0.003f;
+            ssc.CBTT_DepthGain = 0.004f;
+
+            Assert.AreEqual("CBTT[7] 0.001,0.002,0.003,0.004", ssc.CBTT_CmdStr(7), "CBTT Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CBTT Command String.
+        /// </summary>
+        [Test]
+        public void CBTT1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CBTT_SNRShallowDetectionThresh = 0.001f;
+            ssc.CBTT_DepthSNR = 0.002f;
+            ssc.CBTT_SNRDeepDetectionThresh = 0.003f;
+            ssc.CBTT_DepthGain = 0.004f;
+
+            Assert.AreEqual("CBTT[4] 0.001,0.002,0.003,0.004", ssc.CBTT_CmdStr(), "CBTT Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWTON Command Str
+
+        /// <summary>
+        /// Test CWTON Command String.
+        /// </summary>
+        [Test]
+        public void CWTON_CmdStr()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            ssc.CWTON = false;
+
+            Assert.AreEqual("CWTON[7] 0", ssc.CWTON_CmdStr(7), "CWTON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTON Command String.
+        /// </summary>
+        [Test]
+        public void CWTON_CmdStr1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWTON = true;
+
+            Assert.AreEqual("CWTON[3] 1", ssc.CWTON_CmdStr(3), "CWTON Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTON Command String.
+        /// </summary>
+        [Test]
+        public void CWTON_CmdStr2()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWTON = true;
+
+            Assert.AreEqual("CWTON[4] 1", ssc.CWTON_CmdStr(), "CWTON Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWTBB Command Str
+
+        /// <summary>
+        /// Test CWTBB Command String.
+        /// </summary>
+        [Test]
+        public void CWTBB_CmdStr()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            ssc.CWTBB = false;
+
+            Assert.AreEqual("CWTBB[7] 0", ssc.CWTBB_CmdStr(7), "CWTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTBB Command String.
+        /// </summary>
+        [Test]
+        public void CWTBB_CmdStr1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWTBB = true;
+
+            Assert.AreEqual("CWTBB[3] 1", ssc.CWTBB_CmdStr(3), "CWTBB Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTBB Command String.
+        /// </summary>
+        [Test]
+        public void CWTBB_CmdStr2()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWTBB = true;
+
+            Assert.AreEqual("CWTBB[4] 1", ssc.CWTBB_CmdStr(), "CWTBB Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWTBL Command Str
+
+        /// <summary>
+        /// Test CWTBL Command String.
+        /// </summary>
+        [Test]
+        public void CWTBL()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWTBL = 0.2345f;
+
+            Assert.AreEqual("CWTBL[7] 0.2345", ssc.CWTBL_CmdStr(7), "CWTBL Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTBL Command String.
+        /// </summary>
+        [Test]
+        public void CWTBL1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWTBL = 0.2345f;
+
+            Assert.AreEqual("CWTBL[4] 0.2345", ssc.CWTBL_CmdStr(), "CWTBL Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWTBS Command Str
+
+        /// <summary>
+        /// Test CWTBS Command String.
+        /// </summary>
+        [Test]
+        public void CWTBS()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWTBS = 0.2345f;
+
+            Assert.AreEqual("CWTBS[7] 0.2345", ssc.CWTBS_CmdStr(7), "CWTBS Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTBS Command String.
+        /// </summary>
+        [Test]
+        public void CWTBS1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWTBS = 0.2345f;
+
+            Assert.AreEqual("CWTBS[4] 0.2345", ssc.CWTBS_CmdStr(), "CWTBS Cmd Str is incorrect.");
+        }
+
+        #endregion
+
+        #region CWTTBP Command Str
+
+        /// <summary>
+        /// Test CWTTBP Command String.
+        /// </summary>
+        [Test]
+        public void CWTTBP()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            ssc.CWTTBP = 0.001f;
+
+            Assert.AreEqual("CWTTBP[7] 0.001", ssc.CWTTBP_CmdStr(7), "CWTTBP Cmd Str is incorrect.");
+        }
+
+        /// <summary>
+        /// Test CWTTBP Command String.
+        /// </summary>
+        [Test]
+        public void CWTTBP1()
+        {
+            Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            ssc.CWTTBP = 0.001f;
+
+            Assert.AreEqual("CWTTBP[4] 0.001", ssc.CWTTBP_CmdStr(), "CWTTBP Cmd Str is incorrect.");
+        }
+
+        #endregion
     }
 }

@@ -44,6 +44,7 @@
  *                                         Removed "private set".
  * 01/24/2012      RC          1.14       Removed Rounded properties to methods to reduce memory footprint.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 01/04/2013      RC          2.17       Created a constructor that take no data.
  *       
  * 
  */
@@ -145,6 +146,22 @@ namespace RTI
             public float SpeedOfSound { get; set; }
 
             #endregion
+
+            /// <summary>
+            /// Create a Ancillary data set.  Includes all the information
+            /// about the current Ancillary data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public AncillaryDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
+                base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+
+            }
 
             /// <summary>
             /// Create a Ancillary data set.  Includes all the information
@@ -265,7 +282,7 @@ namespace RTI
                 // Copy the header to the array
                 System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
 
-                // Copy the Nmea data to the array
+                // Copy the payload data to the array
                 System.Buffer.BlockCopy(payload, 0, result, header.Length, payload.Length);
 
                 return result;

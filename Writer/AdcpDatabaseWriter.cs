@@ -62,6 +62,7 @@
  * 09/18/2012      RC          2.15       In WriteEnsembleDataToDatabase(), added SubsystemConfig to the database.
  * 10/02/2012      RC          2.15       Added UpdateAdcpConfiguration() to write the AdcpConfiguration to the database.
  * 10/22/2012      RC          2.15       When writing the ensemble data, try to get the ADCP Configurtation to also write to the project.
+ * 12/28/2012      RC          2.17       Make AdcpConfiguration::AdcpSubsystemConfigExist() take only 1 argument.
  * 
  */
 
@@ -331,7 +332,7 @@ namespace RTI
                                 WriteEnsembleData(ensemble, cnn);
 
                                 // Set the serial number if it has not been set already to the project
-                                if (_selectedProject.SerialNumber == SerialNumber.Empty)
+                                if (_selectedProject.SerialNumber.IsEmpty())
                                 {
                                     _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
                                 }
@@ -342,11 +343,14 @@ namespace RTI
                                 // Later it will be written to the project.
                                 // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
                                 SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
-                                Subsystem ss = ensemble.EnsembleData.GetSubSystem();
-                                CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
-                                if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ss, ssConfig))
+                                if (ssConfig != null)
                                 {
-                                    _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                    Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                    CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
+                                    if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                    {
+                                        _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                    }
                                 }
                             }
 
@@ -671,8 +675,8 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareMajor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMajor });
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareMinor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMinor });
                         cmd.Parameters.Add(new SQLiteParameter("@firmwareRevision", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareRevision });
-                        cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.SubsystemCode });
-                        cmd.Parameters.Add(new SQLiteParameter("@subConfig", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SubsystemConfig.CommandSetup });
+                        cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.GetSubsystemCode(dataset.EnsembleData.SysSerialNumber) });
+                        cmd.Parameters.Add(new SQLiteParameter("@subConfig", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SubsystemConfig.ConfigNumber });
 
                         // Bottom Track parameters
                         if (dataset.IsBottomTrackAvail)

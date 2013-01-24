@@ -22,10 +22,11 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Vertion    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/29/2012      RC          2.07       Initial coding
  * 07/19/2012      RC          2.12       Updated UnitTest with converting byte arrays to Float64 and doubles.
+ * 12/24/2012      RC          2.17       Added test for Percent Good and Percent Difference.
  * 
  * 
  */
@@ -1951,6 +1952,77 @@ namespace RTI
             Assert.AreEqual(data[5], result[3], "Byte Array 3 for String incorrect");
             Assert.AreEqual(data[6], result[4], "Byte Array 4 for String incorrect");
             Assert.AreEqual(5, result.Length, "String incorrect");
+        }
+
+        #endregion
+
+        #region Percent Error
+
+        /// <summary>
+        /// Test Percent error.
+        /// </summary>
+        [Test]
+        public void PercentErrorPos()
+        {
+            Assert.AreEqual(50, MathHelper.PercentError(222, 111), "Percent Error is incorrect");
+        }
+
+        /// <summary>
+        /// Test Percent error.
+        /// </summary>
+        [Test]
+        public void PercentErrorNeg()
+        {
+            Assert.AreEqual(-50, MathHelper.PercentError(222, 333), "Percent Error is incorrect");
+        }
+
+        /// <summary>
+        /// Test Percent error.
+        /// </summary>
+        [Test]
+        public void PercentErrorZero()
+        {
+            Assert.AreEqual(0, MathHelper.PercentError(222, 222), "Percent Error is incorrect");
+        }
+
+        /// <summary>
+        /// Test Percent error.
+        /// </summary>
+        [Test]
+        public void PercentErrorBad()
+        {
+            Assert.AreEqual(0, MathHelper.PercentError(0, 222), "Percent Error is incorrect");
+        }
+
+        #endregion
+
+        #region Percent Difference
+
+        /// <summary>
+        /// Test Percent Difference.
+        /// </summary>
+        [Test]
+        public void PercentDifference()
+        {
+            Assert.AreEqual(66.666, MathHelper.PercentDifference(222, 111), 0.001, "Percent Difference is incorrect");
+        }
+
+        /// <summary>
+        /// Test Percent Difference.
+        /// </summary>
+        [Test]
+        public void PercentDifferenceZero()
+        {
+            Assert.AreEqual(0, MathHelper.PercentDifference(222, 222), 0.001, "Percent Difference is incorrect");
+        }
+
+        /// <summary>
+        /// Test Percent Difference.
+        /// </summary>
+        [Test]
+        public void PercentDifferenceBad()
+        {
+            Assert.AreEqual(0, MathHelper.PercentDifference(1.5, -1.5), 0.001, "Percent Difference is incorrect");
         }
 
         #endregion

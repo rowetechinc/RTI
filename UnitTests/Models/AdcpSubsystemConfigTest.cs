@@ -25,6 +25,9 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 10/12/2012      RC          2.15       Initial coding
+ * 12/03/2012      RC          2.17       Updated AdcpSubsystemConfig.ToString().
+ * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ *                                         Made SubsystemConfiguration take a Subsystem in its constructor.
  * 
  * 
  */
@@ -50,18 +53,18 @@ namespace RTI
         public void TestConstructor()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2, 0);         // 1200kHz
-            SubsystemConfiguration ssConfig = new SubsystemConfiguration(0);                    // 0 Config
+            SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, 0);                    // 0 Config
             int cepoIndex = 0;
-            AdcpSubsystemConfig asConfig = new AdcpSubsystemConfig(ss, ssConfig, cepoIndex);
-            string asConfigStr = AdcpSubsystemConfig.GetString(ss, ssConfig);
+            AdcpSubsystemConfig asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);
+            string asConfigStr = AdcpSubsystemConfig.GetString(ssConfig);
 
 
             Assert.AreEqual(asConfig.CepoIndex, cepoIndex, "CepoIndex is incorrect.");
             Assert.AreEqual(asConfig.Commands.CepoIndex, cepoIndex, "Commands CEPO index is incorrect.");
-            Assert.AreEqual(asConfig.Subsystem, ss, "Subsystem is incorrect.");
+            Assert.AreEqual(asConfig.SubsystemConfig.SubSystem, ss, "Subsystem is incorrect.");
             Assert.AreEqual(asConfig.SubsystemConfig, ssConfig, "SubsystemConfiguration is incorrect.");
-            Assert.AreEqual(asConfig.ToString(), "2_0", "ToString is incorrect.");
-            Assert.AreEqual(asConfigStr, "2_0", "GetString is incorrect.");
+            Assert.AreEqual(asConfig.ToString(), "[0] 1.2 MHz 4 beam 20 degree piston", "ToString is incorrect.");
+            Assert.AreEqual(asConfigStr, "[0] 1.2 MHz 4 beam 20 degree piston", "GetString is incorrect.");
         }
 
 
@@ -74,24 +77,24 @@ namespace RTI
         public void TestJSON()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2, 0);         // 1200kHz
-            SubsystemConfiguration ssConfig = new SubsystemConfiguration(0);                    // 0 Config
+            SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, 0);                    // 0 Config
             int cepoIndex = 0;
-            AdcpSubsystemConfig asConfig = new AdcpSubsystemConfig(ss, ssConfig, cepoIndex);
+            AdcpSubsystemConfig asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);
 
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(asConfig);                                        // Serialize object to JSON
             AdcpSubsystemConfig newConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpSubsystemConfig>(json);   // Deserialize the JSON
 
             Assert.AreEqual(asConfig.CepoIndex, cepoIndex, "CepoIndex is incorrect.");
             Assert.AreEqual(asConfig.Commands.CepoIndex, cepoIndex, "Commands CEPO index is incorrect.");
-            Assert.AreEqual(asConfig.Subsystem, ss, "Subsystem is incorrect.");
+            Assert.AreEqual(asConfig.SubsystemConfig.SubSystem, ss, "Subsystem is incorrect.");
             Assert.AreEqual(asConfig.SubsystemConfig, ssConfig, "SubsystemConfiguration is incorrect.");
-            Assert.AreEqual(asConfig.ToString(), "2_0", "ToString is incorrect.");
+            Assert.AreEqual(asConfig.ToString(), "[0] 1.2 MHz 4 beam 20 degree piston", "ToString is incorrect.");
 
             Assert.AreEqual(newConfig.CepoIndex, cepoIndex, "CepoIndex is incorrect.");
             Assert.AreEqual(newConfig.Commands.CepoIndex, cepoIndex, "Commands CEPO index is incorrect.");
-            Assert.AreEqual(newConfig.Subsystem, ss, "Subsystem is incorrect.");
+            Assert.AreEqual(newConfig.SubsystemConfig.SubSystem, ss, "Subsystem is incorrect.");
             Assert.AreEqual(newConfig.SubsystemConfig, ssConfig, "SubsystemConfiguration is incorrect.");
-            Assert.AreEqual(newConfig.ToString(), "2_0", "ToString is incorrect.");
+            Assert.AreEqual(newConfig.ToString(), "[0] 1.2 MHz 4 beam 20 degree piston", "ToString is incorrect.");
         }
 
         /// <summary>
@@ -101,24 +104,24 @@ namespace RTI
         public void TestJSON1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_1_2MHZ_VERT_PISTON_A, 0);                // 1200kHz
-            SubsystemConfiguration ssConfig = new SubsystemConfiguration(3);                    // 3 Config
+            SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, 3);                    // 3 Config
             int cepoIndex = 6;
-            AdcpSubsystemConfig asConfig = new AdcpSubsystemConfig(ss, ssConfig, cepoIndex);
+            AdcpSubsystemConfig asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);
 
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(asConfig);                                        // Serialize object to JSON
             AdcpSubsystemConfig newConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpSubsystemConfig>(json);   // Deserialize the JSON
 
             Assert.AreEqual(asConfig.CepoIndex, cepoIndex, "CepoIndex is incorrect.");
             Assert.AreEqual(asConfig.Commands.CepoIndex, cepoIndex, "Commands CEPO index is incorrect.");
-            Assert.AreEqual(asConfig.Subsystem, ss, "Subsystem is incorrect.");
+            Assert.AreEqual(asConfig.SubsystemConfig.SubSystem, ss, "Subsystem is incorrect.");
             Assert.AreEqual(asConfig.SubsystemConfig, ssConfig, "SubsystemConfiguration is incorrect.");
-            Assert.AreEqual(asConfig.ToString(), "A_3", "ToString is incorrect.");
+            Assert.AreEqual(asConfig.ToString(), "[3] 1.2 MHz vertical beam piston", "ToString is incorrect.");
 
             Assert.AreEqual(newConfig.CepoIndex, cepoIndex, "CepoIndex is incorrect.");
             Assert.AreEqual(newConfig.Commands.CepoIndex, cepoIndex, "Commands CEPO index is incorrect.");
-            Assert.AreEqual(newConfig.Subsystem, ss, "Subsystem is incorrect.");
+            Assert.AreEqual(newConfig.SubsystemConfig.SubSystem, ss, "Subsystem is incorrect.");
             Assert.AreEqual(newConfig.SubsystemConfig, ssConfig, "SubsystemConfiguration is incorrect.");
-            Assert.AreEqual(newConfig.ToString(), "A_3", "ToString is incorrect.");
+            Assert.AreEqual(newConfig.ToString(), "[3] 1.2 MHz vertical beam piston", "ToString is incorrect.");
         }
 
         #endregion

@@ -50,6 +50,10 @@
  * 10/10/2012      RC          2.15       When creating the command list, ensure the string is set to United States English format.  This is to prevent commas from being used for decimal points.
  * 10/16/2012      RC          2.15       Validate the min and max values for the commands.
  * 10/17/2012      RC          2.15       Added Min/Max values for the CWPAP commands.
+ * 11/20/2012      RC          2.16       Created CmdStr to output the command string for reach command with the command, CEPO index and the values.
+ * 12/20/2012      RC          2.17       Updated comments to ADCP User Guide Rev H.
+ *                                         Added 2 new WP broadband pulse types based off ADCP User Guide Rev H.
+ * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
  *
  */
 
@@ -1498,6 +1502,8 @@ namespace RTI
                 /// <summary>
                 /// (0) Non-Coded Narrowband.
                 /// Provides long range profiles at the expense of variance.
+                /// Not recommended for use with bin size less than the default
+                /// bin size.
                 /// </summary>
                 NARROWBAND = 0, 
 
@@ -1505,6 +1511,7 @@ namespace RTI
                 /// (1) Coded Broadband.
                 /// Typically 15% less range than narrow band but has greatly reduced
                 /// variance (depending on lag length).
+                /// Used in conjunction with CWPBP for small bins.
                 /// </summary>
                 BROADBAND = 1,
 
@@ -1517,11 +1524,23 @@ namespace RTI
                 PULSE_TO_PULSE_NON_CODED = 2,
 
                 /// <summary>
-                /// (3) Coded Pulse-To-Pulse.
+                /// (3) Coded Pulse-To-Pulse. (no ambuguity resolver).
                 /// Provides ultra low variance for small bin sizes.  Coded 
                 /// has slightly lower variance than the non-coded transmit.
                 /// </summary>
                 PULSE_TO_PULSE_CODED  = 3,
+
+                /// <summary>
+                /// Broadband with ambuguity resolver ping.
+                /// Used in conjunction with CWPBP.
+                /// </summary>
+                BROADBAND_AMBIGUITY_RESOLVER = 4,
+
+                /// <summary>
+                /// Broadband pulse to pulse with ambiguity resolver ping.
+                /// Used in conjunction with CWPAP.
+                /// </summary>
+                BROADBAND_P2P_AMBIGUITY_RESOLVER = 5
             }
 
             /// <summary>
@@ -1545,6 +1564,16 @@ namespace RTI
             public const string TRANSMIT_PULSE_TYPE_PTP_CODED = "Pulse to Pulse Coded";
 
             /// <summary>
+            /// String for Transmit Pulse Type Broadband with ambiguity resolver ping.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER = "Broadband with Ambiguity Resolver Ping";
+
+            /// <summary>
+            /// String for Transmit Pulse Type Broadband pulse to pulse with ambiguity resolver ping.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER = "Broadband Pulse to Pulse with Ambiguity Resolver Ping";
+
+            /// <summary>
             /// Create a list for all the Transmit Pulse types.
             /// </summary>
             /// <returns>A list of all the Transmit Pulse types.</returns>
@@ -1555,6 +1584,8 @@ namespace RTI
                 list.Add(TRANSMIT_PULSE_TYPE_BROADBAND);
                 list.Add(TRANSMIT_PULSE_TYPE_PTP_NONCODED);
                 list.Add(TRANSMIT_PULSE_TYPE_PTP_CODED);
+                list.Add(TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER);
+                list.Add(TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER);
 
                 return list;
             }
@@ -1582,6 +1613,12 @@ namespace RTI
                     case TRANSMIT_PULSE_TYPE_PTP_CODED:
                         CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
                         break;
+                    case TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.BROADBAND_AMBIGUITY_RESOLVER;
+                        break;
+                    case TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.BROADBAND_P2P_AMBIGUITY_RESOLVER;
+                        break;
                     default:
                         CWPBB_TransmitPulseType = DEFAULT_CWPBB_TRANSMITPULSETYPE;
                         break;
@@ -1605,6 +1642,10 @@ namespace RTI
                         return TRANSMIT_PULSE_TYPE_PTP_NONCODED;
                     case eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED:
                         return TRANSMIT_PULSE_TYPE_PTP_CODED;
+                    case eCWPBB_TransmitPulseType.BROADBAND_AMBIGUITY_RESOLVER:
+                        return TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER;
+                    case eCWPBB_TransmitPulseType.BROADBAND_P2P_AMBIGUITY_RESOLVER:
+                        return TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER;
                     default:
                         return TRANSMIT_PULSE_TYPE_BROADBAND;
                 }
@@ -1628,6 +1669,10 @@ namespace RTI
                         return eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
                     case TRANSMIT_PULSE_TYPE_PTP_CODED:
                         return eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+                    case TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER:
+                        return eCWPBB_TransmitPulseType.BROADBAND_AMBIGUITY_RESOLVER;
+                    case TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER:
+                        return eCWPBB_TransmitPulseType.BROADBAND_P2P_AMBIGUITY_RESOLVER;
                     default:
                         return DEFAULT_CWPBB_TRANSMITPULSETYPE;
                 }
@@ -1652,7 +1697,7 @@ namespace RTI
             /// Water Profile Broadband.  Enables or disables water profile coded pulse transmissions and lag.
             /// 
             /// Lag length in vertical meters.
-            /// Used with transmit Pulse Type 1, 2, and 3.  A longer lag will
+            /// Not used with NarrowBand.  A longer lag will
             /// have lower variance and a lower ambiguity velocity.
             /// 
             /// Command: CWPBB 1, n.nnn \r
@@ -1666,7 +1711,7 @@ namespace RTI
             /// Water Profile Broadband.  Enables or disables water profile coded pulse transmissions and lag.
             /// 
             /// Lag length in vertical meters.
-            /// Used with transmit Pulse Type 1, 2, and 3.  A longer lag will
+            /// Not used with NarrowBand.  A longer lag will
             /// have lower variance and a lower ambiguity velocity.
             /// 
             /// Command: CWPBB 1, n.nnn \r
@@ -1690,6 +1735,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// 0 to 100 sets the number of pings that will be averaged together.
             /// 
             /// Command: CWPAP n X X X X \r
@@ -1700,6 +1748,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// 0 to 100 sets the number of pings that will be averaged together.
             /// 
             /// Command: CWPAP n X X X X \r
@@ -1723,6 +1774,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Lag (meters) sets the length of the lag.
             /// 
             /// Command: CWPAP X n.nnn X X X \r
@@ -1733,6 +1787,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Lag (meters) sets the length of the lag.
             /// 
             /// Command: CWPAP X n.nnn X X X \r
@@ -1755,6 +1812,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Blank (meters) sets the starting position of the bin.
             /// 
             /// Command: CWPAP X X n.nnn X X \r
@@ -1765,6 +1825,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Blank (meters) sets the starting position of the bin.
             /// 
             /// Command: CWPAP X X n.nnn X X \r
@@ -1787,6 +1850,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Bin Size (meters).
             /// 
             /// Command: CWPAP X X X n.nnn X \r
@@ -1796,7 +1862,10 @@ namespace RTI
             private float _cWPAP_BinSize;
             /// <summary>
             /// Water Ambiguity Ping.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
             /// Used when CWPBB = 5.
+            /// 
             /// Bin Size (meters).
             /// 
             /// Command: CWPAP X X X n.nnn X \r
@@ -1819,6 +1888,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Time Between Ambiguity Pings (seconds).
             /// 
             /// Command: CWPAP X X X X n.nnn \r
@@ -1829,6 +1901,9 @@ namespace RTI
             /// <summary>
             /// Water Ambiguity Ping.
             /// Used when CWPBB = 5.
+            /// Pulse to pulse ping and processing is used for the 
+            /// ambiguity resolver therefore  (Blank + BinSize) > Lag.
+            /// 
             /// Time Between Ambiguity Pings (seconds).
             /// 
             /// Command: CWPAP X X X X n.nnn \r
@@ -2144,8 +2219,14 @@ namespace RTI
 
             /// <summary>
             /// Water Base Pings (1)
+            /// Used when CWPBB = 0 or 1.
+            /// This command should be used when small, non pulse to pulse,
+            /// bin sizes are required for profiling.  The Base Pings are averaged
+            /// together as a complex number which allows for better correlation screening and
+            /// averaging.
             /// 
-            /// Set the number of pings that will be averaged together during each CWPP ping.
+            /// Pings a value of 2 to 100. Sets the number of pings that will be averaged
+            /// together during each CWPP ping.  A value of 0 to 1 disables Base Ping averaging.
             /// 
             /// Command: CWPBP n, 2 \r
             /// Scale: Number of Pings.
@@ -2154,8 +2235,14 @@ namespace RTI
             private UInt16 _cWPBP_NumPingsAvg;
             /// <summary>
             /// Water Base Pings (1)
+            /// Used when CWPBB = 0 or 1.
+            /// This command should be used when small, non pulse to pulse,
+            /// bin sizes are required for profiling.  The Base Pings are averaged
+            /// together as a complex number which allows for better correlation screening and
+            /// averaging.
             /// 
-            /// Set the number of pings that will be averaged together during each CWPP ping.
+            /// Pings a value of 2 to 100. Sets the number of pings that will be averaged
+            /// together during each CWPP ping.  A value of 0 to 1 disables Base Ping averaging.
             /// 
             /// Command: CWPBP n, 2 \r
             /// Scale: Number of Pings.
@@ -2176,8 +2263,14 @@ namespace RTI
 
             /// <summary>
             /// Water Base Pings (2)
+            /// Used when CWPBB = 0 or 1.
+            /// This command should be used when small, non pulse to pulse,
+            /// bin sizes are required for profiling.  The Base Pings are averaged
+            /// together as a complex number which allows for better correlation screening and
+            /// averaging. 
             /// 
-            /// Time in seconds between the base pings.
+            /// Time in seconds between the base pings (seconds).  Normally it is a small number i.e.
+            /// 0.01 for the 1200 kHz system.
             /// 
             /// Command: CWPBP 1, t.t \r
             /// Scale: Time in Seconds.
@@ -2186,8 +2279,14 @@ namespace RTI
             private float _cWPBP_TimeBetweenBasePings;
             /// <summary>
             /// Water Base Pings (2)
+            /// Used when CWPBB = 0 or 1.
+            /// This command should be used when small, non pulse to pulse,
+            /// bin sizes are required for profiling.  The Base Pings are averaged
+            /// together as a complex number which allows for better correlation screening and
+            /// averaging. 
             /// 
-            /// Time in seconds between the base pings.
+            /// Time in seconds between the base pings (seconds).  Normally it is a small number i.e.
+            /// 0.01 for the 1200 kHz system.
             /// 
             /// Command: CWPBP 1, t.t \r
             /// Scale: Time in Seconds.
@@ -2266,8 +2365,24 @@ namespace RTI
             /// Burst Interval.
             /// Sets the time interval between a series of ensembles.
             /// 
-            /// Used when a prices short time interval is required between
+            /// Used when a precise short time interval is required between
             /// ensembles followed by a period of sleep.
+            /// 
+            /// Note:  Burst sampling typically requires precise timing intervals. 
+            /// If serial data output is enabled during burst sampling the user 
+            /// needs to ensure that each data transfer completes before the 
+            /// next ensemble is output. If the length of the data transfer 
+            /// exceeds the time between samples the data will bottleneck and 
+            /// the desired sample rate will not be maintained. Self-contained 
+            /// ADCP users can disable the serial data output by sending the 
+            /// command CEOUTPUT 0 [CR]. Of course you need to enable the internal 
+            /// data recording CERECORD 1 [CR]. During burst sampling, internal 
+            /// data recording only occurs at the end of the burst or when the 
+            /// STOP[CR] command is received by the ADCP. Another option, when 
+            /// real-time data is required, is to increase the data output rate 
+            /// by using the C485B 921600[CR] or C422B 921600[CR] command. Be 
+            /// aware that the RS232 connection may not reliably support the 
+            /// higher data rates.
             /// 
             /// Command: CBI HH:MM:SS.hh, n \r
             /// Scale: TimeValue
@@ -2727,7 +2842,7 @@ namespace RTI
             /// Scale: dB
             /// Range: 0 to n.nnn
             /// </summary>
-            public float _cBTT_SNRShallowDetectionThresh;
+            private float _cBTT_SNRShallowDetectionThresh;
             /// <summary>
             /// Bottom Track Thresholds (1)
             /// Bottom Track SNR(dB) shallow detection threshold.
@@ -3004,7 +3119,7 @@ namespace RTI
             }
 
             /// <summary>
-            /// Water Track Blank
+            /// Water Track Blank (meters)
             /// Sets the vertical range from 
             /// the face of the transducer to 
             /// the first sample of the Bin.
@@ -3015,7 +3130,7 @@ namespace RTI
             /// </summary>
             private float _cWTBL;
             /// <summary>
-            /// Water Track Blank
+            /// Water Track Blank (meters)
             /// Sets the vertical range from 
             /// the face of the transducer to 
             /// the first sample of the Bin.
@@ -3145,7 +3260,7 @@ namespace RTI
             public AdcpSubsystemCommands()
             {
                 // Set empty subsystem.
-                SubSystem = Subsystem.Empty;
+                SubSystem = new Subsystem();
 
                 // Set empty CEPO index
                 CepoIndex = DEFAULT_CEPO_INDEX;
@@ -3462,57 +3577,40 @@ namespace RTI
             public List<string> GetCommandList()
             {
                 List<string> list = new List<string>();
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPON, CepoIndex, CWPON_ToString()));                                                                                                    // CWPON
-                list.Add(String.Format("{0}[{1}] {2},{3}", CMD_CWPBB, CepoIndex, ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")), 
-                                                                                    CWPBB_LagLength.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                         // CWBB
-                list.Add(String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CWPAP, CepoIndex, CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")), 
-                                                                                            CWPAP_Lag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CWPAP_Blank.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CWPAP_BinSize.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CWPAP_TimeBetweenPing.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                           // CWPAP
-                list.Add(String.Format("{0}[{1}] {2},{3}", CMD_CWPBP, CepoIndex, CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                    CWPBP_TimeBetweenBasePings.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                              // CWPBP
-                list.Add(String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPST, CepoIndex, CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                        CWPST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                        CWPST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                               // CWPST
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBL, CepoIndex, CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWPBL
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBS, CepoIndex, CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWPBS
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPX, CepoIndex, CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                            // CWPX
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPBN, CepoIndex, CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWPBN
-
+                list.Add(CWPON_CmdStr());              // CWPON
+                list.Add(CWPBB_CmdStr());              // CWBB
+                list.Add(CWPAP_CmdStr());              // CWPAP
+                list.Add(CWPBP_CmdStr());              // CWPBP
+                list.Add(CWPST_CmdStr());              // CWPST
+                list.Add(CWPBL_CmdStr());              // CWPBL
+                list.Add(CWPBS_CmdStr());              // CWPBS
+                list.Add(CWPX_CmdStr());               // CWPX
+                list.Add(CWPBN_CmdStr());              // CWPBN
                 if (!IsEnableCWPAI())
                 {
-                    list.Add(String.Format("{0}[{1}] {2}", CMD_CWPP, CepoIndex, CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CWPP
+                    list.Add(CWPP_CmdStr());           // CWPP
                 }
                 else
                 {
-                    list.Add(String.Format("{0}[{1}] {2}", CMD_CWPAI, CepoIndex, CWPAI.ToString()));                                                                                                // CWPAI
+                    list.Add(CWPAI_CmdStr());          // CWPAI
                 }
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWPTBP, CepoIndex, CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CWPTBP
+                list.Add(CWPTBP_CmdStr());             // CWPTBP
 
-                list.Add(string.Format("{0}[{1}] {2},{3}", CMD_CBI, CepoIndex, CBI_BurstInterval.ToString(),
-                                                                                CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                            // CBI
+                list.Add(CBI_CmdStr());                // CBI
 
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTON, CepoIndex, CBTON_ToString()));                                                                                                    // CBTON
-                list.Add(String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTBB, CepoIndex, ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                        CBTBB_PulseToPulseLag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                        CBTBB_LongRangeDepth.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                // CBTBB
-                list.Add(String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTST, CepoIndex, CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                        CBTST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                        CBTST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                               // CBTST
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTBL, CepoIndex, CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CBTBL
-                //list.Add(String.Format("{0}[{1}] {2}", CMD_CBTMX, cepoIndex, CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CBTMX          // REMOVE BECAUSE A BUG IN FIRMWARE AS OF 2.11
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CBTTBP, CepoIndex, CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CBTTBP
-                list.Add(String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTT, CepoIndex, CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CBTT_DepthSNR.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CBTT_SNRDeepDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CBTT_DepthGain.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                  // CBTT
+                list.Add(CBTON_CmdStr());              // CBTON
+                list.Add(CBTBB_CmdStr());              // CBTBB
+                list.Add(CBTST_CmdStr());              // CBTST
+                list.Add(CBTBL_CmdStr());              // CBTBL
+                //list.Add(CBTMX_CmdStr());            // CBTMX          // REMOVE BECAUSE A BUG IN FIRMWARE AS OF 2.11
+                list.Add(CBTTBP_CmdStr());             // CBTTBP
+                list.Add(CBTT_CmdStr());               // CBTT
 
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTON, CepoIndex, CWTON_ToString()));                                                                                                    // CWTON
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBB, CepoIndex, CWTBB_ToString()));                                                                                                    // CWTBB
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBL, CepoIndex, CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWTBL
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTBS, CepoIndex, CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                          // CWTBS
-                list.Add(String.Format("{0}[{1}] {2}", CMD_CWTTBP, CepoIndex, CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                        // CWTTBP
+                list.Add(CWTON_CmdStr());              // CWTON
+                list.Add(CWTBB_CmdStr());              // CWTBB
+                list.Add(CWTBL_CmdStr());              // CWTBL
+                list.Add(CWTBS_CmdStr());              // CWTBS
+                list.Add(CWTTBP_CmdStr());             // CWTTBP
 
                 return list;
             }
@@ -3528,50 +3626,34 @@ namespace RTI
             public override string ToString()
             {
                 StringBuilder builder = new StringBuilder();
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPON, CepoIndex, CWPON_ToString()));                                                                                            // CWPON
-                builder.Append(String.Format("{0}[{1}] {2},{3}\n", CMD_CWPBB, CepoIndex, ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CWPBB_LagLength.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                 // CWPBB
-                builder.Append(String.Format("{0}[{1}] {2},{3},{4},{5},{6}\n", CMD_CWPAP, CepoIndex, CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                        CWPAP_Lag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                        CWPAP_Blank.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                        CWPAP_BinSize.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                        CWPAP_TimeBetweenPing.ToString(CultureInfo.CreateSpecificCulture("en-US"))));               // CWPAP
-                builder.Append(String.Format("{0}[{1}] {2},{3}\n", CMD_CWPBP, CepoIndex, CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                            CWPBP_TimeBetweenBasePings.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                      // CWPBP
-                builder.Append(String.Format("{0}[{1}] {2},{3},{4}\n", CMD_CWPST, CepoIndex, CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                CWPST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                CWPST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                       // CWPST
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBL, CepoIndex, CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWPBL
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBS, CepoIndex, CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWPBS
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPX, CepoIndex, CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                    // CWPX
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPBN, CepoIndex, CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWPBN
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPP, CepoIndex, CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                    // CWPP
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPAI, CepoIndex, CWPAI.ToString()));                                                                                            // CWPAI
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWPTBP, CepoIndex, CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CWPTBP
+                builder.AppendLine(CWPON_CmdStr());         // CWPON
+                builder.AppendLine(CWPBB_CmdStr());         // CWPBB
+                builder.AppendLine(CWPAP_CmdStr());         // CWPAP
+                builder.AppendLine(CWPBP_CmdStr());         // CWPBP
+                builder.AppendLine(CWPST_CmdStr());         // CWPST
+                builder.AppendLine(CWPBL_CmdStr());         // CWPBL
+                builder.AppendLine(CWPBS_CmdStr());         // CWPBS
+                builder.AppendLine(CWPX_CmdStr());          // CWPX
+                builder.AppendLine(CWPBN_CmdStr());         // CWPBN
+                builder.AppendLine(CWPP_CmdStr());          // CWPP
+                builder.AppendLine(CWPAI_CmdStr());         // CWPAI
+                builder.AppendLine(CWPTBP_CmdStr());        // CWPTBP
 
-                builder.Append(String.Format("{0}[{1}] {2},{3}\n", CMD_CBI, CepoIndex, CBI_BurstInterval.ToString(), 
-                                                                                        CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                    // CBI
+                builder.AppendLine(CBI_CmdStr());           // CBI
 
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTON, CepoIndex, CBTON_ToString()));                                                                                            // CBTON
-                builder.Append(String.Format("{0}[{1}] {2},{3},{4}\n", CMD_CBTBB, CepoIndex, ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")), 
-                                                                                                CBTBB_PulseToPulseLag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                CBTBB_LongRangeDepth.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                        // CBTBB
-                builder.Append(String.Format("{0}[{1}] {2},{3},{4}\n", CMD_CBTST, CepoIndex, CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                CBTST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                CBTST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                       // CBTST
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTBL, CepoIndex, CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CBTBL
-                //builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTMX, CepoIndex, CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CBTMX          // REMOVE BECAUSE A BUG IN FIRMWARE AS OF 2.11
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CBTTBP, CepoIndex, CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CBTTBP
-                builder.Append(String.Format("{0}[{1}] {2},{3},{4},{5}\n", CMD_CBTT, CepoIndex, CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                    CBTT_DepthSNR.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                    CBTT_SNRDeepDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                                    CBTT_DepthGain.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                          // CBTT
+                builder.AppendLine(CBTON_CmdStr());         // CBTON
+                builder.AppendLine(CBTBB_CmdStr());         // CBTBB
+                builder.AppendLine(CBTST_CmdStr());         // CBTST
+                builder.AppendLine(CBTBL_CmdStr());         // CBTBL
+                //builder.AppendLine(CBTMX_CmdStr());       // CBTMX          // REMOVE BECAUSE A BUG IN FIRMWARE AS OF 2.11
+                builder.AppendLine(CBTTBP_CmdStr());        // CBTTBP
+                builder.AppendLine(CBTT_CmdStr());          // CBTT
 
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTON, CepoIndex, CWTON_ToString()));                                                                                            // CWTON
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBB, CepoIndex, CWTBB_ToString()));                                                                                            // CWTBB
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBL, CepoIndex, CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWTBL
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTBS, CepoIndex, CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                  // CWTBS
-                builder.Append(String.Format("{0}[{1}] {2}\n", CMD_CWTTBP, CepoIndex, CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US"))));                                                // CWTTBP
+                builder.AppendLine(CWTON_CmdStr());         // CWTON
+                builder.AppendLine(CWTBB_CmdStr());         // CWTBB
+                builder.AppendLine(CWTBL_CmdStr());         // CWTBL
+                builder.AppendLine(CWTBS_CmdStr());         // CWTBS
+                builder.AppendLine(CWTTBP_CmdStr());        // CWTTBP
 
                 return builder.ToString();
             }
@@ -3595,6 +3677,779 @@ namespace RTI
 
                 return false;
             }
+
+            #region Command Strings
+
+            #region CWPON
+
+            /// <summary>
+            /// Command String for the CWPBB command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPON_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPON, cepoIndex, CWPON_ToString());
+            }
+
+            /// <summary>
+            /// Return the CWPON command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPON_CmdStr()
+            {
+                return CWPON_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPBB
+
+            /// <summary>
+            /// Command String for the CWPBB command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBB_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3}", CMD_CWPBB, cepoIndex, ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                    CWPBB_LagLength.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPBB command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBB_CmdStr()
+            {
+                return CWPBB_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPAP
+            
+            /// <summary>
+            /// Command String for the CWPAP command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPAP_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CWPAP, cepoIndex, CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                            CWPAP_Lag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                            CWPAP_Blank.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                            CWPAP_BinSize.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                                            CWPAP_TimeBetweenPing.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            
+            /// <summary>
+            /// Return the CWPAP command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPAP_CmdStr()
+            {
+                return CWPAP_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPBP
+
+            /// <summary>
+            /// Command String for the CWPBP command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBP_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3}", CMD_CWPBP, cepoIndex, CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                    CWPBP_TimeBetweenBasePings.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+
+            /// <summary>
+            /// Return the CWPBP command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBP_CmdStr()
+            {
+                return CWPBP_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPST
+
+            /// <summary>
+            /// Command String for the CWPST command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPST_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPST, cepoIndex, CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CWPST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CWPST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+
+            /// <summary>
+            /// Return the CWPST command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPST_CmdStr()
+            {
+                return CWPST_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPBL
+
+            /// <summary>
+            /// Command String for the CWPBL command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBL_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPBL, cepoIndex, CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPBL command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBL_CmdStr()
+            {
+                return CWPBL_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPBS
+
+            /// <summary>
+            /// Command String for the CWPBS command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBS_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPBS, cepoIndex, CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPBS command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBS_CmdStr()
+            {
+                return CWPBS_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPX
+
+            /// <summary>
+            /// Command String for the CWPX command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPX_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPX, cepoIndex, CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPX command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPX_CmdStr()
+            {
+                return CWPX_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPBN
+
+            /// <summary>
+            /// Command String for the CWPBN command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBN_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPBN, cepoIndex, CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPBN command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPBN_CmdStr()
+            {
+                return CWPBN_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPP
+
+            /// <summary>
+            /// Command String for the CWPP command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPP_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPP, cepoIndex, CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPP command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPP_CmdStr()
+            {
+                return CWPP_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPAI
+
+            /// <summary>
+            /// Command String for the CWPAI command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPAI_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPAI, cepoIndex, CWPAI.ToString());
+            }
+
+            /// <summary>
+            /// Return the CWPAI command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPAI_CmdStr()
+            {
+                return CWPAI_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWPTBP
+
+            /// <summary>
+            /// Command String for the CWPTBP command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPTBP_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWPTBP, cepoIndex, CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWPTBP command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWPTBP_CmdStr()
+            {
+                return CWPTBP_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBI
+
+            /// <summary>
+            /// Command String for the CBI command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBI_CmdStr(int cepoIndex)
+            {
+                return string.Format("{0}[{1}] {2},{3}", CMD_CBI, cepoIndex, CBI_BurstInterval.ToString(),
+                                                                                CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBI command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBI_CmdStr()
+            {
+                return CBI_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTON
+
+            /// <summary>
+            /// Command String for the CBTON command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTON_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CBTON, cepoIndex, CBTON_ToString());
+            }
+
+            /// <summary>
+            /// Return the CBTON command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTON_CmdStr()
+            {
+                return CBTON_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTBB
+
+            /// <summary>
+            /// Command String for the CBTBB command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTBB_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTBB, cepoIndex, ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTBB_PulseToPulseLag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTBB_LongRangeDepth.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBTBB command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTBB_CmdStr()
+            {
+                return CBTBB_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTST
+
+            /// <summary>
+            /// Command String for the CBTST command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTST_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTST, cepoIndex, CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                        CBTST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBTST command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTST_CmdStr()
+            {
+                return CBTST_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTBL
+
+            /// <summary>
+            /// Command String for the CBTBL command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTBL_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CBTBL, cepoIndex, CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBTBL command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTBL_CmdStr()
+            {
+                return CBTBL_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTMX
+
+            /// <summary>
+            /// Command String for the CBTMX command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTMX_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CBTMX, cepoIndex, CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBTMX command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTMX_CmdStr()
+            {
+                return CBTMX_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTTBP
+
+            /// <summary>
+            /// Command String for the CBTTBP command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTTBP_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CBTTBP, cepoIndex, CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBTTBP command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTTBP_CmdStr()
+            {
+                return CBTTBP_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CBTT
+
+            /// <summary>
+            /// Command String for the CBTT command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTT_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTT, cepoIndex, CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CBTT_DepthSNR.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CBTT_SNRDeepDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                            CBTT_DepthGain.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CBTT command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CBTT_CmdStr()
+            {
+                return CBTT_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWTON
+
+            /// <summary>
+            /// Command String for the CWTON command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTON_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWTON, cepoIndex, CWTON_ToString());
+            }
+
+            /// <summary>
+            /// Return the CWTON command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTON_CmdStr()
+            {
+                return CWTON_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWTBB
+
+            /// <summary>
+            /// Command String for the CWTBB command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTBB_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWTBB, cepoIndex, CWTBB_ToString());
+            }
+
+            /// <summary>
+            /// Return the CWTBB command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTBB_CmdStr()
+            {
+                return CWTBB_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWTBL
+
+            /// <summary>
+            /// Command String for the CWTBL command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTBL_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWTBL, cepoIndex, CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWTBL command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTBL_CmdStr()
+            {
+                return CWTBL_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWTBS
+
+            /// <summary>
+            /// Command String for the CWTBS command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTBS_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWTBS, cepoIndex, CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWTBS command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTBS_CmdStr()
+            {
+                return CWTBS_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #region CWTTBP
+
+            /// <summary>
+            /// Command String for the CWTTBP command.
+            /// 
+            /// The CEPO index determines which configuration owns
+            /// this command.  
+            /// 
+            /// The parameters are converted to english format
+            /// so that numbers with a decimal point do not use a comma.
+            /// </summary>
+            /// <param name="cepoIndex">CEPO index.</param>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTTBP_CmdStr(int cepoIndex)
+            {
+                return String.Format("{0}[{1}] {2}", CMD_CWTTBP, cepoIndex, CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the CWTTBP command string using the
+            /// CEPO index for this object.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string CWTTBP_CmdStr()
+            {
+                return CWTTBP_CmdStr(CepoIndex);
+            }
+
+            #endregion
+
+            #endregion
 
             #endregion
 

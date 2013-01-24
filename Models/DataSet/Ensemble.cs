@@ -60,6 +60,7 @@
  * 04/10/2012      RC          2.08       Changed BYTES_IN_INT to BYTES_IN_INT8 and BYTES_IN_INT32.
  * 06/14/2012      RC          2.11       Added variable MAX_NUM_BINS.
  * 10/05/2012      RC          2.15       Added more description for BEAM_Q_INDEX.
+ * 01/04/2013      RC          2.17       Added AddEnsembleData() that takes no data.
  *                                         
  *       
  * 
@@ -921,6 +922,22 @@ namespace RTI
 
             /// <summary>
             /// Add the Ensemble data set to the data.
+            /// This will add the Ensemble data and take no data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddEnsembleData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsEnsembleAvail = true;
+                EnsembleData = new EnsembleDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Ensemble data set to the data.
             /// This will add the Ensemble data and decode the byte array
             /// for all the Ensemble data.
             /// </summary>
@@ -992,6 +1009,23 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
+            public void AddAncillaryData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsAncillaryAvail = true;
+                AncillaryData = new AncillaryDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Ancillary data set to the data.
+            /// This will add the Ancillary data and decode the byte array
+            /// for all the Ancillary data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
             /// <param name="ancillaryData">Byte array containing Ancillary data</param>
             public void AddAncillaryData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ancillaryData)
             {
@@ -1042,6 +1076,22 @@ namespace RTI
             #endregion
 
             #region Bottom Track Data Set
+
+            /// <summary>
+            /// Add the Bottom Track data set to the data.
+            /// This will add the Bottom Track data with NO data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddBottomTrackData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsBottomTrackAvail = true;
+                BottomTrackData = new BottomTrackDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
 
             /// <summary>
             /// Add the Bottom Track data set to the data.
@@ -1271,7 +1321,7 @@ namespace RTI
                     ensemble.AddGoodEarthData(GoodEarthData.ValueType, GoodEarthData.NumElements, GoodEarthData.ElementsMultiplier, GoodEarthData.Imag, GoodEarthData.NameLength, GoodEarthData.Name, GoodEarthData.Encode(), GoodEarthData.Orientation);
                 }
 
-                if (IsEnsembleAvail)
+                if (IsEnsembleAvail && EnsembleData != null)
                 {
                     ensemble.AddEnsembleData(EnsembleData.ValueType, EnsembleData.NumElements, EnsembleData.ElementsMultiplier, EnsembleData.Imag, EnsembleData.NameLength, EnsembleData.Name, EnsembleData.Encode());
                 }

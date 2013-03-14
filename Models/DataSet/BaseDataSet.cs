@@ -41,11 +41,17 @@
  *                                          Fix bug in GetDataSetSize(), wrong case statement variable for float.
  *                                          Fix bug in GenerateHeader(), ValueType hard coded to BYTE.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 02/20/2013      RC          2.18       Made all public properties' Setters public to convert to and from JSON.
+ * 02/22/2013      RC          2.18       Added ToJsonBaseStub() to create a JSON stub for the base dataset properties.
+ * 02/25/2013      RC          2.18       Removed Orientation.  Replaced with SubsystemConfiguration.
  *       
  * 
  */
 
 using System;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json;
 namespace RTI
 {
     namespace DataSet
@@ -56,39 +62,531 @@ namespace RTI
         /// </summary>
         public class BaseDataSet
         {
+            #region Variables
+
             /// <summary>
             /// This is number of elements in the header of a dataset.
             /// Each element is a byte except the NAME.  Its size varies
             /// and is given by NameLength.
             /// </summary>
             public const int NUM_DATASET_HEADER_ELEMENTS = 6;
-                                                                                    
-            /// <summary>
-            /// All the possible combinations for a beam
-            /// to be pointed.  This is seperate multiple transducers
-            /// on one system. Two different transducers could report
-            /// data for the same Bin and beam.  This option will
-            /// differenciate the two different transducers.
-            /// 
-            /// Possible there may just be different datatypes created.
-            /// </summary>
-            public enum BeamOrientation
-            {
-                /// <summary>
-                /// Orientation of a beam.  Downward facing.
-                /// </summary>
-                DOWN = 0,
 
-                /// <summary>
-                /// Orienation of the beam.  Upward facing.
-                /// </summary>
-                UP = 1,
-            };
+            #region JSON Strings
+
+            #region Base Data
+
+            /// <summary>
+            /// String for NumElements.
+            /// </summary>
+            public const string JSON_STR_NUMELEMENTS = "NumElements";
+
+            /// <summary>
+            /// String for ElementsMultiplier.
+            /// </summary>
+            public const string JSON_STR_ELEMENTSMULTIPLIER = "ElementsMultiplier";
+
+            #endregion
+
+            #region Data Sets with per Beam Data
+
+            /// <summary>
+            /// String for AmplitudeData.
+            /// </summary>
+            public const string JSON_STR_AMPLITUDEDATA = "AmplitudeData";
+
+            /// <summary>
+            /// String for Correlation Data.
+            /// </summary>
+            public const string JSON_STR_CORRELATIONDATA = "CorrelationData";
+
+            /// <summary>
+            /// String for Beam Velocity Data.
+            /// </summary>
+            public const string JSON_STR_BEAMVELOCITYDATA = "BeamVelocityData";
+
+            /// <summary>
+            /// String for Instrument Velocity Data.
+            /// </summary>
+            public const string JSON_STR_INSTRUMENTVELOCITYDATA = "InstrumentVelocityData";
+
+            /// <summary>
+            /// String for Earth Velocity Data.
+            /// </summary>
+            public const string JSON_STR_EARTHVELOCITYDATA = "EarthVelocityData";
+
+            /// <summary>
+            /// String for Good Earth Data.
+            /// </summary>
+            public const string JSON_STR_GOODEARTHDATA = "GoodEarthData";
+
+            /// <summary>
+            /// String for Good Beam Data.
+            /// </summary>
+            public const string JSON_STR_GOODBEAMDATA = "GoodBeamData";
+
+            #endregion
+
+            #region VeclocityVector Properties
+
+            /// <summary>
+            /// String for IsVelocityVectorAvail property.
+            /// </summary>
+            public const string JSON_STR_ISVELOCITYVECTORAVAIL = "IsVelocityVectorAvail";
+
+            /// <summary>
+            /// String for VelocityVectors property.
+            /// </summary>
+            public const string JSON_STR_VELOCITYVECTORS = "VelocityVectors";
+
+            /// <summary>
+            /// String for VelocityVector Magnitude property.
+            /// </summary>
+            public const string JSON_STR_VV_MAG = "Magnitude";
+
+            /// <summary>
+            /// String for VelocityVector DirectionXNorth property.
+            /// </summary>
+            public const string JSON_STR_VV_XNORTH = "DirectionXNorth";
+
+            /// <summary>
+            /// String for VelocityVector DirectionYNorth property.
+            /// </summary>
+            public const string JSON_STR_VV_YNORTH = "DirectionYNorth";
+
+            #endregion
+
+            #region Ensemble Properties
+
+            /// <summary>
+            /// String for EnsembleNumber.
+            /// </summary>
+            public const string JSON_STR_ENSEMBLENUMBER = "EnsembleNumber";
+
+            #region SerialNumber Properties
+
+            ///// <summary>
+            ///// String for SerialNumber SystemSerialNumber.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_SYSTEMSERIALNUMBER = "SystemSerialNumber";
+
+            ///// <summary>
+            ///// String for SerialNumber Spare.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_SPARE = "Spare";
+
+            ///// <summary>
+            ///// String for SerialNumber BaseHardware.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_BASEHARDWARE = "BaseHardware";
+
+            ///// <summary>
+            ///// String for SerialNumber SubSystems.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_SUBSYSTEMS = "SubSystems";
+
+            ///// <summary>
+            ///// String for SerialNumber SubSystemsDict.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_SUBSYSTEMDICT = "SubSystemsDict";
+
+            /// <summary>
+            /// String for SerialNumber SerialNumberString.
+            /// </summary>
+            public const string STR_JSON_SERIALNUMBER_SERIALNUMBERSTRING = "SerialNumberString";
+
+            ///// <summary>
+            ///// String for SerialNumber Subsystem Dictionary Index.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_DICT_INDEX = "Index";
+
+            ///// <summary>
+            ///// String for SerialNumber Subsystem Dictionary Code.
+            ///// </summary>
+            //public const string STR_JSON_SERIALNUMBER_DICT_CODE = "Code";
+
+            #endregion
+
+            #region Firmware Properties
+
+            /// <summary>
+            /// String for FirmwareMajor.
+            /// </summary>
+            public const string JSON_STR_FIRMWAREMAJOR = "FirmwareMajor";
+
+            /// <summary>
+            /// String for FirmwareMinor.
+            /// </summary>
+            public const string JSON_STR_FIRMWAREMINOR = "FirmwareMinor";
+
+            /// <summary>
+            /// String for FirmwareRevision.
+            /// </summary>
+            public const string JSON_STR_FIRMWAREREVISION = "FirmwareRevision";
+
+            /// <summary>
+            /// String for SubsystemCode.
+            /// </summary>
+            public const string JSON_STR_SUBSYSTEMCODE = "SubsystemCode";
+
+            #endregion
+
+            #region SubsystemConfig Properties
+
+            /// <summary>
+            /// String for SubSystem.
+            /// </summary>
+            public const string JSON_STR_SUBSYSTEM = "SubSystem";
+
+            /// <summary>
+            /// String for Subsystem Index.
+            /// </summary>
+            public const string JSON_STR_SUBSYSTEM_INDEX = "Index";
+
+            /// <summary>
+            /// String for Subsystem Code.
+            /// </summary>
+            public const string JSON_STR_SUBSYSTEM_CODE = "Code";
+
+            /// <summary>
+            /// String for ConfigNumber.
+            /// </summary>
+            public const string JSON_STR_CONFIGNUMBER = "ConfigNumber";
+
+            #endregion
+
+            /// <summary>
+            /// String for NumBins.
+            /// </summary>
+            public const string JSON_STR_NUMBINS = "NumBins";
+
+            /// <summary>
+            /// String for NumBeams.
+            /// </summary>
+            public const string JSON_STR_NUMBEAMS = "NumBeams";
+
+            /// <summary>
+            /// String for DesiredPingCount.
+            /// </summary>
+            public const string JSON_STR_DESIREDPINGCOUNT = "DesiredPingCount";
+
+            /// <summary>
+            /// String for ActualPingCount.
+            /// </summary>
+            public const string JSON_STR_ACTUALPINGCOUNT = "ActualPingCount";
+
+            /// <summary>
+            /// String for SysSerialNumber.
+            /// </summary>
+            public const string JSON_STR_SYSSERIALNUMBER = "SysSerialNumber";
+
+            /// <summary>
+            /// String for SysFirmware.
+            /// </summary>
+            public const string JSON_STR_SYSFIRMWARE = "SysFirmware";
+
+            /// <summary>
+            /// String for SubsystemConfig.
+            /// </summary>
+            public const string JSON_STR_SUBSYSTEMCONFIG = "SubsystemConfig";
+
+            /// <summary>
+            /// String for Status.
+            /// </summary>
+            public const string JSON_STR_STATUS = "Status";
+
+            /// <summary>
+            /// String for Year.
+            /// </summary>
+            public const string JSON_STR_YEAR = "Year";
+
+            /// <summary>
+            /// String for Month.
+            /// </summary>
+            public const string JSON_STR_MONTH = "Month";
+
+            /// <summary>
+            /// String for Day.
+            /// </summary>
+            public const string JSON_STR_DAY = "Day";
+
+            /// <summary>
+            /// String for Hour.
+            /// </summary>
+            public const string JSON_STR_HOUR = "Hour";
+
+            /// <summary>
+            /// String for Minute.
+            /// </summary>
+            public const string JSON_STR_MINUTE = "Minute";
+
+            /// <summary>
+            /// String for Second.
+            /// </summary>
+            public const string JSON_STR_SECOND = "Second";
+
+            /// <summary>
+            /// String for HSec.
+            /// </summary>
+            public const string JSON_STR_HSEC = "HSec";
+
+            /// <summary>
+            /// String for EnsDateTime.
+            /// </summary>
+            public const string JSON_STR_ENSDATETIME = "EnsDateTime";
+
+            #endregion
+
+            #region Ancillary Properties
+
+            /// <summary>
+            /// String for FirstBinRange.
+            /// </summary>
+            public const string JSON_STR_FIRSTBINRANGE = "FirstBinRange";
+
+            /// <summary>
+            /// String for BinSize.
+            /// </summary>
+            public const string JSON_STR_BINSIZE = "BinSize";
+
+            /// <summary>
+            /// String for FirstPingTime.
+            /// </summary>
+            public const string JSON_STR_FIRSTPINGTIME = "FirstPingTime";
+
+            /// <summary>
+            /// String for LastPingTime.
+            /// </summary>
+            public const string JSON_STR_LASTPINGTIME = "LastPingTime";
+
+            /// <summary>
+            /// String for Heading.
+            /// </summary>
+            public const string JSON_STR_HEADING = "Heading";
+
+            /// <summary>
+            /// String for Pitch.
+            /// </summary>
+            public const string JSON_STR_PITCH = "Pitch";
+
+            /// <summary>
+            /// String for Roll.
+            /// </summary>
+            public const string JSON_STR_ROLL = "Roll";
+
+            /// <summary>
+            /// String for WaterTemp.
+            /// </summary>
+            public const string JSON_STR_WATERTEMP = "WaterTemp";
+
+            /// <summary>
+            /// String for SystemTemp.
+            /// </summary>
+            public const string JSON_STR_SYSTEMP = "SystemTemp";
+
+            /// <summary>
+            /// String for Salinity.
+            /// </summary>
+            public const string JSON_STR_SALINITY = "Salinity";
+
+            /// <summary>
+            /// String for Pressure.
+            /// </summary>
+            public const string JSON_STR_PRESSURE = "Pressure";
+
+            /// <summary>
+            /// String for TransducerDepth.
+            /// </summary>
+            public const string JSON_STR_TRANSDUCERDEPTH = "TransducerDepth";
+
+            /// <summary>
+            /// String for SpeedOfSound.
+            /// </summary>
+            public const string JSON_STR_SPEEDOFSOUND = "SpeedOfSound";
+
+            #endregion
+
+            #region Bottom Track Properties
+
+            /// <summary>
+            /// String for FirstPingTime.
+            /// </summary>
+            public const string JSON_STR_BT_FIRSTPINGTIME = "FirstPingTime";
+
+            /// <summary>
+            /// String for LastPingTime.
+            /// </summary>
+            public const string JSON_STR_BT_LASTPINGTIME = "LastPingTime";
+
+            /// <summary>
+            /// String for Heading.
+            /// </summary>
+            public const string JSON_STR_BT_HEADING = "Heading";
+
+            /// <summary>
+            /// String for Pitch.
+            /// </summary>
+            public const string JSON_STR_BT_PITCH = "Pitch";
+
+            /// <summary>
+            /// String for Roll.
+            /// </summary>
+            public const string JSON_STR_BT_ROLL = "Roll";
+
+            /// <summary>
+            /// String for WaterTemp.
+            /// </summary>
+            public const string JSON_STR_BT_WATERTEMP = "WaterTemp";
+
+            /// <summary>
+            /// String for SystemTemp.
+            /// </summary>
+            public const string JSON_STR_BT_SYSTEMTEMP = "SystemTemp";
+
+            /// <summary>
+            /// String for Salinity.
+            /// </summary>
+            public const string JSON_STR_BT_SALINITY = "Salinity";
+
+            /// <summary>
+            /// String for Pressure.
+            /// </summary>
+            public const string JSON_STR_BT_PRESSURE = "Pressure";
+
+            /// <summary>
+            /// String for TransducerDepth.
+            /// </summary>
+            public const string JSON_STR_BT_TRANSDUCERDEPTH = "TransducerDepth";
+
+            /// <summary>
+            /// String for SpeedOfSound.
+            /// </summary>
+            public const string JSON_STR_BT_SPEEDOFSOUND = "SpeedOfSound";
+
+            /// <summary>
+            /// String for Status.
+            /// </summary>
+            public const string JSON_STR_BT_STATUS = "Status";
+
+            /// <summary>
+            /// String for NumBeams.
+            /// </summary>
+            public const string JSON_STR_BT_NUMBEAMS = "NumBeams";
+
+            /// <summary>
+            /// String for ActualPingCount.
+            /// </summary>
+            public const string JSON_STR_BT_ACTUALPINGCOUNT = "ActualPingCount";
+
+            /// <summary>
+            /// String for Range.
+            /// </summary>
+            public const string JSON_STR_BT_RANGE = "Range";
+
+            /// <summary>
+            /// String for SNR.
+            /// </summary>
+            public const string JSON_STR_BT_SNR = "SNR";
+
+            /// <summary>
+            /// String for Amplitude.
+            /// </summary>
+            public const string JSON_STR_BT_AMPLITUDE = "Amplitude";
+
+            /// <summary>
+            /// String for Correlation.
+            /// </summary>
+            public const string JSON_STR_BT_CORRELATION = "Correlation";
+
+            /// <summary>
+            /// String for BeamVelocity.
+            /// </summary>
+            public const string JSON_STR_BT_BEAMVELOCITY = "BeamVelocity";
+
+            /// <summary>
+            /// String for BeamGood.
+            /// </summary>
+            public const string JSON_STR_BT_BEAMGOOD = "BeamGood";
+
+            /// <summary>
+            /// String for InstrumentVelocity.
+            /// </summary>
+            public const string JSON_STR_BT_INSTRUMENTVELOCITY = "InstrumentVelocity";
+
+            /// <summary>
+            /// String for InstrumentGood.
+            /// </summary>
+            public const string JSON_STR_BT_INSTRUMENTGOOD = "InstrumentGood";
+
+            /// <summary>
+            /// String for EarthVelocity.
+            /// </summary>
+            public const string JSON_STR_BT_EARTHVELOCITY = "EarthVelocity";
+
+            /// <summary>
+            /// String for EarthGood.
+            /// </summary>
+            public const string JSON_STR_BT_EARTHGOOD = "EarthGood";
+
+            #endregion
+
+            #region NMEA Properties
+
+            /// <summary>
+            /// String for NmeaStrings.
+            /// </summary>
+            public const string JSON_STR_NMEASTRINGS = "NmeaStrings";
+
+            #endregion
+
+            #region Water Mass Properties
+
+            /// <summary>
+            /// String for Water Mass Velocity East property.
+            /// </summary>
+            public const string JSON_STR_VELEAST = "VelocityEast";
+
+            /// <summary>
+            /// String for Water Mass Velocity North property.
+            /// </summary>
+            public const string JSON_STR_VELNORTH = "VelocityNorth";
+
+            /// <summary>
+            /// String for Water Mass Velocity Vertical property.
+            /// </summary>
+            public const string JSON_STR_VELVERTICAL = "VelocityVertical";
+
+            /// <summary>
+            /// String for Water Mass Velocity X property.
+            /// </summary>
+            public const string JSON_STR_VELX = "VelocityX";
+
+            /// <summary>
+            /// String for Water Mass Velocity Y property.
+            /// </summary>
+            public const string JSON_STR_VELY = "VelocityY";
+
+            /// <summary>
+            /// String for Water Mass Velocity Z property.
+            /// </summary>
+            public const string JSON_STR_VELZ = "VelocityZ";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer property.
+            /// </summary>
+            public const string JSON_STR_WATERMASSDEPTHLAYER = "WaterMassDepthLayer";
+
+            #endregion
+
+            #endregion
+
+            #endregion
+
+            #region Properties
 
             /// <summary>
             /// Type of ranges for this data type.
             /// </summary>
-            public int ValueType { get; protected set; }
+            public int ValueType { get; set; }
 
             /// <summary>
             /// Number of DATA in this data type.
@@ -98,27 +596,29 @@ namespace RTI
             /// EnsembleData.Bins.  THIS NUMBER IS THE
             /// NUMBER OF DATA VALUES IN THE DATATYPE.
             /// </summary>
-            public int NumElements { get; protected set; }
+            public int NumElements { get; set; }
 
             /// <summary>
             /// Number of beams in this data type.
             /// </summary>
-            public int ElementsMultiplier { get; protected set; }
+            public int ElementsMultiplier { get; set; }
 
             /// <summary>
             /// Dataset Image value.
             /// </summary>
-            public int Imag { get; protected set; }
+            public int Imag { get; set; }
 
             /// <summary>
             /// Length of name for this data type.
             /// </summary>
-            public int NameLength { get; protected set; }
+            public int NameLength { get; set; }
 
             /// <summary>
             /// Name of this data type.
             /// </summary>
-            public string Name { get; protected set; }
+            public string Name { get; set; }
+
+            #endregion
 
             /// <summary>
             /// Set all the initial ranges for the base data set.
@@ -246,6 +746,46 @@ namespace RTI
 
                 return result;
             }
+
+            /// <summary>
+            /// Give the base JSON information.  This will be used to combine with a dataset to 
+            /// give the complete dataset information.
+            /// 
+            /// To use:
+            /// ... 
+            /// Write the base values
+            /// writer.WriteRaw(base.ToJsonBaseStub());
+            /// writer.WriteRaw(",");
+            /// ...
+            /// 
+            /// </summary>
+            /// <returns>Return a stub JSON string for the Base data.</returns>
+            public string ToJsonBaseStub()
+            {
+                StringBuilder sb = new StringBuilder();
+                StringWriter sw = new StringWriter(sb);
+                using (JsonWriter writer = new JsonTextWriter(sw))
+                {
+                    // Start the object
+                    writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk writing space
+
+                    #region Base Values
+
+                    // NumElements
+                    writer.WritePropertyName(JSON_STR_NUMELEMENTS);
+                    writer.WriteValue(NumElements);
+
+                    // ElementsMultiplier
+                    writer.WritePropertyName(JSON_STR_ELEMENTSMULTIPLIER);
+                    writer.WriteValue(ElementsMultiplier);
+
+                    #endregion
+
+                }
+
+                return sb.ToString();
+            }
+
         }
     }
 }

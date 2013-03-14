@@ -43,6 +43,8 @@
  *                                         Rename Decode methods to Decode().
  * 01/23/2012      RC          1.14       Fixed Encode to convert to int to byte array.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 02/25/2013      RC          2.18       Removed Orientation.
+ *                                         Added JSON encoding and Decoding.
  * 
  */
 
@@ -50,6 +52,10 @@
 using System.Data;
 using System;
 using System.ComponentModel;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json.Linq;
 namespace RTI
 {
     namespace DataSet
@@ -57,22 +63,17 @@ namespace RTI
         /// <summary>
         /// Data set containing all the Good EarthVelocity data.
         /// </summary>
+        [JsonConverter(typeof(GoodEarthDataSetSerializer))]
         public class GoodEarthDataSet : BaseDataSet
         {
+            #region Properties
+
             /// <summary>
             /// Store all the Good EarthVelocity data for the ADCP.
             /// </summary>
             public int[,] GoodEarthData { get; set; }
 
-            /// <summary>
-            /// This value will be used when there will be multiple transducers
-            /// giving ranges.  There will be duplicate beam Bin Bin ranges and the
-            /// orientation will determine which beam Bin Bin ranges to group together.
-            /// 
-            /// This may not be necessary and additional datatypes may be created instead
-            /// for each transducer orientation.
-            /// </summary>
-            public BaseDataSet.BeamOrientation Orientation { get; set; }
+            #endregion
 
             /// <summary>
             /// Create an Good EarthVelocity data set.
@@ -83,15 +84,11 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beams.</param>
-            public GoodEarthDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, BeamOrientation orientation = BeamOrientation.DOWN) :
+            public GoodEarthDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
                 GoodEarthData = new int[NumElements, ElementsMultiplier];
-
-                // Default orientation value is DOWN
-                Orientation = orientation;
             }
 
             /// <summary>
@@ -105,43 +102,44 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="goodEarthData">Byte array containing Good EarthVelocity data</param>
-            /// <param name="orientation">Orientation of the beams.</param>
-            public GoodEarthDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodEarthData, BeamOrientation orientation = BeamOrientation.DOWN) :
+            public GoodEarthDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodEarthData) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
                 GoodEarthData = new int[NumElements, ElementsMultiplier];
-
-                // Default orientation value is DOWN
-                Orientation = orientation;
 
                 // Decode the byte array for Good EarthVelocity data
                 Decode(goodEarthData);
             }
 
             /// <summary>
-            /// Create an Good Earth data set.  Include all the information to
-            /// create the data set.
+            /// Create an Good Earth data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodEarthDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 162ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.GoodEarthDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodEarthDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
             /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="goodEarthData">DataTable containing Good Earth data</param>
-            /// <param name="orientation">Orientation of the beams.</param>
-            public GoodEarthDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable goodEarthData, BeamOrientation orientation = BeamOrientation.DOWN) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
+            /// <param name="ValueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="NumElements">Number of Bin</param>
+            /// <param name="ElementsMultiplier">Number of beams</param>
+            /// <param name="Imag"></param>
+            /// <param name="NameLength">Length of name</param>
+            /// <param name="Name">Name of data type</param>
+            /// <param name="GoodEarthData">2D Array containing Beam velocity data. [Bin, Beam]</param>
+            [JsonConstructor]
+            private GoodEarthDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name, int[,] GoodEarthData) :
+                base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
                 // Initialize data
-                GoodEarthData = new int[NumElements, ElementsMultiplier];
-
-                // Default orientation value is DOWN
-                Orientation = orientation;
-
-                // Decode the byte array for Good EarthVelocity data
-                Decode(goodEarthData);
+                this.GoodEarthData = GoodEarthData;
             }
 
             /// <summary>
@@ -160,24 +158,6 @@ namespace RTI
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
                         GoodEarthData[bin, beam] = MathHelper.ByteArrayToInt32(dataType, index);
                     }
-                }
-            }
-
-            /// <summary>
-            /// Get all the Good Earth ranges for each beam and Bin.
-            /// 
-            /// I changed the order from what the data is stored as and now make it Bin Bin Beams.
-            /// </summary>
-            /// <param name="dataTable">DataTable containing the Good Earth data type.</param>
-            private void Decode(DataTable dataTable)
-            {
-                // Go through the result settings the ranges
-                foreach (DataRow r in dataTable.Rows)
-                {
-                    int bin = Convert.ToInt32(r[DbCommon.COL_BV_BIN_NUM].ToString());
-                    int beam = Convert.ToInt32(r[DbCommon.COL_BV_BEAM_NUM].ToString());
-                    int value = Convert.ToInt32(r[DbCommon.COL_BV_GOOD_EARTH].ToString());
-                    GoodEarthData[bin, beam] = value;
                 }
             }
 
@@ -236,6 +216,131 @@ namespace RTI
                 }
 
                 return s;
+            }
+        }
+
+        /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodEarthData).
+        /// 
+        /// 38ms for this method.
+        /// 50ms for calling SerializeObject default.
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class GoodEarthDataSetSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodEarthData).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var data = value as GoodEarthDataSet;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                // Write the base values
+                writer.WriteRaw(data.ToJsonBaseStub());
+                writer.WriteRaw(",");
+
+
+                // Write the float[,] array data
+                // This will be an array of arrays
+                // Each array element will contain an array with the 4 beam's value
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_GOODEARTHDATA);
+                writer.WriteStartArray();
+                for (int bin = 0; bin < data.NumElements; bin++)
+                {
+                    // Write an array of float values for each beam's value
+                    writer.WriteStartArray();
+                    writer.WriteValue(data.GoodEarthData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
+                    writer.WriteValue(data.GoodEarthData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
+                    writer.WriteValue(data.GoodEarthData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
+                    writer.WriteValue(data.GoodEarthData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+                    writer.WriteEndArray();
+                }
+                writer.WriteEndArray();
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// 
+            /// DataSet.GoodEarthDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodEarthDataSet}(encodedEns)
+            /// 
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    // Load the object
+                    JObject jsonObject = JObject.Load(reader);
+
+                    // Decode the data
+                    int NumElements = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMELEMENTS];
+                    int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
+
+                    // Create the object
+                    var data = new GoodEarthDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AmplitudeID);
+                    data.GoodEarthData = new int[NumElements, ElementsMultiplier];
+
+                    // Decode the 2D array 
+                    JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_GOODEARTHDATA];
+                    if (jArray.Count <= NumElements)                                                            // Verify size
+                    {
+                        for (int bin = 0; bin < jArray.Count; bin++)
+                        {
+                            JArray arrayData = (JArray)jArray[bin];
+                            if (arrayData.Count <= ElementsMultiplier)                                          // Verify size
+                            {
+                                for (int beam = 0; beam < arrayData.Count; beam++)
+                                {
+                                    data.GoodEarthData[bin, beam] = (int)arrayData[beam];
+                                }
+                            }
+                        }
+                    }
+
+                    return data;
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(GoodEarthDataSet).IsAssignableFrom(objectType);
             }
         }
     }

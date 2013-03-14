@@ -29,6 +29,7 @@
  *                                         Test AdditionalData().
  * 03/29/2012      RC          2.07       Changed the Status to an object in ensemble.
  * 01/17/2013      RC          2.17       Added a test for default constructor.  Added a test for encode and decode.
+ * 02/28/2013      RC          2.18       Added Test for JSON.
  * 
  */
 
@@ -36,6 +37,7 @@ namespace RTI
 {
     using System;
     using NUnit.Framework;
+    using System.Diagnostics;
 
     /// <summary>
     /// Unit test of the Bottom Track DataSet object.
@@ -315,194 +317,195 @@ namespace RTI
         public void EncodeDecodeTest()
         {
             // Create dataset
-            DataSet.Ensemble adcpData = new DataSet.Ensemble();
+            DataSet.Ensemble ensemble = new DataSet.Ensemble();
 
             // Add Bottom Track data
-            adcpData.AddBottomTrackData(DataSet.Ensemble.DATATYPE_FLOAT,                    // Type of data stored (Float or Int)
+            ensemble.AddBottomTrackData(DataSet.Ensemble.DATATYPE_FLOAT,                    // Type of data stored (Float or Int)
                                             1,                                              // Number of bins
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
                                             DataSet.Ensemble.BottomTrackID);                // Dataset ID
 
-            Assert.IsTrue(adcpData.IsBottomTrackAvail, "IsBottomTrackAvail is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.ActualPingCount, "Actual Ping Count is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.FirstPingTime, "FirstPingTime is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.LastPingTime, "LastPingTime is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.Heading, "Heading is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.Pitch, "Pitch is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.Roll, "Roll is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.WaterTemp, "WaterTemp is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.SystemTemp, "SystemTemp is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.Salinity, "Salinity is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.Pressure, "Pressure is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.TransducerDepth, "TransducerDepth is incorrect.");
-            Assert.AreEqual(0.0f, adcpData.BottomTrackData.SpeedOfSound, "SpeedOfSound is incorrect.");
-            Assert.AreEqual(new Status(0), adcpData.BottomTrackData.Status, "Status is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.NumBeams, "NumBeams is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.Range.GetLength(0), "Range Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.SNR.GetLength(0), "SNR Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.Amplitude.GetLength(0), "Amplitude Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.Correlation.GetLength(0), "Correlation Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.BeamVelocity.GetLength(0), "BeamVelocity Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.BeamGood.GetLength(0), "BeamGood Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.InstrumentVelocity.GetLength(0), "InstrumentVelocity Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.InstrumentGood.GetLength(0), "InstrumentGood Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.EarthVelocity.GetLength(0), "EarthVelocity Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.EarthGood.GetLength(0), "EarthGood Length is incorrect.");
+            Assert.IsTrue(ensemble.IsBottomTrackAvail, "IsBottomTrackAvail is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.ActualPingCount, "Actual Ping Count is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.FirstPingTime, "FirstPingTime is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.LastPingTime, "LastPingTime is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.Heading, "Heading is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.Pitch, "Pitch is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.Roll, "Roll is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.WaterTemp, "WaterTemp is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.SystemTemp, "SystemTemp is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.Salinity, "Salinity is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.Pressure, "Pressure is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.TransducerDepth, "TransducerDepth is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.BottomTrackData.SpeedOfSound, "SpeedOfSound is incorrect.");
+            Assert.AreEqual(new Status(0), ensemble.BottomTrackData.Status, "Status is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.NumBeams, "NumBeams is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.Range.GetLength(0), "Range Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.SNR.GetLength(0), "SNR Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.Amplitude.GetLength(0), "Amplitude Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.Correlation.GetLength(0), "Correlation Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.BeamVelocity.GetLength(0), "BeamVelocity Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.BeamGood.GetLength(0), "BeamGood Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.InstrumentVelocity.GetLength(0), "InstrumentVelocity Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.InstrumentGood.GetLength(0), "InstrumentGood Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.EarthVelocity.GetLength(0), "EarthVelocity Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.EarthGood.GetLength(0), "EarthGood Length is incorrect.");
 
             #region Set Values
 
             // Set the values
-            adcpData.BottomTrackData.ActualPingCount = 1.2f;
-            adcpData.BottomTrackData.FirstPingTime = 2.3f;
-            adcpData.BottomTrackData.LastPingTime = 3.4f;
-            adcpData.BottomTrackData.Heading = 4.5f;
-            adcpData.BottomTrackData.Pitch = 5.6f;
-            adcpData.BottomTrackData.Roll = 6.7f;
-            adcpData.BottomTrackData.WaterTemp = 7.8f;
-            adcpData.BottomTrackData.SystemTemp = 8.9f;
-            adcpData.BottomTrackData.Salinity = 9.10f;
-            adcpData.BottomTrackData.Pressure = 10.11f;
-            adcpData.BottomTrackData.TransducerDepth = 11.12f;
-            adcpData.BottomTrackData.SpeedOfSound = 12.13f;
-            adcpData.BottomTrackData.Status = new Status(4);
-            adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.ActualPingCount = 1.2f;
+            ensemble.BottomTrackData.FirstPingTime = 2.3f;
+            ensemble.BottomTrackData.LastPingTime = 3.4f;
+            ensemble.BottomTrackData.Heading = 4.5f;
+            ensemble.BottomTrackData.Pitch = 5.6f;
+            ensemble.BottomTrackData.Roll = 6.7f;
+            ensemble.BottomTrackData.WaterTemp = 7.8f;
+            ensemble.BottomTrackData.SystemTemp = 8.9f;
+            ensemble.BottomTrackData.Salinity = 9.10f;
+            ensemble.BottomTrackData.Pressure = 10.11f;
+            ensemble.BottomTrackData.TransducerDepth = 11.12f;
+            ensemble.BottomTrackData.SpeedOfSound = 12.13f;
+            ensemble.BottomTrackData.Status = new Status(4);
+            ensemble.BottomTrackData.NumBeams = 4;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
-            adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
-            adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
-            adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
 
-            adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
-            adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
-            adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
-            adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
 
-            adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
-            adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
-            adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
-            adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
 
-            adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
-            adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
-            adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
-            adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
 
             #endregion
 
             #region Verify Values
 
-            Assert.IsTrue(adcpData.IsBottomTrackAvail, "IsBottomTrackAvail is incorrect.");
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.ActualPingCount, "Actual Ping Count is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.FirstPingTime, "FirstPingTime is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.LastPingTime, "LastPingTime is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.Heading, "Heading is incorrect.");
-            Assert.AreEqual(5.6f, adcpData.BottomTrackData.Pitch, "Pitch is incorrect.");
-            Assert.AreEqual(6.7f, adcpData.BottomTrackData.Roll, "Roll is incorrect.");
-            Assert.AreEqual(7.8f, adcpData.BottomTrackData.WaterTemp, "WaterTemp is incorrect.");
-            Assert.AreEqual(8.9f, adcpData.BottomTrackData.SystemTemp, "SystemTemp is incorrect.");
-            Assert.AreEqual(9.10f, adcpData.BottomTrackData.Salinity, "Salinity is incorrect.");
-            Assert.AreEqual(10.11f, adcpData.BottomTrackData.Pressure, "Pressure is incorrect.");
-            Assert.AreEqual(11.12f, adcpData.BottomTrackData.TransducerDepth, "TransducerDepth is incorrect.");
-            Assert.AreEqual(12.13f, adcpData.BottomTrackData.SpeedOfSound, "SpeedOfSound is incorrect.");
-            Assert.AreEqual(new Status(4), adcpData.BottomTrackData.Status, "Status is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.NumBeams, "NumBeams is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.Range.GetLength(0), "Range Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.SNR.GetLength(0), "SNR Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.Amplitude.GetLength(0), "Amplitude Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.Correlation.GetLength(0), "Correlation Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.BeamVelocity.GetLength(0), "BeamVelocity Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.BeamGood.GetLength(0), "BeamGood Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.InstrumentVelocity.GetLength(0), "InstrumentVelocity Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.InstrumentGood.GetLength(0), "InstrumentGood Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.EarthVelocity.GetLength(0), "EarthVelocity Length is incorrect.");
-            Assert.AreEqual(4, adcpData.BottomTrackData.EarthGood.GetLength(0), "EarthGood Length is incorrect.");
+            Assert.IsTrue(ensemble.IsBottomTrackAvail, "IsBottomTrackAvail is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.ActualPingCount, "Actual Ping Count is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.FirstPingTime, "FirstPingTime is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.LastPingTime, "LastPingTime is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.Heading, "Heading is incorrect.");
+            Assert.AreEqual(5.6f, ensemble.BottomTrackData.Pitch, "Pitch is incorrect.");
+            Assert.AreEqual(6.7f, ensemble.BottomTrackData.Roll, "Roll is incorrect.");
+            Assert.AreEqual(7.8f, ensemble.BottomTrackData.WaterTemp, "WaterTemp is incorrect.");
+            Assert.AreEqual(8.9f, ensemble.BottomTrackData.SystemTemp, "SystemTemp is incorrect.");
+            Assert.AreEqual(9.10f, ensemble.BottomTrackData.Salinity, "Salinity is incorrect.");
+            Assert.AreEqual(10.11f, ensemble.BottomTrackData.Pressure, "Pressure is incorrect.");
+            Assert.AreEqual(11.12f, ensemble.BottomTrackData.TransducerDepth, "TransducerDepth is incorrect.");
+            Assert.AreEqual(12.13f, ensemble.BottomTrackData.SpeedOfSound, "SpeedOfSound is incorrect.");
+            Assert.AreEqual(new Status(4), ensemble.BottomTrackData.Status, "Status is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.NumBeams, "NumBeams is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.Range.GetLength(0), "Range Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.SNR.GetLength(0), "SNR Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.Amplitude.GetLength(0), "Amplitude Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.Correlation.GetLength(0), "Correlation Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.BeamVelocity.GetLength(0), "BeamVelocity Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.BeamGood.GetLength(0), "BeamGood Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.InstrumentVelocity.GetLength(0), "InstrumentVelocity Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.InstrumentGood.GetLength(0), "InstrumentGood Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.EarthVelocity.GetLength(0), "EarthVelocity Length is incorrect.");
+            Assert.AreEqual(4, ensemble.BottomTrackData.EarthGood.GetLength(0), "EarthGood Length is incorrect.");
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_0_INDEX], "Range 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_1_INDEX], "Range 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_2_INDEX], "Range 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.Range[DataSet.Ensemble.BEAM_3_INDEX], "Range 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_0_INDEX], "Range 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_1_INDEX], "Range 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_2_INDEX], "Range 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_3_INDEX], "Range 3 is incorrect.");
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_0_INDEX], "SNR 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_1_INDEX], "SNR 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_2_INDEX], "SNR 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.SNR[DataSet.Ensemble.BEAM_3_INDEX], "SNR 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_0_INDEX], "SNR 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_1_INDEX], "SNR 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_2_INDEX], "SNR 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_3_INDEX], "SNR 3 is incorrect.");
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_0_INDEX], "Amplitude 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_1_INDEX], "Amplitude 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_2_INDEX], "Amplitude 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_3_INDEX], "Amplitude 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_0_INDEX], "Amplitude 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_1_INDEX], "Amplitude 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_2_INDEX], "Amplitude 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_3_INDEX], "Amplitude 3 is incorrect.");
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_0_INDEX], "Correlation 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_1_INDEX], "Correlation 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_2_INDEX], "Correlation 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_3_INDEX], "Correlation 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_0_INDEX], "Correlation 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_1_INDEX], "Correlation 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_2_INDEX], "Correlation 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_3_INDEX], "Correlation 3 is incorrect.");
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_0_INDEX], "BeamVelocity 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_1_INDEX], "BeamVelocity 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_2_INDEX], "BeamVelocity 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_3_INDEX], "BeamVelocity 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_0_INDEX], "BeamVelocity 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_1_INDEX], "BeamVelocity 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_2_INDEX], "BeamVelocity 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_3_INDEX], "BeamVelocity 3 is incorrect.");
 
-            Assert.AreEqual(1, adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_0_INDEX], "BeamGood 0 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_1_INDEX], "BeamGood 1 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_2_INDEX], "BeamGood 2 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_3_INDEX], "BeamGood 3 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_0_INDEX], "BeamGood 0 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_1_INDEX], "BeamGood 1 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_2_INDEX], "BeamGood 2 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_3_INDEX], "BeamGood 3 is incorrect.");
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_0_INDEX], "InstrumentVelocity 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_1_INDEX], "InstrumentVelocity 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_2_INDEX], "InstrumentVelocity 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_3_INDEX], "InstrumentVelocity 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_0_INDEX], "InstrumentVelocity 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_1_INDEX], "InstrumentVelocity 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_2_INDEX], "InstrumentVelocity 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_3_INDEX], "InstrumentVelocity 3 is incorrect.");
 
-            Assert.AreEqual(1, adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_0_INDEX], "InstrumentGood 0 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_1_INDEX], "InstrumentGood 1 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_2_INDEX], "InstrumentGood 2 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_3_INDEX], "InstrumentGood 3 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_0_INDEX], "InstrumentGood 0 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_1_INDEX], "InstrumentGood 1 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_2_INDEX], "InstrumentGood 2 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_3_INDEX], "InstrumentGood 3 is incorrect.");
 
 
-            Assert.AreEqual(1.2f, adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_0_INDEX], "EarthVelocity 0 is incorrect.");
-            Assert.AreEqual(2.3f, adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_1_INDEX], "EarthVelocity 1 is incorrect.");
-            Assert.AreEqual(3.4f, adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_2_INDEX], "EarthVelocity 2 is incorrect.");
-            Assert.AreEqual(4.5f, adcpData.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_3_INDEX], "EarthVelocity 3 is incorrect.");
+            Assert.AreEqual(1.2f, ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_0_INDEX], "EarthVelocity 0 is incorrect.");
+            Assert.AreEqual(2.3f, ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_1_INDEX], "EarthVelocity 1 is incorrect.");
+            Assert.AreEqual(3.4f, ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_2_INDEX], "EarthVelocity 2 is incorrect.");
+            Assert.AreEqual(4.5f, ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_3_INDEX], "EarthVelocity 3 is incorrect.");
 
-            Assert.AreEqual(1, adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_0_INDEX], "EarthGood 0 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_1_INDEX], "EarthGood 1 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_2_INDEX], "EarthGood 2 is incorrect.");
-            Assert.AreEqual(1, adcpData.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_3_INDEX], "EarthGood 3 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_0_INDEX], "EarthGood 0 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_1_INDEX], "EarthGood 1 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_2_INDEX], "EarthGood 2 is incorrect.");
+            Assert.AreEqual(1, ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_3_INDEX], "EarthGood 3 is incorrect.");
 
 
             #endregion
 
             // Encode the data
-            byte[] encode = adcpData.BottomTrackData.Encode();
+            byte[] encode = ensemble.BottomTrackData.Encode();
             
             // Add Bottom Track data
             DataSet.Ensemble ens1 = new DataSet.Ensemble();
@@ -600,6 +603,194 @@ namespace RTI
 
         #endregion
 
+        #region JSON
+
+        /// <summary>
+        /// Test encoding and decoding to JSON.
+        /// </summary>
+        [Test]
+        public void TestJson()
+        {
+            // Generate an Ensemble
+            DataSet.Ensemble ensemble = EnsembleHelper.GenerateEnsemble(30);
+
+            // Modify the data
+            ensemble.BottomTrackData.FirstPingTime = 3.4f;
+            ensemble.BottomTrackData.LastPingTime = 4.5f;
+            ensemble.BottomTrackData.Heading = 5.6f;
+            ensemble.BottomTrackData.Pitch = 6.7f;
+            ensemble.BottomTrackData.Roll = 7.8f;
+            ensemble.BottomTrackData.WaterTemp = 8.9f;
+            ensemble.BottomTrackData.SystemTemp = 9.10f;
+            ensemble.BottomTrackData.Salinity = 10.11f;
+            ensemble.BottomTrackData.Pressure = 11.12f;
+            ensemble.BottomTrackData.TransducerDepth = 12.13f;
+            ensemble.BottomTrackData.SpeedOfSound = 13.14f;
+            ensemble.BottomTrackData.Status = new Status(1);
+            ensemble.BottomTrackData.NumBeams = 4;
+            ensemble.BottomTrackData.ActualPingCount = 5.66f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.Range[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.SNR[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.Amplitude[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.Correlation[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.BeamVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
+            ensemble.BottomTrackData.BeamGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
+
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
+            ensemble.BottomTrackData.InstrumentGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
+
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_0_INDEX] = 1.2f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_1_INDEX] = 2.3f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_2_INDEX] = 3.4f;
+            ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_3_INDEX] = 4.5f;
+
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_0_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_1_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_2_INDEX] = 1;
+            ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_3_INDEX] = 1;
+
+            string encoded = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData);                                      // Serialize object to JSON
+            DataSet.BottomTrackDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BottomTrackDataSet>(encoded);       // Deserialize the JSON
+
+            // Verify the values are the same
+            Assert.AreEqual(3.4f, decoded.FirstPingTime, "FirstPingTime is incorrect.");
+            Assert.AreEqual(4.5f, decoded.LastPingTime, "LastPingTime is incorrect.");
+            Assert.AreEqual(5.6f, decoded.Heading, "Heading is incorrect.");
+            Assert.AreEqual(6.7f, decoded.Pitch, "Pitch is incorrect.");
+            Assert.AreEqual(7.8f, decoded.Roll, "Roll is incorrect.");
+            Assert.AreEqual(8.9f, decoded.WaterTemp, "WaterTemp is incorrect.");
+            Assert.AreEqual(9.10f, decoded.SystemTemp, "SystemTemp is incorrect.");
+            Assert.AreEqual(10.11f, decoded.Salinity, "Salinity is incorrect.");
+            Assert.AreEqual(11.12f, decoded.Pressure, "Pressure is incorrect.");
+            Assert.AreEqual(12.13f, decoded.TransducerDepth, "TransducerDepth is incorrect.");
+            Assert.AreEqual(13.14f, decoded.SpeedOfSound, "SpeedOfSound is incorrect.");
+            Assert.AreEqual(new Status(1), decoded.Status, "Status is incorrect.");
+            Assert.AreEqual(4, decoded.NumBeams, "NumBeams is incorrect.");
+            Assert.AreEqual(5.66f, decoded.ActualPingCount, "ActualPingCount is incorrect.");
+            Assert.AreEqual(1.2f, decoded.Range[DataSet.Ensemble.BEAM_0_INDEX], "Range 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.Range[DataSet.Ensemble.BEAM_1_INDEX], "Range 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.Range[DataSet.Ensemble.BEAM_2_INDEX], "Range 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.Range[DataSet.Ensemble.BEAM_3_INDEX], "Range 3 is incorrect.");
+
+            Assert.AreEqual(1.2f, decoded.SNR[DataSet.Ensemble.BEAM_0_INDEX], "SNR 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.SNR[DataSet.Ensemble.BEAM_1_INDEX], "SNR 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.SNR[DataSet.Ensemble.BEAM_2_INDEX], "SNR 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.SNR[DataSet.Ensemble.BEAM_3_INDEX], "SNR 3 is incorrect.");
+
+            Assert.AreEqual(1.2f, decoded.Amplitude[DataSet.Ensemble.BEAM_0_INDEX], "Amplitude 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.Amplitude[DataSet.Ensemble.BEAM_1_INDEX], "Amplitude 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.Amplitude[DataSet.Ensemble.BEAM_2_INDEX], "Amplitude 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.Amplitude[DataSet.Ensemble.BEAM_3_INDEX], "Amplitude 3 is incorrect.");
+
+            Assert.AreEqual(1.2f, decoded.Correlation[DataSet.Ensemble.BEAM_0_INDEX], "Correlation 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.Correlation[DataSet.Ensemble.BEAM_1_INDEX], "Correlation 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.Correlation[DataSet.Ensemble.BEAM_2_INDEX], "Correlation 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.Correlation[DataSet.Ensemble.BEAM_3_INDEX], "Correlation 3 is incorrect.");
+
+            Assert.AreEqual(1.2f, decoded.BeamVelocity[DataSet.Ensemble.BEAM_0_INDEX], "BeamVelocity 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.BeamVelocity[DataSet.Ensemble.BEAM_1_INDEX], "BeamVelocity 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.BeamVelocity[DataSet.Ensemble.BEAM_2_INDEX], "BeamVelocity 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.BeamVelocity[DataSet.Ensemble.BEAM_3_INDEX], "BeamVelocity 3 is incorrect.");
+
+            Assert.AreEqual(1, decoded.BeamGood[DataSet.Ensemble.BEAM_0_INDEX], "BeamGood 0 is incorrect.");
+            Assert.AreEqual(1, decoded.BeamGood[DataSet.Ensemble.BEAM_1_INDEX], "BeamGood 1 is incorrect.");
+            Assert.AreEqual(1, decoded.BeamGood[DataSet.Ensemble.BEAM_2_INDEX], "BeamGood 2 is incorrect.");
+            Assert.AreEqual(1, decoded.BeamGood[DataSet.Ensemble.BEAM_3_INDEX], "BeamGood 3 is incorrect.");
+
+            Assert.AreEqual(1.2f, decoded.InstrumentVelocity[DataSet.Ensemble.BEAM_0_INDEX], "InstrumentVelocity 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.InstrumentVelocity[DataSet.Ensemble.BEAM_1_INDEX], "InstrumentVelocity 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.InstrumentVelocity[DataSet.Ensemble.BEAM_2_INDEX], "InstrumentVelocity 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.InstrumentVelocity[DataSet.Ensemble.BEAM_3_INDEX], "InstrumentVelocity 3 is incorrect.");
+
+            Assert.AreEqual(1, decoded.InstrumentGood[DataSet.Ensemble.BEAM_0_INDEX], "InstrumentGood 0 is incorrect.");
+            Assert.AreEqual(1, decoded.InstrumentGood[DataSet.Ensemble.BEAM_1_INDEX], "InstrumentGood 1 is incorrect.");
+            Assert.AreEqual(1, decoded.InstrumentGood[DataSet.Ensemble.BEAM_2_INDEX], "InstrumentGood 2 is incorrect.");
+            Assert.AreEqual(1, decoded.InstrumentGood[DataSet.Ensemble.BEAM_3_INDEX], "InstrumentGood 3 is incorrect.");
+
+
+            Assert.AreEqual(1.2f, decoded.EarthVelocity[DataSet.Ensemble.BEAM_0_INDEX], "EarthVelocity 0 is incorrect.");
+            Assert.AreEqual(2.3f, decoded.EarthVelocity[DataSet.Ensemble.BEAM_1_INDEX], "EarthVelocity 1 is incorrect.");
+            Assert.AreEqual(3.4f, decoded.EarthVelocity[DataSet.Ensemble.BEAM_2_INDEX], "EarthVelocity 2 is incorrect.");
+            Assert.AreEqual(4.5f, decoded.EarthVelocity[DataSet.Ensemble.BEAM_3_INDEX], "EarthVelocity 3 is incorrect.");
+
+            Assert.AreEqual(1, decoded.EarthGood[DataSet.Ensemble.BEAM_0_INDEX], "EarthGood 0 is incorrect.");
+            Assert.AreEqual(1, decoded.EarthGood[DataSet.Ensemble.BEAM_1_INDEX], "EarthGood 1 is incorrect.");
+            Assert.AreEqual(1, decoded.EarthGood[DataSet.Ensemble.BEAM_2_INDEX], "EarthGood 2 is incorrect.");
+            Assert.AreEqual(1, decoded.EarthGood[DataSet.Ensemble.BEAM_3_INDEX], "EarthGood 3 is incorrect.");
+        }
+
+        /// <summary>
+        /// Testing the timing for the JSON conversions.
+        /// Put breakstatements on all the time results.
+        /// Then run the code and check the results.
+        /// </summary>
+        [Test]
+        public void TestTiming()
+        {
+
+            // Generate an Ensemble
+            DataSet.Ensemble ensemble = EnsembleHelper.GenerateEnsemble(30);
+
+            Stopwatch watch = new Stopwatch();
+
+            // Test Serialize()
+            watch = new Stopwatch();
+            watch.Start();
+            for (int x = 0; x < 1000; x++)
+            {
+                string encoded = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData);
+            }
+            watch.Stop();
+            long resultSerialize = watch.ElapsedMilliseconds;
+
+            // Test Deserialize()
+            string encodedd = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData);
+            watch = new Stopwatch();
+            watch.Start();
+            for (int x = 0; x < 1000; x++)
+            {
+                DataSet.BottomTrackDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BottomTrackDataSet>(encodedd);
+            }
+            watch.Stop();
+            long resultDeserialize = watch.ElapsedMilliseconds;
+
+            Debug.WriteLine(String.Format("Serialize:{0}  Deserialize:{1}", resultSerialize, resultDeserialize));
+
+            Debug.WriteLine("Complete");
+
+        }
+
+        #endregion
     }
 
 }

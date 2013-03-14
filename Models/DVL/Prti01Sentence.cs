@@ -33,7 +33,8 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 11/22/2011      RC                     Initial coding.
- * 01/19/2012      RC          1.14       Added Encode()..
+ * 01/19/2012      RC          1.14       Added Encode().
+ * 02/21/2013      RC          2.18       Added comments.
  * 
  */
 
@@ -64,17 +65,40 @@ namespace RTI
         /// power up or user reset.
         /// </summary>
         private int _startTime;
+        /// <summary>
+        /// Start time of this sample in hundreds of seconds since
+        /// power up or user reset.
+        /// </summary>
+        public int StartTime
+        {
+            get { return _startTime; }
+        }
 
         /// <summary>
         /// Sample Number.
         /// </summary>
         private int _sampleNumber;
+        /// <summary>
+        /// Get the Sample number.
+        /// </summary>
+        public int SampleNumber
+        {
+            get { return _sampleNumber; }
+        }
 
         /// <summary>
         /// Temperature in hundreds of degrees Celsius.
         /// (Measured from the transducer)
         /// </summary>
         private int _temperature;
+        /// <summary>
+        /// Temperature in hundreds of degrees Celsius.
+        /// (Measured from the transducer)
+        /// </summary>
+        public int Temperature
+        {
+            get { return _temperature; }
+        }
 
         /// <summary>
         /// Bottom Track X velocity component mm/s.
@@ -82,6 +106,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _btVelocityX;
+        /// <summary>
+        /// Bottom Track X velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelX
+        {
+            get { return _btVelocityX; }
+        }
 
         /// <summary>
         /// Bottom Track Y velocity component mm/s.
@@ -89,7 +122,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _btVelocityY;
-
+        /// <summary>
+        /// Bottom Track Y velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelY
+        {
+            get { return _btVelocityY; }
+        }
 
         /// <summary>
         /// Bottom Track Z velocity component mm/s.
@@ -97,6 +138,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _btVelocityZ;
+        /// <summary>
+        /// Bottom Track Z velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelZ
+        {
+            get { return _btVelocityZ; }
+        }
 
         /// <summary>
         /// Depth below transducer in mm.  
@@ -104,6 +154,15 @@ namespace RTI
         /// 0 = no detection)
         /// </summary>
         private Distance _depth;
+        /// <summary>
+        /// Depth below transducer in mm.  
+        /// (Range to the bottom in front of the transducer, 
+        /// 0 = no detection)
+        /// </summary>
+        public Distance BottomTrackDepth
+        {
+            get { return _depth; }
+        }
 
         /// <summary>
         /// Water Mass X velocity component mm/s.
@@ -111,6 +170,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _wmVelocityX;
+        /// <summary>
+        /// Water Mass X velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelX
+        {
+            get { return _wmVelocityX; }
+        }
 
         /// <summary>
         /// Water Mass Y velocity component mm/s.
@@ -118,7 +186,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _wmVelocityY;
-
+        /// <summary>
+        /// Water Mass Y velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelY
+        {
+            get { return _wmVelocityY; }
+        }
 
         /// <summary>
         /// Water Mass Z velocity component mm/s.
@@ -126,18 +202,43 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _wmVelocityZ;
+        /// <summary>
+        /// Water Mass Z velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelZ
+        {
+            get { return _wmVelocityZ; }
+        }
 
         /// <summary>
         /// Depth of water mass measurement in mm.
         /// (Position of the bin in front of the transducer)
         /// </summary>
         private Distance _wmDepth;
+        /// <summary>
+        /// Depth of water mass measurement in mm.
+        /// (Position of the bin in front of the transducer)
+        /// </summary>
+        public Distance WaterMassDepth
+        {
+            get { return _wmDepth; }
+        }
 
         /// <summary>
         /// Built in test and status bits in hexadecimal.
         /// (0000 = OK)
         /// </summary>
         private Status _status;
+        /// <summary>
+        /// Built in test and status bits in hexadecimal.
+        /// (0000 = OK)
+        /// </summary>
+        public Status SystemStatus
+        {
+            get { return _status; }
+        }
 
         #endregion
 
@@ -612,102 +713,6 @@ namespace RTI
             AppendChecksum();
 
             return Sentence;
-        }
-
-        /// <summary>
-        /// Return the Start time.
-        /// </summary>
-        public int StartTime
-        {
-            get { return _startTime; }
-        }
-
-        /// <summary>
-        /// Get the Sample number.
-        /// </summary>
-        public int SampleNumber
-        {
-            get { return _sampleNumber; }
-        }
-
-        /// <summary>
-        /// Get the temperature in Celcius.
-        /// </summary>
-        public int Temperature
-        {
-            get { return _temperature; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Velocity X as mm/s.
-        /// </summary>
-        public Speed BottomTrackVelX
-        {
-            get { return _btVelocityX; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Velocity Y as mm/s.
-        /// </summary>
-        public Speed BottomTrackVelY
-        {
-            get { return _btVelocityY; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Velocity Z as mm/s.
-        /// </summary>
-        public Speed BottomTrackVelZ
-        {
-            get { return _btVelocityZ; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Depth in mm.
-        /// </summary>
-        public Distance BottomTrackDepth
-        {
-            get { return _depth; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Velocity X in mm/s.
-        /// </summary>
-        public Speed WaterMassVelX
-        {
-            get { return _wmVelocityX; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Velocity Y in mm/s.
-        /// </summary>
-        public Speed WaterMassVelY
-        {
-            get { return _wmVelocityY; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Velocity Z in mm/s.
-        /// </summary>
-        public Speed WaterMassVelZ
-        {
-            get { return _wmVelocityZ; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Depth in mm.
-        /// </summary>
-        public Distance WaterMassDepth
-        {
-            get { return _wmDepth; }
-        }
-
-        /// <summary>
-        /// Get the status of the system.
-        /// </summary>
-        public Status SystemStatus
-        {
-            get { return _status; }
         }
     }
 

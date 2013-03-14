@@ -45,12 +45,18 @@
  * 01/24/2012      RC          1.14       Removed Rounded properties to methods to reduce memory footprint.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 01/04/2013      RC          2.17       Created a constructor that take no data.
- *       
+ * 02/21/2013      RC          2.18       For PRTI messages, made LastPingTime the PRTI start time.
+ * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
+ * 02/26/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
  * 
  */
 
 using System;
 using System.Data;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace RTI
 {
@@ -59,6 +65,7 @@ namespace RTI
         /// <summary>
         /// Data set containing all the Ancillary data.
         /// </summary>
+        [JsonConverter(typeof(AncillaryDataSetSerializer))]
         public class AncillaryDataSet : BaseDataSet
         {
             #region Variables
@@ -114,12 +121,12 @@ namespace RTI
             public float Roll { get; set; }
 
             /// <summary>
-            /// Water Temperature in degrees.  Used in Speed of Sound.
+            /// Water Temperature in degrees farenheit.  Used in Speed of Sound.
             /// </summary>
             public float WaterTemp { get; set; }
 
             /// <summary>
-            /// System (board) temperature in degrees.
+            /// System (board) temperature in degrees farenheit.
             /// </summary>
             public float SystemTemp { get; set; }
 
@@ -182,24 +189,6 @@ namespace RTI
             }
 
             /// <summary>
-            /// Create a Ancillary data set.  Includes all the information
-            /// about the current Ancillary data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="ancData">DataTable containing Ancillary data</param>
-            public AncillaryDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataRow ancData) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
-            {
-                // Decode the information
-                Decode(ancData);
-            }
-
-            /// <summary>
             /// Create a Ancillary data set.  Include all the information
             /// about the current Ancillary data from the sentence.
             /// This will set the temperature.
@@ -208,7 +197,8 @@ namespace RTI
             public AncillaryDataSet(Prti01Sentence sentence) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID)
             {
-                WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);   // Sentence stores temp at 1/100 degree Celcius.
+                WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);     // Sentence stores temp at 1/100 degree Celcius.
+                LastPingTime = sentence.StartTime / 100;                        // Convert the Start Time for hundreds of seconds to seconds.
             }
 
             /// <summary>
@@ -221,6 +211,64 @@ namespace RTI
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID)
             {
                 WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);   // Sentence stores temp at 1/100 degree Celcius.
+                LastPingTime = sentence.StartTime / 100;                        // Convert the Start Time for hundreds of seconds to seconds.
+            }
+
+            /// <summary>
+            /// Create an Ancillary data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.AncillaryDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 97ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.AncillaryDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.AncillaryDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
+            /// </summary>
+            /// <param name="ValueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="NumElements">Number of Bin</param>
+            /// <param name="ElementsMultiplier">Number of beams</param>
+            /// <param name="Imag"></param>
+            /// <param name="NameLength">Length of name</param>
+            /// <param name="Name">Name of data type</param>
+            /// <param name="FirstBinRange">First Bin Range.</param>
+            /// <param name="BinSize">Bin Size in meters.</param>
+            /// <param name="FirstPingTime">Time of first ping in seconds</param>
+            /// <param name="LastPingTime">Time of last ping in seconds.</param>
+            /// <param name="Heading">Heading in degrees.</param>
+            /// <param name="Pitch">Pitch in degrees.</param>
+            /// <param name="Roll">Roll in degrees.</param>
+            /// <param name="WaterTemp">Water Temperature in degrees farenheit.</param>
+            /// <param name="SystemTemp">System Temperature in degrees farenheit.</param>
+            /// <param name="Salinity">Salinity of the water in PPM.</param>
+            /// <param name="Pressure">Pressure read by the pressure sensor in Pascals.</param>
+            /// <param name="TransducerDepth">Depth of the transducer in meters.</param>
+            /// <param name="SpeedOfSound">Speed of Sound measured in m/s.</param>
+            [JsonConstructor]
+            private AncillaryDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
+                        float FirstBinRange, float BinSize, float FirstPingTime, float LastPingTime,
+                        float Heading, float Pitch, float Roll, float WaterTemp, float SystemTemp,
+                        float Salinity, float Pressure, float TransducerDepth, float SpeedOfSound) :
+                base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
+            {
+                // Initialize data
+                this.FirstBinRange = FirstBinRange;
+                this.BinSize = BinSize;
+                this.FirstPingTime = FirstPingTime;
+                this.LastPingTime = LastPingTime;
+                this.Heading = Heading;
+                this.Pitch = Pitch;
+                this.Roll = Roll;
+                this.WaterTemp = WaterTemp;
+                this.SystemTemp = SystemTemp;
+                this.Salinity = Salinity;
+                this.Pressure = Pressure;
+                this.TransducerDepth = TransducerDepth;
+                this.SpeedOfSound = SpeedOfSound;
             }
 
             /// <summary>
@@ -310,29 +358,6 @@ namespace RTI
             }
 
             /// <summary>
-            /// Get all the information about the Ancillary data.
-            /// </summary>
-            /// <param name="dataRow">DataTable containing the Ancillary data type.</param>
-            private void Decode(DataRow dataRow)
-            {
-                // Go through the result settings the settings
-                FirstBinRange = Convert.ToSingle(dataRow[DbCommon.COL_ENS_FIRST_BIN_RANGE].ToString());
-                BinSize = Convert.ToSingle(dataRow[DbCommon.COL_ENS_BIN_SIZE].ToString());
-                FirstPingTime = Convert.ToSingle(dataRow[DbCommon.COL_ENS_FIRST_PING_TIME].ToString());
-                LastPingTime = Convert.ToSingle(dataRow[DbCommon.COL_ENS_LAST_PING_TIME].ToString());
-                Heading = Convert.ToSingle(dataRow[DbCommon.COL_ENS_HEADING].ToString());
-                Pitch = Convert.ToSingle(dataRow[DbCommon.COL_ENS_PITCH].ToString());
-                Roll = Convert.ToSingle(dataRow[DbCommon.COL_ENS_ROLL].ToString());
-                WaterTemp = Convert.ToSingle(dataRow[DbCommon.COL_ENS_TEMP_WATER].ToString());
-                SystemTemp = Convert.ToSingle(dataRow[DbCommon.COL_ENS_TEMP_SYS].ToString());
-                Salinity = Convert.ToSingle(dataRow[DbCommon.COL_ENS_SALINITY].ToString());
-                Pressure = Convert.ToSingle(dataRow[DbCommon.COL_ENS_PRESSURE].ToString());
-                TransducerDepth = Convert.ToSingle(dataRow[DbCommon.COL_ENS_XDCR_DEPTH].ToString());
-                SpeedOfSound = Convert.ToSingle(dataRow[DbCommon.COL_ENS_SOS].ToString());
-            }
-
-
-            /// <summary>
             /// Override the ToString to return all the Ancillary data as a string.
             /// </summary>
             /// <returns></returns>
@@ -354,6 +379,186 @@ namespace RTI
                 s += "System Temp:     " + SystemTemp + "\n";
 
                 return s;
+            }
+        }
+
+        /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData).
+        /// 
+        /// 50ms for this method.
+        /// 100ms for calling SerializeObject default.
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class AncillaryDataSetSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var data = value as AncillaryDataSet;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                // Write the base values
+                writer.WriteRaw(data.ToJsonBaseStub());
+                writer.WriteRaw(",");
+
+                // FirstBinRange
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_FIRSTBINRANGE);
+                writer.WriteValue(data.FirstBinRange);
+
+                // BinSize
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BINSIZE);
+                writer.WriteValue(data.BinSize);
+
+                // FirstPingTime
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_FIRSTPINGTIME);
+                writer.WriteValue(data.FirstPingTime);
+
+                // LastPingTime
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_LASTPINGTIME);
+                writer.WriteValue(data.LastPingTime);
+
+                // Heading
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_HEADING);
+                writer.WriteValue(data.Heading);
+
+                // Pitch
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_PITCH);
+                writer.WriteValue(data.Pitch);
+
+                // Roll
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_ROLL);
+                writer.WriteValue(data.Roll);
+
+                // WaterTemp
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WATERTEMP);
+                writer.WriteValue(data.WaterTemp);
+
+                // SystemTemp
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SYSTEMP);
+                writer.WriteValue(data.SystemTemp);
+
+                // Salinity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SALINITY);
+                writer.WriteValue(data.Salinity);
+
+                // Pressure
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_PRESSURE);
+                writer.WriteValue(data.Pressure);
+
+                // TransducerDepth
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_TRANSDUCERDEPTH);
+                writer.WriteValue(data.TransducerDepth);
+
+                // SpeedOfSound
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SPEEDOFSOUND);
+                writer.WriteValue(data.SpeedOfSound);
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// 
+            /// DataSet.AncillaryDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.AncillaryDataSet}(encodedEns)
+            /// 
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    // Load the object
+                    JObject jsonObject = JObject.Load(reader);
+
+                    // Decode the data
+                    int NumElements = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMELEMENTS];
+                    int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
+
+                    // Create the object
+                    var data = new AncillaryDataSet(DataSet.Ensemble.DATATYPE_FLOAT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID);
+
+                    // FirstBinRange
+                    data.FirstBinRange = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_FIRSTBINRANGE];
+
+                    // BinSize
+                    data.BinSize = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_BINSIZE];
+
+                    // FirstPingTime
+                    data.FirstPingTime = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_FIRSTPINGTIME];
+
+                    // LastPingTime
+                    data.LastPingTime = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_LASTPINGTIME];
+
+                    // Heading
+                    data.Heading = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_HEADING];
+
+                    // Pitch
+                    data.Pitch = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_PITCH];
+
+                    // Roll
+                    data.Roll = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_ROLL];
+
+                    // WaterTemp
+                    data.WaterTemp = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_WATERTEMP];
+
+                    // SystemTemp
+                    data.SystemTemp = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SYSTEMP];
+
+                    // Salinity
+                    data.Salinity = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SALINITY];
+
+                    // Pressure
+                    data.Pressure = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_PRESSURE];
+
+                    // TransducerDepth
+                    data.TransducerDepth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_TRANSDUCERDEPTH];
+
+                    // SpeedOfSound
+                    data.SpeedOfSound = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SPEEDOFSOUND];
+
+                    return data;
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(AncillaryDataSet).IsAssignableFrom(objectType);
             }
         }
     }

@@ -48,6 +48,11 @@
  * 09/14/2012      RC          2.15       Added column names for Commands and Options for a project.
  * 09/18/2012      RC          2.15       Added COL_ENS_SUBSYS_CONFIG column to the Project database in tblEnsemble.
  * 10/01/2012      RC          2.15       Added COL_CMD_REV column to the Project database in tblOptions.
+ * 02/06/2013      RC          2.18       Changed TBL_ENS_CMDS to TBL_ENS_OPTIONS.
+ * 02/07/2013      RC          2.18       Added CheckIfColumnExist() and CheckIfTableIsEmpty().
+ * 03/06/2013      RC          2.18       Changed the format of the database.
+ * 03/08/2013      RC          2.18       For each method call, created a new one with the SQLiteConnection to prevent opening and closing connection for each call.
+ *                                         Added RunQueryOnProjectDbObj() to return an object instead of an int.
  * 
  */
 
@@ -97,15 +102,13 @@ namespace RTI
 
         /// <summary>
         /// Project Database:
-        /// Table to hold all the commands and options for the project.
+        /// Table to hold all the options for the project.
         /// </summary>
-        public const string TBL_ENS_CMDS = "tblOptions";
+        public const string TBL_ENS_OPTIONS = "tblOptions";
 
         #endregion
 
         #region Columns
-
-        #region Ensemble Columns
 
         /// <summary>
         /// Ensemble Table:
@@ -123,775 +126,104 @@ namespace RTI
 
         /// <summary>
         /// Ensemble Table:
-        /// Number of bins.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_NUM_BIN = "NumBins";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Number of beams.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_NUM_BEAM = "NumBeams";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Desired Number of Pings.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_DES_PING_COUNT = "DesiredPingCount";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Actual Number of Pings.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_ACT_PING_COUNT = "ActualPingCount";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Status of the system.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_STATUS = "Status";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Year.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_YEAR = "Year";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Month.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_MONTH = "Month";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Day.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_DAY = "Day";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Hour.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_HOUR = "Hour";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Minute.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_MINUTE = "Minute";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Second.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_SECOND = "Second";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Hundredth of a second.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_HUN_SECOND = "HundSec";
-
-        /// <summary>
-        /// Ensemble Table:
         /// DateTime.
         /// (INTEGER NOT NULL)
         /// </summary>
         public const string COL_ENS_DATETIME = "DateTime";
 
-        /// <summary>
-        /// Ensemble Table:
-        /// Range to first bin.
-        /// (INTEGER NOT NULL)
-        /// </summary>
-        public const string COL_ENS_FIRST_BIN_RANGE = "FirstBinRange";
+
+        #region DataSet Columns
 
         /// <summary>
         /// Ensemble Table:
-        /// Bin Size.
-        /// (INTEGER NOT NULL)
+        /// Ensemble DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_BIN_SIZE = "BinSize";
+        public const string COL_ENSEMBLE_DS = "EnsembleDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// First Ping Time.
-        /// (REAL NOT NULL)
+        /// Ancillary DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_FIRST_PING_TIME = "ProfileFirstPingTime";
+        public const string COL_ANCILLARY_DS = "AncillaryDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Last Ping Time.
-        /// (REAL NOT NULL)
+        /// Amplitude DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_LAST_PING_TIME = "ProfileLastPingTime";
+        public const string COL_AMPLITUDE_DS = "AmplitudeDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Heading.
-        /// (REAL NOT NULL)
+        /// Correlation DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_HEADING = "Heading";
+        public const string COL_CORRELATION_DS = "CorrelationDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Pitch.
-        /// (REAL NOT NULL)
+        /// Beam Velocity DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_PITCH = "Pitch";
+        public const string COL_BEAMVELOCITY_DS = "BeamVelocityDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Roll.
-        /// (REAL NOT NULL)
+        /// Earth Velocity DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_ROLL = "Roll";
+        public const string COL_EARTHVELOCITY_DS = "EarthVelocityDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Water Temperature.
-        /// (REAL NOT NULL)
+        /// Instrument Velocity DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_TEMP_WATER = "WaterTemp";
-
-
-        /// <summary>
-        /// Ensemble Table:
-        /// System Temperature.
-        /// (REAL NOT NULL)
-        /// </summary>
-        public const string COL_ENS_TEMP_SYS = "SysTemp";
+        public const string COL_INSTRUMENTVELOCITY_DS = "InstrumentVelocityDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Salinity.
-        /// (REAL NOT NULL)
+        /// Bottom Track DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_SALINITY = "Salinity";
+        public const string COL_BOTTOMTRACK_DS = "BottomTrackDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Pressure.
-        /// (REAL NOT NULL)
+        /// Good Beam DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_PRESSURE = "Pressure";
+        public const string COL_GOODBEAM_DS = "GoodBeamDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Transducer Depth.
-        /// (REAL NOT NULL)
+        /// Good Earth DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_XDCR_DEPTH = "TransducerDepth";
+        public const string COL_GOODEARTH_DS = "GoodEarthDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Speed of Sound.
-        /// (REAL NOT NULL)
+        /// NMEA DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_SOS = "SpeedOfSound";
+        public const string COL_NMEA_DS = "NmeaDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// DateTime ensemble was added to the database.
-        /// (DATETIME NOT NULL)
+        /// Earth Water Mass DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_DB_TIME = "DbTime";
+        public const string COL_EARTHWATERMASS_DS = "EarthWaterMassDS";
 
         /// <summary>
         /// Ensemble Table:
-        /// Is Beam Velocity Available.
-        /// (BOOLEAN)
+        /// Instrument Water Mass DataSet
+        /// TEXT
         /// </summary>
-        public const string COL_ENS_IS_BEAM_VEL_AVAIL = "IsBeamVelAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Instrument Velocity Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_INSTR_VEL_AVAIL = "IsInstrVelAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Earth Velocity Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_EARTH_VEL_AVAIL = "IsEarthVelAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Amplitude Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_AMP_AVAIL = "IsAmpAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Correlation Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_CORR_AVAIL = "IsCorrAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Good Beam Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_GB_AVAIL = "IsGoodBeamAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Good Earth Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_GE_AVAIL = "IsGoodEarthAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Ancillary Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_ANCIL_AVAIL = "IsAncillaryAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is Bottom Track Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_BT_AVAIL = "IsBottomTrackAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Is NMEA Available.
-        /// (BOOLEAN)
-        /// </summary>
-        public const string COL_ENS_IS_NMEA_AVAIL = "IsNmeaAvail";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// NMEA strings.
-        /// (TEXT)
-        /// </summary>
-        public const string COL_ENS_NMEA_DATA = "NmeaData";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// System Serial Number.
-        /// (TEXT)
-        /// </summary>
-        public const string COL_ENS_SYS_SERIAL = "SysSerialNum";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Firmware version.
-        /// (TEXT)
-        /// </summary>
-        public const string COL_ENS_FIRMWARE = "Firmware";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Firmware Major version.
-        /// (TINYINT)
-        /// </summary>
-        public const string COL_ENS_FIRMWARE_MAJOR = "FirmwareMajor";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Firmware Minor version.
-        /// (TINYINT)
-        /// </summary>
-        public const string COL_ENS_FIRMWARE_MINOR = "FirmwareMinor";
-
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Firmware Revision.
-        /// (TINYINT)
-        /// </summary>
-        public const string COL_ENS_FIRMWARE_REVISION = "FirmwareRevision";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Sub-System.  Describes which subsystem the ensemble is associated with.
-        /// (TINYINT)
-        /// </summary>
-        public const string COL_ENS_SUBSYSTEM_CODE = "SubsystemCode";
-
-        /// <summary>
-        /// Ensemble Table:
-        /// Subsystem Configuration.  Identifies which command setup is being used for the current subsystem.
-        /// </summary>
-        public const string COL_ENS_SUBSYS_CONFIG = "SubsystemConfig";
-
-        #endregion
-
-        #region Beam Columns
-
-        /// <summary>
-        /// Beam Table:
-        /// Row ID.
-        /// (INTEGER PRIMARY KEY AUTOINCREMENT) 
-        /// </summary>
-        public const string COL_BV_ID = "ID";
-
-        /// <summary>
-        /// Beam Table:
-        /// Ensemble Id.
-        /// (INTEGER FOREIGN KEY)
-        /// </summary>
-        public const string COL_BV_ENS_ID = "EnsembleId";
-
-        /// <summary>
-        /// Beam Table:
-        /// Bin Number.
-        /// (INTEGER NOT NULL) 
-        /// </summary>
-        public const string COL_BV_BIN_NUM = "BinNum";
-
-        /// <summary>
-        /// Beam Table:
-        /// Beam Number.
-        /// (SAMLLINT NOT NULL)
-        /// </summary>
-        public const string COL_BV_BEAM_NUM = "BeamNum";
-
-        /// <summary>
-        /// Beam Table:
-        /// Beam Orientation.
-        /// (TINYINT NOT NULL)
-        /// </summary>
-        public const string COL_BV_ORIENT = "Orientation";
-
-        /// <summary>
-        /// Beam Table:
-        /// Beam Velocity data.
-        /// (REAL) 
-        /// </summary>
-        public const string COL_BV_VEL_BEAM = "BeamVel";
-
-        /// <summary>
-        /// Beam Table:
-        /// Earth Velocity data.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BV_VEL_EARTH = "EarthVel";
-
-        /// <summary>
-        /// Beam Table:
-        /// Instrument Velocity data.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BV_VEL_INSTR = "InstrVel";
-
-        /// <summary>
-        /// Beam Table:
-        /// Amplitude data.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BV_AMP = "Amplitude";
-
-        /// <summary>
-        /// Beam Table:
-        /// Correlation data.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BV_CORR = "Correlation";
-
-        /// <summary>
-        /// Beam Table:
-        /// Good Beam data.
-        /// (SMALLINT)
-        /// </summary>
-        public const string COL_BV_GOOD_BEAM = "GoodBeam";
-
-        /// <summary>
-        /// Beam Table:
-        /// Good Earth data.
-        /// (SMALLINT)
-        /// </summary>
-        public const string COL_BV_GOOD_EARTH = "GoodEarth";
-
-        #endregion
-
-        #region Bottom Track Columns
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// First Ping Time.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_FIRST_PING_TIME = "BTFirstPingTime";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Last Ping Time.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_LAST_PING_TIME = "BTLastPingTime";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Heading.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_HEADING = "BTHeading";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Pitch.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_PITCH = "BTPitch";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Roll.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_ROLL = "BTRoll";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Water Temperature.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_TEMP_WATER = "BTWaterTemp";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// System Temperature.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_TEMP_SYS = "BTSysTemp";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Salinity.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_SALINITY = "BTSalinity";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Pressure.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_PRESSURE = "BTPressure";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Speed of Sound.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_SOS = "BTSpeedOfSound";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Status.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_STATUS = "BTStatus";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Actual Ping Count.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_ACTUAL_PING_COUNT = "BTActualPingCount";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Range Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_RANGE_B0 = "BTRangeBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Range Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_RANGE_B1 = "BTRangeBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Range Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_RANGE_B2 = "BTRangeBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Range Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_RANGE_B3 = "BTRangeBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Signal to Noise Ratio Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_SNR_B0 = "BTSNRBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Signal to Noise Ratio Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_SNR_B1 = "BTSNRBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Signal to Noise Ratio Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_SNR_B2 = "BTSNRBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Signal to Noise Ratio Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_SNR_B3 = "BTSNRBEAM3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Amplitude Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_AMP_B0 = "BTAmpBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Amplitude Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_AMP_B1 = "BTAmpBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Amplitude Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_AMP_B2 = "BTAmpBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Amplitude Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_AMP_B3 = "BTAmpBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Correlation Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_CORR_B0 = "BTCorrBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Correlation Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_CORR_B1 = "BTCorrBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Correlation Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_CORR_B2 = "BTCorrBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Correlation Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_CORR_B3 = "BTCorrBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_VEL_B0 = "BTBeamVelBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_VEL_B1 = "BTBeamVelBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_VEL_B2 = "BTBeamVelBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_VEL_B3 = "BTBeamVelBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Good Beam Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_GOOD_B0 = "BTBeamGoodBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Good Beam Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_GOOD_B1 = "BTBeamGoodBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Good Beam Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_GOOD_B2 = "BTBeamGoodBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Beam Velocity Good Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_BEAM_GOOD_B3 = "BTBeamGoodBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_VEL_B0 = "BTInstrVelBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_VEL_B1 = "BTInstrVelBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_VEL_B2 = "BTInstrVelBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_VEL_B3 = "BTInstrVelBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Good Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_GOOD_B0 = "BTInstrGoodBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Good Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_GOOD_B1 = "BTInstrGoodBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Good Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_GOOD_B2 = "BTInstrGoodBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Instrument Velocity Good Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_INSTR_GOOD_B3 = "BTInstrGoodBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_VEL_B0 = "BTEarthVelBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_VEL_B1 = "BTEarthVelBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_VEL_B2 = "BTEarthVelBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_VEL_B3 = "BTEarthVelBeam3";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Good Beam 0.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_GOOD_B0 = "BTEarthGoodBeam0";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Good Beam 1.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_GOOD_B1 = "BTEarthGoodBeam1";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Good Beam 2.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_GOOD_B2 = "BTEarthGoodBeam2";
-
-        /// <summary>
-        /// Bottom Track Table:
-        /// Earth Velocity Good Beam 3.
-        /// (REAL)
-        /// </summary>
-        public const string COL_BT_EARTH_GOOD_B3 = "BTEarthGoodBeam3";
+        public const string COL_INSTRUMENTWATERMASS_DS = "InstrumentWaterMassDS";
 
         #endregion
 
@@ -1013,12 +345,125 @@ namespace RTI
             }
             catch (SQLiteException e)
             {
-                log.Error("Error running query on database: " + project.ProjectName, e);
+                log.Error(string.Format("Error running query on database: {0} \n{1}", project.ProjectName, query), e);
                 return 0;
             }
             catch (Exception e)
             {
-                log.Error("Unknown Error running query on database: " + project.ProjectName, e);
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
+                return 0;
+            }
+
+
+            return result;
+        }
+
+        /// <summary>
+        /// Run a query that will return an Integer.  Give the
+        /// project and the query string.  The result will be returned.
+        /// If an error, 0 will be returned.
+        /// </summary>
+        /// <param name="cnn">Sqlite Database Connection.</param>
+        /// <param name="project">Project to query.</param>
+        /// <param name="query">Query string.</param>
+        /// <returns>Result of query, if error, it will return 0.</returns>
+        public static int RunQueryOnProjectDb(SQLiteConnection cnn, Project project, string query)
+        {
+            int result = 0;
+
+            try
+            {
+                // Open a connection to the database
+                //using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
+                //{
+                    // Ensure a connection can be made
+                    if (cnn == null)
+                    {
+                        return -1;
+                    }
+
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        using (DbCommand cmd = cnn.CreateCommand())
+                        {
+                            cmd.CommandText = query;
+
+                            // Get Result
+                            object resultValue = cmd.ExecuteScalar();
+                            result = Convert.ToInt32(resultValue.ToString());
+
+                        }
+                        // Add all the data
+                        dbTrans.Commit();
+                    }
+                    // Close the connection to the database
+                    //cnn.Close();
+                //}
+            }
+            catch (SQLiteException e)
+            {
+                log.Error(string.Format("Error running query on database: {0} \n{1}", project.ProjectName, query), e);
+                return 0;
+            }
+            catch (Exception e)
+            {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
+                return 0;
+            }
+
+
+            return result;
+        }
+
+
+        /// <summary>
+        /// Run a query that will return an object.  Give the
+        /// project and the query string.  The result will be returned.
+        /// If an error, null will be returned.
+        /// </summary>
+        /// <param name="project">Project to query.</param>
+        /// <param name="query">Query string.</param>
+        /// <returns>Result of query, if error, it will return 0.</returns>
+        public static object RunQueryOnProjectDbObj(Project project, string query)
+        {
+            object result = 0;
+
+            try
+            {
+                // Open a connection to the database
+                using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
+                {
+                    // Ensure a connection can be made
+                    if (cnn == null)
+                    {
+                        return -1;
+                    }
+
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        using (DbCommand cmd = cnn.CreateCommand())
+                        {
+                            cmd.CommandText = query;
+
+                            // Get Result
+                            result = cmd.ExecuteScalar();
+
+                        }
+                        // Add all the data
+                        dbTrans.Commit();
+                    }
+                    // Close the connection to the database
+                    cnn.Close();
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error(string.Format("Error running query on database: {0} \n{1}", project.ProjectName, query), e);
+                return 0;
+            }
+            catch (Exception e)
+            {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
                 return 0;
             }
 
@@ -1069,14 +514,238 @@ namespace RTI
             {
                 if (project != null)
                 {
-                    log.Error("Error populating datatable from " + project.ProjectName + " database.", e);
+                    log.Error(string.Format("Error populating datatable from {0} database. \n{1}", project.ProjectName, query), e);
                 }
                 else
                 {
-                    log.Error("Error populating datatable.", e);
+                    log.Error(string.Format("Error populating datatable. \n{0}", query), e);
                 }
             }
             return dt;
+        }
+
+        /// <summary>
+        /// Allows the programmer to run a query against the project database
+        /// and return a table with the result.
+        /// </summary>
+        /// <param name="cnn">Sqlite Database Connection.</param>
+        /// <param name="project">Project to query.</param>
+        /// <param name="query">The SQL Query to run</param>
+        /// <returns>A DataTable containing the result set.</returns>
+        public static DataTable GetDataTableFromProjectDb(SQLiteConnection cnn, Project project, string query)
+        {
+            DataTable dt = new DataTable();
+            try
+            {
+                // Open a connection to the database
+                //using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
+                //{
+                    // Ensure a connection can be made
+                    if (cnn == null)
+                    {
+                        return dt;
+                    }
+
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        using (DbCommand cmd = cnn.CreateCommand())
+                        {
+                            cmd.CommandText = query;
+                            DbDataReader reader = cmd.ExecuteReader();
+
+                            // Load the datatable with query result
+                            dt.Load(reader);
+
+                            // Close the connection
+                            reader.Close();
+                            //cnn.Close();
+                        }
+                    }
+                //}
+
+            }
+            catch (Exception e)
+            {
+                if (project != null)
+                {
+                    log.Error(string.Format("Error populating datatable from {0} database. \n{1}", project.ProjectName, query), e);
+                }
+                else
+                {
+                    log.Error(string.Format("Error populating datatable. \n{0}", query), e);
+                }
+            }
+            return dt;
+        }
+
+        /// <summary>
+        /// Query to check if the table contains any rows.  This will check
+        /// the table given in the given project for any rows.  If at least
+        /// 1 row exist in the table, it will return false.
+        /// </summary>
+        /// <param name="project">Project to check.</param>
+        /// <param name="table">Table to check.</param>
+        /// <returns>TRUE = Table is empty.</returns>
+        public static bool CheckIfTableIsEmpty(Project project, string table)
+        {
+            // Create a query to check if the table is empty
+            string query = string.Format("SELECT exists(SELECT 1 FROM {0});", table);
+
+            // Check if any rows exist in the table
+            if (RunQueryOnProjectDb(project, query) > 0)
+            {
+                return false;
+            }
+
+            // Table is empty
+            return true;
+        }
+
+        /// <summary>
+        /// Query to check if the table contains any rows.  This will check
+        /// the table given in the given project for any rows.  If at least
+        /// 1 row exist in the table, it will return false.
+        /// </summary>
+        /// <param name="cnn">Sqlite Database Connection.</param>
+        /// <param name="project">Project to check.</param>
+        /// <param name="table">Table to check.</param>
+        /// <returns>TRUE = Table is empty.</returns>
+        public static bool CheckIfTableIsEmpty(SQLiteConnection cnn, Project project, string table)
+        {
+            // Create a query to check if the table is empty
+            string query = string.Format("SELECT exists(SELECT 1 FROM {0});", table);
+
+            // Check if any rows exist in the table
+            if (RunQueryOnProjectDb(cnn, project, query) > 0)
+            {
+                return false;
+            }
+
+            // Table is empty
+            return true;
+        }
+
+        /// <summary>
+        /// Check if the given column exist in the given table for the given project.
+        /// If the column does not exist, it will return false.  
+        /// 
+        /// To check if the colun exist, it will run a query to select the columnn given.
+        /// If the column does not exist, an exception will be given.  If an exception is
+        /// found, it will return false.
+        /// </summary>
+        /// <param name="project">Project to check.</param>
+        /// <param name="column">Column to check.</param>
+        /// <param name="table">Table to check.</param>
+        /// <returns>TRUE = Column exist in the table.</returns>
+        public static bool CheckIfColumnExist(Project project, string column, string table)
+        {
+            // Create a query to check if the column exist in the table
+            // This will try to select the column, if it does not exist, an error will be thrown
+            string query = string.Format("SELECT {0} FROM {1};", column, table);
+
+            // Default is true
+            bool result = true;
+
+            try
+            {
+                // Open a connection to the database
+                using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
+                {
+                    // Ensure a connection can be made
+                    if (cnn == null)
+                    {
+                        return false;
+                    }
+
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        using (DbCommand cmd = cnn.CreateCommand())
+                        {
+                            cmd.CommandText = query;
+
+                            // Run the query
+                            cmd.ExecuteNonQuery();
+
+                        }
+                        // Add all the data
+                        dbTrans.Commit();
+                    }
+                    // Close the connection to the database
+                    cnn.Close();
+                }
+            }
+            catch (SQLiteException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Check if the given column exist in the given table for the given project.
+        /// If the column does not exist, it will return false.  
+        /// 
+        /// To check if the colun exist, it will run a query to select the columnn given.
+        /// If the column does not exist, an exception will be given.  If an exception is
+        /// found, it will return false.
+        /// </summary>
+        /// <param name="cnn">Sqlite Database Connection.</param>
+        /// <param name="project">Project to check.</param>
+        /// <param name="column">Column to check.</param>
+        /// <param name="table">Table to check.</param>
+        /// <returns>TRUE = Column exist in the table.</returns>
+        public static bool CheckIfColumnExist(SQLiteConnection cnn, Project project, string column, string table)
+        {
+            // Create a query to check if the column exist in the table
+            // This will try to select the column, if it does not exist, an error will be thrown
+            string query = string.Format("SELECT {0} FROM {1};", column, table);
+
+            // Default is true
+            bool result = true;
+
+            try
+            {
+                // Open a connection to the database
+                //using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
+                //{
+                    // Ensure a connection can be made
+                    if (cnn == null)
+                    {
+                        return false;
+                    }
+
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        using (DbCommand cmd = cnn.CreateCommand())
+                        {
+                            cmd.CommandText = query;
+
+                            // Run the query
+                            cmd.ExecuteNonQuery();
+
+                        }
+                        // Add all the data
+                        dbTrans.Commit();
+                    }
+                    // Close the connection to the database
+                    //cnn.Close();
+                //}
+            }
+            catch (SQLiteException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return result;
         }
 
         #endregion

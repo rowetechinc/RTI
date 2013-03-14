@@ -48,35 +48,36 @@
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 06/20/2012      RC          2.12       Added IsBinGood().
  * 06/21/2012      RC          2.12       Add 3 beam solution option in IsBinGood().
+ * 02/25/2013      RC          2.18       Removed Orientation.
+ *                                         Added JSON encoding and Decoding.
+ *                                         Changed VV to VelocityVectors.
+ * 03/04/2013      RC          2.18       Create the VelocityVectors array in the constructor.
  * 
  */
 
 using System;
 using System.Data;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace RTI
 {
     namespace DataSet
     {
         /// <summary>
-        /// Data set containing all the EarthVelocity BeamVelocity data.
+        /// Data set containing all the EarthVelocity data.
         /// </summary>
+        [JsonConverter(typeof(EarthVelocityDataSetSerializer))]
         public class EarthVelocityDataSet : BaseDataSet
         {
+            #region Properties
+
             /// <summary>
             /// Store all the EarthVelocity velocity data for the ADCP.
             /// </summary>
             public float[,] EarthVelocityData { get; set; }
-
-            /// <summary>
-            /// This value will be used when there will be multiple transducers
-            /// giving ranges.  There will be duplicate beam Bin Bin ranges and the
-            /// orientation will determine which beam Bin Bin ranges to group together.
-            /// 
-            /// This may not be necessary and additional datatypes may be created instead
-            /// for each transducer orientation.
-            /// </summary>
-            public BaseDataSet.BeamOrientation Orientation { get; set; }
 
             /// <summary>
             /// Flag if the Velocity Vector Array is available.  This 
@@ -92,7 +93,9 @@ namespace RTI
             /// During screening this array can be created.  The screening
             /// will also remove the ship speed before creating the vector.
             /// </summary>
-            public VelocityVector[] VV { get; set; }
+            public VelocityVector[] VelocityVectors { get; set; }
+
+            #endregion
 
             /// <summary>
             /// Create an Earth Velocity data set.
@@ -103,16 +106,13 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beams.</param>
-            public EarthVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, BeamOrientation orientation = BeamOrientation.DOWN) :
+            public EarthVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
                 IsVelocityVectorAvail = false;
                 EarthVelocityData = new float[NumElements, ElementsMultiplier];
-
-                // Default orientation value is DOWN
-                Orientation = orientation;
+                VelocityVectors = new VelocityVector[NumElements];
             }
 
             /// <summary>
@@ -126,45 +126,50 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="velocityData">Byte array containing EarthVelocity velocity data</param>
-            /// <param name="orientation">Orientation of the beams.</param>
-            public EarthVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData, BeamOrientation orientation = BeamOrientation.DOWN) :
+            public EarthVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
                 IsVelocityVectorAvail = false;
                 EarthVelocityData = new float[NumElements, ElementsMultiplier];
-
-                // Default orientation value is DOWN
-                Orientation = orientation;
+                VelocityVectors = new VelocityVector[NumElements];
 
                 // Decode the byte array for velocity data
                 Decode(velocityData);
             }
 
             /// <summary>
-            /// Create an Earth Velocity data set.  Include all the information to
-            /// create the data set.
+            /// Create an Earth Velocity data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EarthVelocityDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 65ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.EarthVelocityDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EarthVelocityDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
             /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="velocityData">DataTable containing EarthVelocity velocity data</param>
-            /// <param name="orientation">Orientation of the beams.</param>
-            public EarthVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable velocityData, BeamOrientation orientation = BeamOrientation.DOWN) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
+            /// <param name="ValueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="NumElements">Number of Bin</param>
+            /// <param name="ElementsMultiplier">Number of beams</param>
+            /// <param name="Imag"></param>
+            /// <param name="NameLength">Length of name</param>
+            /// <param name="Name">Name of data type</param>
+            /// <param name="EarthVelocityData">2D Array containing Earth velocity data. [Bin, Beam]</param>
+            /// <param name="IsVelocityVectorAvail">Flag if the Velocity Vector array is available.</param>
+            /// <param name="VelocityVectors">Velcoity Vectors.</param>
+            [JsonConstructor]
+            private EarthVelocityDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name, float[,] EarthVelocityData, bool IsVelocityVectorAvail, VelocityVector[] VelocityVectors) :
+                base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
                 // Initialize data
-                IsVelocityVectorAvail = false;
-                EarthVelocityData = new float[NumElements, ElementsMultiplier];
-
-                // Default orientation value is DOWN
-                Orientation = orientation;
-
-                // Decode the byte array for velocity data
-                Decode(velocityData);
+                this.EarthVelocityData = EarthVelocityData;
+                this.IsVelocityVectorAvail = IsVelocityVectorAvail;
+                this.VelocityVectors = VelocityVectors;
             }
 
             /// <summary>
@@ -184,24 +189,6 @@ namespace RTI
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
                         EarthVelocityData[bin, beam] = MathHelper.ByteArrayToFloat(dataType, index);
                     }
-                }
-            }
-
-            /// <summary>
-            /// Get all the Earth Velocity ranges for each beam and Bin.
-            /// 
-            /// I changed the order from what the data is stored as and now make it Bin x Beams.
-            /// </summary>
-            /// <param name="dataTable">DataTable containing the Earth Velocity data type.</param>
-            private void Decode(DataTable dataTable)
-            {
-                // Go through the result settings the ranges
-                foreach (DataRow r in dataTable.Rows)
-                {
-                    int bin = Convert.ToInt32(r[DbCommon.COL_BV_BIN_NUM].ToString());
-                    int beam = Convert.ToInt32(r[DbCommon.COL_BV_BEAM_NUM].ToString());
-                    float value = Convert.ToSingle(r[DbCommon.COL_BV_VEL_EARTH].ToString());
-                    EarthVelocityData[bin, beam] = value;
                 }
             }
 
@@ -261,6 +248,8 @@ namespace RTI
 
                 return s;
             }
+
+            #region Utilties
 
             /// <summary>
             /// Return whether any of the Earth Velocity values are bad.
@@ -356,6 +345,182 @@ namespace RTI
                     // the number of bins could change and then it could select out of range.
                     return -1;
                 }
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EarthVelocityData).
+        /// 
+        /// 65ms for this method.
+        /// 100ms for calling SerializeObject default.
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class EarthVelocityDataSetSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EarthVelocityData).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var data = value as EarthVelocityDataSet;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                // Write the base values
+                writer.WriteRaw(data.ToJsonBaseStub());
+                writer.WriteRaw(",");
+
+
+                // IsVelocityVectorAvail Property
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_ISVELOCITYVECTORAVAIL);
+                writer.WriteValue(data.IsVelocityVectorAvail);
+
+                // VelocityVector Property
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VELOCITYVECTORS);
+                if (data.VelocityVectors != null)
+                {
+                    writer.WriteStartArray();
+                    for (int x = 0; x < data.VelocityVectors.Length; x++)
+                    {
+                        // Write the velocity vector
+                        if (data.VelocityVectors[x] != null)
+                        {
+                            writer.WriteStartObject();
+                            writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VV_MAG);                   // Magnitude
+                            writer.WriteValue(data.VelocityVectors[x].Magnitude);
+                            writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VV_XNORTH);                // Direction X North
+                            writer.WriteValue(data.VelocityVectors[x].DirectionXNorth);
+                            writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VV_YNORTH);                // Direction Y North
+                            writer.WriteValue(data.VelocityVectors[x].DirectionYNorth);
+                            writer.WriteEndObject();
+                        }
+                        else
+                        {
+                            // Write null if the value is null
+                            writer.WriteNull();
+                        }
+                    }
+                    writer.WriteEndArray();
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // Write the float[,] array data
+                // This will be an array of arrays
+                // Each array element will contain an array with the 4 beam's value
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_EARTHVELOCITYDATA);
+                writer.WriteStartArray();
+                for (int bin = 0; bin < data.NumElements; bin++)
+                {
+                    // Write an array of float values for each beam's value
+                    writer.WriteStartArray();
+                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
+                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
+                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
+                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+                    writer.WriteEndArray();
+                }
+                writer.WriteEndArray();
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// 
+            /// DataSet.EarthVelocityDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EarthVelocityDataSet}(encodedEns)
+            /// 
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    // Load the object
+                    JObject jsonObject = JObject.Load(reader);
+
+                    // Decode the data
+                    int NumElements = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMELEMENTS];
+                    int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
+
+                    // Create the object
+                    var data = new EarthVelocityDataSet(DataSet.Ensemble.DATATYPE_FLOAT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.EarthVelocityID);
+                    data.EarthVelocityData = new float[NumElements, ElementsMultiplier];
+
+                    // Decode the 2D array 
+                    JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_EARTHVELOCITYDATA];
+                    if (jArray.Count <= NumElements)                                                            // Verify size
+                    {
+                        for (int bin = 0; bin < jArray.Count; bin++)
+                        {
+                            JArray arrayData = (JArray)jArray[bin];
+                            if (arrayData.Count <= ElementsMultiplier)                                          // Verify size
+                            {
+                                for (int beam = 0; beam < arrayData.Count; beam++)
+                                {
+                                    data.EarthVelocityData[bin, beam] = (float)arrayData[beam];
+                                }
+                            }
+                        }
+                    }
+
+                    // Decode VelocityVectors
+                    data.IsVelocityVectorAvail = (bool)jsonObject[DataSet.BaseDataSet.JSON_STR_ISVELOCITYVECTORAVAIL];
+                    JArray vvArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_VELOCITYVECTORS];
+                    if (vvArray != null)
+                    {
+                        data.VelocityVectors = new VelocityVector[vvArray.Count];
+                        for (int beam = 0; beam < vvArray.Count; beam++)
+                        {
+                            //VelocityVector vv = vvArray[beam].ToObject<VelocityVector>();
+                            data.VelocityVectors[beam] = vvArray[beam].ToObject<VelocityVector>();
+                        }
+                    }
+
+                    return data;
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(EarthVelocityDataSet).IsAssignableFrom(objectType);
             }
         }
     }

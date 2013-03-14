@@ -61,7 +61,11 @@
  * 06/14/2012      RC          2.11       Added variable MAX_NUM_BINS.
  * 10/05/2012      RC          2.15       Added more description for BEAM_Q_INDEX.
  * 01/04/2013      RC          2.17       Added AddEnsembleData() that takes no data.
- *                                         
+ * 02/13/2013      RC          2.18       Added static methods XXXBeamName() to convert the beam number to a string of the beam description for the coordinate transform.
+ * 02/20/2013      RC          2.18       Added AddNmeaData() that takes no data.
+ * 02/22/2013      RC          2.18       Removed the private set from all the properties so the object can be convert to a from JSON.
+ * 02/25/2013      RC          2.18       Removed Orientation from all the datasets.  Replaced with SubsystemConfiguration.
+ * 03/12/2013      RC          2.18       Improved the Ensemble.Clone() by using JSON to clone.                                     
  *       
  * 
  */
@@ -69,6 +73,9 @@
 using System.Data;
 using System.Collections.Generic;
 using System;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace RTI
 {
@@ -81,25 +88,27 @@ namespace RTI
         /// ADCP.  Datasets are added to the
         /// ensemble.
         /// </summary>
+        [JsonConverter(typeof(EnsembleSerializer))]
         public class Ensemble
         {
+            #region Variables
 
             #region Data Set IDs Variables
 
             /// <summary>
             /// Beam Velocity ID for binary format.
             /// </summary>
-            public const string VelocityID = "E000001\0";
+            public const string BeamVelocityID = "E000001\0";
 
             /// <summary>
             /// Instrument Velocity ID for binary format.
             /// </summary>
-            public const string InstrumentID = "E000002\0";
+            public const string InstrumentVelocityID = "E000002\0";
 
             /// <summary>
             /// Earth Velocity ID for binary format.
             /// </summary>
-            public const string EarthID = "E000003\0";
+            public const string EarthVelocityID = "E000003\0";
 
             /// <summary>
             /// Amplitude ID for binary format.
@@ -139,7 +148,7 @@ namespace RTI
             /// <summary>
             /// NMEA ID for binary format.
             /// </summary>
-            public const string NMEAID = "E000011\0";
+            public const string NmeaID = "E000011\0";
 
             /// <summary>
             /// PRTI02 ID for DVL mode format.
@@ -356,141 +365,289 @@ namespace RTI
 
             #endregion
 
+            #region JSON Strings
+
+            #region Available
+
+            /// <summary>
+            /// String for IsBeamVelocityAvail.
+            /// </summary>
+            public const string JSON_STR_ISBEAMVELOCITYAVAIL = "IsBeamVelocityAvail";
+
+            /// <summary>
+            /// String for IsInstrumentVelocityAvail.
+            /// </summary>
+            public const string JSON_STR_ISINSTRUMENTVELOCITYAVAIL = "IsInstrumentVelocityAvail";
+
+            /// <summary>
+            /// String for IsEarthVelocityAvail.
+            /// </summary>
+            public const string JSON_STR_ISEARTHVELOCITYAVAIL = "IsEarthVelocityAvail";
+
+            /// <summary>
+            /// String for IsAmplitudeAvail.
+            /// </summary>
+            public const string JSON_STR_ISAMPLITUDEAVAIL = "IsAmplitudeAvail";
+
+            /// <summary>
+            /// String for IsCorrelationAvail.
+            /// </summary>
+            public const string JSON_STR_ISCORRELATIONAVAIL = "IsCorrelationAvail";
+
+            /// <summary>
+            /// String for IsGoodBeamAvail.
+            /// </summary>
+            public const string JSON_STR_ISGOODBEAMAVAIL = "IsGoodBeamAvail";
+
+            /// <summary>
+            /// String for IsGoodEarthAvail.
+            /// </summary>
+            public const string JSON_STR_ISGOODEARTHAVAIL = "IsGoodEarthAvail";
+
+            /// <summary>
+            /// String for IsEnsembleAvail.
+            /// </summary>
+            public const string JSON_STR_ISENSEMBLEAVAIL = "IsEnsembleAvail";
+
+            /// <summary>
+            /// String for IsAncillaryAvail.
+            /// </summary>
+            public const string JSON_STR_ISANCILLARYAVAIL = "IsAncillaryAvail";
+
+            /// <summary>
+            /// String for IsBottomTrackAvail.
+            /// </summary>
+            public const string JSON_STR_ISBOTTOMTRACKAVAIL = "IsBottomTrackAvail";
+
+            /// <summary>
+            /// String for IsEarthWaterMassAvail.
+            /// </summary>
+            public const string JSON_STR_ISEARTHWATERMASSAVAIL = "IsEarthWaterMassAvail";
+
+            /// <summary>
+            /// String for IsInstrumentWaterMassAvail.
+            /// </summary>
+            public const string JSON_STR_ISINSTRUMENTWATERMASSAVAIL = "IsInstrumentWaterMassAvail";
+
+            /// <summary>
+            /// String for IsNmeaAvail.
+            /// </summary>
+            public const string JSON_STR_ISNMEAAVAIL = "IsNmeaAvail";
+
+            #endregion
+
+            #region DataSets
+
+            /// <summary>
+            /// String for BeamVelocityData.
+            /// </summary>
+            public const string JSON_STR_BEAMVELOCITYDATA = "BeamVelocityData";
+
+            /// <summary>
+            /// String for InstrumentVelocityData.
+            /// </summary>
+            public const string JSON_STR_INSTRUMENTVELOCITYDATA = "InstrumentVelocityData";
+
+            /// <summary>
+            /// String for EarthVelocityData.
+            /// </summary>
+            public const string JSON_STR_EARTHVELOCITYDATA = "EarthVelocityData";
+
+            /// <summary>
+            /// String for AmplitudeData.
+            /// </summary>
+            public const string JSON_STR_AMPLITUDEDATA = "AmplitudeData";
+
+            /// <summary>
+            /// String for CorrelationData.
+            /// </summary>
+            public const string JSON_STR_CORRELATIONDATA = "CorrelationData";
+
+            /// <summary>
+            /// String for GoodBeamData.
+            /// </summary>
+            public const string JSON_STR_GOODBEAMDATA = "GoodBeamData";
+
+            /// <summary>
+            /// String for GoodEarthData.
+            /// </summary>
+            public const string JSON_STR_GOODEARTHDATA = "GoodEarthData";
+
+            /// <summary>
+            /// String for EnsembleData.
+            /// </summary>
+            public const string JSON_STR_ENSEMBLEDATA = "EnsembleData";
+
+            /// <summary>
+            /// String for AncillaryData.
+            /// </summary>
+            public const string JSON_STR_ANCILLARYDATA = "AncillaryData";
+
+            /// <summary>
+            /// String for BottomTrackData.
+            /// </summary>
+            public const string JSON_STR_BOTTOMTRACKDATA = "BottomTrackData";
+
+            /// <summary>
+            /// String for EarthWaterMassData.
+            /// </summary>
+            public const string JSON_STR_EARTHWATERMASSDATA = "EarthWaterMassData";
+
+            /// <summary>
+            /// String for InstrumentWaterMassData.
+            /// </summary>
+            public const string JSON_STR_INSTRUMENTWATERMASSDATA = "InstrumentWaterMassData";
+
+            /// <summary>
+            /// String for NmeaData.
+            /// </summary>
+            public const string JSON_STR_NMEADATA = "NmeaData";
+
+            #endregion
+
+            #endregion
+
+            #endregion
+
+            #region Properties
+
             #region Data Set Available Properties
 
             /// <summary>
             /// Set if the Beam velocity data set is available for this data set
             /// </summary>
-            public bool IsBeamVelocityAvail { get; private set; }
+            public bool IsBeamVelocityAvail { get; set; }
 
             /// <summary>
             /// Set if the InstrumentVelocity velocity data set is available for this data set
             /// </summary>
-            public bool IsInstrVelocityAvail { get; private set; }
+            public bool IsInstrumentVelocityAvail { get; set; }
 
             /// <summary>
             /// Set if the EarthVelocity velocity data set is available for this data set
             /// </summary>
-            public bool IsEarthVelocityAvail { get; private set; }
+            public bool IsEarthVelocityAvail { get; set; }
 
             /// <summary>
             /// Set if the Amplitude data set is available for this data set
             /// </summary>
-            public bool IsAmplitudeAvail { get; private set; }
+            public bool IsAmplitudeAvail { get; set; }
 
             /// <summary>
             /// Set if the Correlation data set is available for this data set
             /// </summary>
-            public bool IsCorrelationAvail { get; private set; }
+            public bool IsCorrelationAvail { get; set; }
 
             /// <summary>
             /// Set if the Good Beam data set is available for this data set
             /// </summary>
-            public bool IsGoodBeamAvail { get; private set; }
+            public bool IsGoodBeamAvail { get; set; }
 
             /// <summary>
             /// Set if the Good EarthVelocity data set is available for this data set
             /// </summary>
-            public bool IsGoodEarthAvail { get; private set; }
+            public bool IsGoodEarthAvail { get; set; }
 
             /// <summary>
             /// Set if the Ensemble data set is available for this data set
             /// </summary>
-            public bool IsEnsembleAvail { get; private set; }
+            public bool IsEnsembleAvail { get; set; }
 
             /// <summary>
             /// Set if the Ancillary data set is available for this data set
             /// </summary>
-            public bool IsAncillaryAvail { get; private set; }
+            public bool IsAncillaryAvail { get; set; }
 
             /// <summary>
             /// Set if the Bottom Track data set is available for this data set
             /// </summary>
-            public bool IsBottomTrackAvail { get; private set; }
+            public bool IsBottomTrackAvail { get; set; }
 
             /// <summary>
             /// Set if the Earth Water Mass data set is available for this data set
             /// </summary>
-            public bool IsEarthWaterMassAvail { get; private set; }
+            public bool IsEarthWaterMassAvail { get; set; }
 
             /// <summary>
             /// Set if the Insturment Water Mass data set is available for this data set
             /// </summary>
-            public bool IsInstrumentWaterMassAvail { get; private set; }
+            public bool IsInstrumentWaterMassAvail { get; set; }
 
             /// <summary>
             /// Set if the NMEA data set is available for this data set
             /// </summary>
-            public bool IsNmeaAvail { get; private set; }
+            public bool IsNmeaAvail { get; set; }
 
             #endregion
 
             #region Data Sets Properties
 
             /// <summary>
-            /// Beam BeamVelocity Data set for this data set.
+            /// Beam Velocity Data set for this data set.
             /// </summary>
-            public BeamVelocityDataSet BeamVelocityData { get; private set; }
+            public BeamVelocityDataSet BeamVelocityData { get; set; }
 
             /// <summary>
-            /// InstrumentVelocity BeamVelocity Data set for this data set.
+            /// Instrument Velocity Data set for this data set.
             /// </summary>
-            public InstrVelocityDataSet InstrVelocityData { get; private set; }
+            public InstrumentVelocityDataSet InstrumentVelocityData { get; set; }
 
             /// <summary>
-            /// EarthVelocity BeamVelocity Data set for this data set.
+            /// Earth Velocity Data set for this data set.
             /// </summary>
-            public EarthVelocityDataSet EarthVelocityData { get; private set; }
+            public EarthVelocityDataSet EarthVelocityData { get; set; }
 
             /// <summary>
             /// Amplitude Data set for this data set.
             /// </summary>
-            public AmplitudeDataSet AmplitudeData { get; private set; }
+            public AmplitudeDataSet AmplitudeData { get; set; }
 
             /// <summary>
             /// Correlation Data set for this data set.
             /// </summary>
-            public CorrelationDataSet CorrelationData { get; private set; }
+            public CorrelationDataSet CorrelationData { get; set; }
 
             /// <summary>
             /// Good Beam Data set for this data set.
             /// </summary>
-            public GoodBeamDataSet GoodBeamData { get; private set; }
+            public GoodBeamDataSet GoodBeamData { get; set; }
 
             /// <summary>
-            /// Good EarthVelocity Data set for this data set.
+            /// Good Velocity Data set for this data set.
             /// </summary>
-            public GoodEarthDataSet GoodEarthData { get; private set; }
+            public GoodEarthDataSet GoodEarthData { get; set; }
 
             /// <summary>
             /// Ensemble Data set for this data set.
             /// </summary>
-            public EnsembleDataSet EnsembleData { get; private set; }
+            public EnsembleDataSet EnsembleData { get; set; }
 
             /// <summary>
             /// Ancillary Data set for this data set.
             /// </summary>
-            public AncillaryDataSet AncillaryData { get; private set; }
+            public AncillaryDataSet AncillaryData { get; set; }
 
             /// <summary>
             /// Bottom Track Data set for this data set.
             /// </summary>
-            public BottomTrackDataSet BottomTrackData { get; private set; }
+            public BottomTrackDataSet BottomTrackData { get; set; }
 
             /// <summary>
             /// Water Mass Earth Velocity Data set for this data set.
             /// </summary>
-            public EarthWaterMassDataSet EarthWaterMassData { get; private set; }
+            public EarthWaterMassDataSet EarthWaterMassData { get; set; }
 
             /// <summary>
             /// Water Mass Instrument Velocity Data set for this data set.
             /// </summary>
-            public InstrumentWaterMassDataSet InstrumentWaterMassData { get; private set; }
+            public InstrumentWaterMassDataSet InstrumentWaterMassData { get; set; }
 
             /// <summary>
             /// NMEA Data set for this data set.
             /// </summary>
-            public NmeaDataSet NmeaData { get; private set; }
+            public NmeaDataSet NmeaData { get; set; }
+
+            #endregion
 
             #endregion
 
@@ -506,7 +663,7 @@ namespace RTI
 
                 // Initialize all ranges
                 IsBeamVelocityAvail = false;
-                IsInstrVelocityAvail = false;
+                IsInstrumentVelocityAvail = false;
                 IsEarthVelocityAvail = false;
                 IsAmplitudeAvail = false;
                 IsCorrelationAvail = false;
@@ -515,7 +672,89 @@ namespace RTI
                 IsEnsembleAvail = false;
                 IsAncillaryAvail = false;
                 IsBottomTrackAvail = false;
+                IsEarthWaterMassAvail = false;
+                IsInstrumentWaterMassAvail = false;
                 IsNmeaAvail = false;
+            }
+
+            /// <summary>
+            /// Create an Ensemble data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EnsembleDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 162ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.EnsembleDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EnsembleDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
+            /// </summary>
+            /// <param name="IsBeamVelocityAvail">Flag if Beam Velocity DataSet Is Available.</param>
+            /// <param name="IsInstrumentVelocityAvail">Flag if Instrument Velocity DataSet Is Available.</param>
+            /// <param name="IsEarthVelocityAvail">Flag if Earth Velocity DataSet Is Available.</param>
+            /// <param name="IsAmplitudeAvail">Flag if Amplitude DataSet Is Available.</param>
+            /// <param name="IsCorrelationAvail">Flag if Correlation DataSet Is Available.</param>
+            /// <param name="IsGoodBeamAvail">Flag if Good Beam DataSet Is Available.</param>
+            /// <param name="IsGoodEarthAvail">Flag if Good Earth DataSet Is Available.</param>
+            /// <param name="IsEnsembleAvail">Flag if Ensemble DataSet Is Available.</param>
+            /// <param name="IsAncillaryAvail">Flag if Ancillary DataSet Is Available.</param>
+            /// <param name="IsBottomTrackAvail">Flag if Bottom Track DataSet Is Available.</param>
+            /// <param name="IsEarthWaterMassAvail">Flag if Earth Water Mass Velocity DataSet Is Available.</param>
+            /// <param name="IsInstrumentWaterMassAvail">Flag if Instrument Water Mass Velocity DataSet Is Available.</param>
+            /// <param name="IsNmeaAvail">Flag if Nmea DataSet Is Available.</param>
+            /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
+            /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
+            /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
+            /// <param name="AmplitudeData">Amplitude DataSet.</param>
+            /// <param name="CorrelationData">Correlation DataSet.</param>
+            /// <param name="GoodBeamData">Good Beam DataSet.</param>
+            /// <param name="GoodEarthData">Good Earth DataSet.</param>
+            /// <param name="EnsembleData">Ensemble DataSet.</param>
+            /// <param name="AncillaryData">Ancillary DataSet.</param>
+            /// <param name="BottomTrackData">Bottom Track DataSet.</param>
+            /// <param name="EarthWaterMassData">Earth Water Mass Velocity DataSet.</param>
+            /// <param name="InstrumentWaterMassData">Instrument Water Mass Velocity DataSet.</param>
+            /// <param name="NmeaData">Nmea DataSet.</param>
+            [JsonConstructor]
+            public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
+                            bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
+                            bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail,
+                            BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
+                            AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
+                            EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
+                            InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData)
+            {
+                // Initialize all ranges
+                this.IsBeamVelocityAvail = IsBeamVelocityAvail;
+                this.IsInstrumentVelocityAvail = IsInstrumentVelocityAvail;
+                this.IsEarthVelocityAvail = IsEarthVelocityAvail;
+                this.IsAmplitudeAvail = IsAmplitudeAvail;
+                this.IsCorrelationAvail = IsCorrelationAvail;
+                this.IsGoodBeamAvail = IsGoodBeamAvail;
+                this.IsGoodEarthAvail = IsGoodEarthAvail;
+                this.IsEnsembleAvail = IsEnsembleAvail;
+                this.IsAncillaryAvail = IsAncillaryAvail;
+                this.IsBottomTrackAvail = IsBottomTrackAvail;
+                this.IsEarthWaterMassAvail = IsEarthWaterMassAvail;
+                this.IsInstrumentWaterMassAvail = IsInstrumentWaterMassAvail;
+                this.IsNmeaAvail = IsNmeaAvail;
+
+                this.BeamVelocityData = BeamVelocityData;
+                this.InstrumentVelocityData = InstrumentVelocityData;
+                this.EarthVelocityData = EarthVelocityData;
+                this.AmplitudeData = AmplitudeData;
+                this.CorrelationData = CorrelationData;
+                this.GoodBeamData = GoodBeamData;
+                this.GoodEarthData = GoodEarthData;
+                this.EnsembleData = EnsembleData;
+                this.AncillaryData = AncillaryData;
+                this.BottomTrackData = BottomTrackData;
+                this.EarthWaterMassData = EarthWaterMassData;
+                this.InstrumentWaterMassData = InstrumentWaterMassData;
+                this.NmeaData = NmeaData;
             }
 
             #region Beam Velocity Data Set
@@ -529,11 +768,10 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddBeamVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddBeamVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
             {
                 IsBeamVelocityAvail = true;
-                BeamVelocityData = new BeamVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, orientation);
+                BeamVelocityData = new BeamVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name);
             }
 
             /// <summary>
@@ -548,30 +786,10 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="velocityData">Byte array containing Beam velocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddBeamVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddBeamVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData)
             {
                 IsBeamVelocityAvail = true;
-                BeamVelocityData = new BeamVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData, orientation);
-            }
-
-            /// <summary>
-            /// Add the Beam Velocity data set to the data.
-            /// This will add the Beam velocity data and decode the DataTable
-            /// for all the Beam velocity data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="velocityData">DataTable containing Beam velocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddBeamVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable velocityData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
-            {
-                IsBeamVelocityAvail = true;
-                BeamVelocityData = new BeamVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData, orientation);
+                BeamVelocityData = new BeamVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
             }
 
             #endregion
@@ -587,11 +805,10 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddInstrVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddInstrumentVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
             {
-                IsInstrVelocityAvail = true;
-                InstrVelocityData = new InstrVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, orientation);
+                IsInstrumentVelocityAvail = true;
+                InstrumentVelocityData = new InstrumentVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name);
             }
 
             /// <summary>
@@ -606,30 +823,10 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="velocityData">Byte array containing InstrumentVelocity velocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddInstrVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddInstrumentVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData)
             {
-                IsInstrVelocityAvail = true;
-                InstrVelocityData = new InstrVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData, orientation);
-            }
-
-            /// <summary>
-            /// Add the Instrument Velocity data set to the data.
-            /// This will add the Instrument Velocity data and decode the DataTable
-            /// for all the Instrument Velocity data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="velocityData">DataTable containing InstrumentVelocity velocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddInstrVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable velocityData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
-            {
-                IsInstrVelocityAvail = true;
-                InstrVelocityData = new InstrVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData, orientation);
+                IsInstrumentVelocityAvail = true;
+                InstrumentVelocityData = new InstrumentVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
             }
 
             #endregion
@@ -645,11 +842,10 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddEarthVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddEarthVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
             {
                 IsEarthVelocityAvail = true;
-                EarthVelocityData = new EarthVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, orientation);
+                EarthVelocityData = new EarthVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name);
             }
 
             /// <summary>
@@ -664,30 +860,10 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="velocityData">Byte array containing EarthVelocity velocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddEarthVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddEarthVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData)
             {
                 IsEarthVelocityAvail = true;
-                EarthVelocityData = new EarthVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData, orientation);
-            }
-
-            /// <summary>
-            /// Add the Earth Velocity data set to the data.
-            /// This will add the Earth Velocity data and decode the DataTable
-            /// for all the Earth Velocity data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="velocityData">DataTable containing EarthVelocity velocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddEarthVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable velocityData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
-            {
-                IsEarthVelocityAvail = true;
-                EarthVelocityData = new EarthVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData, orientation);
+                EarthVelocityData = new EarthVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
             }
 
             #endregion
@@ -722,24 +898,6 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             /// <param name="amplitudeData">Byte array containing Amplitude data</param>
             public void AddAmplitudeData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] amplitudeData)
-            {
-                IsAmplitudeAvail = true;
-                AmplitudeData = new AmplitudeDataSet(valueType, numBins, numBeams, imag, nameLength, name, amplitudeData);
-            }
-
-            /// <summary>
-            /// Add the Amplitude data set to the data.
-            /// This will add the Amplitude data and decode the DataTable
-            /// for all the Amplitude data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="amplitudeData">DataTable containing Amplitude data</param>
-            public void AddAmplitudeData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable amplitudeData)
             {
                 IsAmplitudeAvail = true;
                 AmplitudeData = new AmplitudeDataSet(valueType, numBins, numBeams, imag, nameLength, name, amplitudeData);
@@ -782,24 +940,6 @@ namespace RTI
                 CorrelationData = new CorrelationDataSet(valueType, numBins, numBeams, imag, nameLength, name, correlationData);
             }
 
-            /// <summary>
-            /// Add the Correlation data set to the data.
-            /// This will add the Correlation data and decode the DataTable
-            /// for all the Correlation data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="correlationData">DataTable containing Correlation data</param>
-            public void AddCorrelationData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable correlationData)
-            {
-                IsCorrelationAvail = true;
-                CorrelationData = new CorrelationDataSet(valueType, numBins, numBeams, imag, nameLength, name, correlationData);
-            }
-
             #endregion
 
             #region Good Beam Data Set
@@ -813,11 +953,10 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddGoodBeamData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddGoodBeamData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
             {
                 IsGoodBeamAvail = true;
-                GoodBeamData = new GoodBeamDataSet(valueType, numBins, numBeams, imag, nameLength, name, orientation);
+                GoodBeamData = new GoodBeamDataSet(valueType, numBins, numBeams, imag, nameLength, name);
             }
 
             /// <summary>
@@ -832,30 +971,10 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="goodBeamData">Byte array containing Good Beam data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddGoodBeamData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodBeamData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddGoodBeamData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodBeamData)
             {
                 IsGoodBeamAvail = true;
-                GoodBeamData = new GoodBeamDataSet(valueType, numBins, numBeams, imag, nameLength, name, goodBeamData, orientation);
-            }
-
-            /// <summary>
-            /// Add the Good Beam data set to the data.
-            /// This will add the Good Beam data and decode the DataTable
-            /// for all the Good Beam data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="goodBeamData">DataTable containing Good Beam data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddGoodBeamData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable goodBeamData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
-            {
-                IsGoodBeamAvail = true;
-                GoodBeamData = new GoodBeamDataSet(valueType, numBins, numBeams, imag, nameLength, name, goodBeamData, orientation);
+                GoodBeamData = new GoodBeamDataSet(valueType, numBins, numBeams, imag, nameLength, name, goodBeamData);
             }
 
             #endregion
@@ -871,11 +990,10 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddGoodEarthData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddGoodEarthData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
             {
                 IsGoodEarthAvail = true;
-                GoodEarthData = new GoodEarthDataSet(valueType, numBins, numBeams, imag, nameLength, name,orientation);
+                GoodEarthData = new GoodEarthDataSet(valueType, numBins, numBeams, imag, nameLength, name);
             }
 
             /// <summary>
@@ -890,30 +1008,10 @@ namespace RTI
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="goodEarthData">Byte array containing Good Earth data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddGoodEarthData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodEarthData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddGoodEarthData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodEarthData)
             {
                 IsGoodEarthAvail = true;
-                GoodEarthData = new GoodEarthDataSet(valueType, numBins, numBeams, imag, nameLength, name, goodEarthData, orientation);
-            }
-
-            /// <summary>
-            /// Add the Good Earth data set to the data.
-            /// This will add the Good Earth data and decode the byte array
-            /// for all the Good Earth data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="goodEarthData">DataTable containing Good EarthVelocity data</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddGoodEarthData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataTable goodEarthData, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
-            {
-                IsGoodEarthAvail = true;
-                GoodEarthData = new GoodEarthDataSet(valueType, numBins, numBeams, imag, nameLength, name, goodEarthData, orientation);
+                GoodEarthData = new GoodEarthDataSet(valueType, numBins, numBeams, imag, nameLength, name, goodEarthData);
             }
 
             #endregion
@@ -949,24 +1047,6 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             /// <param name="ensembleData">Byte array containing Ensemble data</param>
             public void AddEnsembleData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ensembleData)
-            {
-                IsEnsembleAvail = true;
-                EnsembleData = new EnsembleDataSet(valueType, numBins, numBeams, imag, nameLength, name, ensembleData);
-            }
-
-            /// <summary>
-            /// Add the Ensemble data set to the data.
-            /// This will add the Ensemble data and decode the DataTable
-            /// for all the Ensemble data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="ensembleData">DataTable containing Ensemble data</param>
-            public void AddEnsembleData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataRow ensembleData)
             {
                 IsEnsembleAvail = true;
                 EnsembleData = new EnsembleDataSet(valueType, numBins, numBeams, imag, nameLength, name, ensembleData);
@@ -1034,24 +1114,6 @@ namespace RTI
             }
 
             /// <summary>
-            /// Add the Ancillary data set to the data.
-            /// This will add the Ancillary data and decode the DataTable
-            /// for all the Ancillary data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="ancillaryData">DataTable containing Ancillary data</param>
-            public void AddAncillaryData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataRow ancillaryData)
-            {
-                IsAncillaryAvail = true;
-                AncillaryData = new AncillaryDataSet(valueType, numBins, numBeams, imag, nameLength, name, ancillaryData);
-            }
-
-            /// <summary>
             /// Add the temperature based off the 
             /// Prti01Sentence given.
             /// </summary>
@@ -1113,24 +1175,6 @@ namespace RTI
 
             /// <summary>
             /// Add the Bottom Track data set to the data.
-            /// This will add the Bottom Track data and decode the DataTable
-            /// for all the Bottom Track data.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="bottomTrackData">DataTable containing Bottom Track data</param>
-            public void AddBottomTrackData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataRow bottomTrackData)
-            {
-                IsBottomTrackAvail = true;
-                BottomTrackData = new BottomTrackDataSet(valueType, numBins, numBeams, imag, nameLength, name, bottomTrackData);
-            }
-
-            /// <summary>
-            /// Add the Bottom Track data set to the data.
             /// This will add the Bottom Track data and decode the Prti01Sentence
             /// for all the Bottom Track data;
             /// </summary>
@@ -1183,11 +1227,10 @@ namespace RTI
             /// <param name="north">North Velocity.</param>
             /// <param name="vertical">Vertical Velocity.</param>
             /// <param name="depthLayer">Water Mass Depth Layer.</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddEarthWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float east, float north, float vertical, float depthLayer, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddEarthWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float east, float north, float vertical, float depthLayer)
             {
                 IsEarthWaterMassAvail = true;
-                EarthWaterMassData = new EarthWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, east, north, vertical, depthLayer, orientation);
+                EarthWaterMassData = new EarthWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, east, north, vertical, depthLayer);
             }
 
             /// <summary>
@@ -1218,11 +1261,10 @@ namespace RTI
             /// <param name="y">Y Velocity.</param>
             /// <param name="z">Z Velocity.</param>
             /// <param name="depthLayer">Water Mass Depth Layer.</param>
-            /// <param name="orientation">Orientation of the beam. Default down.</param>
-            public void AddInstrumentWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float x, float y, float z, float depthLayer, DataSet.BaseDataSet.BeamOrientation orientation = DataSet.BaseDataSet.BeamOrientation.DOWN)
+            public void AddInstrumentWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float x, float y, float z, float depthLayer)
             {
                 IsInstrumentWaterMassAvail = true;
-                InstrumentWaterMassData = new InstrumentWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, x, y, z, depthLayer, orientation);
+                InstrumentWaterMassData = new InstrumentWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, x, y, z, depthLayer);
             }
 
             /// <summary>
@@ -1239,6 +1281,22 @@ namespace RTI
             #endregion
 
             #region NMEA Data Set
+
+            /// <summary>
+            /// Add the NMEA data set to the data.
+            /// This will add an empty NMEA data set.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddNmeaData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsNmeaAvail = true;
+                NmeaData = new NmeaDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
 
             /// <summary>
             /// Add the NMEA data set to the data.
@@ -1284,76 +1342,81 @@ namespace RTI
             /// <returns>A new object identical to this object.  Deep Copy.</returns>
             public Ensemble Clone()
             {
-                Ensemble ensemble = new Ensemble();
+                //Ensemble ensemble = new Ensemble();
 
-                if (IsBeamVelocityAvail)
-                {
-                    ensemble.AddBeamVelocityData(BeamVelocityData.ValueType, BeamVelocityData.NumElements, BeamVelocityData.ElementsMultiplier, BeamVelocityData.Imag, BeamVelocityData.NameLength, BeamVelocityData.Name, BeamVelocityData.Encode(), BeamVelocityData.Orientation);
-                }
+                //if (IsBeamVelocityAvail)
+                //{
+                //    ensemble.AddBeamVelocityData(BeamVelocityData.ValueType, BeamVelocityData.NumElements, BeamVelocityData.ElementsMultiplier, BeamVelocityData.Imag, BeamVelocityData.NameLength, BeamVelocityData.Name, BeamVelocityData.Encode());
+                //}
 
-                if (IsInstrVelocityAvail)
-                {
-                    ensemble.AddInstrVelocityData(InstrVelocityData.ValueType, InstrVelocityData.NumElements, InstrVelocityData.ElementsMultiplier, InstrVelocityData.Imag, InstrVelocityData.NameLength, InstrVelocityData.Name, InstrVelocityData.Encode(), InstrVelocityData.Orientation);
-                }
+                //if (IsInstrumentVelocityAvail)
+                //{
+                //    ensemble.AddInstrumentVelocityData(InstrumentVelocityData.ValueType, InstrumentVelocityData.NumElements, InstrumentVelocityData.ElementsMultiplier, InstrumentVelocityData.Imag, InstrumentVelocityData.NameLength, InstrumentVelocityData.Name, InstrumentVelocityData.Encode());
+                //}
 
-                if (IsEarthVelocityAvail)
-                {
-                    ensemble.AddEarthVelocityData(EarthVelocityData.ValueType, EarthVelocityData.NumElements, EarthVelocityData.ElementsMultiplier, EarthVelocityData.Imag, EarthVelocityData.NameLength, EarthVelocityData.Name, EarthVelocityData.Encode(), EarthVelocityData.Orientation);
-                }
+                //if (IsEarthVelocityAvail)
+                //{
+                //    ensemble.AddEarthVelocityData(EarthVelocityData.ValueType, EarthVelocityData.NumElements, EarthVelocityData.ElementsMultiplier, EarthVelocityData.Imag, EarthVelocityData.NameLength, EarthVelocityData.Name, EarthVelocityData.Encode());
+                //}
 
-                if (IsAmplitudeAvail)
-                {
-                    ensemble.AddAmplitudeData(AmplitudeData.ValueType, AmplitudeData.NumElements, AmplitudeData.ElementsMultiplier, AmplitudeData.Imag, AmplitudeData.NameLength, AmplitudeData.Name, AmplitudeData.Encode());
-                }
+                //if (IsAmplitudeAvail)
+                //{
+                //    ensemble.AddAmplitudeData(AmplitudeData.ValueType, AmplitudeData.NumElements, AmplitudeData.ElementsMultiplier, AmplitudeData.Imag, AmplitudeData.NameLength, AmplitudeData.Name, AmplitudeData.Encode());
+                //}
 
-                if (IsCorrelationAvail)
-                {
-                    ensemble.AddCorrelationData(CorrelationData.ValueType, CorrelationData.NumElements, CorrelationData.ElementsMultiplier, CorrelationData.Imag, CorrelationData.NameLength, CorrelationData.Name, CorrelationData.Encode());
-                }
+                //if (IsCorrelationAvail)
+                //{
+                //    ensemble.AddCorrelationData(CorrelationData.ValueType, CorrelationData.NumElements, CorrelationData.ElementsMultiplier, CorrelationData.Imag, CorrelationData.NameLength, CorrelationData.Name, CorrelationData.Encode());
+                //}
 
-                if (IsGoodBeamAvail)
-                {
-                    ensemble.AddGoodBeamData(GoodBeamData.ValueType, GoodBeamData.NumElements, GoodBeamData.ElementsMultiplier, GoodBeamData.Imag, GoodBeamData.NameLength, GoodBeamData.Name, GoodBeamData.Encode(), GoodBeamData.Orientation);
-                }
+                //if (IsGoodBeamAvail)
+                //{
+                //    ensemble.AddGoodBeamData(GoodBeamData.ValueType, GoodBeamData.NumElements, GoodBeamData.ElementsMultiplier, GoodBeamData.Imag, GoodBeamData.NameLength, GoodBeamData.Name, GoodBeamData.Encode());
+                //}
 
-                if (IsGoodEarthAvail)
-                {
-                    ensemble.AddGoodEarthData(GoodEarthData.ValueType, GoodEarthData.NumElements, GoodEarthData.ElementsMultiplier, GoodEarthData.Imag, GoodEarthData.NameLength, GoodEarthData.Name, GoodEarthData.Encode(), GoodEarthData.Orientation);
-                }
+                //if (IsGoodEarthAvail)
+                //{
+                //    ensemble.AddGoodEarthData(GoodEarthData.ValueType, GoodEarthData.NumElements, GoodEarthData.ElementsMultiplier, GoodEarthData.Imag, GoodEarthData.NameLength, GoodEarthData.Name, GoodEarthData.Encode());
+                //}
 
-                if (IsEnsembleAvail && EnsembleData != null)
-                {
-                    ensemble.AddEnsembleData(EnsembleData.ValueType, EnsembleData.NumElements, EnsembleData.ElementsMultiplier, EnsembleData.Imag, EnsembleData.NameLength, EnsembleData.Name, EnsembleData.Encode());
-                }
+                //if (IsEnsembleAvail && EnsembleData != null)
+                //{
+                //    ensemble.AddEnsembleData(EnsembleData.ValueType, EnsembleData.NumElements, EnsembleData.ElementsMultiplier, EnsembleData.Imag, EnsembleData.NameLength, EnsembleData.Name, EnsembleData.Encode());
+                //}
 
-                if (IsAncillaryAvail)
-                {
-                    ensemble.AddAncillaryData(AncillaryData.ValueType, AncillaryData.NumElements, AncillaryData.ElementsMultiplier, AncillaryData.Imag, AncillaryData.NameLength, AncillaryData.Name, AncillaryData.Encode());
-                }
+                //if (IsAncillaryAvail)
+                //{
+                //    ensemble.AddAncillaryData(AncillaryData.ValueType, AncillaryData.NumElements, AncillaryData.ElementsMultiplier, AncillaryData.Imag, AncillaryData.NameLength, AncillaryData.Name, AncillaryData.Encode());
+                //}
 
-                if (IsBottomTrackAvail)
-                {
-                    ensemble.AddBottomTrackData(BottomTrackData.ValueType, BottomTrackData.NumElements, BottomTrackData.ElementsMultiplier, BottomTrackData.Imag, BottomTrackData.NameLength, BottomTrackData.Name, BottomTrackData.Encode());
-                }
+                //if (IsBottomTrackAvail)
+                //{
+                //    ensemble.AddBottomTrackData(BottomTrackData.ValueType, BottomTrackData.NumElements, BottomTrackData.ElementsMultiplier, BottomTrackData.Imag, BottomTrackData.NameLength, BottomTrackData.Name, BottomTrackData.Encode());
+                //}
 
-                if (IsEarthWaterMassAvail)
-                {
-                    ensemble.AddEarthWaterMassData(EarthWaterMassData.ValueType, EarthWaterMassData.NumElements, EarthWaterMassData.ElementsMultiplier, EarthWaterMassData.Imag, EarthWaterMassData.NameLength, EarthWaterMassData.Name, EarthWaterMassData.VelocityEast, EarthWaterMassData.VelocityNorth, EarthWaterMassData.VelocityVertical, EarthWaterMassData.WaterMassDepthLayer, EarthWaterMassData.Orientation);
-                }
+                //if (IsEarthWaterMassAvail)
+                //{
+                //    ensemble.AddEarthWaterMassData(EarthWaterMassData.ValueType, EarthWaterMassData.NumElements, EarthWaterMassData.ElementsMultiplier, EarthWaterMassData.Imag, EarthWaterMassData.NameLength, EarthWaterMassData.Name, EarthWaterMassData.VelocityEast, EarthWaterMassData.VelocityNorth, EarthWaterMassData.VelocityVertical, EarthWaterMassData.WaterMassDepthLayer);
+                //}
 
-                if (IsInstrumentWaterMassAvail)
-                {
-                    ensemble.AddInstrumentWaterMassData(InstrumentWaterMassData.ValueType, InstrumentWaterMassData.NumElements, InstrumentWaterMassData.ElementsMultiplier, InstrumentWaterMassData.Imag, InstrumentWaterMassData.NameLength, InstrumentWaterMassData.Name, InstrumentWaterMassData.VelocityX, InstrumentWaterMassData.VelocityY, InstrumentWaterMassData.VelocityZ, InstrumentWaterMassData.WaterMassDepthLayer, InstrumentWaterMassData.Orientation);
-                }
+                //if (IsInstrumentWaterMassAvail)
+                //{
+                //    ensemble.AddInstrumentWaterMassData(InstrumentWaterMassData.ValueType, InstrumentWaterMassData.NumElements, InstrumentWaterMassData.ElementsMultiplier, InstrumentWaterMassData.Imag, InstrumentWaterMassData.NameLength, InstrumentWaterMassData.Name, InstrumentWaterMassData.VelocityX, InstrumentWaterMassData.VelocityY, InstrumentWaterMassData.VelocityZ, InstrumentWaterMassData.WaterMassDepthLayer);
+                //}
 
-                if(IsNmeaAvail)
-                {
-                    ensemble.AddNmeaData(NmeaData.ValueType, NmeaData.NumElements, NmeaData.ElementsMultiplier, NmeaData.Imag, NmeaData.NameLength, NmeaData.Name, NmeaData.Encode());
-                }
+                //if(IsNmeaAvail)
+                //{
+                //    ensemble.AddNmeaData(NmeaData.ValueType, NmeaData.NumElements, NmeaData.ElementsMultiplier, NmeaData.Imag, NmeaData.NameLength, NmeaData.Name, NmeaData.Encode());
+                //}
 
-                return ensemble;
+                //return ensemble;
+
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(this);
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.Ensemble>(json);
             }
             #endregion
+
+            #region Strings
 
             /// <summary>
             /// String representation of a the entire ensemble.
@@ -1377,9 +1440,9 @@ namespace RTI
                 {
                     s += BeamVelocityData.ToString();
                 }
-                if (IsInstrVelocityAvail)
+                if (IsInstrumentVelocityAvail)
                 {
-                    s += InstrVelocityData.ToString();
+                    s += InstrumentVelocityData.ToString();
                 }
                 if (IsEarthVelocityAvail)
                 {
@@ -1417,6 +1480,67 @@ namespace RTI
                 return s;
             }
 
+            /// <summary>
+            /// Based off the given beam number, give
+            /// the name of the beam in Beam Coordinate transform.
+            /// Beam 0, Beam 1, Beam 2 and Beam 3.
+            /// </summary>
+            /// <param name="beam">Beam number.</param>
+            /// <returns>Name for the beam number in Beam Coordinate Transform.</returns>
+            public static string BeamBeamName(int beam)
+            {
+                return string.Format("Beam {0}", beam);
+            }
+
+            /// <summary>
+            /// Based off the given beam number, give
+            /// the name of the beam in Earth Coordinate transform.
+            /// East, North, Vertical or Q.
+            /// </summary>
+            /// <param name="beam">Beam number.</param>
+            /// <returns>Name for the beam number in Earth Coordinate Transform.</returns>
+            public static string EarthBeamName(int beam)
+            {
+                switch (beam)
+                {
+                    case DataSet.Ensemble.BEAM_EAST_INDEX:
+                        return "East";
+                    case DataSet.Ensemble.BEAM_NORTH_INDEX:
+                        return "North";
+                    case DataSet.Ensemble.BEAM_VERTICAL_INDEX:
+                        return "Vertical";
+                    case DataSet.Ensemble.BEAM_Q_INDEX:
+                        return "Q";
+                    default:
+                        return "";
+                }
+            }
+
+            /// <summary>
+            /// Based off the given beam number, give
+            /// the name of the beam in Instrument Coordinate transform.
+            /// X, Y, Z, and Q.
+            /// </summary>
+            /// <param name="beam">Beam number.</param>
+            /// <returns>Name for the beam number in Instrument Coordinate Transform.</returns>
+            public static string InstrumentBeamName(int beam)
+            {
+                switch (beam)
+                {
+                    case DataSet.Ensemble.BEAM_X_INDEX:
+                        return "X";
+                    case DataSet.Ensemble.BEAM_Y_INDEX:
+                        return "Y";
+                    case DataSet.Ensemble.BEAM_Z_INDEX:
+                        return "Z";
+                    case DataSet.Ensemble.BEAM_Q_INDEX:
+                        return "Q";
+                    default:
+                        return "";
+                }
+            }
+
+            #endregion
 
             #region Checksum and Sizes
 
@@ -1640,9 +1764,9 @@ namespace RTI
                 }
 
                 // Instrument Velocity DataSet
-                if (IsInstrVelocityAvail)
+                if (IsInstrumentVelocityAvail)
                 {
-                    byte[] instrDataSet = InstrVelocityData.Encode();
+                    byte[] instrDataSet = InstrumentVelocityData.Encode();
                     datasetList.Add(instrDataSet);
                     size += instrDataSet.Length;
                 }
@@ -1749,5 +1873,283 @@ namespace RTI
 
             #endregion
         }
+
+
+        /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble).
+        /// 
+        /// 420ms for this method.
+        /// 900ms for calling SerializeObject default.
+        /// 
+        /// 1000 Ensembles
+        /// Serialize: 440ms
+        /// Deserialize: 1260 ms
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class EnsembleSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var ensemble = value as Ensemble;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                #region Available
+
+                // IsBeamVelocityAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISBEAMVELOCITYAVAIL);
+                writer.WriteValue(ensemble.IsBeamVelocityAvail);
+
+                // IsInstrumentVelocityAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISINSTRUMENTVELOCITYAVAIL);
+                writer.WriteValue(ensemble.IsInstrumentVelocityAvail);
+
+                // IsEarthVelocityAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISEARTHVELOCITYAVAIL);
+                writer.WriteValue(ensemble.IsEarthVelocityAvail);
+
+                // IsAmplitudeAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISAMPLITUDEAVAIL);
+                writer.WriteValue(ensemble.IsAmplitudeAvail);
+
+                // IsCorrelationAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISCORRELATIONAVAIL);
+                writer.WriteValue(ensemble.IsCorrelationAvail);
+
+                // IsGoodBeamAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISGOODBEAMAVAIL);
+                writer.WriteValue(ensemble.IsGoodBeamAvail);
+
+                // IsGoodEarthAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISGOODEARTHAVAIL);
+                writer.WriteValue(ensemble.IsGoodEarthAvail);
+
+                // IsEnsembleAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISENSEMBLEAVAIL);
+                writer.WriteValue(ensemble.IsEnsembleAvail);
+
+                // IsAncillaryAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISANCILLARYAVAIL);
+                writer.WriteValue(ensemble.IsAncillaryAvail);
+
+                // IsBottomTrackAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISBOTTOMTRACKAVAIL);
+                writer.WriteValue(ensemble.IsBottomTrackAvail);
+
+                // IsEarthWaterMassAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISEARTHWATERMASSAVAIL);
+                writer.WriteValue(ensemble.IsEarthWaterMassAvail);
+
+                // IsInstrumentWaterMassAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISINSTRUMENTWATERMASSAVAIL);
+                writer.WriteValue(ensemble.IsInstrumentWaterMassAvail);
+
+                // IsNmeaAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEAAVAIL);
+                writer.WriteValue(ensemble.IsNmeaAvail);
+
+                #endregion
+
+                #region DataSet
+
+                // BeamVelocityData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_BEAMVELOCITYDATA);
+                if (ensemble.IsBeamVelocityAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BeamVelocityData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // InstrumentVelocityData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_INSTRUMENTVELOCITYDATA);
+                if (ensemble.IsInstrumentVelocityAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.InstrumentVelocityData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // EarthVelocityData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_EARTHVELOCITYDATA);
+                if (ensemble.IsEarthVelocityAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EarthVelocityData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // AmplitudeData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_AMPLITUDEDATA);
+                if (ensemble.IsAmplitudeAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AmplitudeData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // CorrelationData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_CORRELATIONDATA);
+                if (ensemble.IsCorrelationAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.CorrelationData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // GoodBeamData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_GOODBEAMDATA);
+                if (ensemble.IsGoodBeamAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodBeamData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // GoodEarthData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_GOODEARTHDATA);
+                if (ensemble.IsGoodEarthAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodEarthData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // EnsembleData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ENSEMBLEDATA);
+                if (ensemble.IsEnsembleAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EnsembleData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // AncillaryData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ANCILLARYDATA);
+                if (ensemble.IsAncillaryAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // BottomTrackData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_BOTTOMTRACKDATA);
+                if (ensemble.IsBottomTrackAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // EarthWaterMassData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_EARTHWATERMASSDATA);
+                if (ensemble.IsEarthWaterMassAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EarthWaterMassData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // InstrumentWaterMassData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_INSTRUMENTWATERMASSDATA);
+                if (ensemble.IsInstrumentWaterMassAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.InstrumentWaterMassData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // NmeaData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_NMEADATA);
+                if (ensemble.IsNmeaAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                #endregion
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                var ensemble = new Ensemble();
+                serializer.Populate(reader, ensemble);
+                return ensemble;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(Ensemble).IsAssignableFrom(objectType);
+            }
+        }
+
     }
 }

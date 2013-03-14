@@ -30,6 +30,8 @@
  * 12/20/2011      RC          1.10       Added test to test bad checksum (1 byte) with a good sentence.
  * 01/03/2012      RC          1.11       Fixed test using DVL Codec event instead of CurrentDataSetManager event.
  * 03/29/2012      RC          2.07       Changed the Status to an object in ensemble.
+ * 02/20/2013      RC          2.18       Updated test with latest changes to setting the time for PRTI sentences.
+ * 02/28/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
  * 
  * 
  */
@@ -66,7 +68,7 @@ namespace RTI
         [Test]
         public void TestPrti01()
         {
-            string nmea = "$PRTI01,380250,8,1464,-1205,-24,-347,79380,300,-200,400,100,0000*2C";
+            string nmea = "$PRTI01,1000,8,1464,-1205,-24,-347,79380,300,-200,400,100,0000*21";
 
             //RecorderManager.Instance.FlushEnsembleDatabase();
 
@@ -90,11 +92,11 @@ namespace RTI
             // Check number of bins
             Assert.AreEqual(0, recvData01.EnsembleData.NumBins);
 
-            // Check time
-            Assert.AreEqual(1, recvData01.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvData01.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(3, recvData01.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvData01.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(22, recvData01.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvData01.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(500, recvData01.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvData01.EnsembleData.EnsDateTime.ToString());
+            //// Check time
+            Assert.AreEqual(DateTime.Now.Hour, recvBad.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Minute, recvBad.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Second, recvBad.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvBad.EnsembleData.EnsDateTime.ToString());
+            //Assert.AreEqual(DateTime.Now.Millisecond, recvBad.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvBad.EnsembleData.EnsDateTime.ToString());
 
             // Check Ancillary data set available
             Assert.AreEqual(true, recvData01.IsAncillaryAvail, "Ancillary Data Set not available");
@@ -105,7 +107,7 @@ namespace RTI
             Assert.AreEqual(0, recvData01.AncillaryData.FirstBinRange, "First Bin Range was incorrect");
             Assert.AreEqual(0, recvData01.AncillaryData.BinSize, "Bin Size was incorrect");
             Assert.AreEqual(0, recvData01.AncillaryData.FirstPingTime, "First Ping Time was incorrect");
-            Assert.AreEqual(0, recvData01.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
+            Assert.AreEqual(10, recvData01.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
             Assert.AreEqual(0, recvData01.AncillaryData.Heading, "Heading was incorrect");
             Assert.AreEqual(0, recvData01.AncillaryData.Pitch, "Pitch was incorrect");
             Assert.AreEqual(0, recvData01.AncillaryData.Roll, "Roll was incorrect");
@@ -161,7 +163,7 @@ namespace RTI
         [Test]
         public void TestPrti02()
         {
-            string nmea = "$PRTI02,380250,8,1464,-1205,-24,-347,79380,300,-200,400,100,0000*2F";
+            string nmea = "$PRTI02,1000,8,1464,-1205,-24,-347,79380,300,-200,400,100,0000*22";
 
             //CurrentDataSetManager.Instance.ReceiveRecordDataset += new CurrentDataSetManager.RecordDatasetEventHandler(ReceiveMsg02);
 
@@ -186,10 +188,10 @@ namespace RTI
             Assert.AreEqual(0, recvData02.EnsembleData.NumBins);
 
             // Check time
-            Assert.AreEqual(1, recvData02.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvData02.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(3, recvData02.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvData02.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(22, recvData02.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvData02.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(500, recvData02.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvData02.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Hour, recvBad.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Minute, recvBad.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Second, recvBad.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvBad.EnsembleData.EnsDateTime.ToString());
+            //Assert.AreEqual(DateTime.Now.Millisecond, recvBad.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvBad.EnsembleData.EnsDateTime.ToString());
 
             // Check Ancillary data set available
             Assert.AreEqual(true, recvData02.IsAncillaryAvail, "Ancillary Data Set not available");
@@ -200,7 +202,7 @@ namespace RTI
             Assert.AreEqual(0, recvData02.AncillaryData.FirstBinRange, "First Bin Range was incorrect");
             Assert.AreEqual(0, recvData02.AncillaryData.BinSize, "Bin Size was incorrect");
             Assert.AreEqual(0, recvData02.AncillaryData.FirstPingTime, "First Ping Time was incorrect");
-            Assert.AreEqual(0, recvData02.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
+            Assert.AreEqual(10, recvData02.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
             Assert.AreEqual(0, recvData02.AncillaryData.Heading, "Heading was incorrect");
             Assert.AreEqual(0, recvData02.AncillaryData.Pitch, "Pitch was incorrect");
             Assert.AreEqual(0, recvData02.AncillaryData.Roll, "Roll was incorrect");
@@ -297,7 +299,7 @@ namespace RTI
         public void TestBadThenGoodData()
         {
             string badNmea = "This is a a bad nmea string.";
-            string goodNmea = "$PRTI01,380250,10,1464,-1205,-24,-347,79380,,,,,0000*3C";
+            string goodNmea = "$PRTI01,1000,10,1464,-1205,-24,-347,79380,,,,,0000*31";
             recvData1 = null;
 
             AdcpDvlCodec codec = new AdcpDvlCodec();
@@ -322,10 +324,10 @@ namespace RTI
             Assert.AreEqual(0, recvBad.EnsembleData.NumBins);
 
             // Check time
-            Assert.AreEqual(1, recvBad.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvBad.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(3, recvBad.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvBad.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(22, recvBad.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvBad.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(500, recvBad.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Hour, recvBad.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Minute, recvBad.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Second, recvBad.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvBad.EnsembleData.EnsDateTime.ToString());
+            //Assert.AreEqual(DateTime.Now.Millisecond, recvBad.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvBad.EnsembleData.EnsDateTime.ToString());
 
             // Check Ancillary data set available
             Assert.AreEqual(true, recvBad.IsAncillaryAvail, "Ancillary Data Set not available");
@@ -336,7 +338,7 @@ namespace RTI
             Assert.AreEqual(0, recvBad.AncillaryData.FirstBinRange, "First Bin Range was incorrect");
             Assert.AreEqual(0, recvBad.AncillaryData.BinSize, "Bin Size was incorrect");
             Assert.AreEqual(0, recvBad.AncillaryData.FirstPingTime, "First Ping Time was incorrect");
-            Assert.AreEqual(0, recvBad.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
+            Assert.AreEqual(10, recvBad.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
             Assert.AreEqual(0, recvBad.AncillaryData.Heading, "Heading was incorrect");
             Assert.AreEqual(0, recvBad.AncillaryData.Pitch, "Pitch was incorrect");
             Assert.AreEqual(0, recvBad.AncillaryData.Roll, "Roll was incorrect");
@@ -386,7 +388,7 @@ namespace RTI
         public void TestMaxBufferSize()
         {
             string badNmea = "This is a a bad nmea string.";
-            string goodNmea = "$PRTI01,380250,10,1464,-1205,-24,-347,79380,,,,,0000*3C";
+            string goodNmea = "$PRTI01,1000,10,1464,-1205,-24,-347,79380,,,,,0000*31";
             recvData1 = null;
 
             AdcpDvlCodec codec = new AdcpDvlCodec();
@@ -421,10 +423,10 @@ namespace RTI
             Assert.AreEqual(0, recvMaxBuffSize.EnsembleData.NumBins);
 
             // Check time
-            Assert.AreEqual(1, recvMaxBuffSize.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvMaxBuffSize.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(3, recvMaxBuffSize.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvMaxBuffSize.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(22, recvMaxBuffSize.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvMaxBuffSize.EnsembleData.EnsDateTime.ToString());
-            Assert.AreEqual(500, recvMaxBuffSize.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvMaxBuffSize.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Hour, recvBad.EnsembleData.EnsDateTime.Hour, "Incorrect Ensemble time in Hours " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Minute, recvBad.EnsembleData.EnsDateTime.Minute, "Incorrect Ensemble time in Minutes " + recvBad.EnsembleData.EnsDateTime.ToString());
+            Assert.AreEqual(DateTime.Now.Second, recvBad.EnsembleData.EnsDateTime.Second, "Incorrect Ensemble time in Seconds " + recvBad.EnsembleData.EnsDateTime.ToString());
+            //Assert.AreEqual(DateTime.Now.Millisecond, recvBad.EnsembleData.EnsDateTime.Millisecond, "Incorrece Ensemble time in Milliseconds " + recvBad.EnsembleData.EnsDateTime.ToString());
 
             // Check Ancillary data set available
             Assert.AreEqual(true, recvMaxBuffSize.IsAncillaryAvail, "Ancillary Data Set not available");
@@ -435,7 +437,7 @@ namespace RTI
             Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.FirstBinRange, "First Bin Range was incorrect");
             Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.BinSize, "Bin Size was incorrect");
             Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.FirstPingTime, "First Ping Time was incorrect");
-            Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
+            Assert.AreEqual(10, recvMaxBuffSize.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
             Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.Heading, "Heading was incorrect");
             Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.Pitch, "Pitch was incorrect");
             Assert.AreEqual(0, recvMaxBuffSize.AncillaryData.Roll, "Roll was incorrect");
@@ -734,7 +736,7 @@ namespace RTI
             // Check if Ensemble data set available
             Assert.AreEqual(true, recvNmeaCombine.IsEnsembleAvail, "Ensemble Data Set not available");
             Assert.AreEqual(1, recvNmeaCombine.EnsembleData.EnsembleNumber, "Ensemble number is incorrect");
-            Assert.IsFalse(recvNmeaCombine.IsInstrVelocityAvail, "Instrument Velocity should not be included");
+            Assert.IsFalse(recvNmeaCombine.IsInstrumentVelocityAvail, "Instrument Velocity should not be included");
 
             Assert.AreEqual(DataSet.Ensemble.BAD_VELOCITY, recvNmeaCombine.BottomTrackData.EarthVelocity[0], "Bottom Track Earth Velocity East incorrect");
             Assert.AreEqual(DataSet.Ensemble.BAD_VELOCITY, recvNmeaCombine.BottomTrackData.EarthVelocity[1], "Bottom Track Earth Velocity North incorrect");

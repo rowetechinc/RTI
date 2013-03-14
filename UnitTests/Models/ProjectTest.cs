@@ -130,5 +130,35 @@ namespace RTI
             //Assert.AreEqual(projectSerial, p.SysSerialNumber.ToString(), "Project Serial numbers do not match");
         }
 
+        /// <summary>
+        /// Test the constructor.
+        /// </summary>
+        [Test]
+        public void TestConstructor1()
+        {
+            int projectId = 0;
+            string projectSerial = "01300000000000000000000000000001";
+            string projectName = "Test Project1";
+            string projectDir = @"D:\UnitTestResult";  // Choose a FOLDER where database files can be created
+
+            // Remove a previous test result
+            if (Directory.Exists(projectDir + @"\" + projectName))
+            {
+                File.Delete(projectDir + @"\" + projectName + @"\" + projectName + ".db");
+                Directory.Delete(projectDir + @"\" + projectName);
+            }
+
+            Project p = new Project(projectName, projectDir, projectSerial);
+
+            p.ProjectID = projectId;
+
+            Assert.AreEqual(projectId, p.ProjectID);                                        // Verify Project ID
+            Assert.AreEqual(projectName, p.ProjectName);                                    // Verify Project Name
+            Assert.AreEqual(projectDir, p.ProjectDir);                                      // Verify Project Dir
+            Assert.AreEqual(projectDir + @"\" + projectName, p.ProjectFolderPath);          // Verify Project folder path
+            //Assert.AreEqual(projectSerial, p.SysSerialNumber.ToString(), "Project Serial numbers do not match");
+
+        }
+
     }
 }

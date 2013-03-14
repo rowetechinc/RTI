@@ -49,6 +49,7 @@
  *                                         Verify there is a project to write to before trying to buffer incoming data.
  * 02/14/2012      RC          2.03       Moved file extension to Commns.cs.
  * 02/17/2012      RC          2.03       Set the file size to 0 when getting a new file name.
+ * 01/24/2013      RC          2.18       Made FileSize a public property to monitor the recording.
  *       
  * 
  */
@@ -115,11 +116,11 @@ namespace RTI
         /// </summary>
         private int _fileNameIndex = 0;
 
-        /// <summary>
-        /// Current size of the file to ensure
-        /// it does not exceed a max value.
-        /// </summary>
-        private long _fileSize = 0;
+        ///// <summary>
+        ///// Current size of the file to ensure
+        ///// it does not exceed a max value.
+        ///// </summary>
+        //private long _fileSize = 0;
 
         /// <summary>
         /// Writer to write binary data to
@@ -163,6 +164,27 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// Current size of the file to ensure
+        /// it does not exceed a max value.  This can be 
+        /// used to monitor the current file size.  
+        /// This will calculate what is currently in the buffer
+        /// and what has already been written to the file.
+        /// </summary>
+        private long _fileSize = 0;
+        /// <summary>
+        /// Current size of the file to ensure
+        /// it does not exceed a max value.  This can be 
+        /// used to monitor the current file size.  
+        /// This will calculate what is currently in the buffer
+        /// and what has already been written to the file.
+        /// </summary>
+        public long FileSize
+        {
+            get { return _fileSize + _writeBufferIndex; }
+        }
+
 
         #endregion
 

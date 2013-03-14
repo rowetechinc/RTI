@@ -383,7 +383,7 @@ namespace RTI
                 // Get the size of this data set
                 dataSetSize = BaseDataSet.GetDataSetSize(type, nameLen, numElements, elementMultiplier);
 
-                if (Ensemble.VelocityID.Equals(name, StringComparison.Ordinal))
+                if (Ensemble.BeamVelocityID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
                     byte[] velData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
@@ -395,19 +395,19 @@ namespace RTI
                     // Advance the packet pointer
                     packetPointer += dataSetSize;
                 }
-                else if (Ensemble.InstrumentID.Equals(name, StringComparison.Ordinal))
+                else if (Ensemble.InstrumentVelocityID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
                     byte[] velData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddInstrVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                    adcpData.AddInstrumentVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
                     //Debug.WriteLine(adcpData.InstrVelocityData.ToString());
 
                     // Advance the packet pointer
                     packetPointer += dataSetSize;
                 }
-                else if (Ensemble.EarthID.Equals(name, StringComparison.Ordinal))
+                else if (Ensemble.EarthVelocityID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
                     byte[] velData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
@@ -503,7 +503,7 @@ namespace RTI
                     // Advance the packet pointer
                     packetPointer += dataSetSize;
                 }
-                else if (Ensemble.NMEAID.Equals(name, StringComparison.Ordinal))
+                else if (Ensemble.NmeaID.Equals(name, StringComparison.Ordinal))
                 {
                     // List of all data read
                     byte[] nmeaData = new byte[dataSetSize]; 

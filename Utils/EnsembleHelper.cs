@@ -34,6 +34,8 @@
  * -----------------------------------------------------------------
  * 12/24/2012      RC          2.17       Initial coding
  * 01/17/2013      RC          2.17       Added BottomTrack.
+ * 02/20/2013      RC          2.18       Added Beam and Instrument Velocity, Good Beam and Earth and Water Mass.
+ * 03/06/2013      RC          2.18       Maded AddNmea() only take an ensemble.
  * 
  */
 
@@ -74,11 +76,23 @@ namespace RTI
 
                 AddAmplitude(ref ensemble, numBins, numBeams);
 
+                AddBeamVelocity(ref ensemble, numBins, numBeams);
+
                 AddEarthVelocity(ref ensemble, numBins, numBeams);
+
+                AddInstrumentVelocity(ref ensemble, numBins, numBeams);
 
                 AddBottomTrack(ref ensemble);
 
-                //AddWaterMassEarth(ref ensemble, numBins, numBeams);
+                AddWaterMassEarth(ref ensemble, numBins, numBeams);
+
+                AddWaterMassInstrument(ref ensemble, numBins, numBeams);
+
+                AddGoodBeam(ref ensemble, numBins, numBeams);
+
+                AddGoodEarth(ref ensemble, numBins, numBeams);
+
+                AddNmea(ref ensemble);
             }
             return ensemble;
         }
@@ -183,6 +197,36 @@ namespace RTI
 
         #endregion
 
+        #region Beam Velocity
+
+        /// <summary>
+        /// Add a blank Beam velocity data set to
+        /// the given ensemble.  This will use the number
+        /// of bins and beams given to create the Beam
+        /// Velocity array.  The array will be empty.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public static void AddBeamVelocity(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            // Check for null
+            if (ensemble == null)
+            {
+                return;
+            }
+
+            // Add a blank Beam Velocity Data set
+            ensemble.AddBeamVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,              // Type of data stored (Float or Int)
+                                            numBins,                                    // Number of bins
+                                            numBeams,                                   // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
+                                            DataSet.Ensemble.BeamVelocityID);               // Dataset ID
+        }
+
+        #endregion
+
         #region Earth Velocity
 
         /// <summary>
@@ -208,7 +252,37 @@ namespace RTI
                                             numBeams,                                   // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
-                                            DataSet.Ensemble.EarthID);                  // Dataset ID
+                                            DataSet.Ensemble.EarthVelocityID);                  // Dataset ID
+        }
+
+        #endregion
+
+        #region Instrument Velocity
+
+        /// <summary>
+        /// Add a blank Instrument velocity data set to
+        /// the given ensemble.  This will use the number
+        /// of bins and beams given to create the Instrument
+        /// Velocity array.  The array will be empty.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public static void AddInstrumentVelocity(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            // Check for null
+            if (ensemble == null)
+            {
+                return;
+            }
+
+            // Add a blank Instrument Velocity Data set
+            ensemble.AddInstrumentVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,              // Type of data stored (Float or Int)
+                                            numBins,                                    // Number of bins
+                                            numBeams,                                   // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
+                                            DataSet.Ensemble.InstrumentVelocityID);             // Dataset ID
         }
 
         #endregion
@@ -232,6 +306,66 @@ namespace RTI
 
         #endregion
 
+        #region Good Beam
+
+        /// <summary>
+        /// Add a blank Good Beam data set to
+        /// the given ensemble.  This will use the number
+        /// of bins and beams given to create the Good Beam
+        /// array.  The array will be empty.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public static void AddGoodBeam(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            // Check for null
+            if (ensemble == null)
+            {
+                return;
+            }
+
+            // Add a blank Earth Velocity Data set
+            ensemble.AddGoodBeamData(DataSet.Ensemble.DATATYPE_FLOAT,                   // Type of data stored (Float or Int)
+                                            numBins,                                    // Number of bins
+                                            numBeams,                                   // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
+                                            DataSet.Ensemble.GoodBeamID);               // Dataset ID
+        }
+
+        #endregion
+
+        #region Good Earth
+
+        /// <summary>
+        /// Add a blank Good Earth data set to
+        /// the given ensemble.  This will use the number
+        /// of bins and beams given to create the Good Earth
+        /// array.  The array will be empty.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public static void AddGoodEarth(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            // Check for null
+            if (ensemble == null)
+            {
+                return;
+            }
+
+            // Add a blank Earth Velocity Data set
+            ensemble.AddGoodEarthData(DataSet.Ensemble.DATATYPE_FLOAT,                  // Type of data stored (Float or Int)
+                                            numBins,                                    // Number of bins
+                                            numBeams,                                   // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
+                                            DataSet.Ensemble.GoodEarthID);              // Dataset ID
+        }
+
+        #endregion
+
         #region Water Mass Earth
 
         /// <summary>
@@ -242,16 +376,58 @@ namespace RTI
         /// <param name="numBeams">Number of beam sin the dataset.</param>
         public static void AddWaterMassEarth(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
         {
-            //ensemble.AddEarthWaterMassData(DataSet.Ensemble.DATATYPE_FLOAT, 
-            //                                DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
-            //                                DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
-            //                                DataSet.Ensemble.DEFAULT_IMAG,                          // Image
-            //                                DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
-            //                                DataSet.Ensemble.WaterMassInstrumentID,                 // Name (Dataset ID)
-            //                                0.3f,                                                   // Water Mass East Velocity in m/s.
-            //                                -0.2f,                                                  // Water Mass North Velocity in m/s.
-            //                                0.4f,                                                   // Water Mass Vertical Velocity in m/s.
-            //                                0.1f);                                                  // Depth layer of the Water Mass measurement in meters.
+            ensemble.AddEarthWaterMassData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                            DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
+                                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,                          // Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
+                                            DataSet.Ensemble.WaterMassEarthID,                      // Name (Dataset ID)
+                                            0.0f,                                                   // Water Mass East Velocity in m/s.
+                                            0.0f,                                                   // Water Mass North Velocity in m/s.
+                                            0.0f,                                                   // Water Mass Vertical Velocity in m/s.
+                                            0.0f);                                                  // Depth layer of the Water Mass measurement in meters.
+        }
+
+        #endregion
+
+        #region Water Mass Instrument
+
+        /// <summary>
+        /// Add Water Mass Earth data set.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins in the dataset.</param>
+        /// <param name="numBeams">Number of beam sin the dataset.</param>
+        public static void AddWaterMassInstrument(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            ensemble.AddInstrumentWaterMassData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                            DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
+                                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,                          // Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
+                                            DataSet.Ensemble.WaterMassInstrumentID,                 // Name (Dataset ID)
+                                            0.0f,                                                   // Water Mass East Velocity in m/s.
+                                            0.0f,                                                   // Water Mass North Velocity in m/s.
+                                            0.0f,                                                   // Water Mass Vertical Velocity in m/s.
+                                            0.0f);                                                  // Depth layer of the Water Mass measurement in meters.
+        }
+
+        #endregion
+
+        #region Nmea
+
+        /// <summary>
+        /// Add Nmea data set.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        public static void AddNmea(ref DataSet.Ensemble ensemble)
+        {
+            ensemble.AddNmeaData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                            DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
+                                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,                          // Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
+                                            DataSet.Ensemble.NmeaID);                               // Name (Dataset ID)
         }
 
         #endregion
@@ -304,12 +480,12 @@ namespace RTI
             }
 
             // Earth Velocities
-            if (ensemble.IsInstrVelocityAvail && bin < ensemble.InstrVelocityData.InstrumentVelocityData.GetLength(0))
+            if (ensemble.IsInstrumentVelocityAvail && bin < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(0))
             {
-                ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
             }
         }
 

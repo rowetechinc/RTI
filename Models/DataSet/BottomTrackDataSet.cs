@@ -55,11 +55,17 @@
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 06/20/2012      RC          2.12       Added IsInstrumentVelocityGood().
  * 06/21/2012      RC          2.12       Add 3 beam solution option in IsInstrumentVelocityGood() and IsEarthVelocityGood().
+ * 02/27/2013      RC          2.18       Set FirstPingTime when decoding the PRTI sentences.
+ * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
  * 
  */
 
 using System;
 using System.Data;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace RTI
 {
@@ -68,12 +74,17 @@ namespace RTI
         /// <summary>
         /// Data set containing all the Ancillary data.
         /// </summary>
+        [JsonConverter(typeof(BottomTrackDataSetSerializer))]
         public class BottomTrackDataSet : BaseDataSet
         {
+            #region Variables
+
             /// <summary>
             /// Number of elements in this data set.
             /// </summary>
             public const int NUM_DATA_ELEMENTS = 54;
+
+            #region Status
 
             /// <summary>
             /// Water Track 3 Beam solution STATUS value (DVL only).
@@ -100,6 +111,12 @@ namespace RTI
             /// </summary>
             public const int BT_HDWR_TIMEOUT = 0x8000;
 
+            #endregion
+
+            #endregion
+
+            #region Properties
+
             /// <summary>
             /// First Bottom Track Ping Time in seconds.
             /// </summary>
@@ -108,6 +125,7 @@ namespace RTI
             /// <summary>
             /// Round version of First Bottom Track Ping time in seconds.
             /// </summary>
+            [JsonIgnore]
             public string FirstPingTimeRounded { get { return FirstPingTime.ToString("0.00"); } }
 
             /// <summary>
@@ -118,6 +136,7 @@ namespace RTI
             /// <summary>
             /// Round version of Last Ping Time in seconds.
             /// </summary>
+            [JsonIgnore]
             public string LastPingRounded { get { return LastPingTime.ToString("0.00"); } }
 
             /// <summary>
@@ -128,6 +147,7 @@ namespace RTI
             /// <summary>
             /// Round version of Heading in degrees.
             /// </summary>
+            [JsonIgnore]
             public string HeadingRounded { get { return Heading.ToString("0.000"); } }
 
             /// <summary>
@@ -138,6 +158,7 @@ namespace RTI
             /// <summary>
             /// Round version of Pitch in degrees. 
             /// </summary>
+            [JsonIgnore]
             public string PitchRounded { get { return Pitch.ToString("0.000"); } }
 
             /// <summary>
@@ -148,6 +169,7 @@ namespace RTI
             /// <summary>
             /// Round version of Roll in degrees. 
             /// </summary>
+            [JsonIgnore]
             public string RollRounded { get { return Roll.ToString("0.000"); } }
 
             /// <summary>
@@ -158,6 +180,7 @@ namespace RTI
             /// <summary>
             /// Round version of Water Temperature in degrees.
             /// </summary>
+            [JsonIgnore]
             public string WaterTempRounded { get { return WaterTemp.ToString("0.000"); } }
 
             /// <summary>
@@ -168,6 +191,7 @@ namespace RTI
             /// <summary>
             /// Round version of System Temperature in degrees.
             /// </summary>
+            [JsonIgnore]
             public string SystemTempRounded { get { return SystemTemp.ToString("0.000"); } }
 
             /// <summary>
@@ -179,6 +203,7 @@ namespace RTI
             /// <summary>
             /// Round version of Salinity in parts per thousand.
             /// </summary>
+            [JsonIgnore]
             public string SalinityRounded { get { return Salinity.ToString("0.000"); } }
 
             /// <summary>
@@ -189,6 +214,7 @@ namespace RTI
             /// <summary>
             /// Round version of Pressure in pascal.
             /// </summary>
+            [JsonIgnore]
             public string PressureRounded { get { return Pressure.ToString("0.000"); } }
 
             /// <summary>
@@ -200,6 +226,7 @@ namespace RTI
             /// <summary>
             /// Round version of Tranducer Depth in meters.
             /// </summary>
+            [JsonIgnore]
             public string TransducerDepthRounded { get { return TransducerDepth.ToString("0.000"); } }
 
             /// <summary>
@@ -210,6 +237,7 @@ namespace RTI
             /// <summary>
             /// Round version of Speed Of Sound in meter/sec.
             /// </summary>
+            [JsonIgnore]
             public string SpeedOfSoundRounded { get { return SpeedOfSound.ToString("0.000"); } }
 
             /// <summary>
@@ -230,6 +258,7 @@ namespace RTI
             /// <summary>
             /// Round version of actual number of pings in samples.
             /// </summary>
+            [JsonIgnore]
             public double ActualPingCountRounded { get { return Math.Round(ActualPingCount, 3); } }
 
             /// <summary>
@@ -282,6 +311,7 @@ namespace RTI
             /// </summary>
             public float[] EarthGood { get; set; }
 
+            #endregion
 
             /// <summary>
             /// Create a Bottom Track data set.  This will create an empty dataset.
@@ -324,27 +354,6 @@ namespace RTI
             /// Create a Bottom Track data set.  Includes all the information
             /// about the current Bottom Track data.
             /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="btData">DataRow containing Bottom Track data</param>
-            public BottomTrackDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataRow btData) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
-            {
-                // Initialize arrays
-                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
-
-                // Decode the information
-                Decode(btData);
-            }
-
-            /// <summary>
-            /// Create a Bottom Track data set.  Includes all the information
-            /// about the current Bottom Track data.
-            /// </summary>
             /// <param name="sentence"></param>
             public BottomTrackDataSet(Prti01Sentence sentence) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
@@ -369,6 +378,90 @@ namespace RTI
 
                 // Decode the information
                 DecodeBottomTrackData(sentence);
+            }
+
+            /// <summary>
+            /// Create an Bottom Track data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.BottomTrackDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 97ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.BottomTrackDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.BottomTrackDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
+            /// </summary>
+            /// <param name="ValueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="NumElements">Number of Bin</param>
+            /// <param name="ElementsMultiplier">Number of beams</param>
+            /// <param name="Imag"></param>
+            /// <param name="NameLength">Length of name</param>
+            /// <param name="Name">Name of data type</param>
+            /// <param name="FirstPingTime">Time of first ping in seconds</param>
+            /// <param name="LastPingTime">Time of last ping in seconds.</param>
+            /// <param name="Heading">Heading in degrees.</param>
+            /// <param name="Pitch">Pitch in degrees.</param>
+            /// <param name="Roll">Roll in degrees.</param>
+            /// <param name="WaterTemp">Water Temperature in degrees farenheit.</param>
+            /// <param name="SystemTemp">System Temperature in degrees farenheit.</param>
+            /// <param name="Salinity">Salinity of the water in PPM.</param>
+            /// <param name="Pressure">Pressure read by the pressure sensor in Pascals.</param>
+            /// <param name="TransducerDepth">Depth of the transducer in meters.</param>
+            /// <param name="SpeedOfSound">Speed of Sound measured in m/s.</param>
+            /// <param name="Status">Status of the Adcp.</param>
+            /// <param name="NumBeams">Number of beams.</param>
+            /// <param name="ActualPingCount">Actual Ping Count.</param>
+            /// <param name="Range">Range array.</param>
+            /// <param name="SNR">Signal To Noise Ratio array.</param>
+            /// <param name="Amplitude">Amplitude array.</param>
+            /// <param name="Correlation">Correlation array.</param>
+            /// <param name="BeamVelocity">Beam Velocity array.</param>
+            /// <param name="BeamGood">Good Beam Velocity array.</param>
+            /// <param name="InstrumentVelocity">Instrument Velocity array.</param>
+            /// <param name="InstrumentGood">Good Instrument Velocity array.</param>
+            /// <param name="EarthVelocity">Earth Velocity array.</param>
+            /// <param name="EarthGood">Good Earth Velocity array.</param>
+            [JsonConstructor]
+            public BottomTrackDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
+                        float FirstPingTime, float LastPingTime,
+                        float Heading, float Pitch, float Roll, float WaterTemp, float SystemTemp,
+                        float Salinity, float Pressure, float TransducerDepth, float SpeedOfSound,
+                        Status Status, float NumBeams, float ActualPingCount,
+                        float[] Range, float[] SNR, float[] Amplitude, float[] Correlation, 
+                        float[] BeamVelocity, float[] BeamGood, float[] InstrumentVelocity,
+                        float[] InstrumentGood, float[] EarthVelocity, float[] EarthGood) :
+                base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
+            {
+                // Initialize the values
+                this.FirstPingTime = FirstPingTime;
+                this.LastPingTime = LastPingTime;
+                this.Heading = Heading;
+                this.Pitch = Pitch;
+                this.Roll = Roll;
+                this.WaterTemp = WaterTemp;
+                this.SystemTemp = SystemTemp;
+                this.Salinity = Salinity;
+                this.Pressure = Pressure;
+                this.TransducerDepth = TransducerDepth;
+                this.SpeedOfSound = SpeedOfSound;
+                this.Status = Status;
+                this.NumBeams = NumBeams;
+                this.ActualPingCount = ActualPingCount;
+
+                this.Range = Range;
+                this.SNR = SNR;
+                this.Amplitude = Amplitude;
+                this.Correlation = Correlation;
+                this.BeamVelocity = BeamVelocity;
+                this.BeamGood = BeamGood;
+                this.InstrumentVelocity = InstrumentVelocity;
+                this.InstrumentGood = InstrumentGood;
+                this.EarthVelocity = EarthVelocity;
+                this.EarthGood = EarthGood;
             }
 
             /// <summary>
@@ -614,90 +707,6 @@ namespace RTI
             }
 
             /// <summary>
-            /// Get all the information about the Bottom Track data.
-            /// Data is passed in as a DataRow from a database.  The
-            /// data is then extracted and added to the properties.
-            /// </summary>
-            /// <param name="dataRow">DataRow containing the Bottom Track data type.</param>
-            private void Decode(DataRow dataRow)
-            {
-                try
-                {
-                    // Set the values based off the data given
-                    FirstPingTime = Convert.ToSingle(dataRow[DbCommon.COL_BT_FIRST_PING_TIME].ToString());
-                    LastPingTime = Convert.ToSingle(dataRow[DbCommon.COL_BT_LAST_PING_TIME].ToString());
-
-                    Heading = Convert.ToSingle(dataRow[DbCommon.COL_BT_HEADING].ToString());
-                    Pitch = Convert.ToSingle(dataRow[DbCommon.COL_BT_PITCH].ToString());
-                    Roll = Convert.ToSingle(dataRow[DbCommon.COL_BT_ROLL].ToString());
-                    WaterTemp = Convert.ToSingle(dataRow[DbCommon.COL_BT_TEMP_WATER].ToString());
-                    SystemTemp = Convert.ToSingle(dataRow[DbCommon.COL_BT_TEMP_SYS].ToString());
-                    Salinity = Convert.ToSingle(dataRow[DbCommon.COL_BT_SALINITY].ToString());
-                    Pressure = Convert.ToSingle(dataRow[DbCommon.COL_BT_PRESSURE].ToString());
-                    TransducerDepth = Convert.ToSingle(dataRow[DbCommon.COL_ENS_XDCR_DEPTH].ToString());
-                    SpeedOfSound = Convert.ToSingle(dataRow[DbCommon.COL_BT_SOS].ToString());
-
-                    Status = new Status(Convert.ToInt32(dataRow[DbCommon.COL_BT_STATUS].ToString()));
-                    NumBeams = Convert.ToSingle(dataRow[DbCommon.COL_ENS_NUM_BEAM].ToString());
-                    ActualPingCount = Convert.ToSingle(dataRow[DbCommon.COL_BT_ACTUAL_PING_COUNT].ToString());
-
-                    Range[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_RANGE_B0].ToString());
-                    Range[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_RANGE_B1].ToString());
-                    Range[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_RANGE_B2].ToString());
-                    Range[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_RANGE_B3].ToString());
-
-                    SNR[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_SNR_B0].ToString());
-                    SNR[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_SNR_B1].ToString());
-                    SNR[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_SNR_B2].ToString());
-                    SNR[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_SNR_B3].ToString());
-
-                    Amplitude[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_AMP_B0].ToString());
-                    Amplitude[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_AMP_B1].ToString());
-                    Amplitude[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_AMP_B2].ToString());
-                    Amplitude[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_AMP_B3].ToString());
-
-                    Correlation[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_CORR_B0].ToString());
-                    Correlation[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_CORR_B1].ToString());
-                    Correlation[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_CORR_B2].ToString());
-                    Correlation[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_CORR_B3].ToString());
-
-                    BeamVelocity[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_VEL_B0].ToString());
-                    BeamVelocity[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_VEL_B1].ToString());
-                    BeamVelocity[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_VEL_B2].ToString());
-                    BeamVelocity[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_VEL_B3].ToString());
-
-                    BeamGood[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_GOOD_B0].ToString());
-                    BeamGood[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_GOOD_B1].ToString());
-                    BeamGood[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_GOOD_B2].ToString());
-                    BeamGood[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_BEAM_GOOD_B3].ToString());
-
-                    InstrumentVelocity[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_VEL_B0].ToString());
-                    InstrumentVelocity[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_VEL_B1].ToString());
-                    InstrumentVelocity[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_VEL_B2].ToString());
-                    InstrumentVelocity[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_VEL_B3].ToString());
-
-                    InstrumentGood[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_GOOD_B0].ToString());
-                    InstrumentGood[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_GOOD_B1].ToString());
-                    InstrumentGood[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_GOOD_B2].ToString());
-                    InstrumentGood[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_INSTR_GOOD_B3].ToString());
-
-                    EarthVelocity[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_VEL_B0].ToString());
-                    EarthVelocity[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_VEL_B1].ToString());
-                    EarthVelocity[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_VEL_B2].ToString());
-                    EarthVelocity[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_VEL_B3].ToString());
-
-                    EarthGood[0] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_GOOD_B0].ToString());
-                    EarthGood[1] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_GOOD_B1].ToString());
-                    EarthGood[2] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_GOOD_B2].ToString());
-                    EarthGood[3] = Convert.ToSingle(dataRow[DbCommon.COL_BT_EARTH_GOOD_B3].ToString());
-                }
-                catch (FormatException)
-                {
-                    //RecorderManager.Instance.ReportError("Error Decoding Bottom Track data.", e);
-                }
-            }
-
-            /// <summary>
             /// Prti01Sentence contains bottom track velocity in Instrument form. It also
             /// contains the depth and status.
             /// </summary>
@@ -755,6 +764,8 @@ namespace RTI
                 // Set the water temp
                 WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);   // Sentence stores temp at 1/100 degree Celcius.
 
+                // First ping time
+                FirstPingTime = Convert.ToInt32(sentence.StartTime / 100);      // Sentence stores the time in hundredths of a second
             }
 
             /// <summary>
@@ -815,6 +826,8 @@ namespace RTI
                 // Set the water temp
                 WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);   // Sentence stores temp at 1/100 degree Celcius.
 
+                // First ping time
+                FirstPingTime = Convert.ToInt32(sentence.StartTime / 100);      // Sentence stores the time in hundredths of a second
             }
 
             /// <summary>
@@ -995,6 +1008,373 @@ namespace RTI
                 s += "\n";
 
                 return s;
+            }
+        }
+
+        /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData).
+        /// 
+        /// 50ms for this method.
+        /// 100ms for calling SerializeObject default.
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class BottomTrackDataSetSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var data = value as BottomTrackDataSet;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                // Write the base values
+                writer.WriteRaw(data.ToJsonBaseStub());
+                writer.WriteRaw(",");
+
+                // FirstPingTime
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_FIRSTPINGTIME);
+                writer.WriteValue(data.FirstPingTime);
+
+                // LastPingTime
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_LASTPINGTIME);
+                writer.WriteValue(data.LastPingTime);
+
+                // Heading
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_HEADING);
+                writer.WriteValue(data.Heading);
+
+                // Pitch
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_PITCH);
+                writer.WriteValue(data.Pitch);
+
+                // Roll
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_ROLL);
+                writer.WriteValue(data.Roll);
+
+                // WaterTemp
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WATERTEMP);
+                writer.WriteValue(data.WaterTemp);
+
+                // SystemTemp
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SYSTEMP);
+                writer.WriteValue(data.SystemTemp);
+
+                // Salinity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SALINITY);
+                writer.WriteValue(data.Salinity);
+
+                // Pressure
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_PRESSURE);
+                writer.WriteValue(data.Pressure);
+
+                // TransducerDepth
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_TRANSDUCERDEPTH);
+                writer.WriteValue(data.TransducerDepth);
+
+                // SpeedOfSound
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SPEEDOFSOUND);
+                writer.WriteValue(data.SpeedOfSound);
+
+                // Status Value
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_STATUS);
+                writer.WriteValue(data.Status.Value);
+
+                // NumBeams
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_NUMBEAMS);
+                writer.WriteValue(data.NumBeams);
+
+                // ActualPingCount
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_ACTUALPINGCOUNT);
+                writer.WriteValue(data.ActualPingCount);
+
+                // Range
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_RANGE);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.Range[beam]);
+                }
+                writer.WriteEndArray();
+
+                // SNR
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_SNR);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.SNR[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Amplitude
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_AMPLITUDE);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.Amplitude[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Correlation
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_CORRELATION);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.Correlation[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Beam Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_BEAMVELOCITY);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.BeamVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Good Beam Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_BEAMGOOD);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.BeamGood[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Instrument Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_INSTRUMENTVELOCITY);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.InstrumentVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Good Instrument Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_INSTRUMENTGOOD);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.InstrumentGood[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Earth Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_EARTHVELOCITY);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.EarthVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Good Earth Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_EARTHGOOD);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.EarthGood[beam]);
+                }
+                writer.WriteEndArray();
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// 
+            /// DataSet.BottomTrackDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.BottomTrackDataSet}(encodedEns)
+            /// 
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    // Load the object
+                    JObject jsonObject = JObject.Load(reader);
+
+                    // Decode the data
+                    int NumElements = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMELEMENTS];
+                    int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
+
+                    // Create the object
+                    var data = new BottomTrackDataSet(DataSet.Ensemble.DATATYPE_FLOAT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID);
+
+                    // FirstPingTime
+                    data.FirstPingTime = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_FIRSTPINGTIME];
+
+                    // LastPingTime
+                    data.LastPingTime = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_LASTPINGTIME];
+
+                    // Heading
+                    data.Heading = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_HEADING];
+
+                    // Pitch
+                    data.Pitch = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_PITCH];
+
+                    // Roll
+                    data.Roll = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_ROLL];
+
+                    // WaterTemp
+                    data.WaterTemp = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_WATERTEMP];
+
+                    // SystemTemp
+                    data.SystemTemp = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SYSTEMP];
+
+                    // Salinity
+                    data.Salinity = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SALINITY];
+
+                    // Pressure
+                    data.Pressure = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_PRESSURE];
+
+                    // TransducerDepth
+                    data.TransducerDepth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_TRANSDUCERDEPTH];
+
+                    // SpeedOfSound
+                    data.SpeedOfSound = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SPEEDOFSOUND];
+
+                    // Status Value
+                    data.Status = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_STATUS]);
+
+                    // NumBeams
+                    data.NumBeams = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_NUMBEAMS];
+
+                    // ActualPingCount
+                    data.ActualPingCount = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_ACTUALPINGCOUNT];
+
+                    // Range
+                    JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_RANGE];
+                    data.Range = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.Range[x] = (float)jArray[x];
+                    }
+
+                    // SNR
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_SNR];
+                    data.SNR = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.SNR[x] = (float)jArray[x];
+                    }
+
+                    // Amplitude
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_AMPLITUDE];
+                    data.Amplitude = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.Amplitude[x] = (float)jArray[x];
+                    }
+
+                    // Correlation
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_CORRELATION];
+                    data.Correlation = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.Correlation[x] = (float)jArray[x];
+                    }
+
+                    // BeamVelocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_BEAMVELOCITY];
+                    data.BeamVelocity = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.BeamVelocity[x] = (float)jArray[x];
+                    }
+
+                    // BeamGood
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_BEAMGOOD];
+                    data.BeamGood = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.BeamGood[x] = (float)jArray[x];
+                    }
+
+                    // InstrumentVelocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_INSTRUMENTVELOCITY];
+                    data.InstrumentVelocity = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.InstrumentVelocity[x] = (float)jArray[x];
+                    }
+
+                    // InstrumentGood
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_INSTRUMENTGOOD];
+                    data.InstrumentGood = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.InstrumentGood[x] = (float)jArray[x];
+                    }
+
+                    // EarthVelocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_EARTHVELOCITY];
+                    data.EarthVelocity = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.EarthVelocity[x] = (float)jArray[x];
+                    }
+
+                    // EarthGood
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_EARTHGOOD];
+                    data.EarthGood = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.EarthGood[x] = (float)jArray[x];
+                    }
+
+                    return data;
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(BottomTrackDataSet).IsAssignableFrom(objectType);
             }
         }
     }

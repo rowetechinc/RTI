@@ -1,5 +1,46 @@
 RTI Changelog
 
+RTI-2.18
+ - Changed the version number.
+ - In AdcpBinaryWriter, made FileSize a public property to monitor the recording.
+ - In Project, changed the database revision to C1 because we added a new table, tblOptions.
+ - In DbCommons, changed TBL_ENS_CMDS to TBL_ENS_OPTIONS.
+ - In EnsembleDataSet::Decode(), set SubsystemConfig with the subsystem if the revision is old and no SubsystemConfig is given.  Before it would not give the subsystem.
+ - In Project, added VerifyDatabase() to verify a database when copying a new project database.
+ - In DbCommon, added CheckIfColumnExist() and CheckIfTableIsEmpty().
+ - In Ensemble, added static methods XXXBeamName() to convert the beam number to a string of the beam description for the coordinate transform.
+ - In BaseDataSet, make all properties Setter public for converting to JSON.
+ - In EnsembleHelper, added Beam and Instrument Velocity, Good Beam and Earth and Water Mass.
+ - In NmeaDataSet, added an empty constructor.  Made the properties' Setter public for JSON coding.
+ - In Ensemble, added AddNmeaData() that takes no data.
+ - In EnsembleDataSet, fixed setting the time for PRTI sentences with SetPRTITime().
+ - In EnsembleDataSet, in constructors for PRTI messages, set the serial number to SubsystemConfiguration().  This will use the DVL serial number to create the SubsystemConfiguration.
+ - In Firmware, in GetSubsystemCode() and GetSubsystem(), check if the serial number given is a DVL serial number.  If so, handle differently.
+ - In EnsembleDataSet, made the time for PRTI be the current time.  Set the start time to AncillaryDataSet.LastPingTime.
+ - In AncillaryDataSet, for PRTI messages, made LastPingTime the PRTI start time.
+ - In BottomTrackDataSet, set FirstPingTime when decoding the PRTI sentences.
+ - In Ensemble, removed the private set from all the properties so the object can be convert to a from JSON.
+ - In BaseDataSet, added ToJsonBaseStub() to create a JSON stub for the base dataset properties.
+ - In AmplitudeDataSet, added ToJson() and ToJsonStub() to convert this object to a JSON string.
+ - In all the DataSets and Ensemble, removed Orientation from all the datasets.  Replaced with SubsystemConfiguration.
+ - In all the DataSets added encoding and decoding of the object as a JSON string.
+ - Changed name and file name from InstrVelocityData to InstrumentVelocityData.
+ - In EarthVelocityDataSet, changed name of VV to VelocityVectors.
+ - In Firmware, maded SubsystemCode public so it can be decoded for JSON.
+ - In UniqueID::== do not check milliseconds.
+ - In AncillaryDataSet, fixed FirstPingTime for PRTI sentences.
+ - In EnsembleHelper, maded AddNmea() only take an ensemble.
+ - In the JSON strings for the BaseData, only stores the NumElements and ElementMultipliers.
+ - Changed the format of the database in the Project file.  Now stores JSON strings for each dataset.
+ - In AdcpDatabaseReader, Removed cache and added an SQLiteConnection to improve performance.
+ - In DbCommon and AdcpDatabaseCodec, for each method call, created a new one with the SQLiteConnection to prevent opening and closing connection for each call.
+ - In DbCommon, added RunQueryOnProjectDbObj() to return an object instead of an int.
+ - In VelocityVectors::CreateVelocityVector(), create the VelocityVector before setting the values.
+ - In Project, added ValidateVersion() to validate which version of the Project file.
+ - In AdcpDatabaseCodec, added GetProjectVersion() to get the project version.
+ - In Ensemble, improved the Ensemble.Clone() by using JSON to clone.
+ - Check for null when parsing the JSON string for all the datasets. 
+
 RTI-2.17
  - Changed the version number.
  - In Subsystem and AdcpSubsystemConfig, added a note about the subsystem code being EMPTY.

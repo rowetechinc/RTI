@@ -58,6 +58,10 @@
     <Compile Include="Models\DataSet\AncillaryDataSetTest.cs" />
     <Compile Include="Models\DataSet\BottomTrackDataSetTest.cs" />
     <Compile Include="Models\DataSet\AmplitudeDataSetTest.cs" />
+    <Compile Include="Models\DataSet\BeamVelocityDataSetTest.cs" />
+    <Compile Include="Models\DataSet\GoodEarthDataSetTest.cs" />
+    <Compile Include="Models\DataSet\GoodBeamDataSetTest.cs" />
+    <Compile Include="Models\DataSet\InstrumentVelocityDataSetTest.cs" />
     <Compile Include="Models\DataSet\CorrelationDataSetTest.cs" />
     <Compile Include="Models\DataSet\EarthVelocityDataSetTest.cs" />
     <Compile Include="Models\DataSet\EarthWaterMassDataSetTest.cs" />
@@ -82,11 +86,13 @@
     <Compile Include="Post Process\Screen\ScreenErrorVelocityThresholdTest.cs" />
     <Compile Include="Post Process\Screen\ScreenVerticalVelocityThreshold.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reader\AdcpDatabaseReaderTest.cs" />
     <Compile Include="Spatial\DistanceTest.cs" />
     <Compile Include="Spatial\NmeaSentenceTest.cs" />
     <Compile Include="Spatial\SpeedTest.cs" />
     <Compile Include="Utils\EnsembleHelperTest.cs" />
     <Compile Include="Utils\MathHelperTest.cs" />
+    <Compile Include="Writer\AdcpDatabaseWriterTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RTI.csproj">

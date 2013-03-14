@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 11/29/2011      RC                     Initial coding.
  * 01/19/2012      RC          1.14       Added Encode().
+ * 02/21/2013      RC          2.18       Added comments.
  * 
  */
 
@@ -65,17 +66,40 @@ namespace RTI
         /// power up or user reset.
         /// </summary>
         private int _startTime;
+        /// <summary>
+        /// Start time of this sample in hundreds of seconds since
+        /// power up or user reset.
+        /// </summary>
+        public int StartTime
+        {
+            get { return _startTime; }
+        }
 
         /// <summary>
         /// Sample Number.
         /// </summary>
         private int _sampleNumber;
+        /// <summary>
+        /// Get the Sample number.
+        /// </summary>
+        public int SampleNumber
+        {
+            get { return _sampleNumber; }
+        }
 
         /// <summary>
         /// Temperature in hundreds of degrees Celsius.
         /// (Measured from the transducer)
         /// </summary>
         private int _temperature;
+        /// <summary>
+        /// Temperature in hundreds of degrees Celsius.
+        /// (Measured from the transducer)
+        /// </summary>
+        public int Temperature
+        {
+            get { return _temperature; }
+        }
 
         /// <summary>
         /// Bottom Track East velocity component mm/s.
@@ -83,6 +107,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _btVelocityEast;
+        /// <summary>
+        /// Bottom Track East velocity component mm/s.
+        /// (Earth Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelEast
+        {
+            get { return _btVelocityEast; }
+        }
 
         /// <summary>
         /// Bottom Track North velocity component mm/s.
@@ -90,7 +123,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _btVelocityNorth;
-
+        /// <summary>
+        /// Bottom Track North velocity component mm/s.
+        /// (Earth Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelNorth
+        {
+            get { return _btVelocityNorth; }
+        }
 
         /// <summary>
         /// Bottom Track Up velocity component mm/s.
@@ -98,6 +139,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _btVelocityUp;
+        /// <summary>
+        /// Bottom Track Up velocity component mm/s.
+        /// (Earth Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelUp
+        {
+            get { return _btVelocityUp; }
+        }
 
         /// <summary>
         /// Depth below transducer in mm.  
@@ -105,6 +155,15 @@ namespace RTI
         /// 0 = no detection)
         /// </summary>
         private Distance _depth;
+        /// <summary>
+        /// Depth below transducer in mm.  
+        /// (Range to the bottom in front of the transducer, 
+        /// 0 = no detection)
+        /// </summary>
+        public Distance BottomTrackDepth
+        {
+            get { return _depth; }
+        }
 
         /// <summary>
         /// Water Mass East velocity component mm/s.
@@ -112,6 +171,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _wmVelocityEast;
+        /// <summary>
+        /// Water Mass East velocity component mm/s.
+        /// (Earth Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelEast
+        {
+            get { return _wmVelocityEast; }
+        }
 
         /// <summary>
         /// Water Mass North velocity component mm/s.
@@ -119,7 +187,15 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _wmVelocityNorth;
-
+        /// <summary>
+        /// Water Mass North velocity component mm/s.
+        /// (Earth Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelNorth
+        {
+            get { return _wmVelocityNorth; }
+        }
 
         /// <summary>
         /// Water Mass Up velocity component mm/s.
@@ -127,18 +203,43 @@ namespace RTI
         /// (-99999 indicates no valid velocity)
         /// </summary>
         private Speed _wmVelocityUp;
+        /// <summary>
+        /// Water Mass Up velocity component mm/s.
+        /// (Earth Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelUp
+        {
+            get { return _wmVelocityUp; }
+        }
 
         /// <summary>
         /// Depth of water mass measurement in mm.
         /// (Position of the bin in front of the transducer)
         /// </summary>
         private Distance _wmDepth;
+        /// <summary>
+        /// Depth of water mass measurement in mm.
+        /// (Position of the bin in front of the transducer)
+        /// </summary>
+        public Distance WaterMassDepth
+        {
+            get { return _wmDepth; }
+        }
 
         /// <summary>
         /// Built in test and status bits in hexadecimal.
         /// (0000 = OK)
         /// </summary>
         private Status _status;
+        /// <summary>
+        /// Built in test and status bits in hexadecimal.
+        /// (0000 = OK)
+        /// </summary>
+        public Status SystemStatus
+        {
+            get { return _status; }
+        }
 
         #endregion
 
@@ -294,7 +395,6 @@ namespace RTI
         }
 
         #endregion
-
 
         /// <summary>
         /// Called when [sentence changed].
@@ -613,102 +713,6 @@ namespace RTI
             AppendChecksum();
 
             return Sentence;
-        }
-
-        /// <summary>
-        /// Return the Start time.
-        /// </summary>
-        public int StartTime
-        {
-            get { return _startTime; }
-        }
-
-        /// <summary>
-        /// Get the Sample number.
-        /// </summary>
-        public int SampleNumber
-        {
-            get { return _sampleNumber; }
-        }
-
-        /// <summary>
-        /// Get the temperature in Celcius.
-        /// </summary>
-        public int Temperature
-        {
-            get { return _temperature; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Velocity East as mm/s.
-        /// </summary>
-        public Speed BottomTrackVelEast
-        {
-            get { return _btVelocityEast; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Velocity North as mm/s.
-        /// </summary>
-        public Speed BottomTrackVelNorth
-        {
-            get { return _btVelocityNorth; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Velocity Up as mm/s.
-        /// </summary>
-        public Speed BottomTrackVelUp
-        {
-            get { return _btVelocityUp; }
-        }
-
-        /// <summary>
-        /// Get the Bottom Track Depth in mm.
-        /// </summary>
-        public Distance BottomTrackDepth
-        {
-            get { return _depth; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Velocity East in mm/s.
-        /// </summary>
-        public Speed WaterMassVelEast
-        {
-            get { return _wmVelocityEast; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Velocity North in mm/s.
-        /// </summary>
-        public Speed WaterMassVelNorth
-        {
-            get { return _wmVelocityNorth; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Velocity Up in mm/s.
-        /// </summary>
-        public Speed WaterMassVelUp
-        {
-            get { return _wmVelocityUp; }
-        }
-
-        /// <summary>
-        /// Get the Water Mass Depth in mm.
-        /// </summary>
-        public Distance WaterMassDepth
-        {
-            get { return _wmDepth; }
-        }
-
-        /// <summary>
-        /// Get the status of the system.
-        /// </summary>
-        public Status SystemStatus
-        {
-            get { return _status; }
         }
     }
 

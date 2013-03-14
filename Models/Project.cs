@@ -51,7 +51,9 @@
  * 10/01/2012      RC          2.15       Removed AdcpCommands, DeploymentOptions and AdcpSubsystemCommadns and replaced with AdcpConfiguration.
  * 10/15/2012      RC          2.15       In tblEnsemble changed column SubsystemIndex to SubsystemCode.
  * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
- * 
+ * 02/06/2013      RC          2.18       Changed the database revision to C1 because we added a new table, tblOptions.
+ * 02/07/2013      RC          2.18       Added VerifyDatabase() to verify a database when copying a new project database.
+ * 03/08/2013      RC          2.18       Added ValidateVersion() to validate which version of the Project file.
  */
 
 using System;
@@ -62,6 +64,7 @@ using log4net;
 using RTI.Commands;
 using System.Collections.Generic;
 using System.Data;
+using System.Text;
 
 namespace RTI
 {
@@ -76,6 +79,8 @@ namespace RTI
     /// </summary>
     public class Project
     {
+        #region Variables
+
         /// <summary>
         /// Logger for logging error messages.
         /// </summary>
@@ -84,14 +89,20 @@ namespace RTI
         /// <summary>
         /// Revision for the Project database.
         /// Revision B includes the Adcp commands and options.
+        /// Revision C changed the options table.
+        /// Revision D made all the columns JSON data.
         /// </summary>
-        public const string REV = "B1";
+        public const string REV = "D1";
 
         /// <summary>
         /// ID for project if no project 
         /// ID is given.
         /// </summary>
         public const int EmptyID = -1;
+
+        #endregion
+
+        #region Properties
 
         /// <summary>
         /// Name of the project.
@@ -136,9 +147,9 @@ namespace RTI
         /// Serial for the system the project is associated with.
         /// This will determine the subsystems for the project.
         /// </summary>
-        public SerialNumber SerialNumber 
+        public SerialNumber SerialNumber
         {
-            get { return _serialNumber; } 
+            get { return _serialNumber; }
             set
             {
                 _serialNumber = value;
@@ -158,6 +169,8 @@ namespace RTI
         /// deployment options set for the ADCP.
         /// </summary>
         public AdcpConfiguration Configuration { get; set; }
+
+        #endregion
 
         /// <summary>
         /// Constructor
@@ -297,7 +310,7 @@ namespace RTI
         /// Create a new Project database that will
         /// store ensemble data.
         /// </summary>
-        private void CreateProjectDatabase( )
+        private void CreateProjectDatabase()
         {
             // Check if the database exist
             // If it does not, create it
@@ -336,6 +349,9 @@ namespace RTI
                 FileInfo file = new FileInfo(dbFilePath);
                 file.CopyTo(GetProjectFullPath());
 
+                // Verify the database is the latest revision
+                VerifyDatabase(GetProjectFullPath());
+
                 // Get the command and options from the database
                 GetAdcpConfiguration();
             }
@@ -359,18 +375,22 @@ namespace RTI
         /// corrupt.
         /// 
         /// </summary>
-        private void CreateProjectTables( )
+        private void CreateProjectTables()
         {
             // All the possible tables
             var commands = new[]
             {
                 "PRAGMA synchronous = OFF",
                 "PRAGMA journal_mode = MEMORY",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER, NumBins INTEGER NOT NULL, NumBeams INTEGER NOT NULL, DesiredPingCount INTEGER NOT NULL, ActualPingCount INTEGER NOT NULL, Status INTEGER NOT NULL, Year INTEGER NOT NULL, Month INTEGER NOT NULL, Day INTEGER NOT NULL, Hour INTEGER NOT NULL, Minute INTEGER NOT NULL, Second INTEGER NOT NULL, HundSec INTEGER NOT NULL, DateTime DATETIME NOT NULL, FirstBinRange FLOAT NOT NULL, BinSize FLOAT NOT NULL, ProfileFirstPingTime FLOAT NOT NULL, ProfileLastPingTime FLOAT NOT NULL, Heading FLOAT NOT NULL, Pitch FLOAT NOT NULL, Roll FLOAT NOT NULL, WaterTemp FLOAT NOT NULL, SysTemp FLOAT NOT NULL, Salinity FLOAT NOT NULL, Pressure FLOAT NOT NULL, TransducerDepth FLOAT NOT NULL, SpeedOfSound FLOAT NOT NULL, DbTime DATETIME NOT NULL, IsBeamVelAvail BOOLEAN, IsInstrVelAvail BOOLEAN, IsEarthVelAvail BOOLEAN, IsAmpAvail BOOLEAN, IsCorrAvail BOOLEAN, IsGoodBeamAvail BOOLEAN, IsGoodEarthAvail BOOLEAN, IsAncillaryAvail BOOLEAN, IsBottomTrackAvail BOOLEAN, IsNmeaAvail BOOLEAN, NmeaData TEXT, SysSerialNum TEXT, FirmwareMajor TINYINT, FirmwareMinor TINYINT, FirmwareRevision TINYINT, SubsystemCode TINYINT, SubsystemConfig TINYINT, BTFirstPingTime FLOAT, BTLastPingTime FLOAT, BTHeading FLOAT, BTPitch FLOAT, BTRoll FLOAT, BTWaterTemp FLOAT, BTSysTemp FLOAT, BTSalinity FLOAT, BTPressure FLOAT, BTSpeedOfSound FLOAT, BTStatus INTEGER, BTActualPingCount FLOAT, BTRangeBeam0 FLOAT, BTRangeBeam1 FLOAT, BTRangeBeam2 FLOAT, BTRangeBeam3 FLOAT, BTSNRBeam0 FLOAT, BTSNRBeam1 FLOAT, BTSNRBeam2 FLOAT, BTSNRBEAM3 FLOAT, BTAmpBeam0 FLOAT, BTAmpBeam1 FLOAT, BTAmpBeam2 FLOAT, BTAmpBeam3 FLOAT, BTCorrBeam0 FLOAT, BTCorrBeam1 FLOAT, BTCorrBeam2 FLOAT, BTCorrBeam3 FLOAT, BTBeamVelBeam0 FLOAT, BTBeamVelBeam1 FLOAT, BTBeamVelBeam2 FLOAT, BTBeamVelBeam3 FLOAT, BTBeamGoodBeam0 FLOAT, BTBeamGoodBeam1 FLOAT, BTBeamGoodBeam2 FLOAT, BTBeamGoodBeam3 FLOAT, BTInstrVelBeam0 FLOAT, BTInstrVelBeam1 FLOAT, BTInstrVelBeam2 FLOAT, BTInstrVelBeam3 FLOAT,  BTInstrGoodBeam0 FLOAT, BTInstrGoodBeam1 FLOAT, BTInstrGoodBeam2 FLOAT, BTInstrGoodBeam3 FLOAT, BTEarthVelBeam0 FLOAT, BTEarthVelBeam1 FLOAT, BTEarthVelBeam2 FLOAT, BTEarthVelBeam3 FLOAT, BTEarthGoodBeam0 FLOAT, BTEarthGoodBeam1 FLOAT, BTEarthGoodBeam2 FLOAT, BTEarthGoodBeam3 FLOAT)",
-                "CREATE TABLE tblBeam(ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleId INTEGER, BinNum INTEGER NOT NULL, BeamNum SAMLLINT NOT NULL, BeamVel FLOAT, EarthVel FLOAT, InstrVel FLOAT, Amplitude FLOAT, Correlation FLOAT, GoodBeam SMALLINT, GoodEarth SMALLINT, Orientation TINYINT NOT NULL, FOREIGN KEY(EnsembleId) REFERENCES tblEnsemble(ID))",
+                //"PRAGMA main.page_size = 4096",
+                //"PRAGMA main.cache_size=10000",
+                "PRAGMA main.locking_mode=EXCLUSIVE",
+                //"PRAGMA main.synchronous=NORMAL",
+                //"PRAGMA main.journal_mode=WAL",
+                //"PRAGMA main.cache_size=5000",
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT)",
                 "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, AdcpConfiguration TEXT, Revision TEXT, Misc TEXT)",
-                "CREATE INDEX idxBeam ON tblBeam(EnsembleId, BinNum)",
-                string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, {4});", DbCommon.TBL_ENS_CMDS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", "'B1'"),   // Put at least 1 entry so an insert does not have to be done later
+                string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, {4});", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", "'D1'"),   // Put at least 1 entry so an insert does not have to be done later
             };
 
             //SQLiteConnection cnn = DbCommon.OpenProjectDB(project);
@@ -410,30 +430,121 @@ namespace RTI
 
         #endregion
 
-        #region Commands and Options
+        #region Verify Database
 
         /// <summary>
-        /// Create the commands for the project.
-        /// These are all the commands for the project and they are set to default.
+        /// Verify the database is up to date.
+        /// 
+        /// Check if tblOptions exist and if not, create the table and set the revision
+        /// 
+        /// Check if tblOptions is the latest version and if not, replace the table with
+        /// the latest version.
+        /// 
         /// </summary>
-        private void CreateAdcpConfiguration()
+        /// <param name="filepath">Filepath to the database.</param>
+        private void VerifyDatabase(string filepath)
         {
-            // Create the Adcp Configuration
-            Configuration = new AdcpConfiguration(SerialNumber);
+            //// Create the table tblOptions if it does not exist and set the revision
+            //string queryCreateTableOptions = string.Format("CREATE TABLE IF NOT EXISTS tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, AdcpConfiguration TEXT, Revision TEXT, Misc TEXT);");
+            //string queryPopulateTableOptions = string.Format("INSERT INTO {0} ({1}, {2}) VALUES ('{3}', '{4}');", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "", REV);
+            //string queryDropTableOptions = string.Format("DROP TABLE IF EXISTS {0};", DbCommon.TBL_ENS_OPTIONS);
+
+            //// Determine which querys need to be run
+            //StringBuilder query = new StringBuilder();
+
+            //query.Append(queryCreateTableOptions);          // Always verify tblOptions exist
+
+            //// If the table tblOption is empty, then create a row in the table
+            //if (DbCommon.CheckIfTableIsEmpty(this, DbCommon.TBL_ENS_OPTIONS))
+            //{
+            //    query.Append(queryPopulateTableOptions);
+            //}
+
+            //// Check if tblOptions is an older revision table
+            //// It the table is older, replace it with a new revision table
+            //if (!DbCommon.CheckIfColumnExist(this, DbCommon.COL_CMD_REV, DbCommon.TBL_ENS_OPTIONS))
+            //{
+            //    query.Append(queryDropTableOptions);
+            //    query.Append(queryCreateTableOptions);
+            //    query.Append(queryPopulateTableOptions);
+            //}
+
+            //// run the queries
+            ////DbCommon.RunQueryOnProjectDb(this, query.ToString());
+
+            //try
+            //{
+            //    // Open a connection to the database
+            //    string projectConnection = "Data Source=" + GetProjectFullPath();
+            //    using (SQLiteConnection cnn = new SQLiteConnection(projectConnection))
+            //    {
+            //        // Ensure a connection can be made
+            //        if (cnn == null)
+            //        {
+            //            return;
+            //        }
+
+            //        cnn.Open();
+
+            //        using (DbTransaction dbTrans = cnn.BeginTransaction())
+            //        {
+            //            using (DbCommand cmd = cnn.CreateCommand())
+            //            {
+            //                cmd.CommandText = query.ToString();
+
+            //                // Run query
+            //                cmd.ExecuteNonQuery();
+
+            //            }
+            //            // Add all the data
+            //            dbTrans.Commit();
+            //        }
+            //        // Close the connection to the database
+            //        cnn.Close();
+            //    }
+            //}
+            //catch (SQLiteException e)
+            //{
+            //    log.Error("Error validating project database: " + ProjectName, e);
+            //}
+            //catch (Exception e)
+            //{
+            //    log.Error("Unknown Error validating project database: " + ProjectName, e);
+            //}
         }
 
         /// <summary>
-        /// Get the Commands and deployment options from the database.
-        /// If they could not be found in the database, then it will 
-        /// give default values.
+        /// Validate the version of the Project will work with this version of the software.
+        /// If the version is correct, return true.
+        /// 
+        /// Revision B includes the Adcp commands and options.
+        /// Revision C changed the options table.
+        /// Revision D made all the columns JSON data.
+        /// 
         /// </summary>
-        public void GetAdcpConfiguration()
+        /// <param name="project">Project to check.</param>
+        /// <returns>TRUE = version is valid.</returns>
+        public static bool ValidateVersion(Project project)
         {
-            //SubsystemCommandList = GetAllAdcpSubsystemCommands();
+            if(project != null)
+            {
+                // Get the version
+                string version = AdcpDatabaseCodec.GetProjectVersion(project);
 
-            // Get the configuration from the database
-            Configuration = GetAdcpConfigurationFromDb();
+
+                // Return the latest version of the project
+                if (version.Contains("D"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
+
+        #endregion
+
+        #region Adcp Commands
 
         /// <summary>
         /// Get the AdcpSubsystemCommands from the list of commands stored in the project.
@@ -462,6 +573,29 @@ namespace RTI
         #region AdcpConfiguration
 
         /// <summary>
+        /// Create the commands for the project.
+        /// These are all the commands for the project and they are set to default.
+        /// </summary>
+        private void CreateAdcpConfiguration()
+        {
+            // Create the Adcp Configuration
+            Configuration = new AdcpConfiguration(SerialNumber);
+        }
+
+        /// <summary>
+        /// Get the Commands and deployment options from the database.
+        /// If they could not be found in the database, then it will 
+        /// give default values.
+        /// </summary>
+        public void GetAdcpConfiguration()
+        {
+            //SubsystemCommandList = GetAllAdcpSubsystemCommands();
+
+            // Get the configuration from the database
+            Configuration = GetAdcpConfigurationFromDb();
+        }
+
+        /// <summary>
         /// Get the Adcp Configuration from the database.  This will read the database
         /// table for the configuration.  If one exist, it will set the configuration.
         /// If one does not exist, it will return the default values.
@@ -471,43 +605,43 @@ namespace RTI
         {
             AdcpConfiguration config = new AdcpConfiguration(SerialNumber);
 
-            string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_CMDS);
-            try
-            {
-                // Query the database for the ADCP settings
-                DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
+            //string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS);
+            //try
+            //{
+            //    // Query the database for the ADCP settings
+            //    DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
 
-                // Go through the result settings the settings
-                // If more than 1 result is found, return the first one found
-                foreach (DataRow r in dt.Rows)
-                {
-                    // Check if there is data
-                    if (r[DbCommon.COL_CMD_ADCP_CONFIGURATION] == DBNull.Value)
-                    {
-                        break;
-                    }
+            //    // Go through the result settings the settings
+            //    // If more than 1 result is found, return the first one found
+            //    foreach (DataRow r in dt.Rows)
+            //    {
+            //        // Check if there is data
+            //        if (r[DbCommon.COL_CMD_ADCP_CONFIGURATION] == DBNull.Value)
+            //        {
+            //            break;
+            //        }
 
-                    // This will call the default constructor or pass to the constructor parameter a null
-                    // The constructor parameter must be set after creating the object.
-                    string json = Convert.ToString(r[DbCommon.COL_CMD_ADCP_CONFIGURATION]);
-                    if (!String.IsNullOrEmpty(json))
-                    {
-                        config = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpConfiguration>(json);
-                    }
+            //        // This will call the default constructor or pass to the constructor parameter a null
+            //        // The constructor parameter must be set after creating the object.
+            //        string json = Convert.ToString(r[DbCommon.COL_CMD_ADCP_CONFIGURATION]);
+            //        if (!String.IsNullOrEmpty(json))
+            //        {
+            //            config = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpConfiguration>(json);
+            //        }
 
 
-                    // Only read the first row
-                    break;
-                }
-            }
-            catch (SQLiteException e)
-            {
-                log.Error("SQL Error getting ADCP Configuration from the project.", e);
-            }
-            catch (Exception ex)
-            {
-                log.Error("Error getting ADCP Configuration from the project.", ex);
-            }
+            //        // Only read the first row
+            //        break;
+            //    }
+            //}
+            //catch (SQLiteException e)
+            //{
+            //    log.Error("SQL Error getting ADCP Configuration from the project.", e);
+            //}
+            //catch (Exception ex)
+            //{
+            //    log.Error("Error getting ADCP Configuration from the project.", ex);
+            //}
 
             return config;
         }

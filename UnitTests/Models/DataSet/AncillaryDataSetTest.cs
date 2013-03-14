@@ -22,10 +22,13 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials   Version     Comments
  * -----------------------------------------------------------------
- * 11/28/2011      RC          Initial coding
- * 11/29/2011      RC          Added Prti02Sentence Constructor.
+ * 11/28/2011      RC                     Initial coding
+ * 11/29/2011      RC                     Added Prti02Sentence Constructor.
+ * 02/25/2012      RC          2.18       Added JSON test.
+ * 02/28/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
+ * 
  * 
  */
 
@@ -33,6 +36,7 @@ namespace RTI
 {
     using System;
     using NUnit.Framework;
+    using System.Diagnostics;
 
     /// <summary>
     /// Unit test of the Ancillary DataSet object.
@@ -67,7 +71,7 @@ namespace RTI
             Assert.AreEqual(0, adcpData.AncillaryData.FirstBinRange, "First Bin Range was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.BinSize, "Bin Size was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.FirstPingTime, "First Ping Time was incorrect");
-            Assert.AreEqual(0, adcpData.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
+            Assert.AreEqual(3795, adcpData.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.Heading, "Heading was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.Pitch, "Pitch was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.Roll, "Roll was incorrect");
@@ -105,7 +109,7 @@ namespace RTI
             Assert.AreEqual(0, adcpData.AncillaryData.FirstBinRange, "First Bin Range was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.BinSize, "Bin Size was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.FirstPingTime, "First Ping Time was incorrect");
-            Assert.AreEqual(0, adcpData.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
+            Assert.AreEqual(3795, adcpData.AncillaryData.LastPingTime, "Last Ping Time was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.Heading, "Heading was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.Pitch, "Pitch was incorrect");
             Assert.AreEqual(0, adcpData.AncillaryData.Roll, "Roll was incorrect");
@@ -250,6 +254,90 @@ namespace RTI
             Assert.AreEqual(11.12f, ens1.AncillaryData.Pressure, "Pressure is incorrect.");
             Assert.AreEqual(12.13f, ens1.AncillaryData.TransducerDepth, "TransducerDepth is incorrect.");
             Assert.AreEqual(13.14f, ens1.AncillaryData.SpeedOfSound, "SpeedOfSound is incorrect.");
+
+        }
+
+        /// <summary>
+        /// Test encoding and decoding to JSON.
+        /// </summary>
+        [Test]
+        public void TestJson()
+        {
+            // Generate an Ensemble
+            DataSet.Ensemble ensemble = EnsembleHelper.GenerateEnsemble(30);
+
+            // Modify the data
+            ensemble.AncillaryData.FirstBinRange = 1.2f;
+            ensemble.AncillaryData.BinSize = 2.3f;
+            ensemble.AncillaryData.FirstPingTime = 3.4f;
+            ensemble.AncillaryData.LastPingTime = 4.5f;
+            ensemble.AncillaryData.Heading = 5.6f;
+            ensemble.AncillaryData.Pitch = 6.7f;
+            ensemble.AncillaryData.Roll = 7.8f;
+            ensemble.AncillaryData.WaterTemp = 8.9f;
+            ensemble.AncillaryData.SystemTemp = 9.10f;
+            ensemble.AncillaryData.Salinity = 10.11f;
+            ensemble.AncillaryData.Pressure = 11.12f;
+            ensemble.AncillaryData.TransducerDepth = 12.13f;
+            ensemble.AncillaryData.SpeedOfSound = 13.14f;
+
+            string encoded = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData);                                      // Serialize object to JSON
+            DataSet.AncillaryDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.AncillaryDataSet>(encoded);       // Deserialize the JSON
+
+            // Verify the values are the same
+            Assert.AreEqual(1.2f, decoded.FirstBinRange, "First Bin Range is incorrect.");
+            Assert.AreEqual(2.3f, decoded.BinSize, "BinSize is incorrect.");
+            Assert.AreEqual(3.4f, decoded.FirstPingTime, "FirstPingTime is incorrect.");
+            Assert.AreEqual(4.5f, decoded.LastPingTime, "LastPingTime is incorrect.");
+            Assert.AreEqual(5.6f, decoded.Heading, "Heading is incorrect.");
+            Assert.AreEqual(6.7f, decoded.Pitch, "Pitch is incorrect.");
+            Assert.AreEqual(7.8f, decoded.Roll, "Roll is incorrect.");
+            Assert.AreEqual(8.9f, decoded.WaterTemp, "WaterTemp is incorrect.");
+            Assert.AreEqual(9.10f, decoded.SystemTemp, "SystemTemp is incorrect.");
+            Assert.AreEqual(10.11f, decoded.Salinity, "Salinity is incorrect.");
+            Assert.AreEqual(11.12f, decoded.Pressure, "Pressure is incorrect.");
+            Assert.AreEqual(12.13f, decoded.TransducerDepth, "TransducerDepth is incorrect.");
+            Assert.AreEqual(13.14f, decoded.SpeedOfSound, "SpeedOfSound is incorrect.");
+        }
+
+        /// <summary>
+        /// Testing the timing for the JSON conversions.
+        /// Put breakstatements on all the time results.
+        /// Then run the code and check the results.
+        /// </summary>
+        [Test]
+        public void TestTiming()
+        {
+
+            // Generate an Ensemble
+            DataSet.Ensemble ensemble = EnsembleHelper.GenerateEnsemble(30);
+
+            Stopwatch watch = new Stopwatch();
+
+            // Test Serialize()
+            watch = new Stopwatch();
+            watch.Start();
+            for (int x = 0; x < 1000; x++)
+            {
+                string encoded = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData);
+            }
+            watch.Stop();
+            long resultSerialize = watch.ElapsedMilliseconds;
+
+            // Test Deserialize()
+            string encodedd = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData);
+            watch = new Stopwatch();
+            watch.Start();
+            for (int x = 0; x < 1000; x++)
+            {
+                DataSet.AncillaryDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.AncillaryDataSet>(encodedd);
+            }
+            watch.Stop();
+            long resultDeserialize = watch.ElapsedMilliseconds;
+
+            Debug.WriteLine(String.Format("Serialize:{0}  Deserialize:{1}", resultSerialize, resultDeserialize));
+
+            Debug.WriteLine("Complete");
 
         }
     }

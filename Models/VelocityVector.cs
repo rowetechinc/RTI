@@ -36,6 +36,7 @@
  * 02/24/2012      RC          2.03       Create VelocityVectorHelper with a method to create velocity vectors here.
  * 03/16/2012      RC          2.06       Set the magnitude to absolute value.  No negatives.
  * 06/07/2012      RC          2.11       Added GenerateVelocityVectors() and GenerateAmplitudeVectors().
+ * 03/07/2013      RC          2.18       In CreateVelocityVector(), create the VelocityVector before setting the values.
  *       
  * 
  */
@@ -70,27 +71,27 @@ namespace RTI
         /// velocity data as magnitude and direction.
         /// Direction is given with X and Y North.
         /// </summary>
-        public struct VelocityVector
+        public class VelocityVector
         {
             /// <summary>
             /// Magnitude for the bin with 
             /// Bottom Track velocity removed.
             /// </summary>
-            public double Magnitude;
+            public double Magnitude { get; set; }
 
             /// <summary>
             /// Direction of the bin velocity
             /// with Bottom Track velocity removed.
             /// The positive X direction is North.
             /// </summary>
-            public double DirectionXNorth;
+            public double DirectionXNorth { get; set; }
 
             /// <summary>
             /// Direction of the bin velocity
             /// with Bottom Track velocity removed.
             /// The positive Y direction is North.
             /// </summary>
-            public double DirectionYNorth;
+            public double DirectionYNorth { get; set; }
         }
 
         /// <summary>
@@ -116,11 +117,14 @@ namespace RTI
                 {
                     // Create array to store all the vectors
                     ensemble.EarthVelocityData.IsVelocityVectorAvail = true;
-                    ensemble.EarthVelocityData.VV = new VelocityVector[ensemble.EarthVelocityData.NumElements];
+                    ensemble.EarthVelocityData.VelocityVectors = new VelocityVector[ensemble.EarthVelocityData.NumElements];
 
                     // Create a vector for each bin
                     for (int bin = 0; bin < ensemble.EarthVelocityData.NumElements; bin++)
                     {
+                        // Create the object
+                        ensemble.EarthVelocityData.VelocityVectors[bin] = new VelocityVector();
+
                         // Get the velocity values
                         float east = ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX];
                         float north = ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX];
@@ -131,9 +135,9 @@ namespace RTI
                             north == DataSet.Ensemble.BAD_VELOCITY ||
                             vertical == DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            ensemble.EarthVelocityData.VV[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
-                            ensemble.EarthVelocityData.VV[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
-                            ensemble.EarthVelocityData.VV[bin].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
                         }
                         else
                         {
@@ -146,9 +150,10 @@ namespace RTI
                                                                         ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
                                                                         0);      // do not use Vertical
 
-                            ensemble.EarthVelocityData.VV[bin].Magnitude = Math.Abs(mag);
-                            ensemble.EarthVelocityData.VV[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
-                            ensemble.EarthVelocityData.VV[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
+                            // Set the values
+                            ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude = Math.Abs(mag);
+                            ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
+                            ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
                         }
                     }
 
@@ -186,7 +191,7 @@ namespace RTI
 
                 if (adcpData.IsEarthVelocityAvail && adcpData.EarthVelocityData.IsVelocityVectorAvail)
                 {
-                    ensVec.Vectors = adcpData.EarthVelocityData.VV;
+                    ensVec.Vectors = adcpData.EarthVelocityData.VelocityVectors;
                 }
 
                 return ensVec;

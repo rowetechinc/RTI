@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 12/16/2011      RC          1.10       Initial coding.
+ * 02/27/2013      RC          2.18       In == do not check milliseconds.
  *       
  */
 
@@ -97,7 +98,14 @@ namespace RTI
                 }
 
                 // Return true if the fields match:
-                return id1.EnsembleNumber == id2.EnsembleNumber && id1.EnsDateTime == id2.EnsDateTime;
+                // Ignore milliseconds
+                return id1.EnsembleNumber == id2.EnsembleNumber && 
+                    id1.EnsDateTime.Year == id2.EnsDateTime.Year && 
+                    id1.EnsDateTime.Month == id2.EnsDateTime.Month &&
+                    id1.EnsDateTime.Day == id2.EnsDateTime.Day &&
+                    id1.EnsDateTime.Hour == id2.EnsDateTime.Hour && 
+                    id1.EnsDateTime.Minute == id2.EnsDateTime.Minute &&
+                    id1.EnsDateTime.Second == id2.EnsDateTime.Second;
             }
 
             /// <summary>

@@ -40,6 +40,8 @@
  *                                         Fix bug parsing a string of Nmea data.
  * 12/29/2011      RC          1.11       Changed from passing 4 parameters to only sentence for messages constructor.
  * 01/11/2012      RC          1.12       Fixed bug in SetNmeaStringArray() where if checkSumLoc was negative it would try to remove the string.
+ * 02/20/2013      RC          2.18       Added an empty constructor.  Made the properties' Setter public for JSON coding.
+ * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
  *       
  * 
  */
@@ -50,6 +52,10 @@ using System.Collections.Generic;
 using DotSpatial.Positioning;
 using System;
 using System.Text;
+using Newtonsoft.Json;
+using System.IO;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
 
 namespace RTI
 {
@@ -58,8 +64,11 @@ namespace RTI
         /// <summary>
         /// Data set containing all the NMEA data.
         /// </summary>
+        [JsonConverter(typeof(NmeaDataSetSerializer))]
         public class NmeaDataSet : BaseDataSet
         {
+            #region Variables
+
             /// <summary>
             /// All NMEA sentences should end with this.
             /// </summary>
@@ -78,57 +87,95 @@ namespace RTI
             /// </summary>
             public const int NMEA_CHECKSUM_SIZE = 3;
 
+            #endregion
+
+            #region Properties
+
             /// <summary>
-            /// Array of strings of all the NMEA strings within
+            /// List of strings of all the NMEA strings within
             /// this dataset.
             /// </summary>
-            public NmeaSentence[] NmeaStrings { get; private set; }
+            public List<string> NmeaStrings { get; set; }
 
             /// <summary>
             /// Last GPS GPGGA message received in this
             /// dataset.
             /// Global Positioning System Fix Data.
             /// </summary>
-            public GpggaSentence GPGGA { get; private set; }
+            [JsonIgnore]
+            public GpggaSentence GPGGA { get; set; }
 
             /// <summary>
             /// Last GPS GPVTG message received in this
             /// dataset.
             /// Track made good and ground speed.
             /// </summary>
-            public GpvtgSentence GPVTG { get; private set; }
+            [JsonIgnore]
+            public GpvtgSentence GPVTG { get; set; }
 
             /// <summary>
             /// Last GPS GPRMC message received in this 
             /// dataset.
             /// Recommended minimum specific GPS/Transit data
             /// </summary>
-            public GprmcSentence GPRMC { get; private set; }
+            [JsonIgnore]
+            public GprmcSentence GPRMC { get; set; }
 
             /// <summary>
             /// Last GPS PGRMF message received in this
             /// dataset.
             /// Represents a Garmin $PGRMF sentence.
             /// </summary>
-            public PgrmfSentence PGRMF { get; private set; }
+            [JsonIgnore]
+            public PgrmfSentence PGRMF { get; set; }
 
             /// <summary>
             /// Last GPS GPGLL message received in this dataset.
             /// Geographic position, latitude / longitude.
             /// </summary>
-            public GpgllSentence GPGLL { get; private set; }
+            [JsonIgnore]
+            public GpgllSentence GPGLL { get; set; }
 
             /// <summary>
             /// Last GPS GPGSV message received in this dataset.
             /// GPS Satellites in view.
             /// </summary>
-            public GpgsvSentence GPGSV { get; private set; }
+            [JsonIgnore]
+            public GpgsvSentence GPGSV { get; set; }
 
             /// <summary>
             /// Last GPS GPGSA message received in this dataset.
             /// GPS DOP and active satellites.
             /// </summary>
-            public GpgsaSentence GPGSA { get; private set; }
+            [JsonIgnore]
+            public GpgsaSentence GPGSA { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Create an empty NMEA data set.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public NmeaDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
+                base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Initialize all values
+                GPGGA = null;
+                GPVTG = null;
+                GPRMC = null;
+                PGRMF = null;
+                GPGLL = null;
+                GPGSV = null;
+                GPGSA = null;
+
+                // Initialized list
+                NmeaStrings = new List<string>();
+            }
 
             /// <summary>
             /// Create an NMEA data set.  Include all the information to
@@ -153,6 +200,9 @@ namespace RTI
                 GPGSV = null;
                 GPGSA = null;
 
+                // Initialized list
+                NmeaStrings = new List<string>();
+
                 // Decode the byte array for NMEA data
                 DecodeNmeaData(nmeaData);
             }
@@ -161,9 +211,9 @@ namespace RTI
             /// Create an NMEA data set based off string given.  Include all the information to
             /// create the data set.
             /// </summary>
-            /// <param name="nmeaData">String containing NMEA data</param>
+            /// <param name="nmeaData">String containing NMEA data.</param>
             public NmeaDataSet(string nmeaData) :
-                base(DataSet.Ensemble.DATATYPE_FLOAT, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NMEAID)
+                base(DataSet.Ensemble.DATATYPE_FLOAT, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NmeaID)
             {
                 // Initialize all values
                 GPGGA = null;
@@ -174,8 +224,54 @@ namespace RTI
                 GPGSV = null;
                 GPGSA = null;
 
+                // Initialized list
+                NmeaStrings = new List<string>();
+
                 // Decode the byte array for NMEA data
                 DecodeNmeaData(nmeaData);
+            }
+
+            /// <summary>
+            /// Create an Nmea data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodBeamDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 162ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.NmeaDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.NmeaDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
+            /// </summary>
+            /// <param name="NmeaStrings">List containing NMEA sentences.</param>
+            [JsonConstructor]
+            public NmeaDataSet(List<string> NmeaStrings) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NmeaID)
+            {
+                // Initialize all values
+                GPGGA = null;
+                GPVTG = null;
+                GPRMC = null;
+                PGRMF = null;
+                GPGLL = null;
+                GPGSV = null;
+                GPGSA = null;
+
+                // Initialized list
+                if (NmeaStrings != null)
+                {
+                    this.NmeaStrings = NmeaStrings;
+                }
+                else
+                {
+                    NmeaStrings = new List<string>();
+                }
+
+                // Decode the byte array for NMEA data
+                DecodeNmeaData(NmeaStrings);
             }
 
             /// <summary>
@@ -260,9 +356,13 @@ namespace RTI
                 // Need to add the \r\n back to the end
                 // of each sentence.
                 StringBuilder builder = new StringBuilder();
-                for (int x = 0; x < NmeaStrings.Length; x++)
+
+                if (NmeaStrings != null)
                 {
-                    builder.Append(NmeaStrings[x].Sentence + "\r\n");
+                    for (int x = 0; x < NmeaStrings.Count; x++)
+                    {
+                        builder.Append(NmeaStrings[x] + "\r\n");
+                    }
                 }
                 string nmea = builder.ToString();
 
@@ -294,9 +394,13 @@ namespace RTI
             public void MergeNmeaData(string nmeaData)
             {
                 StringBuilder builder = new StringBuilder();
-                for (int x = 0; x < NmeaStrings.Length; x++)
+
+                if (NmeaStrings != null)
                 {
-                    builder.Append(NmeaStrings[x]);
+                    for (int x = 0; x < NmeaStrings.Count; x++)
+                    {
+                        builder.Append(NmeaStrings[x]);
+                    }
                 }
 
                 // Add the incoming NMEA data to existing data
@@ -316,6 +420,65 @@ namespace RTI
                 string nmeaStrings  = System.Text.ASCIIEncoding.ASCII.GetString(nmeaData);
 
                 SetNmeaStringArray(nmeaStrings);
+            }
+
+            /// <summary>
+            /// Decode the NMEA sentence from the array.  Then add
+            /// it to the list of NMEA sentences.  Set value will try
+            /// to update the NMEA data with the latest information.
+            /// </summary>
+            /// <param name="nmeaSentences">All the NMEA setences.</param>
+            private void DecodeNmeaData(string[] nmeaSentences)
+            {
+                // Create a list of all the NMEA setences
+                LinkedList<string> list = new LinkedList<string>();
+
+                if (nmeaSentences != null)
+                {
+                    for (int x = 0; x < nmeaSentences.Length; x++)
+                    {
+                        // Create a NMEA sentence and verify its valid
+                        NmeaSentence sentence = new NmeaSentence(nmeaSentences[x]);
+                        if (sentence.IsValid)
+                        {
+                            // Add to the list
+                            NmeaStrings.Add(sentence.Sentence);
+
+                            // Set values from the NMEA data
+                            SetValues(sentence);
+                        }
+                    }
+                }
+
+                // Copy the list to the NmeaStrings
+                //NmeaStrings = new string[list.Count];
+                //list.CopyTo(NmeaStrings, 0);
+            }
+
+            /// <summary>
+            /// Decode the NMEA sentence from the array.  Then add
+            /// it to the list of NMEA sentences.  Set value will try
+            /// to update the NMEA data with the latest information.
+            /// </summary>
+            /// <param name="nmeaSentences">All the NMEA setences.</param>
+            private void DecodeNmeaData(List<string> nmeaSentences)
+            {
+                // Create a list of all the NMEA setences
+                LinkedList<string> list = new LinkedList<string>();
+
+                if (nmeaSentences != null)
+                {
+                    for (int x = 0; x < nmeaSentences.Count; x++)
+                    {
+                        // Create a NMEA sentence and verify its valid
+                        NmeaSentence sentence = new NmeaSentence(nmeaSentences[x]);
+                        if (sentence.IsValid)
+                        {
+                            // Set values from the NMEA data
+                            SetValues(sentence);
+                        }
+                    }
+                }
             }
 
             /// <summary>
@@ -383,7 +546,7 @@ namespace RTI
                         if (sentence.IsValid)
                         {
                             // Add the nmea data to list
-                            list.AddLast(sentence);
+                            NmeaStrings.Add(sentence.Sentence);
 
                             // Set values from the NMEA data
                             SetValues(sentence);
@@ -392,8 +555,8 @@ namespace RTI
                 }
 
                 // Store the Nmea data
-                NmeaStrings = new NmeaSentence[list.Count];
-                list.CopyTo(NmeaStrings, 0);
+                //NmeaStrings = new NmeaSentence[list.Count];
+                //list.CopyTo(NmeaStrings, 0);
             }
 
             /// <summary>
@@ -457,9 +620,13 @@ namespace RTI
             public override string ToString()
             {
                 StringBuilder builder = new StringBuilder();
-                for (int x = 0; x < NmeaStrings.Length; x++)
+
+                if (NmeaStrings != null)
                 {
-                    builder.Append(NmeaStrings[x].Sentence);
+                    for (int x = 0; x < NmeaStrings.Count; x++)
+                    {
+                        builder.Append(NmeaStrings[x]);
+                    }
                 }
 
                 return builder.ToString();
@@ -485,6 +652,124 @@ namespace RTI
                 }
 
                 return false;
+            }
+        }
+
+                /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData).
+        /// 
+        /// 50ms for this method.
+        /// 100ms for calling SerializeObject default.
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class NmeaDataSetSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var data = value as NmeaDataSet;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                // Write the base values
+                writer.WriteRaw(data.ToJsonBaseStub());
+                writer.WriteRaw(",");
+
+                // Write the NMEA strings
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_NMEASTRINGS);
+                if (data.NmeaStrings != null)
+                {
+                    writer.WriteStartArray();
+                    for (int x = 0; x < data.NmeaStrings.Count; x++)
+                    {
+                        writer.WriteValue(data.NmeaStrings[x]);
+                    }
+                    writer.WriteEndArray();
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// 
+            /// DataSet.NmeaDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.NmeaDataSet}(encodedEns)
+            /// 
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    // Load the object
+                    JObject jsonObject = JObject.Load(reader);
+
+                    // Decode the data
+                    //int ValueType = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_VALUETYPE];
+                    //int NumElements = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMELEMENTS];
+                    //int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
+                    //int Imag = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_IMAG];
+                    //int NameLength = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NAMELENGTH];
+                    //string Name = (string)jsonObject[DataSet.BaseDataSet.JSON_STR_NAME];
+
+                    // Create a list
+                    List<string> NmeaStrings = new List<string>();
+
+                    // Decode the NMEA string list
+                    JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_NMEASTRINGS];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the strings to the list
+                        NmeaStrings.Add((string)jArray[x]);
+                    }
+
+                    // Return created object
+                    return new NmeaDataSet(NmeaStrings);
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(NmeaDataSet).IsAssignableFrom(objectType);
             }
         }
     }

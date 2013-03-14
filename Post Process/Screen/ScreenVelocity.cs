@@ -253,15 +253,15 @@ namespace RTI
             /// <returns>TRUE if screening occured.</returns>
             public static bool ScreenInstrumentVelocity(ref DataSet.Ensemble ensemble, bool thresholdScreen = true, double threshold = 0.25, bool threeBeamSolution = true)
             {
-                if (ensemble.IsInstrVelocityAvail)
+                if (ensemble.IsInstrumentVelocityAvail)
                 {
                     // Go through each bin, checking the data
-                    for (int bin = 0; bin < ensemble.InstrVelocityData.NumElements; bin++)
+                    for (int bin = 0; bin < ensemble.InstrumentVelocityData.NumElements; bin++)
                     {
                         bool isBad = false;
-                        if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                        if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                            ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                            ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                         {
                             isBad = true;
                         }
@@ -271,8 +271,8 @@ namespace RTI
                         // if its greater than the threshold, the value is bad.
                         if (thresholdScreen)
                         {
-                            if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&        // If Error Vel is bad, then it could still be a 3 beam solution 
-                                ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] > threshold)
+                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&        // If Error Vel is bad, then it could still be a 3 beam solution 
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] > threshold)
                             {
                                 isBad = true;
                             }
@@ -282,7 +282,7 @@ namespace RTI
                         // If the error velocity is bad and the user does not want 3 Beam solution, it will set the values to bad
                         if (!threeBeamSolution)
                         {
-                            if (ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                             {
                                 isBad = true;
                             }
@@ -292,10 +292,10 @@ namespace RTI
                         // Set all the values to bad and set the Good Ping
                         if (isBad)
                         {
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                            ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
                         }
                     }
                     return true;

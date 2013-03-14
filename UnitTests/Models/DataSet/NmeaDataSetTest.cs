@@ -25,6 +25,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 12/20/2011      RC          1.10       Initial Coding
+ * 02/28/2013      RC          2.18       Added Test for JSON.
  * 
  */
 
@@ -32,6 +33,7 @@ namespace RTI
 {
     using System;
     using NUnit.Framework;
+    using System.Diagnostics;
 
     /// <summary>
     /// Unit test of the Ancillary DataSet object.
@@ -208,6 +210,102 @@ namespace RTI
             Assert.AreEqual(new DotSpatial.Positioning.Azimuth(277.26), adcpData.NmeaData.GPVTG.Bearing, "True Track Made Good Bearing not correct.");
             Assert.AreEqual(new DotSpatial.Positioning.Speed(2.62, DotSpatial.Positioning.SpeedUnit.Knots), adcpData.NmeaData.GPVTG.Speed, "Speed is not correct.");
         }
+
+        #region JSON
+
+        /// <summary>
+        /// Test encoding and decoding to JSON.
+        /// </summary>
+        [Test]
+        public void TestJson()
+        {
+            // Generate an Ensemble
+            DataSet.Ensemble ensemble = EnsembleHelper.GenerateEnsemble(30);
+
+            // Modify the data
+            string nmeaData = "$HEHDT,274.67,T*1F$HEROT,-32.6,A*31$GPGGA,155339.00,3245.44007,N,11719.83271,W,2,09,0.9,-1.1,M,-33.3,M,5.0,0138*50$GPVTG,277.26,T,265.15,M,2.62,N,4.86,K,D*29$GPZDA,155339.00,08,12,2011,00,00*67$GPGSV,3,1,09,02,75,182,50,04,56,053,51,05,08,167,42,09,50,241,48*75$GPGSV,3,2,09,10,24,111,46,12,45,322,47,17,17,063,45,25,15,313,44*71$GPGSV,3,3,09,28,05,121,36,,,,,,,,,,,,*48";
+            ensemble.AddNmeaData(nmeaData);
+            Assert.IsNotNull(ensemble, "Adcp Data was not properly created.");
+            Assert.IsTrue(ensemble.IsNmeaAvail, "Nmea Dataset not created.");
+            Assert.IsTrue(ensemble.NmeaData.IsGpggaAvail(), "GGA message not parsed correctly.");
+            Assert.IsTrue(ensemble.NmeaData.IsGpvtgAvail(), "VTG message not parsed correctly.");
+            Assert.IsTrue(ensemble.NmeaData.IsGpgsvAvail(), "GSV message not parsed correctly.");
+            Assert.IsFalse(ensemble.NmeaData.IsGpgllAvail(), "GLL message should not have been found.");
+            Assert.IsFalse(ensemble.NmeaData.IsGpgsaAvail(), "GSA message should not have been found.");
+            Assert.IsFalse(ensemble.NmeaData.IsGprmcAvail(), "RMC message should not have been found.");
+            Assert.IsFalse(ensemble.NmeaData.IsPgrmfAvail(), "PGRMF message should not have been found.");
+            Assert.AreEqual(new DotSpatial.Positioning.Latitude("32 45.44007").DecimalDegrees, ensemble.NmeaData.GPGGA.Position.Latitude.DecimalDegrees, 0.0001, "Latitude is not correct");
+            Assert.AreEqual(new DotSpatial.Positioning.Latitude("-117 19.83271").DecimalDegrees, ensemble.NmeaData.GPGGA.Position.Longitude.DecimalDegrees, 0.0001, "Longitude is not correct");
+            Assert.AreEqual(DotSpatial.Positioning.FixQuality.DifferentialGpsFix, ensemble.NmeaData.GPGGA.FixQuality, "Fix Quality is not correct");
+            Assert.AreEqual(9, ensemble.NmeaData.GPGGA.FixedSatelliteCount, "Number of fixed satellites is incorrect.");
+            Assert.AreEqual(new DotSpatial.Positioning.Distance(-1.1, DotSpatial.Positioning.DistanceUnit.Meters).Value, ensemble.NmeaData.GPGGA.Altitude.Value, 0.00001, "Altitude is not correct");
+            Assert.AreEqual(new DotSpatial.Positioning.Azimuth(277.26), ensemble.NmeaData.GPVTG.Bearing, "True Track Made Good Bearing not correct.");
+            Assert.AreEqual(new DotSpatial.Positioning.Speed(2.62, DotSpatial.Positioning.SpeedUnit.Knots), ensemble.NmeaData.GPVTG.Speed, "Speed is not correct.");
+
+            string encoded = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData);                                      // Serialize object to JSON
+            DataSet.NmeaDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.NmeaDataSet>(encoded);            // Deserialize the JSON
+
+            // Verify the values are the same
+            Assert.IsTrue(decoded.IsGpggaAvail(), "GGA message not parsed correctly.");
+            Assert.IsTrue(decoded.IsGpvtgAvail(), "VTG message not parsed correctly.");
+            Assert.IsTrue(decoded.IsGpgsvAvail(), "GSV message not parsed correctly.");
+            Assert.IsFalse(decoded.IsGpgllAvail(), "GLL message should not have been found.");
+            Assert.IsFalse(decoded.IsGpgsaAvail(), "GSA message should not have been found.");
+            Assert.IsFalse(decoded.IsGprmcAvail(), "RMC message should not have been found.");
+            Assert.IsFalse(decoded.IsPgrmfAvail(), "PGRMF message should not have been found.");
+            Assert.AreEqual(new DotSpatial.Positioning.Latitude("32 45.44007").DecimalDegrees, decoded.GPGGA.Position.Latitude.DecimalDegrees, 0.0001, "Latitude is not correct");
+            Assert.AreEqual(new DotSpatial.Positioning.Latitude("-117 19.83271").DecimalDegrees, decoded.GPGGA.Position.Longitude.DecimalDegrees, 0.0001, "Longitude is not correct");
+            Assert.AreEqual(DotSpatial.Positioning.FixQuality.DifferentialGpsFix, decoded.GPGGA.FixQuality, "Fix Quality is not correct");
+            Assert.AreEqual(9, decoded.GPGGA.FixedSatelliteCount, "Number of fixed satellites is incorrect.");
+            Assert.AreEqual(new DotSpatial.Positioning.Distance(-1.1, DotSpatial.Positioning.DistanceUnit.Meters).Value, decoded.GPGGA.Altitude.Value, 0.00001, "Altitude is not correct");
+            Assert.AreEqual(new DotSpatial.Positioning.Azimuth(277.26), decoded.GPVTG.Bearing, "True Track Made Good Bearing not correct.");
+            Assert.AreEqual(new DotSpatial.Positioning.Speed(2.62, DotSpatial.Positioning.SpeedUnit.Knots), decoded.GPVTG.Speed, "Speed is not correct.");
+        }
+
+        /// <summary>
+        /// Testing the timing for the JSON conversions.
+        /// Put breakstatements on all the time results.
+        /// Then run the code and check the results.
+        /// </summary>
+        [Test]
+        public void TestTiming()
+        {
+
+            // Generate an Ensemble
+            DataSet.Ensemble ensemble = EnsembleHelper.GenerateEnsemble(30);
+            string nmeaData = "$HEHDT,274.67,T*1F$HEROT,-32.6,A*31$GPGGA,155339.00,3245.44007,N,11719.83271,W,2,09,0.9,-1.1,M,-33.3,M,5.0,0138*50$GPVTG,277.26,T,265.15,M,2.62,N,4.86,K,D*29$GPZDA,155339.00,08,12,2011,00,00*67$GPGSV,3,1,09,02,75,182,50,04,56,053,51,05,08,167,42,09,50,241,48*75$GPGSV,3,2,09,10,24,111,46,12,45,322,47,17,17,063,45,25,15,313,44*71$GPGSV,3,3,09,28,05,121,36,,,,,,,,,,,,*48";
+            ensemble.AddNmeaData(nmeaData);
+
+            Stopwatch watch = new Stopwatch();
+
+            // Test Serialize()
+            watch = new Stopwatch();
+            watch.Start();
+            for (int x = 0; x < 1000; x++)
+            {
+                string encoded = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData);
+            }
+            watch.Stop();
+            long resultSerialize = watch.ElapsedMilliseconds;
+
+            // Test Deserialize()
+            string encodedd = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData);
+            watch = new Stopwatch();
+            watch.Start();
+            for (int x = 0; x < 1000; x++)
+            {
+                DataSet.NmeaDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.NmeaDataSet>(encodedd);
+            }
+            watch.Stop();
+            long resultDeserialize = watch.ElapsedMilliseconds;
+
+            Debug.WriteLine(String.Format("Serialize:{0}  Deserialize:{1}", resultSerialize, resultDeserialize));
+
+            Debug.WriteLine("Complete");
+
+        }
+
+        #endregion
     }
 
 }

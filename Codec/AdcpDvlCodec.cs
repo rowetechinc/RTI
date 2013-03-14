@@ -507,9 +507,9 @@ namespace RTI
 
                 // Record the NMEA data to the file
                 // Get the NMEA data from the dataset to ensure valid NMEA messages
-                for (int x = 0; x < adcpData.NmeaData.NmeaStrings.Length; x++)
+                for (int x = 0; x < adcpData.NmeaData.NmeaStrings.Count; x++)
                 {
-                    RecordBinary(adcpData.NmeaData.NmeaStrings[x].Sentence + NMEA_END);
+                    RecordBinary(adcpData.NmeaData.NmeaStrings[x] + NMEA_END);
                 }
             }
         }

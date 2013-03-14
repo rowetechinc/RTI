@@ -63,6 +63,7 @@
  * 10/02/2012      RC          2.15       Added UpdateAdcpConfiguration() to write the AdcpConfiguration to the database.
  * 10/22/2012      RC          2.15       When writing the ensemble data, try to get the ADCP Configurtation to also write to the project.
  * 12/28/2012      RC          2.17       Make AdcpConfiguration::AdcpSubsystemConfigExist() take only 1 argument.
+ * 03/06/2013      RC          2.18       Changed the format of the database.
  * 
  */
 
@@ -276,7 +277,7 @@ namespace RTI
             // Find the SubsystemConfiguration and update the commands
             foreach (AdcpSubsystemConfig asc in SelectedProject.Configuration.SubsystemConfigDict.Values)
             {
-                if (asc==asConfig)
+                if (asc == asConfig)
                 {
                     asc.Commands = asConfig.Commands;
                 }
@@ -309,7 +310,8 @@ namespace RTI
                 // Get the current number of ensembles
                 // in the queue
                 //int count = _datasetQueue.Count;
-
+                //Stopwatch watch = new Stopwatch();
+                //watch.Start();
                 if (_selectedProject != null)
                 {
                     // Used to determine if a new Subsystem Configuration was found
@@ -328,7 +330,7 @@ namespace RTI
                             while (_datasetQueue.Count > 0)
                             {
                                 // Remove dataset from the queue and write to the database
-                                DataSet.Ensemble ensemble = (DataSet.Ensemble)_datasetQueue.Dequeue(); 
+                                DataSet.Ensemble ensemble = (DataSet.Ensemble)_datasetQueue.Dequeue();
                                 WriteEnsembleData(ensemble, cnn);
 
                                 // Set the serial number if it has not been set already to the project
@@ -342,14 +344,17 @@ namespace RTI
                                 // If it has not been added to the project add it now.
                                 // Later it will be written to the project.
                                 // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
-                                SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
-                                if (ssConfig != null)
+                                if (ensemble.IsEnsembleAvail)
                                 {
-                                    Subsystem ss = ensemble.EnsembleData.GetSubSystem();
-                                    CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
-                                    if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                    SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
+                                    if (ssConfig != null)
                                     {
-                                        _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                        Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                        CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
+                                        if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                        {
+                                            _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                        }
                                     }
                                 }
                             }
@@ -372,6 +377,9 @@ namespace RTI
                         log.Error("Selected Mission does not exist. ", ex);
                     }
 
+                    //watch.Stop();
+                    //long result = watch.ElapsedMilliseconds;
+                    //Debug.WriteLine("Writer1 Result: {0}", result);
 
                     // If there was a new Configuration found
                     // Update the project file with the latest configuration
@@ -474,16 +482,16 @@ namespace RTI
                 // Check if ensemble data is available
                 // Ensemble data must be available to write any other data
                 // Everything keys off the ensemble number
-                if (dataset.IsEnsembleAvail)
-                {
-                   int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Ensemble data !!!THIS MUST BE WRITTEN FIRST FOR FOREIGN KEY
+                //if (dataset.IsEnsembleAvail)
+                //{
+                int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Ensemble data !!!THIS MUST BE WRITTEN FIRST FOR FOREIGN KEY
 
-                    // Check if Beam velocity data is available
-                    if (dataset.IsBeamVelocityAvail)
-                    {
-                        WriteBeamToDatabase(dataset, cnn, ensId);
-                    }
-                }
+                //// Check if Beam velocity data is available
+                //if (dataset.IsBeamVelocityAvail)
+                //{
+                //    WriteBeamToDatabase(dataset, cnn, ensId);
+                //}
+                //}
             }
         }
 
@@ -492,455 +500,212 @@ namespace RTI
         /// <summary>
         /// Write the Ensemble dataset to the project database.
         /// </summary>
-        /// <param name="dataset">Dataset to write to the database.</param>
+        /// <param name="ensemble">Dataset to write to the database.</param>
         /// <param name="cnn">Connection to the database.</param>
         /// <returns>Returns the ID for the row where data was added.</returns>
-        private int WriteEnsembleDataToDatabase(DataSet.Ensemble dataset, SQLiteConnection cnn)
+        private int WriteEnsembleDataToDatabase(DataSet.Ensemble ensemble, SQLiteConnection cnn)
         {
+            //Stopwatch watch = new Stopwatch();
+            //watch.Start();
             int ensId = 0;
-            if (Validator.ValidateEnsembleDataSet(dataset))
+            //if (Validator.ValidateEnsembleDataSet(ensemble))
+            //{
+            try
             {
-                try
+                using (DbCommand cmd = cnn.CreateCommand())
                 {
-                    using (DbCommand cmd = cnn.CreateCommand())
+                    // Create the statement
+                    StringBuilder builder = new StringBuilder();
+                    builder.Append("INSERT INTO tblEnsemble(");
+                    builder.Append(string.Format("{0},", DbCommon.COL_ENS_ENS_NUM));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ENS_DATETIME));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ENSEMBLE_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ANCILLARY_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_AMPLITUDE_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_CORRELATION_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_BEAMVELOCITY_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_EARTHVELOCITY_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_INSTRUMENTVELOCITY_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_BOTTOMTRACK_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_GOODBEAM_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_GOODEARTH_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_NMEA_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_EARTHWATERMASS_DS));
+                    builder.Append(string.Format("{0}", DbCommon.COL_INSTRUMENTWATERMASS_DS));
+
+                    builder.Append(") ");
+                    builder.Append("VALUES(");
+                    builder.Append("@ensNum, ");
+                    builder.Append("@dateTime, ");
+                    builder.Append("@ensembleDS, ");
+                    builder.Append("@ancillaryDS, ");
+                    builder.Append("@amplitudeDS, ");
+                    builder.Append("@correlationDS, ");
+                    builder.Append("@beamVelDS, ");
+                    builder.Append("@earthVelDS, ");
+                    builder.Append("@instrVelDS, ");
+                    builder.Append("@bottomTrackDS, ");
+                    builder.Append("@goodBeamDS, ");
+                    builder.Append("@goodEarthDS, ");
+                    builder.Append("@nmeaDS, ");
+                    builder.Append("@earthWaterMassDS, ");
+                    builder.Append("@instrumentWaterMassDS ");
+                    builder.Append("); ");
+                    builder.Append("SELECT last_insert_rowid();");
+
+                    cmd.CommandText = builder.ToString();
+
+                    // Ensemble data
+                    if (ensemble.IsEnsembleAvail)
                     {
-                        // Create the statement
-                        StringBuilder builder = new StringBuilder();
-                        builder.Append("INSERT INTO tblEnsemble("); 
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_ENS_NUM));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_NUM_BIN));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_NUM_BEAM));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DES_PING_COUNT));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_ACT_PING_COUNT));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_STATUS));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_YEAR));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_MONTH));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DAY));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_HOUR));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_MINUTE));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SECOND));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_HUN_SECOND));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DATETIME));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRST_BIN_RANGE));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_BIN_SIZE));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRST_PING_TIME));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_LAST_PING_TIME));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_HEADING));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_PITCH));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_ROLL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_TEMP_WATER));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_TEMP_SYS));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SALINITY));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_PRESSURE));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_XDCR_DEPTH));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SOS));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_DB_TIME));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_BEAM_VEL_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_INSTR_VEL_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_EARTH_VEL_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_AMP_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_CORR_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_GB_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_GE_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_ANCIL_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_BT_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_IS_NMEA_AVAIL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_NMEA_DATA));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SYS_SERIAL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_MAJOR));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_MINOR));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_FIRMWARE_REVISION));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYSTEM_CODE));
-                        builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYS_CONFIG));
+                        cmd.Parameters.Add(new SQLiteParameter("@ensNum", System.Data.DbType.Int32) { Value = ensemble.EnsembleData.EnsembleNumber });
+                        cmd.Parameters.Add(new SQLiteParameter("@dateTime", System.Data.DbType.DateTime) { Value = ensemble.EnsembleData.EnsDateTime });
+                        cmd.Parameters.Add(new SQLiteParameter("@ensembleDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EnsembleData) });
 
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_FIRST_PING_TIME));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_LAST_PING_TIME));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_HEADING));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_PITCH));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_ROLL));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_TEMP_WATER));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_TEMP_SYS));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SALINITY));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_PRESSURE));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SOS));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_STATUS));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_ACTUAL_PING_COUNT));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_RANGE_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_SNR_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_AMP_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_CORR_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_VEL_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_BEAM_GOOD_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_VEL_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_INSTR_GOOD_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B2));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_VEL_B3));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_GOOD_B0));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_GOOD_B1));
-                        builder.Append(string.Format("{0},", DbCommon.COL_BT_EARTH_GOOD_B2));
-                        builder.Append(string.Format("{0}", DbCommon.COL_BT_EARTH_GOOD_B3));
-                        builder.Append(") ");
-                        builder.Append("VALUES(");
-                        builder.Append("@ensembleNum, @numBins, @numBeams, @desiredPingCount, @actualPingCount, @status, ");
-                        builder.Append("@year, @month, @day, @hour, @minute, @second, @hundSec, @dateTime, ");
-                        builder.Append("@firstBinRange, @binSize, @profileFirstPingTime, @profileLastPingTime, @heading, @pitch, @roll, ");
-                        builder.Append("@waterTemp, @sysTemp, @salinity, @pressure, @Depth, @sos, @dbTime, ");
-                        builder.Append("@isBeamVelAvail, @isInstrVelAvail, @isEarthVelAvail, @isAmpAvail, @isCorrAvail, @isGoodBeamAvail, @isGoodEarthAvail, @isAncillaryAvail, @isBottomTrackAvail, @isNmeaAvail, ");
-                        builder.Append("@nmeaData, @sysSerialNum, @firmwareMajor, @firmwareMinor, @firmwareRevision, @subsystem, @subConfig, ");
-                        
-                        builder.Append("@btFirstPingTime, @btLastPingTime, @btHeading, @btPitch, @btRoll, @btWaterTemp, @btSysTemp, ");
-                        builder.Append("@btSalinity, @btPressure, @btSos, @btStatus, @btActualPingCount, ");
-                        builder.Append("@btRangeB0, @btRangeB1, @btRangeB2, @btRangeB3, ");
-                        builder.Append("@btSnrB0, @btSnrB1, @btSnrB2, @btSnrB3, ");
-                        builder.Append("@btAmpB0, @btAmpB1, @btAmpB2, @btAmpB3, ");
-                        builder.Append("@btCorrB0, @btCorrB1, @btCorrB2, @btCorrB3, ");
-                        builder.Append("@btBeamVelB0, @btBeamVelB1, @btBeamVelB2, @btBeamVelB3, ");
-                        builder.Append("@btBeamGoodB0, @btBeamGoodB1, @btBeamGoodB2, @btBeamGoodB3, ");
-                        builder.Append("@btInstrVelB0, @btInstrVelB1, @btInstrVelB2, @btInstrVelB3, ");
-                        builder.Append("@btInstrGoodB0, @btInstrGoodB1, @btInstrGoodB2, @btInstrGoodB3, ");
-                        builder.Append("@btEarthVelB0, @btEarthVelB1, @btEarthVelB2, @btEarthVelB3, ");
-                        builder.Append("@btEarthGoodB0, @btEarthGoodB1, @btEarthGoodB2, @btEarthGoodB3");
-                        builder.Append("); ");
-                        builder.Append("SELECT last_insert_rowid();");
-
-                        cmd.CommandText = builder.ToString();
-
-                        //// Add all the parameters
-                        cmd.Parameters.Add(new SQLiteParameter("@ensembleNum", System.Data.DbType.Int32) { Value = dataset.EnsembleData.EnsembleNumber });
-                        cmd.Parameters.Add(new SQLiteParameter("@numBins", System.Data.DbType.Int32) { Value = dataset.EnsembleData.NumBins });
-                        cmd.Parameters.Add(new SQLiteParameter("@numBeams", System.Data.DbType.Int32) { Value = dataset.EnsembleData.NumBeams });
-                        cmd.Parameters.Add(new SQLiteParameter("@desiredPingCount", System.Data.DbType.Int32) { Value = dataset.EnsembleData.DesiredPingCount });
-                        cmd.Parameters.Add(new SQLiteParameter("@actualPingCount", System.Data.DbType.Int32) { Value = dataset.EnsembleData.ActualPingCount });
-                        cmd.Parameters.Add(new SQLiteParameter("@status", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Status.Value });
-                        cmd.Parameters.Add(new SQLiteParameter("@year", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Year });
-                        cmd.Parameters.Add(new SQLiteParameter("@month", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Month });
-                        cmd.Parameters.Add(new SQLiteParameter("@day", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Day });
-                        cmd.Parameters.Add(new SQLiteParameter("@hour", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Hour });
-                        cmd.Parameters.Add(new SQLiteParameter("@minute", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Minute });
-                        cmd.Parameters.Add(new SQLiteParameter("@second", System.Data.DbType.Int32) { Value = dataset.EnsembleData.Second });
-                        cmd.Parameters.Add(new SQLiteParameter("@hundSec", System.Data.DbType.Int32) { Value = dataset.EnsembleData.HSec });
-                        cmd.Parameters.Add(new SQLiteParameter("@dateTime", System.Data.DbType.DateTime) { Value = dataset.EnsembleData.EnsDateTime });
-                        cmd.Parameters.Add(new SQLiteParameter("@firstBinRange", System.Data.DbType.Single) { Value = dataset.AncillaryData.FirstBinRange });
-                        cmd.Parameters.Add(new SQLiteParameter("@binSize", System.Data.DbType.Single) { Value = dataset.AncillaryData.BinSize });
-                        cmd.Parameters.Add(new SQLiteParameter("@profileFirstPingTime", System.Data.DbType.Single) { Value = dataset.AncillaryData.FirstPingTime });
-                        cmd.Parameters.Add(new SQLiteParameter("@profileLastPingTime", System.Data.DbType.Single) { Value = dataset.AncillaryData.LastPingTime });
-                        cmd.Parameters.Add(new SQLiteParameter("@heading", System.Data.DbType.Single) { Value = dataset.AncillaryData.Heading });
-                        cmd.Parameters.Add(new SQLiteParameter("@pitch", System.Data.DbType.Single) { Value = dataset.AncillaryData.Pitch });
-                        cmd.Parameters.Add(new SQLiteParameter("@roll", System.Data.DbType.Single) { Value = dataset.AncillaryData.Roll });
-                        cmd.Parameters.Add(new SQLiteParameter("@waterTemp", System.Data.DbType.Single) { Value = dataset.AncillaryData.WaterTemp });
-                        cmd.Parameters.Add(new SQLiteParameter("@sysTemp", System.Data.DbType.Single) { Value = dataset.AncillaryData.SystemTemp });
-                        cmd.Parameters.Add(new SQLiteParameter("@salinity", System.Data.DbType.Single) { Value = dataset.AncillaryData.Salinity });
-                        cmd.Parameters.Add(new SQLiteParameter("@pressure", System.Data.DbType.Single) { Value = dataset.AncillaryData.Pressure });
-                        cmd.Parameters.Add(new SQLiteParameter("@Depth", System.Data.DbType.Single) { Value = dataset.AncillaryData.TransducerDepth });
-                        cmd.Parameters.Add(new SQLiteParameter("@sos", System.Data.DbType.Single) { Value = dataset.AncillaryData.SpeedOfSound });
-                        cmd.Parameters.Add(new SQLiteParameter("@dbTime", System.Data.DbType.DateTime) { Value = DateTime.Now });
-                        cmd.Parameters.Add(new SQLiteParameter("@isBeamVelAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsBeamVelocityAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isInstrVelAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsInstrVelocityAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isEarthVelAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsEarthVelocityAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isAmpAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsAmplitudeAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isCorrAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsCorrelationAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isGoodBeamAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsGoodBeamAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isGoodEarthAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsGoodEarthAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isAncillaryAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsAncillaryAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isBottomTrackAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsBottomTrackAvail) });
-                        cmd.Parameters.Add(new SQLiteParameter("@isNmeaAvail", System.Data.DbType.Boolean) { Value = DbCommon.ConvertBool(dataset.IsNmeaAvail) });
-                        // NMEA data below
-                        cmd.Parameters.Add(new SQLiteParameter("@sysSerialNum", System.Data.DbType.String) { Value = dataset.EnsembleData.SysSerialNumber.ToString() });
-                        cmd.Parameters.Add(new SQLiteParameter("@firmwareMajor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMajor });
-                        cmd.Parameters.Add(new SQLiteParameter("@firmwareMinor", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareMinor });
-                        cmd.Parameters.Add(new SQLiteParameter("@firmwareRevision", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.FirmwareRevision });
-                        cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SysFirmware.GetSubsystemCode(dataset.EnsembleData.SysSerialNumber) });
-                        cmd.Parameters.Add(new SQLiteParameter("@subConfig", System.Data.DbType.UInt16) { Value = dataset.EnsembleData.SubsystemConfig.ConfigNumber });
-
-                        // Bottom Track parameters
-                        if (dataset.IsBottomTrackAvail)
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@btFirstPingTime", System.Data.DbType.Single) { Value = dataset.BottomTrackData.FirstPingTime });
-                            cmd.Parameters.Add(new SQLiteParameter("@btLastPingTime", System.Data.DbType.Single) { Value = dataset.BottomTrackData.LastPingTime });
-                            cmd.Parameters.Add(new SQLiteParameter("@btHeading", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Heading });
-                            cmd.Parameters.Add(new SQLiteParameter("@btPitch", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Pitch });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRoll", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Roll });
-                            cmd.Parameters.Add(new SQLiteParameter("@btWaterTemp", System.Data.DbType.Single) { Value = dataset.BottomTrackData.WaterTemp });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSysTemp", System.Data.DbType.Single) { Value = dataset.BottomTrackData.SystemTemp });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSalinity", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Salinity });
-                            cmd.Parameters.Add(new SQLiteParameter("@btPressure", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Pressure });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSos", System.Data.DbType.Single) { Value = dataset.BottomTrackData.SpeedOfSound });
-                            cmd.Parameters.Add(new SQLiteParameter("@btStatus", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Status.Value });
-                            cmd.Parameters.Add(new SQLiteParameter("@btActualPingCount", System.Data.DbType.Single) { Value = dataset.BottomTrackData.ActualPingCount });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Range[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Range[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Range[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Range[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.SNR[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.SNR[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.SNR[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.SNR[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Amplitude[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Amplitude[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Amplitude[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Amplitude[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Correlation[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Correlation[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Correlation[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.Correlation[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamVelocity[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamVelocity[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamVelocity[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamVelocity[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamGood[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamGood[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamGood[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.BeamGood[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentVelocity[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentVelocity[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentVelocity[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentVelocity[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentGood[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentGood[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentGood[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.InstrumentGood[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthVelocity[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthVelocity[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthVelocity[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthVelocity[3] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB0", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[0] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB1", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[1] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB2", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[2] });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB3", System.Data.DbType.Single) { Value = dataset.BottomTrackData.EarthGood[3] });
-                        }
-                        else
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@btFirstPingTime", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btLastPingTime", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btHeading", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btPitch", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRoll", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btWaterTemp", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSysTemp", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSalinity", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btPressure", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSos", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btStatus", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btActualPingCount", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btRangeB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btSnrB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btAmpB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btCorrB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamVelB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btBeamGoodB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrVelB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btInstrGoodB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthVelB3", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB0", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB1", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB2", System.Data.DbType.Single) { Value = 0 });
-                            cmd.Parameters.Add(new SQLiteParameter("@btEarthGoodB3", System.Data.DbType.Single) { Value = 0 });
-                        }
-
-                        if (dataset.IsNmeaAvail)
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@nmeaData", System.Data.DbType.String) { Value = dataset.NmeaData.ToString() });
-                        }
-                        else
-                        {
-                            cmd.Parameters.Add(new SQLiteParameter("@nmeaData", System.Data.DbType.String) { Value = "" });
-                        }
-
-                        //cmd.ExecuteNonQuery();
-                        ensId = Convert.ToInt32(cmd.ExecuteScalar());
                     }
-                }
-                catch (SQLiteException e)
-                {
-                    log.Error("Error adding Ensemble data to database.", e);
-                    return ensId;
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@ensNum", System.Data.DbType.Int32) { Value = 1 });
+                        cmd.Parameters.Add(new SQLiteParameter("@dateTime", System.Data.DbType.DateTime) { Value = DateTime.Now });
+                        cmd.Parameters.Add(new SQLiteParameter("@ensembleDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Ancillary Data
+                    if (ensemble.IsAncillaryAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@ancillaryDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AncillaryData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@ancillaryDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Amplitude data
+                    if (ensemble.IsAmplitudeAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@amplitudeDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AmplitudeData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@amplitudeDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Correlation
+                    if (ensemble.IsCorrelationAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@correlationDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.CorrelationData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@correlationDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Beam Velocity
+                    if (ensemble.IsBeamVelocityAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@beamVelDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BeamVelocityData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@beamVelDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Earth Velocity
+                    if (ensemble.IsEarthVelocityAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@earthVelDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EarthVelocityData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@earthVelDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Instrument Velocity
+                    if (ensemble.IsInstrumentVelocityAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@instrVelDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.InstrumentVelocityData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@instrVelDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Bottom Track
+                    if (ensemble.IsBottomTrackAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@bottomTrackDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@bottomTrackDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Good Beam
+                    if (ensemble.IsGoodBeamAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@goodBeamDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodBeamData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@goodBeamDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Good Earth
+                    if (ensemble.IsGoodEarthAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@goodEarthDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodEarthData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@goodEarthDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Nmea
+                    if (ensemble.IsNmeaAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@nmeaDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@nmeaDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Earth Water Mass Velocity
+                    if (ensemble.IsEarthWaterMassAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@earthWaterMassDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EarthWaterMassData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@earthWaterMassDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Instrument Water Mass Velocity
+                    if (ensemble.IsInstrumentWaterMassAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@instrumentWaterMassDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.InstrumentWaterMassData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@instrumentWaterMassDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Run the query and get the result for the last row
+                    object cmdExecuteScalar = cmd.ExecuteScalar();
+                    ensId = Convert.ToInt32(cmdExecuteScalar);
                 }
             }
+            catch (SQLiteException e)
+            {
+                log.Error("Error adding Ensemble data to database.", e);
+                return ensId;
+            }
+            //}
 
+            //watch.Stop();
+            //long result = watch.ElapsedMilliseconds;
+            //Debug.WriteLine("Wrtier 1 Result: {0}", result);
             return ensId;
-        }
-
-        /// <summary>
-        /// Write the Beam data to the project database.
-        /// </summary>
-        /// <param name="dataset">Dataset to write to the database.</param>
-        /// <param name="cnn">Connection to the database.</param>
-        /// <param name="ensembleRowId">Row ID withing the ensemble.</param>
-        private void WriteBeamToDatabase1(DataSet.Ensemble dataset, SQLiteConnection cnn, int ensembleRowId)
-        {
-            try
-            {
-                for (int bin = 0; bin < dataset.EnsembleData.NumBins; bin++)
-                {
-                    for (int beam = 0; beam < dataset.EnsembleData.NumBeams; beam++)
-                    {
-                        using (DbCommand cmd = cnn.CreateCommand())
-                        {
-                            // Create the statement
-                            StringBuilder builder = new StringBuilder();
-                            builder.Append("INSERT INTO tblBeam(");
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_ENS_ID));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_BIN_NUM));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_BEAM_NUM));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_BEAM));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_EARTH));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_INSTR));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_AMP));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_CORR));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_BEAM));
-                            builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_EARTH));
-                            builder.Append(string.Format("{0}", DbCommon.COL_BV_ORIENT));
-                            builder.Append(") ");
-                            builder.Append("VALUES(");
-                            builder.Append("@ensembleId, @binNum, @beamNum,");
-                            builder.Append("@beamVel, @earthVel, @instrVel,");
-                            builder.Append("@amp, @corr, @goodBeam, @goodEarth, @orient");
-                            builder.Append(");");
-                            cmd.CommandText = builder.ToString();
-
-                            // Add all the parameters
-                            cmd.Parameters.Add(new SQLiteParameter("@ensembleId", System.Data.DbType.UInt32) { Value = ensembleRowId });
-                            cmd.Parameters.Add(new SQLiteParameter("@binNum", System.Data.DbType.UInt32) { Value = bin });
-                            cmd.Parameters.Add(new SQLiteParameter("@beamNum", System.Data.DbType.UInt16) { Value = beam });
-                            cmd.Parameters.Add(new SQLiteParameter("@beamVel", System.Data.DbType.Single) { Value = dataset.BeamVelocityData.BeamVelocityData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@earthVel", System.Data.DbType.Single) { Value = dataset.EarthVelocityData.EarthVelocityData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@instrVel", System.Data.DbType.Single) { Value = dataset.InstrVelocityData.InstrumentVelocityData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@amp", System.Data.DbType.Single) { Value = dataset.AmplitudeData.AmplitudeData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@corr", System.Data.DbType.Single) { Value = dataset.CorrelationData.CorrelationData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@goodBeam", System.Data.DbType.UInt16) { Value = dataset.GoodBeamData.GoodBeamData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@goodEarth", System.Data.DbType.UInt16) { Value = dataset.GoodEarthData.GoodEarthData[bin, beam] });
-                            cmd.Parameters.Add(new SQLiteParameter("@orient", System.Data.DbType.UInt16) { Value = dataset.BeamVelocityData.Orientation });
-
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-            }
-            catch (SQLiteException e)
-            {
-                log.Error("Error adding Beam BeamVelocity data to database.", e);
-            }
-        }
-
-        /// <summary>
-        /// Write the Beam data to the project database.
-        /// </summary>
-        /// <param name="dataset">Dataset to write to the database.</param>
-        /// <param name="cnn">Connection to the database.</param>
-        /// <param name="ensembleRowId">Row ID withing the ensemble.</param>
-        private void WriteBeamToDatabase(DataSet.Ensemble dataset, SQLiteConnection cnn, int ensembleRowId)
-        {
-            try
-            {
-                using (DbTransaction dbTrans = cnn.BeginTransaction())
-                {
-                    for (int bin = 0; bin < dataset.EnsembleData.NumBins; bin++)
-                    {
-                        for (int beam = 0; beam < dataset.EnsembleData.NumBeams; beam++)
-                        {
-                            using (DbCommand cmd = cnn.CreateCommand())
-                            {
-                                // Create the statement
-                                // Create the statement
-                                StringBuilder builder = new StringBuilder();
-                                builder.Append("INSERT INTO tblBeam(");
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_ENS_ID));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_BIN_NUM));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_BEAM_NUM));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_BEAM));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_EARTH));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_VEL_INSTR));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_AMP));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_CORR));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_BEAM));
-                                builder.Append(string.Format("{0},", DbCommon.COL_BV_GOOD_EARTH));
-                                builder.Append(string.Format("{0}", DbCommon.COL_BV_ORIENT));
-                                builder.Append(") ");
-                                builder.Append("VALUES(");
-                                builder.Append("@ensembleId, @binNum, @beamNum,");
-                                builder.Append("@beamVel, @earthVel, @instrVel,");
-                                builder.Append("@amp, @corr, @goodBeam, @goodEarth, @orient");
-                                builder.Append(");");
-                                cmd.CommandText = builder.ToString();
-
-                                // Add all the parameters
-                                cmd.Parameters.Add(new SQLiteParameter("@ensembleId", System.Data.DbType.UInt32) { Value = ensembleRowId });
-                                cmd.Parameters.Add(new SQLiteParameter("@binNum", System.Data.DbType.UInt32) { Value = bin });
-                                cmd.Parameters.Add(new SQLiteParameter("@beamNum", System.Data.DbType.UInt16) { Value = beam });
-                                cmd.Parameters.Add(new SQLiteParameter("@beamVel", System.Data.DbType.Single) { Value = dataset.BeamVelocityData.BeamVelocityData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@earthVel", System.Data.DbType.Single) { Value = dataset.EarthVelocityData.EarthVelocityData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@instrVel", System.Data.DbType.Single) { Value = dataset.InstrVelocityData.InstrumentVelocityData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@amp", System.Data.DbType.Single) { Value = dataset.AmplitudeData.AmplitudeData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@corr", System.Data.DbType.Single) { Value = dataset.CorrelationData.CorrelationData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@goodBeam", System.Data.DbType.UInt16) { Value = dataset.GoodBeamData.GoodBeamData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@goodEarth", System.Data.DbType.UInt16) { Value = dataset.GoodEarthData.GoodEarthData[bin, beam] });
-                                cmd.Parameters.Add(new SQLiteParameter("@orient", System.Data.DbType.UInt16) { Value = dataset.BeamVelocityData.Orientation });
-
-                                cmd.ExecuteNonQuery();
-                            }
-                        }
-                    }
-
-                    dbTrans.Commit();
-                }
-            }
-            catch (SQLiteException e)
-            {
-                log.Error("Error adding Beam BeamVelocity data to database.", e);
-            }
         }
 
         #endregion
@@ -982,7 +747,7 @@ namespace RTI
         {
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(project.Configuration);                                    // Serialize object to JSON
             string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_ADCP_CONFIGURATION, json);
-            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_CMDS, jsonCmd);                 // Create query string
+            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS, jsonCmd);                 // Create query string
 
             using (DbCommand cmd = cnn.CreateCommand())
             {

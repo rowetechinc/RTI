@@ -127,7 +127,7 @@
     <Compile Include="Models\DataSet\GoodBeamDataSet.cs" />
     <Compile Include="Models\DataSet\GoodEarthDataSet.cs" />
     <Compile Include="Models\DataSet\InstrumentWaterMassDataSet.cs" />
-    <Compile Include="Models\DataSet\InstrVelocityDataSet.cs" />
+    <Compile Include="Models\DataSet\InstrumentVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\NmeaDataSet.cs" />
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />

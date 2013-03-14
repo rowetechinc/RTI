@@ -63,12 +63,22 @@
  *                                         Fixed BACKWARDS COMPATITBILITY in Decode where it did not check the Major number and it did not convert the subsystem to a byte correctly.
  * 01/09/2013      RC          2.17       Moved the backwards compatibility to the Firmware object.
  * 01/14/2013      RC          2.17       In UpdateAverageEnsemble(), set the ping count based off the number of samples and the number of pings per ensemble.
+ * 02/06/2013      RC          2.18       In Decode(), set SubsystemConfig with the subsystem if the revision is old and no SubsystemConfig is given.  Before it would not give the subsystem.\
+ * 02/20/2013      RC          2.18       Fixed setting the time for PRTI sentences with SetPRTITime().
+ * 02/21/2013      RC          2.18       In constructors for PRTI messages, set the serial number to SubsystemConfiguration().  This will use the DVL serial number to create the SubsystemConfiguration.
+ *                                         Make the time the current time for PRTI messages.
+ *                                         Made the time for PRTI be the current time.  Set the start time to AncillaryDataSet.LastPingTime.
+ * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
  * 
  */
 
 using System;
 using System.Data;
 using System.Diagnostics;
+using Newtonsoft.Json;
+using System.Text;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace RTI
 {
@@ -77,6 +87,7 @@ namespace RTI
         /// <summary>
         /// Data set containing all the Ensemble data.
         /// </summary>
+        [JsonConverter(typeof(EnsembleDataSetSerializer))]
         public class EnsembleDataSet : BaseDataSet
         {
             #region Variables
@@ -139,6 +150,7 @@ namespace RTI
             /// <summary>
             /// A unique ID for the dataset.
             /// </summary>
+            [JsonIgnore]
             public UniqueID UniqueId { get; set; }
 
             /// <summary>
@@ -227,11 +239,13 @@ namespace RTI
             /// If the Year, Month or Day are not set, then this will
             /// return the current date and time.
             /// </summary>
+            [JsonIgnore]
             public DateTime EnsDateTime { get; set; }
 
             /// <summary>
             /// Return the Date as a string.
             /// </summary>
+            [JsonIgnore]
             public string EnsDateString
             {
                 get
@@ -243,6 +257,7 @@ namespace RTI
             /// <summary>
             /// Return the Time as a string.
             /// </summary>
+            [JsonIgnore]
             public string EnsTimeString
             {
                 get
@@ -270,14 +285,7 @@ namespace RTI
                 EnsembleNumber = DEFAULT_ENS_NUM;
 
                 // Set time to the current time
-                EnsDateTime = DateTime.Now;
-                Year = EnsDateTime.Year;
-                Month = EnsDateTime.Month;
-                Day = EnsDateTime.Day;
-                Hour = EnsDateTime.Hour;
-                Minute = EnsDateTime.Minute;
-                Second = EnsDateTime.Second;
-                HSec = EnsDateTime.Millisecond * 10;
+                SetTime();
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
@@ -322,26 +330,6 @@ namespace RTI
             }
 
             /// <summary>
-            /// Create a Ensemble data set.  Includes all the information
-            /// about the current Ensemble.
-            /// </summary>
-            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
-            /// <param name="imag"></param>
-            /// <param name="nameLength">Length of name</param>
-            /// <param name="name">Name of data type</param>
-            /// <param name="ensembleData">DataTable containing Ensemble data</param>
-            public EnsembleDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, DataRow ensembleData) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
-            {
-                // Initialize ranges
-
-                // Decode the information
-                Decode(ensembleData);
-            }
-
-            /// <summary>
             /// Create an Ensemble data set.  Include all the information
             /// about the current ensemble from the sentence.  This will include
             /// the ensemble number and status.
@@ -353,17 +341,8 @@ namespace RTI
                 // Set the ensemble number
                 EnsembleNumber = sentence.SampleNumber;
 
-                // Set time to number of seconds since startup
-                EnsDateTime = new DateTime();
-                TimeSpan span = new TimeSpan(0, 0, 0, 0, sentence.StartTime * 10);      // Multiply by 10 because value is 1/100 of a second
-                EnsDateTime = EnsDateTime + span;
-                Year = EnsDateTime.Year;
-                Month = EnsDateTime.Month;
-                Day = EnsDateTime.Day;
-                Hour = EnsDateTime.Hour;
-                Minute = EnsDateTime.Minute;
-                Second = EnsDateTime.Second;
-                HSec = EnsDateTime.Millisecond * 10;
+                // Set time to now
+                SetTime();
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
@@ -377,8 +356,8 @@ namespace RTI
                 // Create blank firmware
                 SysFirmware = new Firmware();
 
-                // Create Blank Subsystem configuration
-                SubsystemConfig = new SubsystemConfiguration();
+                // Create Subsystem Configuration based off Firmware and Serialnumber
+                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0);
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -399,10 +378,8 @@ namespace RTI
                 // Set the ensemble number
                 EnsembleNumber = sentence.SampleNumber;
 
-                // Set time to number of seconds since startup
-                EnsDateTime = new DateTime();
-                TimeSpan span = new TimeSpan(0, 0, 0, 0, sentence.StartTime * 10);      // Multiply by 10 because value is 1/100 of a second
-                EnsDateTime = EnsDateTime + span;
+                // Set time to now
+                SetTime();
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
@@ -416,8 +393,8 @@ namespace RTI
                 // Create blank firmware
                 SysFirmware = new Firmware();
 
-                // Create blank Subsystem Configuration
-                SubsystemConfig = new SubsystemConfiguration();
+                // Create Subsystem Configuration based off Firmware and Serialnumber
+                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0);
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -425,6 +402,77 @@ namespace RTI
                 // No bin data
                 NumBins = 0;
             }
+
+            /// <summary>
+            /// Create an Ensemble data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EnsembleDataSet}(json) is
+            /// called.
+            /// 
+            /// DeserializeObject is slightly faster then passing the string to the constructor.
+            /// 162ms for this method.
+            /// 181ms for JSON string constructor.
+            /// 
+            /// Alternative to decoding manually is to use the command:
+            /// DataSet.EnsembleDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EnsembleDataSet}(json); 
+            /// 
+            /// To use this method for JSON you must have all the parameters match all the properties in this object.
+            /// 
+            /// </summary>
+            /// <param name="ValueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="NumElements">Number of Bin</param>
+            /// <param name="ElementsMultiplier">Number of beams</param>
+            /// <param name="Imag"></param>
+            /// <param name="NameLength">Length of name</param>
+            /// <param name="Name">Name of data type</param>
+            /// <param name="EnsembleNumber">Ensemble number.</param>
+            /// <param name="NumBins">Number of bins.</param>
+            /// <param name="NumBeams">Number of beams.</param>
+            /// <param name="DesiredPingCount">Pings Desired.</param>
+            /// <param name="ActualPingCount">Ping Count.</param>
+            /// <param name="SysSerialNumber">Serial Number of the ADCP.</param>
+            /// <param name="SysFirmware">Firmware version and configuration.</param>
+            /// <param name="SubsystemConfig">Configuration for the ensemble.</param>
+            /// <param name="Status">Status of the ADCP.</param>
+            /// <param name="Year">Year of the ensemble.</param>
+            /// <param name="Month">Month of the ensemble.</param>
+            /// <param name="Day">Day of the ensemble.</param>
+            /// <param name="Hour">Hour of the ensemble.</param>
+            /// <param name="Minute">Minute of the ensemble.</param>
+            /// <param name="Second">Second of the ensemble.</param>
+            /// <param name="HSec">Hundredth of second of the ensemble.</param>
+            [JsonConstructor]
+            public EnsembleDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
+                                    int EnsembleNumber, int NumBins, int NumBeams, int DesiredPingCount, int ActualPingCount,
+                                    SerialNumber SysSerialNumber, Firmware SysFirmware, SubsystemConfiguration SubsystemConfig, Status Status,
+                                    int Year, int Month, int Day, int Hour, int Minute, int Second, int HSec) :
+                base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
+            {
+                //this.UniqueId = UniqueId;
+                this.EnsembleNumber = EnsembleNumber;
+                this.NumBins = NumBins;
+                this.NumBeams = NumBeams;
+                this.DesiredPingCount = DesiredPingCount;
+                this.ActualPingCount = ActualPingCount;
+                this.SysSerialNumber = SysSerialNumber;
+                this.SysFirmware = SysFirmware;
+                this.SubsystemConfig = SubsystemConfig;
+                this.Status = Status;
+                this.Year = Year;
+                this.Month = Month;
+                this.Day = Day;
+                this.Hour = Hour;
+                this.Minute = Minute;
+                this.Second = Second;
+                this.HSec = HSec;
+                //this.EnsDateTime = EnsDateTime;
+
+                // Set the time and date
+                ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec / 10);
+
+                // Create UniqueId
+                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+            }
+
 
             /// <summary>
             /// When an ensemble is averaged, the Ping count
@@ -544,11 +592,12 @@ namespace RTI
                 }
                 else
                 {
-                    SubsystemConfig = new SubsystemConfiguration();
+                    // Create a default SubsystemConfig with a configuration of 0
+                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0);
                 }
 
                 // Set the time and date
-                ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec * 10);
+                ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec / 10);
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
@@ -628,84 +677,21 @@ namespace RTI
             }
 
             /// <summary>
-            /// Get all the information about the Ensemble.
+            /// Set the time to now.  This will set the
+            /// DateTime and all the individual
+            /// values.
             /// </summary>
-            /// <param name="data">DataRow containing the Ensemble data type.</param>
-            private void Decode(DataRow data)
+            private void SetTime()
             {
-                // Go through the result settings
-                EnsembleNumber = Convert.ToInt32(data[DbCommon.COL_ENS_ENS_NUM].ToString());
-                NumBins = Convert.ToInt32(data[DbCommon.COL_ENS_NUM_BIN].ToString());
-                NumBeams = Convert.ToInt32(data[DbCommon.COL_ENS_NUM_BEAM].ToString());
-                DesiredPingCount = Convert.ToInt32(data[DbCommon.COL_ENS_DES_PING_COUNT].ToString());
-                ActualPingCount = Convert.ToInt32(data[DbCommon.COL_ENS_ACT_PING_COUNT].ToString());
-                Status = new Status(Convert.ToInt32(data[DbCommon.COL_ENS_STATUS]));
-                Year = Convert.ToInt32(data[DbCommon.COL_ENS_YEAR].ToString());
-                Month = Convert.ToInt32(data[DbCommon.COL_ENS_MONTH].ToString());
-                Day = Convert.ToInt32(data[DbCommon.COL_ENS_DAY].ToString());
-                Hour = Convert.ToInt32(data[DbCommon.COL_ENS_HOUR].ToString());
-                Minute = Convert.ToInt32(data[DbCommon.COL_ENS_MINUTE].ToString());
-                Second = Convert.ToInt32(data[DbCommon.COL_ENS_SECOND].ToString());
-                HSec = Convert.ToInt32(data[DbCommon.COL_ENS_HUN_SECOND].ToString());
-                
-                // Check if Rev D columns exist
-                if (data.Table.Columns.Contains(DbCommon.COL_ENS_SYS_SERIAL))
-                {
-
-                    SysSerialNumber = new SerialNumber(data[DbCommon.COL_ENS_SYS_SERIAL].ToString());
-
-                    UInt16 firmMjr = 0;
-                    UInt16 firmMnr = 0;
-                    UInt16 firmRev = 0;
-                    byte subSysCode = 0; 
-                    firmMjr = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_MAJOR]));
-                    firmMnr = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_MINOR]));
-                    firmRev = (Convert.ToUInt16(data[DbCommon.COL_ENS_FIRMWARE_REVISION]));
-                    subSysCode = (Convert.ToByte(data[DbCommon.COL_ENS_SUBSYSTEM_CODE]));
-                    SysFirmware = new Firmware(subSysCode, firmMjr, firmMnr, firmRev);
-
-                    // Set NumElements
-                    NumElements = NUM_DATA_ELEMENTS_REV_D;
-                }
-                else
-                {
-                    SysSerialNumber = new SerialNumber();
-                    SysFirmware = new Firmware();
-
-                    // Set NumElements
-                    NumElements = NUM_DATA_ELEMENTS_REV_C;
-                }
-
-                // Check if Rev H columns exist
-                if (data.Table.Columns.Contains(DbCommon.COL_ENS_SUBSYS_CONFIG))
-                {
-                    // Verify data exist in the column
-                    if (data[DbCommon.COL_ENS_SUBSYS_CONFIG] != DBNull.Value)
-                    {
-                        // Set Subsystem Configuration
-                        byte subConfig = Convert.ToByte(data[DbCommon.COL_ENS_SUBSYS_CONFIG]);
-                        SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), subConfig);
-                    }
-                    else
-                    {
-                        SubsystemConfig = new SubsystemConfiguration();
-                    }
-
-                    // Set NumElements
-                    NumElements = NUM_DATA_ELEMENTS_REV_H;
-                }
-                else
-                {
-                    SubsystemConfig = new SubsystemConfiguration();
-                }
-
-                // Set the time and date
-                ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec * 10);
-
-                // Create UniqueId
-                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
-
-
+                // Set time to now
+                EnsDateTime = DateTime.Now;
+                Year = EnsDateTime.Year;
+                Month = EnsDateTime.Month;
+                Day = EnsDateTime.Day;
+                Hour = EnsDateTime.Hour;
+                Minute = EnsDateTime.Minute;
+                Second = EnsDateTime.Second;
+                HSec = EnsDateTime.Millisecond * 10;
             }
 
             /// <summary>
@@ -769,6 +755,239 @@ namespace RTI
                 s += "Status: " + Status.ToString() + "\n";
 
                 return s;
+            }
+        }
+
+        /// <summary>
+        /// Convert this object to a JSON object.
+        /// Calling this method is twice as fast as calling the default serializer:
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EnsembleData).
+        /// 
+        /// 19ms for this method.
+        /// 100ms for calling SerializeObject default.
+        /// 
+        /// Use this method whenever possible to convert to JSON.
+        /// 
+        /// http://james.newtonking.com/projects/json/help/
+        /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+        /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+        /// </summary>
+        public class EnsembleDataSetSerializer : JsonConverter
+        {
+            /// <summary>
+            /// Write the JSON string.  This will convert all the properties to a JSON string.
+            /// This is done manaully to improve conversion time.  The default serializer will check
+            /// each property if it can convert.  This will convert the properties automatically.  This
+            /// will double the speed.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EnsembleData).
+            /// 
+            /// </summary>
+            /// <param name="writer">JSON Writer.</param>
+            /// <param name="value">Object to write to JSON.</param>
+            /// <param name="serializer">Serializer to convert the object.</param>
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                // Cast the object
+                var data = value as EnsembleDataSet;
+
+                // Start the object
+                writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
+                writer.WriteStartObject();                      // Start the JSON object
+
+                // Write the base values
+                writer.WriteRaw(data.ToJsonBaseStub());
+                writer.WriteRaw(",");
+
+                // EnsembleNumber
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_ENSEMBLENUMBER);
+                writer.WriteValue(data.EnsembleNumber);
+
+                // NumBins
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_NUMBINS);
+                writer.WriteValue(data.NumBins);
+
+                // NumBeams
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_NUMBEAMS);
+                writer.WriteValue(data.NumBeams);
+
+                // DesiredPingCount
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DESIREDPINGCOUNT);
+                writer.WriteValue(data.DesiredPingCount);
+
+                // ActualPingCount
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_ACTUALPINGCOUNT);
+                writer.WriteValue(data.ActualPingCount);
+
+                // SysSerialNumber
+                writer.WritePropertyName(DataSet.BaseDataSet.STR_JSON_SERIALNUMBER_SERIALNUMBERSTRING);
+                writer.WriteValue(data.SysSerialNumber.SerialNumberString);
+
+                // Firmware Major 
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_FIRMWAREMAJOR);
+                writer.WriteValue(data.SysFirmware.FirmwareMajor);
+
+                // Firmware Minor
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_FIRMWAREMINOR);
+                writer.WriteValue(data.SysFirmware.FirmwareMinor);
+
+                // Firmware Revision
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_FIRMWAREREVISION);
+                writer.WriteValue(data.SysFirmware.FirmwareRevision);
+
+                // Firmware SubsystemCode
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SUBSYSTEMCODE);
+                writer.WriteValue(data.SysFirmware.SubsystemCode);
+
+                // Subsystem Index
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_INDEX);
+                writer.WriteValue(data.SubsystemConfig.SubSystem.Index);
+
+                // Subsystem Code
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_CODE);
+                writer.WriteValue(data.SubsystemConfig.SubSystem.Code);
+
+                // SubsystemConfiguration ConfigNumber
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_CONFIGNUMBER);
+                writer.WriteValue(data.SubsystemConfig.ConfigNumber);
+
+                // Status Value
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_STATUS);
+                writer.WriteValue(data.Status.Value);
+
+                // Year
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_YEAR);
+                writer.WriteValue(data.Year);
+
+                // Month
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_MONTH);
+                writer.WriteValue(data.Month);
+
+                // Day
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DAY);
+                writer.WriteValue(data.Day);
+
+                // Hour
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_HOUR);
+                writer.WriteValue(data.Hour);
+
+                // Minute
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_MINUTE);
+                writer.WriteValue(data.Minute);
+
+                // Second
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SECOND);
+                writer.WriteValue(data.Second);
+
+                // HSec
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_HSEC);
+                writer.WriteValue(data.HSec);
+
+                // End the object
+                writer.WriteEndObject();
+            }
+
+            /// <summary>
+            /// Read the JSON object and convert to the object.  This will allow the serializer to
+            /// automatically convert the object.  No special instructions need to be done and all
+            /// the properties found in the JSON string need to be used.
+            /// 
+            /// DataSet.EnsembleDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EnsembleDataSet}(encodedEns)
+            /// 
+            /// </summary>
+            /// <param name="reader">NOT USED. JSON reader.</param>
+            /// <param name="objectType">NOT USED> Type of object.</param>
+            /// <param name="existingValue">NOT USED.</param>
+            /// <param name="serializer">Serialize the object.</param>
+            /// <returns>Serialized object.</returns>
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (reader.TokenType != JsonToken.Null)
+                {
+                    // Load the object
+                    JObject jsonObject = JObject.Load(reader);
+
+                    // Decode the data
+                    int NumElements = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMELEMENTS];
+                    int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
+
+                    // EnsembleNumber
+                    int EnsembleNumber = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ENSEMBLENUMBER];
+
+                    // NumBins
+                    int NumBins = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMBINS];
+
+                    // NumBeams
+                    int NumBeams = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_NUMBEAMS];
+
+                    // DesiredPingCount
+                    int DesiredPingCount = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_DESIREDPINGCOUNT];
+
+                    // ActualPingCount
+                    int ActualPingCount = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ACTUALPINGCOUNT];
+
+                    // SysSerialNumber
+                    SerialNumber SysSerialNumber = new SerialNumber((string)jsonObject[DataSet.BaseDataSet.STR_JSON_SERIALNUMBER_SERIALNUMBERSTRING]);
+
+                    // SysFirmware
+                    ushort major = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_FIRMWAREMAJOR];
+                    ushort minor = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_FIRMWAREMINOR];
+                    ushort rev = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_FIRMWAREREVISION];
+                    byte code = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_SUBSYSTEMCODE].ToObject<byte>();
+                    Firmware SysFirmware = new Firmware(code, major, minor, rev);
+
+                    // SubsystemConfig
+                    ushort index = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_INDEX];
+                    byte ssCode = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_CODE].ToObject<byte>();
+                    byte configNum = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_CONFIGNUMBER].ToObject<byte>();
+                    SubsystemConfiguration SubsystemConfig = new SubsystemConfiguration(new Subsystem(ssCode, index), configNum);
+
+                    // Status
+                    Status status = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS]);
+
+                    // Year
+                    int Year = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_YEAR];
+
+                    // Month
+                    int Month = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_MONTH];
+
+                    // Day
+                    int Day = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_DAY];
+
+                    // Hour
+                    int Hour = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_HOUR];
+
+                    // Minute
+                    int Minute = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_MINUTE];
+
+                    // Second
+                    int Second = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_SECOND];
+
+                    // HSec
+                    int HSec = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_HSEC];
+
+                    // Create the object
+                    // Need to call the constructor to create
+                    // the correct EnsDateTime and UniqueID
+                    var data = new EnsembleDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.EnsembleDataID,
+                                                    EnsembleNumber, NumBins, NumBeams, DesiredPingCount, ActualPingCount,
+                                                    SysSerialNumber, SysFirmware, SubsystemConfig, status,
+                                                    Year, Month, Day, Hour, Minute, Second, HSec);
+
+                    return data;
+                }
+
+                return null;
+            }
+
+            /// <summary>
+            /// Check if the given object is the correct type.
+            /// </summary>
+            /// <param name="objectType">Object to convert.</param>
+            /// <returns>TRUE = object given is the correct type.</returns>
+            public override bool CanConvert(Type objectType)
+            {
+                return typeof(EnsembleDataSet).IsAssignableFrom(objectType);
             }
         }
     }

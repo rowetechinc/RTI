@@ -60,6 +60,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace RTI
 {
@@ -329,11 +331,12 @@ namespace RTI
         /// information about the system including
         /// the electronics, sub-systems and serial number.
         /// </summary>
-        /// <param name="serialNum">String of the serial number.</param>
-        public SerialNumber(string serialNum)
+        /// <param name="SerialNumberString">String of the serial number.</param>
+        [JsonConstructor]
+        public SerialNumber(string SerialNumberString)
         {
             // Set the serial number based off a string given
-            SetSerialNumberString(serialNum);
+            SetSerialNumberString(SerialNumberString);
         }
 
         /// <summary>

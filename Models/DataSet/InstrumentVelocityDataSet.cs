@@ -33,16 +33,18 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 09/01/2011      RC                     Initial coding
- * 10/04/2011      RC                     Added GoodBeamBinList to display text.
- *                                         Added method to populate the list.
+ * 10/04/2011      RC                     Added InstrumentVelocityBinList to display text.
+ *                                        Added method to populate the list.
+ * 10/05/2011      RC                     Round ranges to display and look for bad velocity
  * 10/25/2011      RC                     Added new constructor that takes no data and made CreateBinList public.
- * 12/07/2011      RC          1.08       Remove BinList     
+ * 12/07/2011      RC          1.08       Remove BinList
  * 12/09/2011      RC          1.09       Make orientation a parameter with a default value.
  * 01/19/2012      RC          1.14       Added Encode() to create a byte array of data.
  *                                         Removed "private set".
  *                                         Rename Decode methods to Decode().
- * 01/23/2012      RC          1.14       Fixed Encode to convert to int to byte array.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
+ * 06/20/2012      RC          2.12       Added IsBinGood().
+ * 06/21/2012      RC          2.12       Add 3 beam solution option in IsBinGood().
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
  * 
@@ -51,31 +53,27 @@
 using System.Data;
 using System;
 using System.ComponentModel;
-using Newtonsoft.Json;
 using System.Text;
 using System.IO;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 namespace RTI
 {
     namespace DataSet
     {
         /// <summary>
-        /// Data set containing all the Good Beam data.
+        /// Data set containing all the Instrument Velocity data.
         /// </summary>
-        [JsonConverter(typeof(GoodBeamDataSetSerializer))]
-        public class GoodBeamDataSet : BaseDataSet
+        [JsonConverter(typeof(InstrumentVelocityDataSetSerializer))]
+        public class InstrumentVelocityDataSet : BaseDataSet
         {
-            #region Properties
-
             /// <summary>
-            /// Store all the Good Beam data for the ADCP.
+            /// Store all the InstrumentVelocity velocity data for the ADCP.
             /// </summary>
-            public int[,] GoodBeamData { get; set; }
-
-            #endregion
+            public float[,] InstrumentVelocityData { get; set; }
 
             /// <summary>
-            /// Create an Good Beam data set.
+            /// Create an Instrument Velocity data set.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
             /// <param name="numBins">Number of Bin</param>
@@ -83,15 +81,15 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            public GoodBeamDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
+            public InstrumentVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
-                GoodBeamData = new int[NumElements, ElementsMultiplier];
+                InstrumentVelocityData = new float[NumElements, ElementsMultiplier];
             }
 
             /// <summary>
-            /// Create an Good Beam data set.  Include all the information to
+            /// Create an Instrument Velocity data set.  Include all the information to
             /// create the data set.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
@@ -100,20 +98,20 @@ namespace RTI
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            /// <param name="goodBeamData">Byte array containing Good Beam data</param>
-            public GoodBeamDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] goodBeamData) :
+            /// <param name="velocityData">Byte array containing Instrument Velocity data</param>
+            public InstrumentVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize data
-                GoodBeamData = new int[NumElements, ElementsMultiplier];
+                InstrumentVelocityData = new float[NumElements, ElementsMultiplier];
 
-                // Decode the byte array for Good Beam data
-                Decode(goodBeamData);
+                // Decode the byte array for velocity data
+                Decode(velocityData);
             }
 
             /// <summary>
-            /// Create an Good Beam data set.  Intended for JSON  deserialize.  This method
-            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodBeamDataSet}(json) is
+            /// Create an Instrument Velocity data set.  Intended for JSON  deserialize.  This method
+            /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.InstrumentVelocityDataSet}(json) is
             /// called.
             /// 
             /// DeserializeObject is slightly faster then passing the string to the constructor.
@@ -121,7 +119,7 @@ namespace RTI
             /// 181ms for JSON string constructor.
             /// 
             /// Alternative to decoding manually is to use the command:
-            /// DataSet.GoodBeamDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodBeamDataSet}(json); 
+            /// DataSet.InstrumentVelocityDataSet decoded = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.InstrumentVelocityDataSet}(json); 
             /// 
             /// To use this method for JSON you must have all the parameters match all the properties in this object.
             /// 
@@ -132,21 +130,21 @@ namespace RTI
             /// <param name="Imag"></param>
             /// <param name="NameLength">Length of name</param>
             /// <param name="Name">Name of data type</param>
-            /// <param name="GoodBeamData">2D Array containing Beam velocity data. [Bin, Beam]</param>
+            /// <param name="InstrumentVelocityData">2D Array containing Instrument velocity data. [Bin, Beam]</param>
             [JsonConstructor]
-            private GoodBeamDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name, int[,] GoodBeamData) :
+            private InstrumentVelocityDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name, float[,] InstrumentVelocityData) :
                 base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
                 // Initialize data
-                this.GoodBeamData = GoodBeamData;
+                this.InstrumentVelocityData = InstrumentVelocityData;
             }
 
             /// <summary>
-            /// Get all the Good Beam ranges for each beam and Bin.
+            /// Get all the InstrumentVelocity velocity ranges for each beam and Bin.
             /// 
-            /// I changed the order from what the data is stored as and now make it Bin and Beams.
+            /// I changed the order from what the data is stored as and now make it Bin y Beams.
             /// </summary>
-            /// <param name="dataType">Byte array containing the Good Beam data type.</param>
+            /// <param name="dataType">Byte array containing the BeamVelocity data type.</param>
             private void Decode(byte[] dataType)
             {
                 int index = 0;
@@ -155,7 +153,7 @@ namespace RTI
                     for (int bin = 0; bin < NumElements; bin++)
                     {
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        GoodBeamData[bin, beam] = MathHelper.ByteArrayToInt32(dataType, index);
+                        InstrumentVelocityData[bin, beam] = MathHelper.ByteArrayToFloat(dataType, index);
                     }
                 }
             }
@@ -190,7 +188,7 @@ namespace RTI
                     {
                         // Get the index for the next element and add to the array
                         index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                        System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(GoodBeamData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocityData[bin, beam]), 0, result, index, Ensemble.BYTES_IN_FLOAT);
                     }
                 }
 
@@ -198,7 +196,33 @@ namespace RTI
             }
 
             /// <summary>
-            /// Override the ToString to return all the Good Beam data as a string.
+            /// Return whether any of the Instrument Velocity values are bad.
+            /// If one is bad, they are all bad.  This will check the given bin.
+            /// If we do not allow 3 Beam solution and Q is bad, then all is bad.
+            /// </summary>
+            /// <param name="bin">Bin to check.</param>
+            /// <param name="allow3BeamSolution">Allow a 3 Beam solution. Default = true</param>
+            /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
+            public bool IsBinGood(int bin, bool allow3BeamSolution = true)
+            {
+                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                if (InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                {
+                    return false;
+                }
+
+                if (InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            /// <summary>
+            /// Override the ToString to return all the velocity data as a string.
             /// </summary>
             /// <returns></returns>
             public override string ToString()
@@ -206,10 +230,10 @@ namespace RTI
                 string s = "";
                 for (int bin = 0; bin < NumElements; bin++)
                 {
-                    s += "GB Bin: " + bin + "\t";
+                    s += "I Bin: " + bin + "\t";
                     for (int beam = 0; beam < ElementsMultiplier; beam++)
                     {
-                        s += "\t" + beam + ": " + GoodBeamData[bin, beam];
+                        s += "\t" + beam + ": " + InstrumentVelocityData[bin, beam];
                     }
                     s += "\n";
                 }
@@ -221,10 +245,10 @@ namespace RTI
         /// <summary>
         /// Convert this object to a JSON object.
         /// Calling this method is twice as fast as calling the default serializer:
-        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodBeamData).
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.InstrumentVelocityData).
         /// 
-        /// 38ms for this method.
-        /// 50ms for calling SerializeObject default.
+        /// 50ms for this method.
+        /// 100ms for calling SerializeObject default.
         /// 
         /// Use this method whenever possible to convert to JSON.
         /// 
@@ -232,7 +256,7 @@ namespace RTI
         /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
         /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
         /// </summary>
-        public class GoodBeamDataSetSerializer : JsonConverter
+        public class InstrumentVelocityDataSetSerializer : JsonConverter
         {
             /// <summary>
             /// Write the JSON string.  This will convert all the properties to a JSON string.
@@ -240,7 +264,7 @@ namespace RTI
             /// each property if it can convert.  This will convert the properties automatically.  This
             /// will double the speed.
             /// 
-            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GoodBeamData).
+            /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.InstrumentVelocityData).
             /// 
             /// </summary>
             /// <param name="writer">JSON Writer.</param>
@@ -249,7 +273,7 @@ namespace RTI
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
                 // Cast the object
-                var data = value as GoodBeamDataSet;
+                var data = value as InstrumentVelocityDataSet;
 
                 // Start the object
                 writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
@@ -263,16 +287,16 @@ namespace RTI
                 // Write the float[,] array data
                 // This will be an array of arrays
                 // Each array element will contain an array with the 4 beam's value
-                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_GOODBEAMDATA);
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_INSTRUMENTVELOCITYDATA);
                 writer.WriteStartArray();
                 for (int bin = 0; bin < data.NumElements; bin++)
                 {
                     // Write an array of float values for each beam's value
                     writer.WriteStartArray();
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+                    writer.WriteValue(data.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
+                    writer.WriteValue(data.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
+                    writer.WriteValue(data.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
+                    writer.WriteValue(data.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
                     writer.WriteEndArray();
                 }
                 writer.WriteEndArray();
@@ -286,7 +310,7 @@ namespace RTI
             /// automatically convert the object.  No special instructions need to be done and all
             /// the properties found in the JSON string need to be used.
             /// 
-            /// DataSet.GoodBeamDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.GoodBeamDataSet}(encodedEns)
+            /// DataSet.InstrumentVelocityDataSet decodedEns = Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.InstrumentVelocityDataSet}(encodedEns)
             /// 
             /// </summary>
             /// <param name="reader">NOT USED. JSON reader.</param>
@@ -306,11 +330,11 @@ namespace RTI
                     int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
 
                     // Create the object
-                    var data = new GoodBeamDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.GoodBeamID);
-                    data.GoodBeamData = new int[NumElements, ElementsMultiplier];
+                    var data = new InstrumentVelocityDataSet(DataSet.Ensemble.DATATYPE_FLOAT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.InstrumentVelocityID);
+                    data.InstrumentVelocityData = new float[NumElements, ElementsMultiplier];
 
                     // Decode the 2D array 
-                    JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_GOODBEAMDATA];
+                    JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_INSTRUMENTVELOCITYDATA];
                     if (jArray.Count <= NumElements)                                                            // Verify size
                     {
                         for (int bin = 0; bin < jArray.Count; bin++)
@@ -320,7 +344,7 @@ namespace RTI
                             {
                                 for (int beam = 0; beam < arrayData.Count; beam++)
                                 {
-                                    data.GoodBeamData[bin, beam] = (int)arrayData[beam];
+                                    data.InstrumentVelocityData[bin, beam] = (float)arrayData[beam];
                                 }
                             }
                         }
@@ -339,7 +363,7 @@ namespace RTI
             /// <returns>TRUE = object given is the correct type.</returns>
             public override bool CanConvert(Type objectType)
             {
-                return typeof(GoodBeamDataSet).IsAssignableFrom(objectType);
+                return typeof(InstrumentVelocityDataSet).IsAssignableFrom(objectType);
             }
         }
     }

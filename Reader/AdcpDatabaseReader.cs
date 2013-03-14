@@ -37,6 +37,8 @@
  *                                         Changed how PopulateCache() query for the data.
  * 05/29/2012      RC          2.11       Added GetEnsembles() to read in a set of ensembles.
  * 06/12/2012      RC          2.11       Added GetFirstEnsemble().
+ * 03/06/2013      RC          2.18       Changed the format of the database.
+ * 03/08/2013      RC          2.18       Removed cache and added an SQLiteConnection to improve performance.
  * 
  */
 namespace RTI
@@ -46,11 +48,13 @@ namespace RTI
     using System.Linq;
     using System.Text;
     using System.ComponentModel;
+    using log4net;
+    using System.Data.SQLite;
 
     /// <summary>
-    /// Cache the data from the database.  Reading in data from the database is slow.
-    /// This will cache a number of ensembles so reading can be done from the cache and
-    /// the IO processing of reading the database can be done in the background.
+    /// Read the data from the Project SQLite database.  This will
+    /// read the data from the database and then parse it to an 
+    /// ensemble.
     /// </summary>
     public class AdcpDatabaseReader
     {
@@ -58,37 +62,9 @@ namespace RTI
         #region Variables
 
         /// <summary>
-        /// Cache to hold the data.  This will reduce
-        /// the time to playback an ensemble.  The time
-        /// to query the database is high and the cache
-        /// allows the query to be done in the future.
-        /// </summary>
-        private Cache<long, DataSet.Ensemble> _cache;
-
-        /// <summary>
-        /// Flag that caching is in progress.
-        /// This will prevent caching from being
-        /// duplicated at the same time.
-        /// </summary>
-        private volatile bool _cacheInProgress;
-
-        /// <summary>
-        /// Size of the cache.
-        /// </summary>
-        private const int CACHE_SIZE = 100;
-
-        /// <summary>
         /// Parse data retrieved from the sqlite database.
         /// </summary>
         private AdcpDatabaseCodec _adcpDbCodec;
-
-        /// <summary>
-        /// Keep track of the previous
-        /// index to determine if a jump occurs.
-        /// A jump is when the index falls outside
-        /// the cached area.
-        /// </summary>
-        private long _prevIndex;
 
         /// <summary>
         /// Check if the project has changed.
@@ -96,6 +72,13 @@ namespace RTI
         /// clear the cache.
         /// </summary>
         private Project _prevProject;
+
+        /// <summary>
+        /// Connection to the SQLite database.
+        /// As the project changes, this will need to be
+        /// opened and closed.
+        /// </summary>
+        private SQLiteConnection _cnn;
 
         #endregion
 
@@ -107,11 +90,9 @@ namespace RTI
             // Setup the codec
             _adcpDbCodec = new AdcpDatabaseCodec();
 
-            // Setup the cache
-            _cacheInProgress = false;
-            _cache = new Cache<long, DataSet.Ensemble>(CACHE_SIZE);
-            _prevIndex = 0;
+            // Initialize values
             _prevProject = null;
+            _cnn = null;
         }
 
         /// <summary>
@@ -119,6 +100,9 @@ namespace RTI
         /// </summary>
         public void Shutdown()
         {
+            // Close the project sqlite connection
+            CloseConnection();
+
             // Shutdown the codec
             _adcpDbCodec.Shutdown();
         }
@@ -138,8 +122,11 @@ namespace RTI
                 // Check if the cache needs to be cleared for a new project
                 if (_prevProject == null || project != _prevProject)
                 {
+                    // Set the project
                     _prevProject = project;
-                    ClearCache();
+
+                    // Open connection to the database
+                    OpenConnection(project);
                 }
 
                 // Get the ensemble from the
@@ -154,7 +141,9 @@ namespace RTI
         /// <summary>
         /// Get a fixed number of ensembles starting at index from the project.
         /// This will open the database for the given project.   It will then read
-        /// the ensemble starting at index.
+        /// the ensemble starting at index.  
+        /// 
+        /// The index starts with 1 in the database.
         /// </summary>
         /// <param name="project">Project to read data.</param>
         /// <param name="index">Start location.</param>
@@ -196,7 +185,7 @@ namespace RTI
                 }
             }
 
-                return ensemble;
+            return ensemble;
         }
 
         /// <summary>
@@ -238,47 +227,16 @@ namespace RTI
         /// update the cache with the next
         /// </summary>
         /// <param name="project">Project to get the data.</param>
-        /// <param name="index"></param>
+        /// <param name="index">Row ID of the data.</param>
         /// <returns>Ensemble read from the database or cache.</returns>
         private DataSet.Ensemble ReadEnsemble(Project project, long index)
         {
-            // Check if the cache has not been populated
-            if (_cache.Count() <= 0)
-            {
-                PopulateCache(project, index);
-            }
-
-            // Store the index
-            _prevIndex = index;
-
             // Use a background worker to get
             // the ensemble.
             if (project != null)
             {
-                // Try to get the data from the cache, if not in cache, query for data
-                DataSet.Ensemble data = _cache.Get(index);
-                if (data == null)
-                {
-                    // Query for ensemble data
-                    data = _adcpDbCodec.QueryForDataSet(project, index);
-
-                    //// Check if a jump occured
-                    //// A jump is when the index is outside
-                    //// the cached area
-                    //if (index > (CACHE_SIZE / 2))
-                    //{
-                    //    if (index > _prevIndex + (CACHE_SIZE / 2) ||
-                    //        index < _prevIndex - (CACHE_SIZE / 2))
-                    //    {
-                    //        // Jump occured
-                    //        //PopulateCache(index);
-                    //    }
-                    //}
-                }
-
-
-                // Update the cache
-                UpdateCache(project, index);
+                // Query for ensemble data
+                DataSet.Ensemble data = _adcpDbCodec.QueryForDataSet(_cnn, project, index);
 
                 // Disturbute the dataset to all subscribers
                 if (data != null)
@@ -294,90 +252,42 @@ namespace RTI
 
         #endregion
 
-        #region Cache
+        #region Open/Close Database Connection
 
         /// <summary>
-        /// The cache did not have a value, 
-        /// so update the cache with the last index plus the next 
-        /// number of values up the maximum size of the cache.
-        /// The cache will start be caching half the size of the cache.  It
-        /// will then be a moving cache with the first half of the cache
-        /// with previous data and the second half of the cache with 
-        /// new data.
+        /// Open a connection to the SQLite database.
+        /// This will check if the givn project is valid and
+        /// is new.  If the project has changed, then open a 
+        /// connection.  If the project is the same, then do
+        /// not open a new connection.  It should already be
+        /// open.
         /// </summary>
-        /// <param name="project">Project to get the data.</param>
-        /// <param name="startIndex">Start Index used to know where to start cacheing.</param>
-        private void PopulateCache(Project project, long startIndex)
+        /// <param name="project">Project to open.</param>
+        private void OpenConnection(Project project)
         {
-            if (!_cacheInProgress)
+            if (project != null)
             {
-                BackgroundWorker worker = new BackgroundWorker();
-                worker.DoWork += delegate(object s, DoWorkEventArgs args)
-                {
-                    _cacheInProgress = true;
+                // Close the previous connection if it is open
+                CloseConnection();
 
-                    // Set the cache for the project
-                    _cache = _adcpDbCodec.QueryForDataSet(project, startIndex, CACHE_SIZE);
-
-                    _cacheInProgress = false;
-                };
-                worker.RunWorkerAsync();
+                // Open a new connection
+                _cnn = DbCommon.OpenProjectDB(project);
             }
+
         }
 
         /// <summary>
-        /// Update the cache with a new entry
-        /// based off the current position.
-        /// The cache is moving with half the cache
-        /// holding the previous ensembles from current location
-        /// and the other half holding future ensembles from 
-        /// the current location.
+        /// Close the connect to the SQLite database.
         /// </summary>
-        /// <param name="project">Project to get the data.</param>
-        /// <param name="index">Current position of playback.</param>
-        private void UpdateCache(Project project, long index)
+        private void CloseConnection()
         {
-            BackgroundWorker workerCache = new BackgroundWorker();
-            workerCache.DoWork += delegate(object sCache, DoWorkEventArgs argsCache)
+            // Close the previous connection if it is open
+            if (_cnn != null)
             {
-                // Keep adding new data to the cache if it is good
-                CacheData(project, index + CACHE_SIZE / 2);
-            };
-            workerCache.RunWorkerAsync();
-        }
-
-        /// <summary>
-        /// Get the data from the database.
-        /// Then add it to the cache.
-        /// The cache will evict old data.
-        /// </summary>
-        /// <param name="project">Project to get the data.</param>
-        /// <param name="index">Index of the database.</param>
-        private void CacheData(Project project, long index)
-        {
-            // Get the data fromm the database.
-            DataSet.Ensemble data = _adcpDbCodec.QueryForDataSet(project, index);
-
-            if (data != null)
-            {
-                // Add to cache
-                _cache.Add(index, data);
-
-                // Add the data to the average manager
-                //_avgMgr.AddEnsemble(data);
+                _cnn.Close();
             }
-        }
-
-        /// <summary>
-        /// Clear the cache.
-        /// </summary>
-        private void ClearCache()
-        {
-            // Clear the cache
-            _cache.Clear();
         }
 
         #endregion
-
     }
 }

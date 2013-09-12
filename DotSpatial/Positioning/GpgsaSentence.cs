@@ -294,20 +294,27 @@ namespace DotSpatial.Positioning
 
             #region Fixed satellites
 
-            if (wordCount >= 3)
+            try
             {
-                // The sentence supports up to 12 satellites
-                _fixedSatellites = new List<Satellite>(12);
+                if (wordCount >= 3)
+                {
+                    // The sentence supports up to 12 satellites
+                    _fixedSatellites = new List<Satellite>(12);
 
-                // Get each satellite PRN number
-                int count = wordCount < 14 ? wordCount : 14;
-                for (int index = 2; index < count; index++)
-                    // Is the word empty?
-                    if (words[index].Length != 0)
-                        // No.  Add a satellite
-                        _fixedSatellites.Add(
-                            // We'll only have an empty object for now
-                            new Satellite(int.Parse(words[index], NmeaCultureInfo)));
+                    // Get each satellite PRN number
+                    int count = wordCount < 14 ? wordCount : 14;
+                    for (int index = 2; index < count; index++)
+                        // Is the word empty?
+                        if (words[index].Length != 0)
+                            // No.  Add a satellite
+                            _fixedSatellites.Add(
+                                // We'll only have an empty object for now
+                                new Satellite(int.Parse(words[index], NmeaCultureInfo)));
+                }
+            }
+            catch (System.Exception)
+            {
+
             }
 
             #endregion Fixed satellites

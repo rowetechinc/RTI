@@ -70,6 +70,15 @@
  * 10/19/2012      RC          2.15       Remove the Download watchdog.
  * 12/11/2012      RC          2.17       In SetSystemDateTime(), wait about 5 seconds after setting the ADCP time.
  * 01/23/2013      RC          2.17       Added the Reboot() command.
+ * 04/30/2013      RC          2.19       Added ability to scan for serial ports with an ADCP connected.
+ * 05/03/2013      RC          2.19       Fixed BUG in ScanSerialConnection() where the serial connection was not shutdown after scanning and cause the read thread to remain alive.
+ * 05/06/2013      RC          2.19       Added the class AdcpSerialOptions.  Make the ScanSerialConnection() return a list of AdcpSerialOptions.
+ * 05/17/2013      RC          2.19       Added ToString().
+ *                                         Changed SetSystemDateTime() to SetLocalSystemDateTime().  Added SetUtcSystemDateTime().
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 07/31/2013      RC          2.19.3     Add flag properties to know what mode the ADCP connection is in.
+ * 08/14/2013      RC          2.19.4     Added a wait state in TestSerialBaudConnection() to allow the BREAK response get received.
+ * 08/28/2013      RC          2.19.5     In TestSerialBaudConnection(), limited the baud rates to test.
  * 
  */
 
@@ -79,6 +88,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
+using RTI.Commands;
 using log4net;
 using System.Timers;
 
@@ -124,6 +134,69 @@ namespace RTI
             /// Send a file to the ADCP.
             /// </summary>
             UPLOAD
+        }
+
+        #endregion
+
+        #region AdcpSerialOptions
+
+        /// <summary>
+        /// This class of options will include the
+        /// serial options and any additional 
+        /// options that are particular to an ADCP.
+        /// This includes serial numbers, ...
+        /// </summary>
+        public class AdcpSerialOptions
+        {
+
+            #region Properties
+
+            /// <summary>
+            /// Serial options for the ADCP.
+            /// </summary>
+            public SerialOptions SerialOptions { get; set; }
+
+            /// <summary>
+            /// Serial number for the ADCP.
+            /// </summary>
+            public SerialNumber SerialNumber { get; set; }
+
+            /// <summary>
+            /// String of all the hardware.
+            /// </summary>
+            public string Hardware { get; set; }
+
+            /// <summary>
+            /// Firmware version.
+            /// </summary>
+            public Firmware Firmware { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize all the values.
+            /// </summary>
+            public AdcpSerialOptions()
+            {
+                SerialOptions = new SerialOptions();
+                SerialNumber = new SerialNumber();
+                Hardware = "";
+                Firmware = new Firmware();
+            }
+
+            /// <summary>
+            /// Display the object to a string.
+            /// </summary>
+            /// <returns>String of the object.</returns>
+            public override string ToString()
+            {
+                string result = SerialNumber.ToString() + ";";
+                result += " " + SerialOptions.ToString() + ";";
+                result += " FW: " + Firmware.ToString() + ";";
+                result += " HW: " + Hardware;
+
+                return result;
+            }
         }
 
         #endregion
@@ -296,6 +369,39 @@ namespace RTI
         /// </summary>
         public AdcpSerialModes Mode { get; set; }
 
+        /// <summary>
+        /// Flag if the ADCP is in ADCP mode.
+        /// This is the standard mode.
+        /// </summary>
+        public bool IsAdcpMode
+        {
+            get { return Mode == AdcpSerialModes.ADCP; }
+        }
+
+        /// <summary>
+        /// Flag if the ADCP is in compass mode.
+        /// </summary>
+        public bool IsCompassMode
+        {
+            get { return Mode == AdcpSerialModes.COMPASS; }
+        }
+
+        /// <summary>
+        /// Flag if the ADCP is in Download mode.
+        /// </summary>
+        public bool IsDownloadMode
+        {
+            get { return Mode == AdcpSerialModes.DOWNLOAD; }
+        }
+
+        /// <summary>
+        /// Flag if the ADCP is in Upload mode.
+        /// </summary>
+        public bool IsUploadMode
+        {
+            get { return Mode == AdcpSerialModes.UPLOAD; }
+        }
+
         #endregion
 
         /// <summary>
@@ -313,7 +419,7 @@ namespace RTI
         /// <summary>
         /// Shutdown the object.
         /// </summary>
-        protected override void SubShutdown()
+        protected override void SubDispose()
         {
             // Close any previous binary writers
             CloseBinaryWriter();
@@ -394,84 +500,7 @@ namespace RTI
 
         #region XModem Download
 
-        /// <summary>
-        /// Download the list of file from the ADCP.  A command
-        /// is sent to give the listing of all the files on the ADCP.
-        /// Store the results to _dirListingString.  This is done
-        /// by subscribing to the serial output.  Then send the command.
-        /// Receive all the lines from the serial output until it finds
-        /// the end of the command.  Then unsubscribe to receive
-        /// serial output.
-        /// </summary>
-        private void DownloadDirectoryListing()
-        {
-            int TIMEOUT = 20;
-            
-            // Clear the buffer
-            ReceiveBufferString = "";
-            _dirListingString = "";
-            
-            // Subscribe to receive serial string data
-            this.ReceiveSerialData += new ReceiveSerialDataEventHandler(GetDirListing_ReceiveSerialData);
-            
-            if (IsAvailable())
-            {
-                // Send the command to get the directory listing
-                SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DSDIR));
-            
-                // Added an extra wait to Wait for response
-                Thread.Sleep(WAIT_STATE);
-            }
-            
-            // Wait for the complete list
-            // "Used Space: ..." is the last line
-            // Check ReceiveBufferString and not _dirListingString because it is a smaller string
-            while ( ReceiveBufferString.IndexOf("Used Space:") <= 0)
-            {
-                Thread.Sleep(WAIT_STATE * 2);
-            
-                // Stop looking after timeout has occured
-                if (TIMEOUT <= 0)
-                {
-                    break;
-                }
-                TIMEOUT--;
-            }
-            
-            // Unsubscribe from the event
-            this.ReceiveSerialData -= GetDirListing_ReceiveSerialData;
-        }
 
-        /// <summary>
-        /// Send the command to display the Directory listing.
-        /// Then return the results from the serial display.
-        /// </summary>
-        /// <returns>List of the directory files.</returns>
-        public RTI.Commands.AdcpDirListing GetDirectoryListing()
-        {
-            // Download the directory listing to _dirListingString
-            DownloadDirectoryListing();
-
-            // Filter the list of directories
-            RTI.Commands.AdcpDirListing dirListing = RTI.Commands.AdcpCommands.DecodeDSDIR(_dirListingString);
-
-            // Clear the string
-            _dirListingString = "";
-
-            // Return the content of the buffer
-            return dirListing;
-        }
-
-        /// <summary>
-        /// Event handler for serial data as a string.
-        /// This will populate the directory string with incoming data.
-        /// </summary>
-        /// <param name="data">Incoming data from serial port as a string.</param>
-        private void GetDirListing_ReceiveSerialData(string data)
-        {
-            // Store the directory listing
-            _dirListingString += data;
-        }
 
         /// <summary>
         /// Clear the input buffer of any commands.
@@ -1747,13 +1776,23 @@ namespace RTI
         /// return that a command could not be set.
         /// </summary>
         /// <returns>TRUE = All commands sent. FALSE = 1 or more commands could not be sent.</returns>
-        public bool StartPinging()
+        public bool StartPinging(bool UseLocal = true)
         {
             bool timeResult = false;
             bool pingResult = false;
 
-            // Try to send the command, if it fails try again
-            timeResult = SetSystemDateTime();
+            // Try to send the command to set the time, if it fails try again
+            // The user can choose to set local or UTC time
+            if (UseLocal)
+            {
+                // Local
+                timeResult = SetLocalSystemDateTime();
+            }
+            else
+            {
+                // UTC time
+                timeResult = SetUtcSystemDateTime();
+            }
 
             // Try to send the command, if it fails try again
             pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
@@ -1794,21 +1833,26 @@ namespace RTI
             return stopResult;
         }
 
+        #endregion
+
+        #region STIME
+
+
         /// <summary>
         /// Set the system time to the ADCP.  This will use the time
-        /// currently set on the computer running this command.  This includes
+        /// currently set on the computer.  This includes
         /// the time and date.
         /// </summary>
         /// <returns>TRUE = DateTime set.</returns>
-        public bool SetSystemDateTime()
+        public bool SetLocalSystemDateTime()
         {
             bool timeResult = false;
 
             // Try to send the command, if it fails try again
-            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetTimeCommand(), TIMEOUT);
+            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetLocalSystemTimeCommand(), TIMEOUT);
             if (!timeResult)
             {
-                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetTimeCommand(), TIMEOUT);
+                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetLocalSystemTimeCommand(), TIMEOUT);
             }
 
             // Allow some time for the ADCP to set the time
@@ -1816,6 +1860,53 @@ namespace RTI
             System.Threading.Thread.Sleep(WAIT_STATE * 20);
 
             return timeResult;
+        }
+
+        /// <summary>
+        /// Set the UTC time to the ADCP.  This will use the time
+        /// currently set on the computer, then convert it to UTC time.  This includes
+        /// the time and date.
+        /// </summary>
+        /// <returns>TRUE = DateTime set.</returns>
+        public bool SetUtcSystemDateTime()
+        {
+            bool timeResult = false;
+
+            // Try to send the command, if it fails try again
+            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetGmtSystemTimeCommand(), TIMEOUT);
+            if (!timeResult)
+            {
+                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetGmtSystemTimeCommand(), TIMEOUT);
+            }
+
+            // Allow some time for the ADCP to set the time
+            // Wait about 5 seconds
+            System.Threading.Thread.Sleep(WAIT_STATE * 20);
+
+            return timeResult;
+        }
+
+        /// <summary>
+        /// Get the Date and Time from the ADCP.
+        /// It will be unknown if this time is UTC
+        /// or Local.  So DateTime.Kind will be unspecified.
+        /// </summary>
+        /// <returns>DateTime from the ADCP.</returns>
+        public DateTime GetAdcpDateTime()
+        {
+            // Now get the time and verify it is within 1 second of the previous time
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send STIME to get the time
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_STIME));
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
+                                                        // Get the current date and time
+            DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
+
+            return adcpDt;
         }
 
         #endregion
@@ -2573,25 +2664,85 @@ namespace RTI
         /// within a second of each other.  So if ADCP time is before 
         /// </summary>
         /// <returns>Result of the test.</returns>
-        public SystemTestResult SysTestRtcTime()
+        public SystemTestResult SysTestRtcLocalTime()
         {
             SystemTestResult result = new SystemTestResult();
 
             // Set the system time
-            if (SetSystemDateTime())
+            if (SetLocalSystemDateTime())
             {
-                // Now get the time and verify it is within 1 second of the previous time
-                // Clear buffer
-                ReceiveBufferString = "";
+                //// Now get the time and verify it is within 1 second of the previous time
+                //// Clear buffer
+                //ReceiveBufferString = "";
 
-                // Send STIME to get the time
-                SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_STIME));
+                //// Send STIME to get the time
+                //SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_STIME));
 
-                // Wait for an output
-                Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
+                //// Wait for an output
+                //Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
 
+
+                //DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
+                DateTime adcpDt = GetAdcpDateTime();                                                    // Decode the date and time from the ADCP
                 DateTime currDt = DateTime.Now;                                                         // Get the current date and time
-                DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
+
+                // Set the Results as the ADCP Date and Time
+                result.Results = adcpDt;
+
+                // Verify the Date and Time are within a second of each other
+                // This could fail on the rare occassion that the hour changes in the second between getting the two times
+                if (adcpDt > currDt ||
+                    adcpDt.Year != currDt.Year ||
+                    adcpDt.Month != currDt.Month ||
+                    adcpDt.Day != currDt.Day ||
+                    adcpDt.Hour != currDt.Hour ||
+                    adcpDt.Minute != currDt.Minute ||
+                    adcpDt.Second > currDt.Second)
+                {
+                    result.TestResult = false;
+                    result.ErrorListStrings.Add(string.Format("RTC time does not match current time.  Expected: {0}  Found {1}", currDt.ToString(), adcpDt.ToString()));
+                    result.ErrorCodes.Add(SystemTestErrorCodes.INCORRECT_RTC_TIME);
+                }
+            }
+            else
+            {
+                // Could not send a command to the ADCP
+                result.TestResult = false;
+                result.ErrorListStrings.Add("Communication with ADCP failed.");
+                result.ErrorCodes.Add(SystemTestErrorCodes.ADCP_NO_COMM);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Test the RTC.  This will set the time to the RTC.  It will
+        /// then check the time agaisnt the system time.  The times should be
+        /// within a second of each other.  So if ADCP time is before 
+        /// </summary>
+        /// <returns>Result of the test.</returns>
+        public SystemTestResult SysTestRtcUtcTime()
+        {
+            SystemTestResult result = new SystemTestResult();
+
+            // Set the system time
+            if (SetUtcSystemDateTime())
+            {
+                //// Now get the time and verify it is within 1 second of the previous time
+                //// Clear buffer
+                //ReceiveBufferString = "";
+
+                //// Send STIME to get the time
+                //SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_STIME));
+
+                //// Wait for an output
+                //Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
+
+                //DateTime currDt = DateTime.Now.ToUniversalTime();                                       // Get the current date and time
+                //DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
+
+                DateTime adcpDt = GetAdcpDateTime();                                                    // Decode the date and time from the ADCP
+                DateTime currDt = DateTime.Now.ToUniversalTime();                                       // Get the current date and time
 
                 // Set the Results as the ADCP Date and Time
                 result.Results = adcpDt;
@@ -2688,6 +2839,300 @@ namespace RTI
         }
 
         #endregion
+
+        #endregion
+
+        #region Scan for ADCP Serial Port
+
+        /// <summary>
+        /// Scan for all the ADCPs connected to the serial ports.
+        /// This will check each serial port and all the baud
+        /// rates to find all the ADCPs connected to this computer.
+        /// It will then return a list of all the serial port connections.
+        /// </summary>
+        /// <returns>List of all the serial ports connections with an ADCP.</returns>
+        public List<AdcpSerialOptions> ScanSerialConnection()
+        {
+            // Get all the available COM ports
+            List<string> ports = SerialOptions.PortOptions;
+
+            var result = new List<AdcpSerialOptions>();
+
+            foreach (var port in ports)
+            {
+                //if (TestSerialPortConnection(port))
+                //{
+                    AdcpSerialOptions options = TestSerialBaudConnection(port);
+                    // Found a port now test the baud rate
+                    if (options != null)
+                    {
+                        result.Add(options);
+                    }
+                //}
+            }
+
+            // Shutdown the object
+            // This will stop the read thread
+            // and the serial port
+            // The user will still need to connect 
+            // to the serial port again.
+            Dispose();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Send a BREAK to the port.
+        /// If there is no response, then it is
+        /// probably not an ADCP.  Even if the baud rate is 
+        /// wrong, the BREAK should send something back.
+        /// </summary>
+        /// <param name="port">Serial port to test.</param>
+        /// <returns>TRUE = A response was give for the port.</returns>
+        protected bool TestSerialPortConnection(string port)
+        {
+            try
+            {
+                // Shutdown the serial port if it is currently open
+                if (IsOpen())
+                {
+                    Disconnect();
+                }
+
+                // Create a serial connection
+                _serialOptions = new SerialOptions();
+                _serialOptions.Port = port;
+                Connect();
+
+                if (IsOpen())
+                {
+                    // Clear the buffer
+                    ReceiveBufferString = "";
+
+                    // Send a break to the Port and see if there was a response
+                    string response = SendDataGetReply("", true, 500);
+                    // Send a BREAK and wait 0.5 seconds
+                    if (!string.IsNullOrEmpty(response))
+                    {
+                        // Shutdown the connection
+                        Disconnect();
+
+                        // Something responded
+                        return true;
+                    }
+
+                    // Shutdown the connection
+                    Disconnect();
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error("Error Searching for an ADCP", e);
+
+                Disconnect();
+                return false;
+            }
+
+            // Never got a response
+            Disconnect();
+            return false;
+        }
+
+        /// <summary>
+        /// Test each baud rate until a good baud rate is found for the 
+        /// port given.  
+        /// 
+        /// A good baud rate is one that when the BREAK statement
+        /// is decode, it has valid data.  If the BREAK statement is
+        /// garabage, it cannot be decoded.
+        /// 
+        /// A quick way to decode the BREAK statement is to just check
+        /// for a phrase in the buffer.
+        /// </summary>
+        /// <param name="port">Serial port to test.</param>
+        /// <returns>Options to connect to the serial port.</returns>
+        public AdcpSerialOptions TestSerialBaudConnection(string port)
+        {
+            // Get a list of all the baud rates
+            //List<int> bauds = SerialOptions.BaudRateOptions;
+            List<int> bauds = new List<int>();
+            bauds.Add(115200);
+            bauds.Add(921600);
+            //bauds.Add(460800);
+            //bauds.Add(230400);
+            //bauds.Add(115200);
+            //bauds.Add(38400);
+            bauds.Add(19200);
+            //bauds.Add(9600);
+
+            //bauds.Insert(0, SerialOptions.DEFAULT_BAUD);                // Add this to the front of the list so the default is tried first to speed up the process
+
+            // Test all the baud rates until one is found
+            foreach (var baud in bauds)
+            {
+                // Create a serial connection
+                _serialOptions = new SerialOptions();
+                _serialOptions.Port = port;
+                _serialOptions.BaudRate = baud;
+                Connect();
+
+                // Verify the connection was created
+                if (IsOpen())
+                {
+                    // Clear the buffer
+                    ReceiveBufferString = "";
+
+                    // Send a break to the Port and see if there was a response
+                    string response = SendDataGetReply("", true, 500);              // True will send a break with no command
+                    Thread.Sleep(AdcpSerialPort.WAIT_STATE);                        // Wait to get the BREAK response, the initial response will be the echo back of BREAK 
+                    if (!string.IsNullOrEmpty(response))
+                    {
+                        // Decode the data to see if the response is not garabage
+                        if (response.Contains(" Rowe Technologies Inc."))
+                        {
+
+                            // Decode the Break response
+                            Commands.BreakStmt breakStmt =  Commands.AdcpCommands.DecodeBREAK(response);
+
+                            // Close the connection
+                            Disconnect();
+
+                            // Return the options used to find the ADCP
+                            return new  AdcpSerialOptions() { SerialOptions = _serialOptions, SerialNumber = breakStmt.SerialNum, Firmware = breakStmt.FirmwareVersion, Hardware = breakStmt.Hardware };
+                        }
+                        else
+                        {
+                            // Nothing found for this baud rate so shutdown the connection
+                            Disconnect();
+                        }
+
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        #endregion
+
+        #region AdcpConfiguration
+
+        /// <summary>
+        /// Get the ADCP Configuration.  This
+        /// will decode the BREAK statement
+        /// and also CSHOW.
+        /// </summary>
+        /// <returns></returns>
+        public AdcpConfiguration GetAdcpConfiguration()
+        {
+            // Stop pinging just in case
+            StopPinging();
+
+            // Send a BREAK to get the serial number
+            //string breakResult = _adcpSerialPort.SendDataGetReply("", true, RTI.AdcpSerialPort.WAIT_STATE * 3);
+            SendBreak();
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Get the buffer output
+            string breakResult = ReceiveBufferString;
+            BreakStmt breakStmt = AdcpCommands.DecodeBREAK(breakResult);
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Send a command for CSHOW to the ADCP
+            // Decode the CSHOW command
+            string result = SendDataGetReply(RTI.Commands.AdcpCommands.CMD_CSHOW);
+
+            // Decode CSHOW for all the settings
+            AdcpConfiguration adcpConfig = AdcpCommands.DecodeCSHOW(result, breakStmt.SerialNum);
+
+            return adcpConfig;
+        }
+
+        #endregion
+
+        #region Directory Listings
+
+        /// <summary>
+        /// Download the list of file from the ADCP.  A command
+        /// is sent to give the listing of all the files on the ADCP.
+        /// Store the results to _dirListingString.  This is done
+        /// by subscribing to the serial output.  Then send the command.
+        /// Receive all the lines from the serial output until it finds
+        /// the end of the command.  Then unsubscribe to receive
+        /// serial output.
+        /// </summary>
+        private void DownloadDirectoryListing()
+        {
+            int TIMEOUT = 20;
+
+            // Clear the buffer
+            ReceiveBufferString = "";
+            _dirListingString = "";
+
+            // Subscribe to receive serial string data
+            this.ReceiveSerialData += new ReceiveSerialDataEventHandler(GetDirListing_ReceiveSerialData);
+
+            if (IsAvailable())
+            {
+                // Send the command to get the directory listing
+                SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DSDIR));
+
+                // Added an extra wait to Wait for response
+                Thread.Sleep(WAIT_STATE);
+            }
+
+            // Wait for the complete list
+            // "Used Space: ..." is the last line
+            // Check ReceiveBufferString and not _dirListingString because it is a smaller string
+            while (ReceiveBufferString.IndexOf("Used Space:") <= 0)
+            {
+                Thread.Sleep(WAIT_STATE * 2);
+
+                // Stop looking after timeout has occured
+                if (TIMEOUT <= 0)
+                {
+                    break;
+                }
+                TIMEOUT--;
+            }
+
+            // Unsubscribe from the event
+            this.ReceiveSerialData -= GetDirListing_ReceiveSerialData;
+        }
+
+        /// <summary>
+        /// Send the command to display the Directory listing.
+        /// Then return the results from the serial display.
+        /// </summary>
+        /// <returns>List of the directory files.</returns>
+        public RTI.Commands.AdcpDirListing GetDirectoryListing()
+        {
+            // Download the directory listing to _dirListingString
+            DownloadDirectoryListing();
+
+            // Filter the list of directories
+            RTI.Commands.AdcpDirListing dirListing = RTI.Commands.AdcpCommands.DecodeDSDIR(_dirListingString);
+
+            // Clear the string
+            _dirListingString = "";
+
+            // Return the content of the buffer
+            return dirListing;
+        }
+
+        /// <summary>
+        /// Event handler for serial data as a string.
+        /// This will populate the directory string with incoming data.
+        /// </summary>
+        /// <param name="data">Incoming data from serial port as a string.</param>
+        private void GetDirListing_ReceiveSerialData(string data)
+        {
+            // Store the directory listing
+            _dirListingString += data;
+        }
 
         #endregion
 
@@ -2898,6 +3343,38 @@ namespace RTI
         #endregion
 
         #endregion
+
+        #endregion
+
+        #region Override
+
+        /// <summary>
+        /// Display the object to a string.
+        /// </summary>
+        /// <returns>String of the object.</returns>
+        public override string ToString()
+        {
+            string mode = "";
+
+            switch (Mode)
+            {
+                case AdcpSerialModes.COMPASS:
+                    mode = "Compass Mode: ";
+                    break;
+                case AdcpSerialModes.DOWNLOAD:
+                    mode = "Download Mode: ";
+                    break;
+                case AdcpSerialModes.UPLOAD:
+                    mode = "Upload Mode: ";
+                    break;
+                case AdcpSerialModes.ADCP:
+                default:
+                    mode = "ADCP Mode: ";
+                    break;
+            }
+
+            return mode + SerialOptions.ToString();
+        }
 
         #endregion
 

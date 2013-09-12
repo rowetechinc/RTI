@@ -45,6 +45,8 @@
  * 07/19/2012      RC          2.12       When parsing the byte arrays, verify the byte arrays given are the correct size.
  * 07/30/2012      RC          2.13       Added MemorySizeString() to display file memory sizes with the highest scale factor.
  * 12/21/2012      RC          2.17       Removed the abolute value from PercentError per Steve Maier request.  He wants negative percent error.
+ * 06/13/2013      RC          2.19       Added HUNSEC_TO_MILLISEC.
+ * 07/31/2013      RC          2.19.3     Added BoolToTrueFalseStr() and BoolToOnOffStr().
  * 
  */
 
@@ -64,6 +66,17 @@ namespace RTI
         /// Value to convert megabytes to bytes.
         /// </summary>
         public const int MB_TO_BYTES = 1048576;
+
+        /// <summary>
+        /// Multiply HUNSEC * HUNSEC_TO_MILLISEC to convert
+        /// hundredth of a second to milliseconds.
+        /// 
+        /// Divide MILLISECOND / HUNSEC_TO_MILLISEC to convert
+        /// millisecond to Hundredth of a second.
+        /// 
+        /// </summary>
+        public const double HUNSEC_TO_MILLISEC = 10.0;
+
 
 
         /// <summary>
@@ -889,6 +902,40 @@ namespace RTI
                 max /= scale;
             }
             return "0 Bytes";
+        }
+
+        #endregion
+
+        #region Bool
+
+        /// <summary>
+        /// Convert the bool to a string of "True" or "False".
+        /// </summary>
+        /// <param name="val">Value to convert.</param>
+        /// <returns>TRUE or False string.</returns>
+        public static string BoolToTrueFalseStr(bool val)
+        {
+            if (val)
+            {
+                return "True";
+            }
+
+            return "False";
+        }
+
+        /// <summary>
+        /// Convert the bool to a string of "On" or "Off".
+        /// </summary>
+        /// <param name="val">Value to convert.</param>
+        /// <returns>On or Off string.</returns>
+        public static string BoolToOnOffStr(bool val)
+        {
+            if (val)
+            {
+                return "On";
+            }
+
+            return "Off";
         }
 
         #endregion

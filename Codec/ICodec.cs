@@ -31,9 +31,11 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 11/30/2011      RC          Initial coding
+ * 11/30/2011      RC                     Initial coding
+ * 06/28/2013      RC          2.19       Removed shutdown in favor of IDisposable.
+ * 
  */
 
 namespace RTI
@@ -62,12 +64,5 @@ namespace RTI
         /// and reset any files.
         /// </summary>
         void ClearIncomingData();
-
-        /// <summary>
-        /// This method is used when the codec needs to be shutdown.
-        /// This should handle closing any files and stopping any
-        /// threads.
-        /// </summary>
-        void Shutdown();
     }
 }

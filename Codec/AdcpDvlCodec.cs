@@ -44,6 +44,8 @@
  * 12/29/2011      RC          1.11       Removed RecorderManager and added Events.
  * 01/03/2012      RC          1.11       Set a buffer size limit and check for limit when finding a sentence.
  *                                         Added _prevBuffer to prevent StackOverflowException.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 08/02/2013      RC          2.19.4     Have ProcessDataEventHandler match AdcpBinaryCodec and give both binary and ensemble.  Removed BinaryRecordEvent.
  * 
  */
 
@@ -61,8 +63,11 @@ namespace RTI
     /// Decode the data received from the ADCP in
     /// DVL mode.  This data is formated like NMEA data.
     /// </summary>
-    public class AdcpDvlCodec
+    public class AdcpDvlCodec: ICodec, IDisposable
     {
+
+        #region Variables
+ 
         /// <summary>
         /// Logger for logging error messages.
         /// </summary>
@@ -134,6 +139,8 @@ namespace RTI
         /// </summary>
         private LinkedList<string> _nmeaBuffer;
 
+        #endregion
+
         /// <summary>
         /// Constructor
         /// Initialize any values.
@@ -146,6 +153,21 @@ namespace RTI
 
             _nmeaBuffer = new LinkedList<string>();
         }
+
+        /// <summary>
+        /// Shutdown this object.
+        /// </summary>
+        public void Dispose()
+        {
+            // Send any remaining data
+            if (_prti01 != null)
+            {
+                SendData(_prti01);
+            }
+
+        }
+
+        #region Incomming Data
 
         /// <summary>
         /// Take incoming data and add it to the
@@ -168,19 +190,6 @@ namespace RTI
         }
 
         /// <summary>
-        /// Shutdown this object.
-        /// </summary>
-        public void Shutdown()
-        {
-            // Send any remaining data
-            if (_prti01 != null)
-            {
-                SendData(_prti01);
-            }
-
-        }
-
-        /// <summary>
         /// Clear the incoming buffer of all data.
         /// </summary>
         public void ClearIncomingData()
@@ -197,6 +206,81 @@ namespace RTI
                 _nmeaBuffer.Clear();
             }
         }
+
+        #endregion
+
+        #region Send Data
+
+        /// <summary>
+        /// If there is data that has not been sent,
+        /// send the data and set to null.
+        /// </summary>
+        /// <param name="adcpData">Data to be recorded.</param>
+        private void SendData(DataSet.Ensemble adcpData)
+        {
+            // Send any remaining data
+            if (adcpData != null)
+            {
+                // Add NMEA to dataset and
+                // Record NMEA data if it exist
+                byte[] binaryData = GetNmeaData(ref adcpData);
+
+                // Send an event that data was processed
+                // in this format
+                if (ProcessDataEvent != null)
+                {
+                    ProcessDataEvent(binaryData, adcpData);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create the data set using PRTI01.
+        /// Then send the dataset.
+        /// </summary>
+        /// <param name="sentence">PRTI01 Sentence.</param>
+        private void SendData(Prti01Sentence sentence)
+        {
+            // Create the dataset
+            DataSet.Ensemble adcpData = CreateDataSet(sentence);
+
+            // Send the data set
+            SendData(adcpData);
+        }
+
+        /// <summary>
+        /// Create the data set using PRTI02.
+        /// Then send the dataset.
+        /// </summary>
+        /// <param name="sentence">PRTI02 Sentence.</param>
+        private void SendData(Prti02Sentence sentence)
+        {
+            // Create the dataset
+            DataSet.Ensemble adcpData = CreateDataSet(sentence);
+
+            // Send the data set
+            SendData(adcpData);
+        }
+
+        /// <summary>
+        /// Create the data set using PRTI01.  Then add PRTI02 to the
+        /// dataset.  Then send the dataset.
+        /// </summary>
+        /// <param name="prti01">PRTI01 Sentence.</param>
+        /// <param name="prti02">PRTI02 Sentence.</param>
+        private void SendData(Prti01Sentence prti01, Prti02Sentence prti02)
+        {
+            // Create the dataset
+            DataSet.Ensemble adcpData = CreateDataSet(prti01);
+            adcpData.AddAdditionalBottomTrackData(prti02);
+
+            // Send the data set
+            SendData(adcpData);
+        }
+
+        #endregion
+
+        #region Process data
 
         /// <summary>
         /// Find the first $. Then find the first start
@@ -218,9 +302,6 @@ namespace RTI
                 {
                     // Process sentence
                     ProcessSentence(sentence);
-
-                    // Record the data to the file
-                    RecordBinary(sentence.Sentence + NMEA_END);
                 }
             }
 
@@ -312,75 +393,6 @@ namespace RTI
             }
         }
 
-        #region Private Methods
-
-        /// <summary>
-        /// If there is data that has not been sent,
-        /// send the data and set to null.
-        /// </summary>
-        /// <param name="adcpData">Data to be recorded.</param>
-        private void SendData(DataSet.Ensemble adcpData)
-        {
-            // Send any remaining data
-            if (adcpData != null)
-            {
-                // Add NMEA to dataset and
-                // Record NMEA data if it exist
-                GetNmeaData(ref adcpData);
-
-                // Send an event that data was processed
-                // in this format
-                if (ProcessDataEvent != null)
-                {
-                    ProcessDataEvent(adcpData);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Create the data set using PRTI01.
-        /// Then send the dataset.
-        /// </summary>
-        /// <param name="sentence">PRTI01 Sentence.</param>
-        private void SendData(Prti01Sentence sentence)
-        {
-            // Create the dataset
-            DataSet.Ensemble adcpData = CreateDataSet(sentence);
-
-            // Send the data set
-            SendData(adcpData);
-        }
-
-        /// <summary>
-        /// Create the data set using PRTI02.
-        /// Then send the dataset.
-        /// </summary>
-        /// <param name="sentence">PRTI02 Sentence.</param>
-        private void SendData(Prti02Sentence sentence)
-        {
-            // Create the dataset
-            DataSet.Ensemble adcpData = CreateDataSet(sentence);
-
-            // Send the data set
-            SendData(adcpData);
-        }
-
-        /// <summary>
-        /// Create the data set using PRTI01.  Then add PRTI02 to the
-        /// dataset.  Then send the dataset.
-        /// </summary>
-        /// <param name="prti01">PRTI01 Sentence.</param>
-        /// <param name="prti02">PRTI02 Sentence.</param>
-        private void SendData(Prti01Sentence prti01, Prti02Sentence prti02)
-        {
-            // Create the dataset
-            DataSet.Ensemble adcpData = CreateDataSet(prti01);
-            adcpData.AddAdditionalBottomTrackData(prti02);
-
-            // Send the data set
-            SendData(adcpData);
-        }
-
         /// <summary>
         /// Process the valid NMEA sentence.  Check which 
         /// type of DVL message it is and create the data set.
@@ -390,7 +402,7 @@ namespace RTI
         private void ProcessSentence(NmeaSentence sentence)
         {
             // Check for PRTI01
-            if(sentence.CommandWord.EndsWith(RTI.Prti01Sentence.CMD_WORD_PRTI01, StringComparison.Ordinal))
+            if (sentence.CommandWord.EndsWith(RTI.Prti01Sentence.CMD_WORD_PRTI01, StringComparison.Ordinal))
             {
                 // Check if the previous PRTI01 was used
                 // If it was not used, send the data
@@ -430,18 +442,9 @@ namespace RTI
             }
         }
 
-        /// <summary>
-        /// Record binary data to the file.
-        /// </summary>
-        /// <param name="data">Data to record.</param>
-        private void RecordBinary(string data)
-        {
-            //RecorderManager.Instance.RecordBinaryData(System.Text.Encoding.ASCII.GetBytes(data));
-            if (this.RecordBinaryDataEvent != null)
-            {
-                RecordBinaryDataEvent(System.Text.Encoding.ASCII.GetBytes(data));
-            }
-        }
+        #endregion
+
+        #region Create DataSets
 
         /// <summary>
         /// Create a dataset.  Set the bottom track instrument velocity and water mass velocity.
@@ -491,27 +494,42 @@ namespace RTI
             return adcpData;
         }
 
+        #endregion
+
+        #region Nmea Buffer
+
         /// <summary>
         /// Get the latest data from the NMEA buffer
         /// and create a string.  
         /// Then record the NMEA data and add it to
         /// the ensemble.
         /// </summary>
-        private void GetNmeaData(ref DataSet.Ensemble adcpData)
+        /// <param name="adcpData">Ensemble data.</param>
+        /// <returns>Binary data.</returns>
+        private byte[] GetNmeaData(ref DataSet.Ensemble adcpData)
         {
+            // Byte array of the binary data
+            List<byte> byteList = new List<byte>();
+            
             string nmeaData = GetNmeaBuffer();
             if (nmeaData.Length > 0)
             {
                 // Add the NMEA data to the dataset
                 adcpData.AddNmeaData(nmeaData.ToString());
 
+                // Create byte array for all the NMEA data accumulated
                 // Record the NMEA data to the file
                 // Get the NMEA data from the dataset to ensure valid NMEA messages
                 for (int x = 0; x < adcpData.NmeaData.NmeaStrings.Count; x++)
                 {
-                    RecordBinary(adcpData.NmeaData.NmeaStrings[x] + NMEA_END);
+                    string nmeaStr = adcpData.NmeaData.NmeaStrings[x] + NMEA_END;
+                    byte[] nmeaBA = System.Text.Encoding.ASCII.GetBytes(nmeaStr);
+                    byteList.AddRange(nmeaBA);
                 }
             }
+
+            // Return the binary data
+            return byteList.ToArray();
         }
 
         /// <summary>
@@ -555,8 +573,9 @@ namespace RTI
         /// Event To subscribe to.  This gives the paramater
         /// that will be passed when subscribing to the event.
         /// </summary>
+        /// <param name="binaryData">Binary data.</param>
         /// <param name="adcpData">DataSet to record and process.</param>
-        public delegate void ProcessDataEventHandler(DataSet.Ensemble adcpData);
+        public delegate void ProcessDataEventHandler(byte[] binaryData, DataSet.Ensemble adcpData);
 
         /// <summary>
         /// Subscribe to receive event when data has been successfully
@@ -571,27 +590,6 @@ namespace RTI
         /// adcpBinaryCodec.ProcessDataEvent -= (method to call)
         /// </summary>
         public event ProcessDataEventHandler ProcessDataEvent;
-
-        /// <summary>
-        /// Event To subscribe to.  This gives the paramater
-        /// that will be passed when subscribing to the event.
-        /// </summary>
-        /// <param name="data">Data to record.</param>
-        public delegate void RecordBinaryDataEventHandler(byte[] data);
-
-        /// <summary>
-        /// Subscribe to receive event when data has been successfully
-        /// processed.  This can be used to tell if data is in this format
-        /// and is being processed or is not in this format.
-        /// Subscribe to this event.  This will hold all subscribers.
-        /// 
-        /// To subscribe:
-        /// adcpBinaryCodec.RecordBinaryDataEvent += new adcpBinaryCodec.RecordBinaryDataEventHandler(method to call);
-        /// 
-        /// To Unsubscribe:
-        /// adcpBinaryCodec.RecordBinaryDataEvent -= (method to call)
-        /// </summary>
-        public event RecordBinaryDataEventHandler RecordBinaryDataEvent;
 
         #endregion
 

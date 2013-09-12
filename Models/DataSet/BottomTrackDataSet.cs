@@ -57,6 +57,8 @@
  * 06/21/2012      RC          2.12       Add 3 beam solution option in IsInstrumentVelocityGood() and IsEarthVelocityGood().
  * 02/27/2013      RC          2.18       Set FirstPingTime when decoding the PRTI sentences.
  * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
+ * 08/13/2013      RC          2.19.4     Fixed a bug with the GetAverageRange() using ElementMulitplier instead of Range.Length.
+ * 08/16/2013      RC          2.19.4     Added IsBeamVelocityGood.  A good way to check for 3 beam solutions or any bad values.
  * 
  */
 
@@ -396,8 +398,8 @@ namespace RTI
             /// 
             /// </summary>
             /// <param name="ValueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="NumElements">Number of Bin</param>
-            /// <param name="ElementsMultiplier">Number of beams</param>
+            /// <param name="NumElements">Number of Elements in the dataset.</param>
+            /// <param name="ElementsMultiplier">Items per Elements.</param>
             /// <param name="Imag"></param>
             /// <param name="NameLength">Length of name</param>
             /// <param name="Name">Name of data type</param>
@@ -831,6 +833,28 @@ namespace RTI
             }
 
             /// <summary>
+            /// Return whether any of the Beam Velocity values are bad.
+            /// If one is bad, they are all bad.
+            /// 
+            /// Also a good way to check if 3 beam solution was attempted.  If one value is bad, but Earth
+            /// and Instrument data exist, then a 3 beam solution was done.
+            /// </summary>
+            /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
+            public bool IsBeamVelocityGood()
+            {
+                if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                    BeamVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                {
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            /// <summary>
             /// Return whether any of the Earth Velocity values are bad.
             /// If one is bad, they are all bad.
             /// If we do not allow 3 Beam solution and Q is bad, then all is bad.
@@ -891,7 +915,7 @@ namespace RTI
             {
                 int count = 0;
                 double result = 0;
-                for (int beam = 0; beam < ElementsMultiplier; beam++)
+                for (int beam = 0; beam < Range.Length; beam++)
                 {
                     if (Range[beam] > DataSet.Ensemble.BAD_RANGE)
                     {
@@ -900,9 +924,9 @@ namespace RTI
                     }
                 }
 
-                // If all values are bad
+                // If at least 2 values are bad
                 // Return a bad range
-                if (count == 0)
+                if (count < 2)
                 {
                     return DataSet.Ensemble.BAD_RANGE;
                 }

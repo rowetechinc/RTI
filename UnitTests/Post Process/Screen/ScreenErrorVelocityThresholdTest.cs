@@ -67,7 +67,7 @@ namespace RTI
             ensemble.EarthVelocityData.EarthVelocityData[badBin, DataSet.Ensemble.BEAM_Q_INDEX] = 1.2f;
 
             // Screen the ensemble
-            Screen.ScreenErrorVelocityThreshold.Screen(ref ensemble, 1.0f);
+            ScreenData.ScreenErrorVelocityThreshold.Screen(ref ensemble, 1.0f);
 
             Assert.AreEqual(0.1f, ensemble.EarthVelocityData.EarthVelocityData[0, DataSet.Ensemble.BEAM_EAST_INDEX], 0.0001, "East Velocity for Good is incorrect.");
             Assert.AreEqual(0.2f, ensemble.EarthVelocityData.EarthVelocityData[0, DataSet.Ensemble.BEAM_NORTH_INDEX], 0.0001, "North Velocity for Good is incorrect.");
@@ -106,7 +106,7 @@ namespace RTI
             ensemble.EarthVelocityData.EarthVelocityData[badBin, DataSet.Ensemble.BEAM_Q_INDEX] = 1.0f;
 
             // Screen the ensemble
-            Screen.ScreenErrorVelocityThreshold.Screen(ref ensemble, 1.0f);
+            ScreenData.ScreenErrorVelocityThreshold.Screen(ref ensemble, 1.0f);
 
             Assert.AreEqual(0.1f, ensemble.EarthVelocityData.EarthVelocityData[0, DataSet.Ensemble.BEAM_EAST_INDEX], 0.0001, "East Velocity for Good is incorrect.");
             Assert.AreEqual(0.2f, ensemble.EarthVelocityData.EarthVelocityData[0, DataSet.Ensemble.BEAM_NORTH_INDEX], 0.0001, "North Velocity for Good is incorrect.");
@@ -145,7 +145,7 @@ namespace RTI
             ensemble.EarthVelocityData.EarthVelocityData[badBin, DataSet.Ensemble.BEAM_Q_INDEX] = 1.0f;
 
             // Screen the ensemble
-            Screen.ScreenErrorVelocityThreshold.Screen(ref ensemble, 2.0f);
+            ScreenData.ScreenErrorVelocityThreshold.Screen(ref ensemble, 2.0f);
 
             Assert.AreEqual(0.1f, ensemble.EarthVelocityData.EarthVelocityData[0, DataSet.Ensemble.BEAM_EAST_INDEX], 0.0001, "East Velocity for Good is incorrect.");
             Assert.AreEqual(0.2f, ensemble.EarthVelocityData.EarthVelocityData[0, DataSet.Ensemble.BEAM_NORTH_INDEX], 0.0001, "North Velocity for Good is incorrect.");

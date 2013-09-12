@@ -53,6 +53,7 @@
  * 12/03/2012      RC          2.17       Replaced SerialNumber.Empty with IsEmpty().
  * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
  * 01/23/2013      RC          2.17       Changed IsEmpty() to only check if a Subsystem is set for the serial number.
+ * 05/06/2013      RC          2.19       Added SerialNumberDescString and GetSerialNumberDescString().
  *
  */
 
@@ -283,6 +284,16 @@ namespace RTI
                 //_serialNumberString = value;
                 SetSerialNumberString(value);
             }
+        }
+
+        /// <summary>
+        /// A descriptive string for the Serial number.
+        /// This will include a description of all the subsystems
+        /// and the serial number.
+        /// </summary>
+        public string SerialNumberDescString
+        {
+            get { return GetSerialNumberDescString(); }
         }
 
         #endregion
@@ -715,6 +726,31 @@ namespace RTI
 
             return result;
         }
+
+        /// <summary>
+        /// This will list all the subsystems full name
+        /// for the serial number.  It will also list
+        /// the serial number.
+        /// </summary>
+        /// <returns></returns>
+        public string GetSerialNumberDescString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            // Set the subsystems
+            foreach (Subsystem ss in SubSystemsDict.Values)
+            {
+                sb.Append(string.Format("{0}: {1}", ss.Index, ss.DescString()));
+                sb.Append("; ");
+            }
+
+            // Set the serial number
+            sb.Append(string.Format("ADCP: {0}", SystemSerialNumber));
+
+
+            return sb.ToString();
+        }
+
 
         /// <summary>
         /// Return the _serialNumberString as the

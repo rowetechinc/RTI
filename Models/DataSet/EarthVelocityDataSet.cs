@@ -52,6 +52,7 @@
  *                                         Added JSON encoding and Decoding.
  *                                         Changed VV to VelocityVectors.
  * 03/04/2013      RC          2.18       Create the VelocityVectors array in the constructor.
+ * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  * 
  */
 
@@ -437,10 +438,12 @@ namespace RTI
                 {
                     // Write an array of float values for each beam's value
                     writer.WriteStartArray();
-                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
-                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
-                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
-                    writer.WriteValue(data.EarthVelocityData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+
+                    for (int beam = 0; beam < data.ElementsMultiplier; beam++)
+                    {
+                        writer.WriteValue(data.EarthVelocityData[bin, beam]);
+                    }
+
                     writer.WriteEndArray();
                 }
                 writer.WriteEndArray();

@@ -53,6 +53,8 @@
  * 04/06/2012      RC           2.08      Changed serial port read thread, so make the codec decode in a while loop again.
  * 07/06/2012      RC           2.12      Added SIZE_OF_FLOAT64, GetParamCommand(), SetTaps0Commands(), SetTaps4Commands() and DecodeKParamResp() to get and set Compass Taps.
  * 11/13/2012      RC           2.16      Updated the pitch and roll values to use.
+ * 06/28/2013      RC           2.19      Replaced Shutdown() with IDisposable.
+ * 07/31/2013      RC           2.19.3    Renamed Parameter and Configuration to PniParamater and PniConfiguration.  Added more responses and decoded them.
  * 
  */
 
@@ -61,13 +63,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
 using log4net;
+using System.Text;
 namespace RTI
 {
     /// <summary>
     /// Codec to decode a PNI Prime compass.  This 
     /// is used to do compass calibration.
     /// </summary>
-    public class PniPrimeCompassBinaryCodec : ICodec
+    public class PniPrimeCompassBinaryCodec : ICodec, IDisposable
     {
 
         /// <summary>
@@ -104,7 +107,7 @@ namespace RTI
         /// <summary>
         /// Default Mounting Reference.
         /// </summary>
-        public const byte DEFAULT_MOUNTING_REF = 1;
+        public const PniConfiguration.PniMountingRef DEFAULT_MOUNTING_REF = PniConfiguration.PniMountingRef.Standard;
 
         /// <summary>
         /// Minimum Mounting Reference.
@@ -245,10 +248,32 @@ namespace RTI
 
         #region Enum and Structs
 
+        #region Mod Info
+
+        /// <summary>
+        /// Firmware info about the compass.
+        /// </summary>
+        public class PniModInfo
+        {
+            /// <summary>
+            /// Type Identifier. 
+            /// </summary>
+            public string Type { get; set; }
+
+            /// <summary>
+            /// Firmware Revision.
+            /// </summary>
+            public string Revision { get; set; }
+        }
+
+        #endregion
+
+        #region Cal Score
+
         /// <summary>
         /// Used to hold the Calibration score.
         /// </summary>
-        public struct CalScore
+        public struct PniCalScore
         {
             /// <summary>
             /// Standard Deviation Error.
@@ -291,10 +316,14 @@ namespace RTI
             public float accelStdDevErr { get; set; }
         }
 
+        #endregion
+
+        #region Data Response
+
         /// <summary>
         /// Response when sending the command kGetData.
         /// </summary>
-        public class DataResponse
+        public class PniDataResponse
         {
             /// <summary>
             /// Compass Heading output.
@@ -389,7 +418,7 @@ namespace RTI
             /// <summary>
             /// Set all default values.
             /// </summary>
-            public DataResponse()
+            public PniDataResponse()
             {
                 Heading = 0.0f;
                 Distortion = false;
@@ -405,11 +434,142 @@ namespace RTI
             }
         }
 
+        #endregion
+
+        #region Configuration
+
         /// <summary>
         /// Response received from sending the command kGetConfig.
         /// </summary>
-        public class Configuration
+        public class PniConfiguration
         {
+            /// <summary>
+            /// All the mounting reference options.
+            /// </summary>
+            public enum PniMountingRef
+            {
+                /// <summary>
+                /// Standard
+                /// </summary>
+                Standard = 1,
+
+                /// <summary>
+                /// X axis up
+                /// </summary>
+                X_AXIS_UP = 2,
+
+                /// <summary>
+                /// Y axis up
+                /// </summary>
+                Y_AXIS_UP = 3,
+
+                /// <summary>
+                /// -90° heading offset
+                /// </summary>
+                NEG_90 = 4,
+
+                /// <summary>
+                /// -180° heading offset
+                /// </summary>
+                NEG_180 = 5,
+
+                /// <summary>
+                /// -270° heading offset
+                /// </summary>
+                NEG_270 = 6,
+
+                /// <summary>
+                /// Z down
+                /// </summary>
+                Z_DOWN = 7,
+
+                /// <summary>
+                /// X + 90°
+                /// </summary>
+                X_PLUS_90 = 8,
+
+                /// <summary>
+                /// X + 180°
+                /// </summary>
+                X_PLUS_180 = 9,
+
+                /// <summary>
+                /// X + 270°
+                /// </summary>
+                X_PLUS_270 = 10,
+
+                /// <summary>
+                /// Y + 90°
+                /// </summary>
+                Y_PLUS_90 = 11,
+
+                /// <summary>
+                /// Y + 180°
+                /// </summary>
+                Y_PLUS_180 = 12,
+
+                /// <summary>
+                /// Y + 270°
+                /// </summary>
+                Y_PLUS_270 = 13,
+
+                /// <summary>
+                /// Z down + 90°
+                /// </summary>
+                Z_DOWN_PLUS_90 = 14,
+
+                /// <summary>
+                /// Z down + 180°
+                /// </summary>
+                Z_DOWN_PLUS_180 = 15,
+
+                /// <summary>
+                /// Z down + 270°
+                /// </summary>
+                Z_DOWN_PLUS_270 = 16,
+
+                /// <summary>
+                /// X down
+                /// </summary>
+                X_DOWN = 17,
+
+                /// <summary>
+                /// X down + 90°
+                /// </summary>
+                X_DOWN_PLUS_90 = 18,
+
+                /// <summary>
+                /// X down + 180°
+                /// </summary>
+                X_DOWN_PLUS_180 = 19,
+
+                /// <summary>
+                /// X down + 270°
+                /// </summary>
+                X_DOWN_PLUS_270 = 20,
+
+                /// <summary>
+                /// Y down
+                /// </summary>
+                Y_DOWN = 21,
+
+                /// <summary>
+                /// Y down + 90°
+                /// </summary>
+                Y_DOWN_PLUS_90 = 22,
+
+                /// <summary>
+                /// Y down + 180°
+                /// </summary>
+                Y_DOWN_PLUS_180 = 23,
+
+                /// <summary>
+                /// Y down + 270°
+                /// </summary>
+                Y_DOWN_PLUS_270 = 24
+            }
+
+
             /// <summary>
             /// This sets the declination angle to determine True
             /// North heading.  Positive declination is easterly declination
@@ -468,7 +628,7 @@ namespace RTI
             /// Range: 1 - 24
             /// Default Value: 1
             /// </summary>
-            public int MountingRef { get; set; }
+            public PniMountingRef MountingRef { get; set; }
 
             /// <summary>
             /// This flag is used during user calibration.  If set to FALSE, 
@@ -522,7 +682,7 @@ namespace RTI
             /// <summary>
             /// Set the default values.
             /// </summary>
-            public Configuration()
+            public PniConfiguration()
             {
                 Declination = DEFAULT_DECLINATION;
                 TrueNorth = DEFAULT_TRUE_NORTH;
@@ -539,9 +699,9 @@ namespace RTI
             /// </summary>
             /// <param name="mntRef">Mounting Reference code.</param>
             /// <returns>String for the Mounting Reference code.</returns>
-            public static string MountingRefToString(int mntRef)
+            public static string MountingRefToString(PniMountingRef mntRef)
             {
-                switch(mntRef)
+                switch((int)mntRef)
                 {
                     case 1:
                         return "Standard";
@@ -642,6 +802,10 @@ namespace RTI
             }
         }
 
+        #endregion
+
+        #region Parameters
+
         /// <summary>
         /// Response from asking for the parameters to the
         /// compass.  This will return a list of filter taps.
@@ -651,7 +815,7 @@ namespace RTI
         /// The current FIR filter settings for either magnetometer 
         /// or accelerometer sensors.  Each tap is a Float64.
         /// </summary>
-        public struct Parameters
+        public class PniParameters
         {
             /// <summary>
             /// Parameter ID.
@@ -672,7 +836,58 @@ namespace RTI
             /// Filter Tap values.
             /// </summary>
             public List<double> Taps { get; set; }
+
+            /// <summary>
+            /// Initialize the array.
+            /// </summary>
+            public PniParameters()
+            {
+                ParamId = 0;
+                AxisId = 0;
+                Count = 0;
+                Taps = new List<double>();
+            }
         }
+
+        #endregion
+
+        #region Acq Params
+
+        /// <summary>
+        /// Acquisition Parameters.
+        /// </summary>
+        public class PniAcqParam
+        {
+            /// <summary>
+            /// Flag to set push/poll data output mode.
+            /// Default is TRUE (poll mode).
+            /// </summary>
+            public bool PollingMode { get; set; }
+
+            /// <summary>
+            /// Flag to set FIR filter flushing ever sample.
+            /// Default is FALSE (no flushing).
+            /// </summary>
+            public bool FlushFilter { get; set; }
+
+            /// <summary>
+            /// The internal time interval between sensor acquisitions.
+            /// Default is 0.0 seconds, this means that the module will 
+            /// reacquire immediately right after the last acquisition.
+            /// </summary>
+            public float SensorAcqTime { get; set; }
+
+            /// <summary>
+            /// The time interval the module ouput data in push mode.
+            /// Default is 0.0 seconds, this means that the module will push
+            /// data out immediately after an acquisition cycle.
+            /// </summary>
+            public float IntervalRespTime { get; set; }
+        }
+
+        #endregion
+
+        #region CalMode
 
         /// <summary>
         /// Enum to decide which 
@@ -695,6 +910,10 @@ namespace RTI
             /// </summary>
             CAL_ACCEL_AND_MAG = 110
         }
+
+        #endregion
+
+        #region ID
 
         /// <summary>
         /// Enum to define all the IDs for the
@@ -1048,6 +1267,8 @@ namespace RTI
 
         #endregion
 
+        #endregion
+
         /// <summary>
         /// Constructor
         /// 
@@ -1083,7 +1304,7 @@ namespace RTI
         /// <summary>
         /// Shutdown this object.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
             StopThread();
         }
@@ -1223,14 +1444,9 @@ namespace RTI
             return buffer;
         }
 
-        /// <summary>
-        /// Create the Get Mod Info command.
-        /// </summary>
-        /// <returns>Byte array with command.</returns>
-        public static byte[] GetModInfoCommand( )
-        {
-            return CreateMsg((int)ID.kGetModInfo, null);
-        }
+        #endregion
+
+        #region Compass Cal Commands
 
         /// <summary>
         /// Create the Start Calibration command.
@@ -1253,24 +1469,6 @@ namespace RTI
         }
 
         /// <summary>
-        /// Create the Start Interval Mode command.
-        /// </summary>
-        /// <returns>Byte array with command.</returns>
-        public static byte[] StartIntervalModeCommand()
-        {
-            return CreateMsg((int)ID.kStartIntervalMode, null); 
-        }
-
-        /// <summary>
-        /// Create the Stop Interval Mode command.
-        /// </summary>
-        /// <returns>Byte array with command.</returns>
-        public static byte[] StopIntervalModeCommand()
-        {
-            return CreateMsg((int)ID.kStopIntervalMode, null);
-        }
-
-        /// <summary>
         /// Save Compass Calibration.
         /// This frame commands the module to save internal
         /// configurations and user calibration to non-volatile memory.
@@ -1281,21 +1479,6 @@ namespace RTI
         public static byte[] SaveCompassCalCommand()
         {
             return CreateMsg((int)ID.kSave, null);
-        }
-
-        /// <summary>
-        /// Get the Data from the compass.  This will get
-        /// data like the heading, pitch, roll and
-        /// distortion.  Results will be stored in DataResponse.
-        /// 
-        /// The output for this is set by kSetDataComponents.  The
-        /// kSetDataComonents states which IDs will be given in 
-        /// kGetData.
-        /// </summary>
-        /// <returns>Byte array with command.</returns>
-        public static byte[] GetDataCommand()
-        {
-            return CreateMsg((int)ID.kGetData, null);
         }
 
         /// <summary>
@@ -1329,53 +1512,7 @@ namespace RTI
             return CreateMsg((int)ID.kFactoryInclCal, null);
         }
 
-        /// <summary>
-        /// Set the Data output to all the components.
-        /// This will set kGetData to output all the components.
-        /// </summary>
-        /// <returns>Byte array of the command.</returns>
-        public static byte[] SetAllDataComponentsCommand()
-        {
-            int numComponenets = 11;
-
-            int count = numComponenets + 1;     // Add one to include the ID count
-            byte[] payload = new byte[count];
-
-            payload[0] = (byte)count;
-            payload[1] = (byte)ID.kHeading;
-            payload[2] = (byte)ID.kPAngle;
-            payload[3] = (byte)ID.kRAngle;
-            payload[4] = (byte)ID.kDistortion;
-            payload[5] = (byte)ID.kCalStatus;
-            payload[6] = (byte)ID.kPAligned;
-            payload[7] = (byte)ID.kRAligned;
-            payload[8] = (byte)ID.kZAligned;
-            payload[9] = (byte)ID.kXAligned;
-            payload[10] = (byte)ID.kYAligned;
-            payload[11] = (byte)ID.kZAligned;
-
-            return CreateMsg((int)ID.kSetDataComponents, payload);
-        }
-
-        /// <summary>
-        /// Return the Data output back to the default
-        /// heading, pitch and roll.
-        /// </summary>
-        /// <returns>Byte array of Data components.</returns>
-        public static byte[] SetHPRDataComponentsCommands()
-        {
-            int numComponenets = 3;
-
-            int count = numComponenets + 1;     // Add one to include the ID count
-            byte[] payload = new byte[count];
-
-            payload[0] = (byte)count;
-            payload[1] = (byte)ID.kHeading;
-            payload[2] = (byte)ID.kPAngle;
-            payload[3] = (byte)ID.kRAngle;
-
-            return CreateMsg((int)ID.kSetDataComponents, payload);
-        }
+        #endregion
 
         #region Config Commands
 
@@ -1419,10 +1556,6 @@ namespace RTI
                     case ID.kBigEndian:
                         return CreateConfigMsg(ID.kSetConfig, ID.kBigEndian, MathHelper.BooleanToByteArray((bool)value));
                     case ID.kMountingRef:
-                        if ((byte)value < MIN_MOUNTING_REF || (byte)value > MAX_MOUNTING_REF)
-                        {
-                            return null;
-                        }
                         return CreateConfigMsg(ID.kSetConfig, ID.kMountingRef, MathHelper.UInt8ToByteArray((byte)value));
                     case ID.kUserCalStableCheck:
                         return CreateConfigMsg(ID.kSetConfig, ID.kUserCalStableCheck, MathHelper.BooleanToByteArray((bool)value));
@@ -1470,6 +1603,10 @@ namespace RTI
 
             return CreateMsg((int)ID.kGetParam, payload);
         }
+
+        #endregion
+
+        #region Taps Commands
 
         /// <summary>
         /// ID 12
@@ -1604,7 +1741,350 @@ namespace RTI
             kPAxis = CreateMsg((int)ID.kSetParam, pAxisPayload);
         }
 
+        /// <summary>
+        /// ID 12
+        /// 8 Tap Setting. 
+        /// Use the byte arrays commands to set 8 taps.  Both commands must sent
+        /// to be correctly set.
+        /// 
+        /// This frame sets the FIR filter settings for the magnetomter and accelerometer sensors.
+        /// The second byte of the payload indicates the x vector componenet of either the magnetomter
+        /// or accelerometer.  This is to differentiate whether to apply the filter settins to the magnetometer
+        /// or accelerometer.  The third bye in the payload indicates the number of FIR taps to use then followed
+        /// byt the filter taps.  Each tap is a Float64.  The maximum number of taps that can be set is 32 and the 
+        /// minimum is 0 (no filtering).  Parameter ID should be set to 3.
+        /// </summary>
+        /// <param name="kXAxis">X Axis byte array command.</param>
+        /// <param name="kPAxis">P Axis byte array command.</param>
+        public static void SetTaps8Commands(out byte[] kXAxis, out byte[] kPAxis)
+        {
+            //0007060601590A00480C0301083F945A3F0FD9EFBF3FB08320F1051E163FC54BB80D20864D3FCFE76F9861ACB73FCFE76F9861ACB73FC54BB80D20864D3FB08320F1051E163F945A3F0FD9EFBF846F00480C0304083F945A3F0FD9EFBF3FB08320F1051E163FC54BB80D20864D3FCFE76F9861ACB73FCFE76F9861ACB73FC54BB80D20864D3FB08320F1051E163F945A3F0FD9EFBFEAAD000F1800000000000000000000E4500007060A044CC2000706020085EF000A060100000000D4FE0007060B012F560007060D0185F0000A060C0000000C34080005096EDC
+            //Filter: Taps = 08, 0.0198755124, 0.0645008648, 0.1663732590, 0.2492503637, 0.2492503637, 0.1663732590, 0.0645008648, 0.0198755124
+            //00480C0301083F945A3F0FD9EFBF3FB08320F1051E163FC54BB80D20864D3FCFE76F9861ACB73FCFE76F9861ACB73FC54BB80D20864D3FB08320F1051E163F945A3F0FD9EFBF846F
+            //00 48 0C 03 04 08 3F 94 5A 3F
+            //0F D9 EF BF 3F B0 83 20 F1 05
+            //1E 16 3F C5 4B B8 0D 20 86 4D 
+            //3F CF E7 6F 98 61 AC B7 3F CF 
+            //E7 6F 98 61 AC B7 3F C5 4B B8
+            //0D 20 86 4D 3F B0 83 20 F1 05 
+            //1E 16 3F 94 5A 3F 0F D9 EF BF 
+            //EA AD
+
+            byte[] kXAxisPayload = new byte[69];
+            kXAxisPayload[0] = 0x03;
+            kXAxisPayload[1] = (byte)ID.kXAxis;//01
+            kXAxisPayload[2] = 0x08;
+            kXAxisPayload[3] = 0x3F;
+            kXAxisPayload[4] = 0x94;
+            kXAxisPayload[5] = 0x5A;
+            kXAxisPayload[6] = 0x3F;
+            kXAxisPayload[7] = 0x0F;
+            kXAxisPayload[8] = 0xD9;
+            kXAxisPayload[9] = 0xEF;
+            kXAxisPayload[10] = 0xBF;
+            kXAxisPayload[11] = 0x3F;
+            kXAxisPayload[12] = 0xB0;
+            kXAxisPayload[13] = 0x83;
+            kXAxisPayload[14] = 0x20;
+            kXAxisPayload[15] = 0xF1;
+            kXAxisPayload[16] = 0x05;
+            kXAxisPayload[17] = 0x1E;
+            kXAxisPayload[18] = 0x16;
+            kXAxisPayload[19] = 0x3F;
+            kXAxisPayload[20] = 0xC5;
+            kXAxisPayload[21] = 0x4B;
+            kXAxisPayload[22] = 0xB8;
+            kXAxisPayload[23] = 0x0D;
+            kXAxisPayload[24] = 0x20;
+            kXAxisPayload[25] = 0x86;
+            kXAxisPayload[26] = 0x4D;
+            kXAxisPayload[27] = 0x3F;
+            kXAxisPayload[28] = 0xCF;
+            kXAxisPayload[29] = 0xE7;
+            kXAxisPayload[30] = 0x6F;
+            kXAxisPayload[31] = 0x98;
+            kXAxisPayload[32] = 0x61;
+            kXAxisPayload[33] = 0xAC;
+            kXAxisPayload[34] = 0xB7;
+            kXAxisPayload[35] = 0x3F;
+            kXAxisPayload[36] = 0xCF;
+            kXAxisPayload[37] = 0xE7;
+            kXAxisPayload[38] = 0x6F;
+            kXAxisPayload[39] = 0x98;
+            kXAxisPayload[40] = 0x61;
+            kXAxisPayload[41] = 0xAC;
+            kXAxisPayload[42] = 0xB7;
+            kXAxisPayload[43] = 0x3F;
+            kXAxisPayload[44] = 0xC5;
+            kXAxisPayload[45] = 0x4B;
+            kXAxisPayload[46] = 0xB8;
+            kXAxisPayload[47] = 0x0D;
+            kXAxisPayload[48] = 0x20;
+            kXAxisPayload[49] = 0x86;
+            kXAxisPayload[50] = 0x4D;
+            kXAxisPayload[51] = 0x3F;
+            kXAxisPayload[52] = 0xB0;
+            kXAxisPayload[53] = 0x83;
+            kXAxisPayload[54] = 0x20;
+            kXAxisPayload[55] = 0xF1;
+            kXAxisPayload[56] = 0x05;
+            kXAxisPayload[57] = 0x1E;
+            kXAxisPayload[58] = 0x16;
+            kXAxisPayload[59] = 0x3F;
+            kXAxisPayload[60] = 0x94;
+            kXAxisPayload[61] = 0x5A;
+            kXAxisPayload[62] = 0x3F;
+            kXAxisPayload[63] = 0x0F;
+            kXAxisPayload[64] = 0xD9;
+            kXAxisPayload[65] = 0xEF;
+            kXAxisPayload[66] = 0xBF;
+            kXAxisPayload[67] = 0x84;
+            kXAxisPayload[68] = 0x6F;
+
+            kXAxis = CreateMsg((int)ID.kSetParam, kXAxisPayload);
+
+            byte[] kPAxisPayload = new byte[69];
+            kPAxisPayload[0] = 0x03;
+            kPAxisPayload[1] = (byte)ID.kPAxis;
+            kPAxisPayload[2] = 0x08;
+            kPAxisPayload[3] = 0x3F;
+            kPAxisPayload[4] = 0x94;
+            kPAxisPayload[5] = 0x5A;
+            kPAxisPayload[6] = 0x3F;
+            kPAxisPayload[7] = 0x0F;
+            kPAxisPayload[8] = 0xD9;
+            kPAxisPayload[9] = 0xEF;
+            kPAxisPayload[10] = 0xBF;
+            kPAxisPayload[11] = 0x3F;
+            kPAxisPayload[12] = 0xB0;
+            kPAxisPayload[13] = 0x83;
+            kPAxisPayload[14] = 0x20;
+            kPAxisPayload[15] = 0xF1;
+            kPAxisPayload[16] = 0x05;
+            kPAxisPayload[17] = 0x1E;
+            kPAxisPayload[18] = 0x16;
+            kPAxisPayload[19] = 0x3F;
+            kPAxisPayload[20] = 0xC5;
+            kPAxisPayload[21] = 0x4B;
+            kPAxisPayload[22] = 0xB8;
+            kPAxisPayload[23] = 0x0D;
+            kPAxisPayload[24] = 0x20;
+            kPAxisPayload[25] = 0x86;
+            kPAxisPayload[26] = 0x4D;
+            kPAxisPayload[27] = 0x3F;
+            kPAxisPayload[28] = 0xCF;
+            kPAxisPayload[29] = 0xE7;
+            kPAxisPayload[30] = 0x6F;
+            kPAxisPayload[31] = 0x98;
+            kPAxisPayload[32] = 0x61;
+            kPAxisPayload[33] = 0xAC;
+            kPAxisPayload[34] = 0xB7;
+            kPAxisPayload[35] = 0x3F;
+            kPAxisPayload[36] = 0xCF;
+            kPAxisPayload[37] = 0xE7;
+            kPAxisPayload[38] = 0x6F;
+            kPAxisPayload[39] = 0x98;
+            kPAxisPayload[40] = 0x61;
+            kPAxisPayload[41] = 0xAC;
+            kPAxisPayload[42] = 0xB7;
+            kPAxisPayload[43] = 0x3F;
+            kPAxisPayload[44] = 0xC5;
+            kPAxisPayload[45] = 0x4B;
+            kPAxisPayload[46] = 0xB8;
+            kPAxisPayload[47] = 0x0D;
+            kPAxisPayload[48] = 0x20;
+            kPAxisPayload[49] = 0x86;
+            kPAxisPayload[50] = 0x4D;
+            kPAxisPayload[51] = 0x3F;
+            kPAxisPayload[52] = 0xB0;
+            kPAxisPayload[53] = 0x83;
+            kPAxisPayload[54] = 0x20;
+            kPAxisPayload[55] = 0xF1;
+            kPAxisPayload[56] = 0x05;
+            kPAxisPayload[57] = 0x1E;
+            kPAxisPayload[58] = 0x16;
+            kPAxisPayload[59] = 0x3F;
+            kPAxisPayload[60] = 0x94;
+            kPAxisPayload[61] = 0x5A;
+            kPAxisPayload[62] = 0x3F;
+            kPAxisPayload[63] = 0x0F;
+            kPAxisPayload[64] = 0xD9;
+            kPAxisPayload[65] = 0xEF;
+            kPAxisPayload[66] = 0xBF;
+            kPAxisPayload[67] = 0x84;
+            kPAxisPayload[68] = 0x6F;
+
+            kPAxis = CreateMsg((int)ID.kSetParam, kPAxisPayload);
+        }
+
         #endregion
+
+        #region Acq Param Commands
+
+        /// <summary>
+        /// Create the Get AcqParams command.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetAcqParamsCommand()
+        {
+            return CreateMsg((int)ID.kGetAcqParams, null);
+        }
+
+        /// <summary>
+        /// Set the Acquisition Params to the compass.
+        /// </summary>
+        /// <param name="param">Params to set.</param>
+        /// <returns>Byte array for the command.</returns>
+        public static byte[] SetAcqParamsCommand(PniAcqParam param)
+        {
+            byte[] sensorAcqTime = MathHelper.FloatToByteArray(param.SensorAcqTime);
+            byte[] intervalRespTime = MathHelper.FloatToByteArray(param.IntervalRespTime);
+
+            byte[] payload = new byte[10];
+            payload[0] = MathHelper.BooleanToByteArray(param.PollingMode)[0];
+            payload[1] = MathHelper.BooleanToByteArray(param.FlushFilter)[0];
+            payload[2] = sensorAcqTime[0];
+            payload[3] = sensorAcqTime[1];
+            payload[4] = sensorAcqTime[2];
+            payload[5] = sensorAcqTime[3];
+            payload[6] = intervalRespTime[0];
+            payload[7] = intervalRespTime[1];
+            payload[8] = intervalRespTime[2];
+            payload[9] = intervalRespTime[3];
+
+            return CreateMsg((int)ID.kSetAcqParams, payload);
+        }
+
+        #endregion
+
+        #region Mod Info Commands
+
+        /// <summary>
+        /// Create the Get Mod Info command.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetModInfoCommand()
+        {
+            return CreateMsg((int)ID.kGetModInfo, null);
+        }
+
+        #endregion
+
+        #region Start Stop Interval Mode Commands
+
+        /// <summary>
+        /// Create the Start Interval Mode command.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] StartIntervalModeCommand()
+        {
+            return CreateMsg((int)ID.kStartIntervalMode, null);
+        }
+
+        /// <summary>
+        /// Create the Stop Interval Mode command.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] StopIntervalModeCommand()
+        {
+            return CreateMsg((int)ID.kStopIntervalMode, null);
+        }
+
+        #endregion
+
+        #region Get Data Command
+
+        /// <summary>
+        /// Get the Data from the compass.  This will get
+        /// data like the heading, pitch, roll and
+        /// distortion.  Results will be stored in DataResponse.
+        /// 
+        /// The output for this is set by kSetDataComponents.  The
+        /// kSetDataComonents states which IDs will be given in 
+        /// kGetData.
+        /// </summary>
+        /// <returns>Byte array with command.</returns>
+        public static byte[] GetDataCommand()
+        {
+            return CreateMsg((int)ID.kGetData, null);
+        }
+
+        /// <summary>
+        /// Set the Data output to all the components.
+        /// This will set kGetData to output all the components.
+        /// </summary>
+        /// <returns>Byte array of the command.</returns>
+        public static byte[] SetAllDataComponentsCommand()
+        {
+            int numComponenets = 11;
+
+            int count = numComponenets + 1;     // Add one to include the ID count
+            byte[] payload = new byte[count];
+
+            payload[0] = (byte)count;
+            payload[1] = (byte)ID.kHeading;
+            payload[2] = (byte)ID.kPAngle;
+            payload[3] = (byte)ID.kRAngle;
+            payload[4] = (byte)ID.kDistortion;
+            payload[5] = (byte)ID.kCalStatus;
+            payload[6] = (byte)ID.kPAligned;
+            payload[7] = (byte)ID.kRAligned;
+            payload[8] = (byte)ID.kZAligned;
+            payload[9] = (byte)ID.kXAligned;
+            payload[10] = (byte)ID.kYAligned;
+            payload[11] = (byte)ID.kZAligned;
+
+            return CreateMsg((int)ID.kSetDataComponents, payload);
+        }
+
+        /// <summary>
+        /// Return the Data output back to the default
+        /// heading, pitch and roll.
+        /// </summary>
+        /// <returns>Byte array of Data components.</returns>
+        public static byte[] SetHPRDataComponentsCommands()
+        {
+            int numComponenets = 3;
+
+            int count = numComponenets + 1;     // Add one to include the ID count
+            byte[] payload = new byte[count];
+
+            payload[0] = (byte)count;
+            payload[1] = (byte)ID.kHeading;
+            payload[2] = (byte)ID.kPAngle;
+            payload[3] = (byte)ID.kRAngle;
+
+            return CreateMsg((int)ID.kSetDataComponents, payload);
+        }
+
+        #endregion
+
+        #region Power Up/Down Command
+
+        /// <summary>
+        /// Command to power down the compass module.
+        /// The frame has no payload.  The unit will power down
+        /// all peripherals including the RS-232 driver but the driver chip
+        /// has the feature to keep the Rx line enabled.  Any character sent to the
+        /// module cause it to exit power down mode.  It is recommended the send
+        /// the byte 0xFF.
+        /// </summary>
+        /// <returns>Command to power up the compass module.</returns>
+        public static byte[] PowerDownCommand()
+        {
+            return CreateMsg((int)ID.kPowerDown, null);
+        }
+
+        /// <summary>
+        /// Any character sent to the
+        /// module cause it to exit power down mode.  It is recommended the send
+        /// the byte 0xFF.
+        /// </summary>
+        /// <returns>Command to power up the compass module.</returns>
+        public static byte[] PowerUpCommand()
+        {
+            return CreateMsg(0xFF, null);
+        }
 
         #endregion
 
@@ -1808,6 +2288,12 @@ namespace RTI
                     case (int)ID.kParamResp:
                         DecodeKParamResp(msg);
                         break;
+                    case (int)ID.kAcqParamsResp:
+                        DecodekAcqParamsResp(msg);
+                        break;
+                    case (int)ID.kModInfoResp:
+                        DecodekModInfoResp(msg);
+                        break;
                     default:
                         break;
                 }
@@ -1858,7 +2344,7 @@ namespace RTI
         /// <param name="msg"></param>
         private void DecodekUserCalScore(byte[] msg)
         {
-            CalScore score = new CalScore();
+            PniCalScore score = new PniCalScore();
             int index = FIRST_PACKET_INDEX;
             
             // Get Std Dev Err
@@ -1927,7 +2413,7 @@ namespace RTI
             int index = FIRST_PACKET_INDEX;
             int idCount = msg[index++];
 
-            DataResponse dataResponse = new DataResponse();
+            PniDataResponse dataResponse = new PniDataResponse();
 
             // Go through each ID in the response
             for (int count = 0; count < idCount; count++)
@@ -1999,7 +2485,7 @@ namespace RTI
         {
             int index = FIRST_PACKET_INDEX;
 
-            Configuration config = new Configuration();
+            PniConfiguration config = new PniConfiguration();
 
             int id = msg[index++];
 
@@ -2025,7 +2511,7 @@ namespace RTI
                     PublishEvent(new CompassEventArgs(ID.kBigEndian, config.BigEndian));
                     break;
                 case (int)ID.kMountingRef:
-                    config.MountingRef = MathHelper.ByteArrayToInt8(msg, index);
+                    config.MountingRef = (PniConfiguration.PniMountingRef)MathHelper.ByteArrayToInt8(msg, index);
 
                     // Call all subscribers with new values
                     PublishEvent(new CompassEventArgs(ID.kMountingRef, config.MountingRef));
@@ -2048,6 +2534,12 @@ namespace RTI
                     // Call all subscribers with new values
                     PublishEvent(new CompassEventArgs(ID.kUserCalAutoSampling, config.UserCalAutoSampling));
                     break;
+                case (int)ID.kBaudRate:
+                    config.BaudRate = MathHelper.ByteArrayToInt8(msg, index);
+
+                    // Call all subscribers with new values
+                    PublishEvent(new CompassEventArgs(ID.kBaudRate, config.BaudRate));
+                    break;
                 default:
                     break;
             }
@@ -2064,7 +2556,7 @@ namespace RTI
         /// <param name="msg">Message to decode.</param>
         private void DecodeKParamResp(byte[] msg)
         {
-            Parameters param = new Parameters();
+            PniParameters param = new PniParameters();
             param.Taps = new List<double>();
 
             int index = FIRST_PACKET_INDEX;
@@ -2085,49 +2577,57 @@ namespace RTI
             // Call all subscribers with parameters
             PublishEvent(new CompassEventArgs(ID.kParamResp, param));
         }
+        
+        /// <summary>
+        /// Decode the Acq Params message.
+        /// Then publish the result.
+        /// </summary>
+        /// <param name="msg">Message to decode.</param>
+        private void DecodekAcqParamsResp(byte[] msg)
+        {
+            PniAcqParam param = new PniAcqParam();
+
+            int index = FIRST_PACKET_INDEX;
+            param.PollingMode = MathHelper.ByteArrayToBoolean(msg, index++);
+            param.FlushFilter = MathHelper.ByteArrayToBoolean(msg, index++);
+            param.SensorAcqTime = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
+            index += SIZE_OF_FLOAT;
+            param.IntervalRespTime = MathHelper.ByteArrayToFloat(msg, index, IS_BIG_ENDIAN);
+
+            // Call all subscribers with parameters
+            PublishEvent(new CompassEventArgs(ID.kAcqParamsResp, param));
+        }
 
         /// <summary>
-        /// Give the calibration positions for
-        /// the next sample taken.
-        /// Hdg:   XXX
-        /// Pitch: XXX
-        /// Roll:  XXX
+        /// Decode the Mod Info message.
+        /// Then publish the results.
         /// </summary>
-        /// <param name="sample">Position Sample.</param>
-        /// <returns>String of next position for each sample given.</returns>
-        public static string MagCalibrationPosition(UInt32 sample)
+        /// <param name="msg">Message to decode.</param>
+        private void DecodekModInfoResp(byte[] msg)
         {
-            switch(sample)
-            {
-                case 0:
-                    return "Hdg:  0°\n\n";
-                case 1:
-                    return "Hdg:  90°\n\n";
-                case 2:
-                    return "Hdg:  180°\n\n";
-                case 3:
-                    return "Hdg:  270°\n\n";
-                case 4:
-                    return "Hdg:  30°\nPitch: 50°\nRoll:   -20°";
-                case 5:
-                    return "Hdg:  120°\nPitch: 50°\nRoll:   20°";
-                case 6:
-                    return "Hdg:  210°\nPitch: 50°\nRoll:   -20°";
-                case 7:
-                    return "Hdg:  300°\nPitch: 50°\nRoll:   20°";
-                case 8:
-                    return "Hdg:  60°\nPitch: -50°\nRoll:   20°";
-                case 9:
-                    return "Hdg:  150°\nPitch: -50°\nRoll:   -20°";
-                case 10:
-                    return "Hdg:  240°\nPitch: -50°\nRoll:   20°";
-                case 11:
-                    return "Hdg:  330°\nPitch: -50°\nRoll:   -20°";
-                default:
-                    return "-";
-            }
+            PniModInfo info = new PniModInfo();
+
+            // Convert the type bytes to a string
+            int index = FIRST_PACKET_INDEX;
+            byte[] typeBytes = new byte[4];
+            typeBytes[0] = msg[index++];
+            typeBytes[1] = msg[index++];
+            typeBytes[2] = msg[index++];
+            typeBytes[3] = msg[index++];
+            info.Type = new ASCIIEncoding().GetString(typeBytes);
+
+            // Convert the revision bytes to a string
+            byte[] revBytes = new byte[4];
+            revBytes[0] = msg[index++];
+            revBytes[1] = msg[index++];
+            revBytes[2] = msg[index++];
+            revBytes[3] = msg[index++];
+            info.Revision = new ASCIIEncoding().GetString(revBytes);
+
+            // Call all subscribers with parameters
+            PublishEvent(new CompassEventArgs(ID.kModInfoResp, info));
         }
-        
+
         /// <summary>
         /// This will check the first 2 byte for a message
         /// length.  It will then go to the last 2 bytes to
@@ -2201,6 +2701,52 @@ namespace RTI
         private UInt16 CalculateMsgChecksum(int size)
         {
             return CRC(_incomingDataBuffer, 0, size-2);
+        }
+
+        #endregion
+
+        #region Strings
+
+        /// <summary>
+        /// Give the calibration positions for
+        /// the next sample taken.
+        /// Hdg:   XXX
+        /// Pitch: XXX
+        /// Roll:  XXX
+        /// </summary>
+        /// <param name="sample">Position Sample.</param>
+        /// <returns>String of next position for each sample given.</returns>
+        public static string MagCalibrationPosition(UInt32 sample)
+        {
+            switch (sample)
+            {
+                case 0:
+                    return "Hdg:  0°\n\n";
+                case 1:
+                    return "Hdg:  90°\n\n";
+                case 2:
+                    return "Hdg:  180°\n\n";
+                case 3:
+                    return "Hdg:  270°\n\n";
+                case 4:
+                    return "Hdg:  30°\nPitch: 50°\nRoll:   -20°";
+                case 5:
+                    return "Hdg:  120°\nPitch: 50°\nRoll:   20°";
+                case 6:
+                    return "Hdg:  210°\nPitch: 50°\nRoll:   -20°";
+                case 7:
+                    return "Hdg:  300°\nPitch: 50°\nRoll:   20°";
+                case 8:
+                    return "Hdg:  60°\nPitch: -50°\nRoll:   20°";
+                case 9:
+                    return "Hdg:  150°\nPitch: -50°\nRoll:   -20°";
+                case 10:
+                    return "Hdg:  240°\nPitch: -50°\nRoll:   20°";
+                case 11:
+                    return "Hdg:  330°\nPitch: -50°\nRoll:   -20°";
+                default:
+                    return "-";
+            }
         }
 
         #endregion

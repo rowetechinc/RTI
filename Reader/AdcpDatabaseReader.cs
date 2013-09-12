@@ -39,6 +39,7 @@
  * 06/12/2012      RC          2.11       Added GetFirstEnsemble().
  * 03/06/2013      RC          2.18       Changed the format of the database.
  * 03/08/2013      RC          2.18       Removed cache and added an SQLiteConnection to improve performance.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 
  */
 namespace RTI
@@ -56,7 +57,7 @@ namespace RTI
     /// read the data from the database and then parse it to an 
     /// ensemble.
     /// </summary>
-    public class AdcpDatabaseReader
+    public class AdcpDatabaseReader: IDisposable
     {
 
         #region Variables
@@ -98,13 +99,13 @@ namespace RTI
         /// <summary>
         /// Shutdown the object.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
             // Close the project sqlite connection
             CloseConnection();
 
             // Shutdown the codec
-            _adcpDbCodec.Shutdown();
+            _adcpDbCodec.Dispose();
         }
 
         /// <summary>
@@ -236,14 +237,17 @@ namespace RTI
             if (project != null)
             {
                 // Query for ensemble data
-                DataSet.Ensemble data = _adcpDbCodec.QueryForDataSet(_cnn, project, index);
+                DataSet.Ensemble ensemble = _adcpDbCodec.QueryForDataSet(_cnn, project, index);
+                
+                // Create the velocity vectors for the ensemble
+                DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
 
                 // Disturbute the dataset to all subscribers
-                if (data != null)
+                if (ensemble != null)
                 {
                     // Create a clone so the ensemble in the
                     //cache is not modified
-                    return data.Clone();
+                    return ensemble.Clone();
                 }
             }
 

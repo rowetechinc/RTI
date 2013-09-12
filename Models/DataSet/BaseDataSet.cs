@@ -44,7 +44,7 @@
  * 02/20/2013      RC          2.18       Made all public properties' Setters public to convert to and from JSON.
  * 02/22/2013      RC          2.18       Added ToJsonBaseStub() to create a JSON stub for the base dataset properties.
  * 02/25/2013      RC          2.18       Removed Orientation.  Replaced with SubsystemConfiguration.
- *       
+ * 07/26/2013      RC          2.19.3     Added CEPO index JSON string and renamed SubsystemConfigurationNumber to SubsystemConfigurationIndex.      
  * 
  */
 
@@ -248,9 +248,14 @@ namespace RTI
             public const string JSON_STR_SUBSYSTEM_CODE = "Code";
 
             /// <summary>
+            /// String for CEPO Index.
+            /// </summary>
+            public const string JSON_STR_CEPOINDEX = "CepoIndex";
+
+            /// <summary>
             /// String for ConfigNumber.
             /// </summary>
-            public const string JSON_STR_CONFIGNUMBER = "ConfigNumber";
+            public const string JSON_STR_SSCONFIG_INDEX = "ConfigNumber";
 
             #endregion
 

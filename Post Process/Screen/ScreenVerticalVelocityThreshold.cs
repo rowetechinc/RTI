@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 12/24/2012      RC          2.17       Initial coding
+ * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
  * 
  */
 
@@ -42,7 +43,7 @@ using System;
 
 namespace RTI
 {
-    namespace Screen
+    namespace ScreenData
     {
         /// <summary>
         /// Screen the Earth Vertical Velocity against a threshold.  If the value is

@@ -53,6 +53,7 @@
  * 03/06/2013      RC          2.18       Added logger and changed the format of the database.
  * 03/08/2013      RC          2.18       For each method call, created a new one with the SQLiteConnection to prevent opening and closing connection for each call.
  *                                         Added GetProjectVersion() to get the project version.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 
  */
 
@@ -70,7 +71,7 @@ namespace RTI
     /// This class will read and write to an
     /// ADCP Database file.
     /// </summary>
-    public class AdcpDatabaseCodec
+    public class AdcpDatabaseCodec: IDisposable
     {
         #region Variables
 
@@ -93,7 +94,7 @@ namespace RTI
         /// <summary>
         /// Shutdown method.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
 
         }

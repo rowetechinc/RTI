@@ -36,6 +36,7 @@
  * 10/01/2012      RC          2.15       Removed serial number from the AdcpCommand constructor.
  * 10/11/2012      RC          2.15       Updated test with new minimum values for CWS, CWSS and CTD.
  * 11/21/2012      RC          2.16       Added Command Strings for every command.
+ * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
  * 
  * 
  */
@@ -96,7 +97,7 @@ using System.Text;
             // Get the first subsystem (Only subsystem)
             SerialNumber serialNum = new SerialNumber("01400000000000000000000000000015");
             Subsystem ss = serialNum.SubSystemsDict[0];
-            AdcpSubsystemCommands asc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands asc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             // Water Profile Defaults
             Assert.AreEqual(Commands.AdcpSubsystemCommands.DEFAULT_CWPON, asc.CWPON);
@@ -425,66 +426,70 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Year = 2015;
+            //cmd.CETFP.Year = 2015;
+            cmd.CETFP = new DateTime(2015, 1, 1, 1, 1, 1);
 
-            Assert.AreEqual(2015, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+            Assert.AreEqual(2015, cmd.CETFP.Year, "CETFP_Year is incorrect.");
         }
 
-        /// <summary>
-        /// Give a bad CETFP_Year.
-        /// Range is 2000 to 2099.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Year_BadMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Year.
+        ///// Range is 2000 to 2099.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Year_BadMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Year = 15;
+        //    //cmd.CETFP.Year = 15;
+        //    cmd.CETFP = new DateTime(15, 1, 1, 1, 1, 1);
 
-            Assert.AreEqual(AdcpCommands.DEFAULT_CETFP_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.DEFAULT_CETFP_YEAR, cmd.CETFP.Year, "CETFP_Year is incorrect.");
+        //}
 
-        /// <summary>
-        /// Give a bad CETFP_Year.
-        /// Range is 2000 to 2099.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Year_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Year.
+        ///// Range is 2000 to 2099.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Year_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Year = 2100;
+        //    //cmd.CETFP_Year = 2100;
+        //    cmd.CETFP = new DateTime(2100, 1, 1, 1, 1, 1);
 
-            Assert.AreEqual(AdcpCommands.DEFAULT_CETFP_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.DEFAULT_CETFP_YEAR, cmd.CETFP.Year, "CETFP_Year is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_Year.
-        /// Range is 2000 to 2099.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Year_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_Year.
+        ///// Range is 2000 to 2099.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Year_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Year = AdcpCommands.MIN_YEAR;
+        //    //cmd.CETFP_Year = AdcpCommands.MIN_YEAR;
+        //    cmd.CETFP = new DateTime(AdcpCommands.MIN_YEAR, 1, 1, 1, 1, 1);
 
-            Assert.AreEqual(AdcpCommands.MIN_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_YEAR, cmd.CETFP.Year, "CETFP_Year is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_Year.
-        /// Range is 2000 to 2099.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Year_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_Year.
+        ///// Range is 2000 to 2099.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Year_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Year = AdcpCommands.MAX_YEAR;
+        //    cmd.CETFP_Year = AdcpCommands.MAX_YEAR;
 
-            Assert.AreEqual(AdcpCommands.MAX_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_YEAR, cmd.CETFP_Year, "CETFP_Year is incorrect.");
+        //}
 
         #endregion
 
@@ -498,66 +503,68 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Month = 5;
+            //cmd.CETFP_Month = 5;
+            //cmd.CETFP.Year = 2015;
+            cmd.CETFP = new DateTime(2015, 5, 1, 1, 1, 1);
 
-            Assert.AreEqual(5, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+            Assert.AreEqual(5, cmd.CETFP.Month, "CETFP_Month is incorrect.");
         }
 
-        /// <summary>
-        /// Give a bad CETFP_Month.
-        /// Range is 1 to 12.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Month_BadMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Month.
+        ///// Range is 1 to 12.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Month_BadMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Month = 0;
+        //    cmd.CETFP_Month = 0;
 
-            Assert.AreEqual(DateTime.Now.Month, cmd.CETFP_Month, "CETFP_Month is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Month, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        //}
 
-        /// <summary>
-        /// Give a bad CETFP_Month.
-        /// Range is 1 to 12.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Month_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Month.
+        ///// Range is 1 to 12.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Month_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Month = 2100;
+        //    cmd.CETFP_Month = 2100;
 
-            Assert.AreEqual(DateTime.Now.Month, cmd.CETFP_Month, "CETFP_Month is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Month, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_Month.
-        /// Range is 1 to 12.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Month_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_Month.
+        ///// Range is 1 to 12.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Month_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Month = AdcpCommands.MIN_MONTH;
+        //    cmd.CETFP_Month = AdcpCommands.MIN_MONTH;
 
-            Assert.AreEqual(AdcpCommands.MIN_MONTH, cmd.CETFP_Month, "CETFP_Month is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_MONTH, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_Month.
-        /// Range is 1 to 12.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Month_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_Month.
+        ///// Range is 1 to 12.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Month_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Month = AdcpCommands.MAX_MONTH;
+        //    cmd.CETFP_Month = AdcpCommands.MAX_MONTH;
 
-            Assert.AreEqual(AdcpCommands.MAX_MONTH, cmd.CETFP_Month, "CETFP_Month is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_MONTH, cmd.CETFP_Month, "CETFP_Month is incorrect.");
+        //}
 
         #endregion
 
@@ -571,66 +578,68 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Day = 5;
+            //cmd.CETFP_Day = 5;
+            //cmd.CETFP.Year = 2015;
+            cmd.CETFP = new DateTime(2015, 1, 5, 1, 1, 1);
 
-            Assert.AreEqual(5, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+            Assert.AreEqual(5, cmd.CETFP.Day, "CETFP_Day is incorrect.");
         }
 
-        /// <summary>
-        /// Give a bad CETFP_Day.
-        /// Range is 1 to 31.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Day_BadMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Day.
+        ///// Range is 1 to 31.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Day_BadMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Day = 0;
+        //    cmd.CETFP_Day = 0;
 
-            Assert.AreEqual(DateTime.Now.Day, cmd.CETFP_Day, "CETFP_Day is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Day, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        //}
 
-        /// <summary>
-        /// Give a bad CETFP_Day.
-        /// Range is 1 to 31.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Day_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Day.
+        ///// Range is 1 to 31.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Day_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Day = 2100;
+        //    cmd.CETFP_Day = 2100;
 
-            Assert.AreEqual(DateTime.Now.Day, cmd.CETFP_Day, "CETFP_Day is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Day, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_Day.
-        /// Range is 1 to 31.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Day_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_Day.
+        ///// Range is 1 to 31.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Day_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Day = AdcpCommands.MIN_DAY;
+        //    cmd.CETFP_Day = AdcpCommands.MIN_DAY;
 
-            Assert.AreEqual(AdcpCommands.MIN_DAY, cmd.CETFP_Day, "CETFP_Day is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_DAY, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_Day.
-        /// Range is 1 to 31.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Day_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_Day.
+        ///// Range is 1 to 31.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Day_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Day = AdcpCommands.MAX_DAY;
+        //    cmd.CETFP_Day = AdcpCommands.MAX_DAY;
 
-            Assert.AreEqual(AdcpCommands.MAX_DAY, cmd.CETFP_Day, "CETFP_Day is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_DAY, cmd.CETFP_Day, "CETFP_Day is incorrect.");
+        //}
 
         #endregion
 
@@ -644,52 +653,54 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Hour = 5;
+            //cmd.CETFP_Hour = 5;
+            //cmd.CETFP.Year = 2015;
+            cmd.CETFP = new DateTime(2015, 1, 1, 5, 1, 1);
 
-            Assert.AreEqual(5, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+            Assert.AreEqual(5, cmd.CETFP.Hour, "CETFP_Hour is incorrect.");
         }
 
-        /// <summary>
-        /// Give a bad CETFP_Hour.
-        /// Range is 0 to 23.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Hour_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Hour.
+        ///// Range is 0 to 23.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Hour_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Hour = 2100;
+        //    cmd.CETFP_Hour = 2100;
 
-            Assert.AreEqual(DateTime.Now.Hour, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Hour, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_Hour.
-        /// Range is 0 to 23.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Hour_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_Hour.
+        ///// Range is 0 to 23.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Hour_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Hour = AdcpCommands.MIN_HOUR;
+        //    cmd.CETFP_Hour = AdcpCommands.MIN_HOUR;
 
-            Assert.AreEqual(AdcpCommands.MIN_HOUR, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_HOUR, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_Hour.
-        /// Range is 0 to 23.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Hour_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_Hour.
+        ///// Range is 0 to 23.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Hour_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Hour = AdcpCommands.MAX_HOUR;
+        //    cmd.CETFP_Hour = AdcpCommands.MAX_HOUR;
 
-            Assert.AreEqual(AdcpCommands.MAX_HOUR, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_HOUR, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
+        //}
 
         #endregion
 
@@ -703,52 +714,53 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Minute = 5;
+            //cmd.CETFP_Minute = 5;
+            cmd.CETFP = new DateTime(2015, 1, 1, 1, 5, 1);
 
-            Assert.AreEqual(5, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+            Assert.AreEqual(5, cmd.CETFP.Minute, "CETFP_Minute is incorrect.");
         }
 
-        /// <summary>
-        /// Give a bad CETFP_Minute.
-        /// Range is 0 to 59.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Minute_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Minute.
+        ///// Range is 0 to 59.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Minute_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Minute = 2100;
+        //    cmd.CETFP_Minute = 2100;
 
-            Assert.AreEqual(DateTime.Now.Minute, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Minute, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_Minute.
-        /// Range is 0 to 59.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Minute_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_Minute.
+        ///// Range is 0 to 59.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Minute_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Minute = AdcpCommands.MIN_MINSEC;
+        //    cmd.CETFP_Minute = AdcpCommands.MIN_MINSEC;
 
-            Assert.AreEqual(AdcpCommands.MIN_MINSEC, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_MINSEC, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_Minute.
-        /// Range is 0 to 59.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Minute_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_Minute.
+        ///// Range is 0 to 59.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Minute_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Minute = AdcpCommands.MAX_MINSEC;
+        //    cmd.CETFP_Minute = AdcpCommands.MAX_MINSEC;
 
-            Assert.AreEqual(AdcpCommands.MAX_MINSEC, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_MINSEC, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
+        //}
 
         #endregion
 
@@ -762,113 +774,114 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Second = 5;
+            //cmd.CETFP_Second = 5;
+            cmd.CETFP = new DateTime(2015, 1, 1, 1, 1, 5);
 
-            Assert.AreEqual(5, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+            Assert.AreEqual(5, cmd.CETFP.Second, "CETFP_Second is incorrect.");
         }
 
-        /// <summary>
-        /// Give a bad CETFP_Second.
-        /// Range is 0 to 59.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Second_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_Second.
+        ///// Range is 0 to 59.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Second_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Second = 2100;
+        //    cmd.CETFP_Second = 2100;
 
-            Assert.AreEqual(DateTime.Now.Second, cmd.CETFP_Second, "CETFP_Second is incorrect.");
-        }
+        //    Assert.AreEqual(DateTime.Now.Second, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_Second.
-        /// Range is 0 to 59.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Second_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_Second.
+        ///// Range is 0 to 59.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Second_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Second = AdcpCommands.MIN_MINSEC;
+        //    cmd.CETFP_Second = AdcpCommands.MIN_MINSEC;
 
-            Assert.AreEqual(AdcpCommands.MIN_MINSEC, cmd.CETFP_Second, "CETFP_Second is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_MINSEC, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_Second.
-        /// Range is 0 to 59.
-        /// </summary>
-        [Test]
-        public void TestCETFP_Second_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_Second.
+        ///// Range is 0 to 59.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_Second_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Second = AdcpCommands.MAX_MINSEC;
+        //    cmd.CETFP_Second = AdcpCommands.MAX_MINSEC;
 
-            Assert.AreEqual(AdcpCommands.MAX_MINSEC, cmd.CETFP_Second, "CETFP_Second is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_MINSEC, cmd.CETFP_Second, "CETFP_Second is incorrect.");
+        //}
 
         #endregion
 
-        #region CETFP_HunSec
+        //#region CETFP_HunSec
 
-        /// <summary>
-        /// Test setting the CETFP_HunSec command.
-        /// </summary>
-        [Test]
-        public void TestCETFP_HunSec()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test setting the CETFP_HunSec command.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_HunSec()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_HunSec = 5;
+        //    cmd.CETFP_HunSec = 5;
 
-            Assert.AreEqual(5, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
-        }
+        //    Assert.AreEqual(5, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        //}
 
-        /// <summary>
-        /// Give a bad CETFP_HunSec.
-        /// Range is 0 to 99.
-        /// </summary>
-        [Test]
-        public void TestCETFP_HunSec_BadMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Give a bad CETFP_HunSec.
+        ///// Range is 0 to 99.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_HunSec_BadMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Second = 2100;
+        //    cmd.CETFP_Second = 2100;
 
-            Assert.AreNotEqual(2100, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
-        }
+        //    Assert.AreNotEqual(2100, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Min for CETFP_HunSec.
-        /// Range is 0 to 99.
-        /// </summary>
-        [Test]
-        public void TestCETFP_HunSec_CornerMin()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Min for CETFP_HunSec.
+        ///// Range is 0 to 99.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_HunSec_CornerMin()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_HunSec = AdcpCommands.MIN_HUNSEC;
+        //    cmd.CETFP_HunSec = AdcpCommands.MIN_HUNSEC;
 
-            Assert.AreEqual(AdcpCommands.MIN_HUNSEC, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MIN_HUNSEC, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        //}
 
-        /// <summary>
-        /// Test corner case Max for CETFP_HunSec.
-        /// Range is 0 to 99.
-        /// </summary>
-        [Test]
-        public void TestCETFP_HunSec_CornerMax()
-        {
-            AdcpCommands cmd = new AdcpCommands();
+        ///// <summary>
+        ///// Test corner case Max for CETFP_HunSec.
+        ///// Range is 0 to 99.
+        ///// </summary>
+        //[Test]
+        //public void TestCETFP_HunSec_CornerMax()
+        //{
+        //    AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_HunSec = AdcpCommands.MAX_HUNSEC;
+        //    cmd.CETFP_HunSec = AdcpCommands.MAX_HUNSEC;
 
-            Assert.AreEqual(AdcpCommands.MAX_HUNSEC, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
-        }
+        //    Assert.AreEqual(AdcpCommands.MAX_HUNSEC, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+        //}
 
-        #endregion
+        //#endregion
 
         #region CERECORD
 
@@ -1865,13 +1878,14 @@ using System.Text;
             cmd.Mode = AdcpCommands.AdcpMode.DVL;
             cmd.CEI = new TimeValue(1, 2, 3, 4);
             cmd.CEPO = "33";
-            cmd.CETFP_Year = 2022;
-            cmd.CETFP_Month = 4;
-            cmd.CETFP_Day = 20;
-            cmd.CETFP_Hour = 3;
-            cmd.CETFP_Minute = 2;
-            cmd.CETFP_Second = 32;
-            cmd.CETFP_HunSec = 83;
+            //cmd.CETFP_Year = 2022;
+            //cmd.CETFP_Month = 4;
+            //cmd.CETFP_Day = 20;
+            //cmd.CETFP_Hour = 3;
+            //cmd.CETFP_Minute = 2;
+            //cmd.CETFP_Second = 32;
+            //cmd.CETFP_HunSec = 83;
+            cmd.CETFP = new DateTime(2022, 4, 20, 3, 2, 32, 83);
             cmd.CERECORD = false;
             cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
             cmd.CWS = 23.234f;
@@ -1906,45 +1920,45 @@ using System.Text;
             #endregion
 
             #region CETFP_Year
-            Assert.AreEqual(2022, cmd.CETFP_Year, "CETFP_Year is incorrect.");
-            Assert.AreEqual(2022, cmd1.CETFP_Year, "CETFP_Year 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Year, cmd1.CETFP_Year, "CETFP_Year equal is incorrect.");
+            Assert.AreEqual(2022, cmd.CETFP.Year, "CETFP_Year is incorrect.");
+            Assert.AreEqual(2022, cmd1.CETFP.Year, "CETFP_Year 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Year, cmd1.CETFP.Year, "CETFP_Year equal is incorrect.");
             #endregion
 
             #region CETFP_Month
-            Assert.AreEqual(4, cmd.CETFP_Month, "CETFP_Month is incorrect.");
-            Assert.AreEqual(4, cmd1.CETFP_Month, "CETFP_Month 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Month, cmd1.CETFP_Month, "CETFP_Month equal is incorrect.");
+            Assert.AreEqual(4, cmd.CETFP.Month, "CETFP_Month is incorrect.");
+            Assert.AreEqual(4, cmd1.CETFP.Month, "CETFP_Month 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Month, cmd1.CETFP.Month, "CETFP_Month equal is incorrect.");
             #endregion
 
             #region CETFP_Day
-            Assert.AreEqual(20, cmd.CETFP_Day, "CETFP_Day is incorrect.");
-            Assert.AreEqual(20, cmd1.CETFP_Day, "CETFP_Day 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Day, cmd1.CETFP_Day, "CETFP_Day equal is incorrect.");
+            Assert.AreEqual(20, cmd.CETFP.Day, "CETFP_Day is incorrect.");
+            Assert.AreEqual(20, cmd1.CETFP.Day, "CETFP_Day 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Day, cmd1.CETFP.Day, "CETFP_Day equal is incorrect.");
             #endregion
 
             #region CETFP_Hour
-            Assert.AreEqual(3, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
-            Assert.AreEqual(3, cmd1.CETFP_Hour, "CETFP_Hour 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Hour, cmd1.CETFP_Hour, "CETFP_Hour equal is incorrect.");
+            Assert.AreEqual(3, cmd.CETFP.Hour, "CETFP_Hour is incorrect.");
+            Assert.AreEqual(3, cmd1.CETFP.Hour, "CETFP_Hour 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Hour, cmd1.CETFP.Hour, "CETFP_Hour equal is incorrect.");
             #endregion
 
             #region CETFP_Minute
-            Assert.AreEqual(2, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
-            Assert.AreEqual(2, cmd1.CETFP_Minute, "CETFP_Minute 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Minute, cmd1.CETFP_Minute, "CETFP_Minute equal is incorrect.");
+            Assert.AreEqual(2, cmd.CETFP.Minute, "CETFP_Minute is incorrect.");
+            Assert.AreEqual(2, cmd1.CETFP.Minute, "CETFP_Minute 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Minute, cmd1.CETFP.Minute, "CETFP_Minute equal is incorrect.");
             #endregion
 
             #region CETFP_Second
-            Assert.AreEqual(32, cmd.CETFP_Second, "CETFP_Second is incorrect.");
-            Assert.AreEqual(32, cmd1.CETFP_Second, "CETFP_Second 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Second, cmd1.CETFP_Second, "CETFP_Second equal is incorrect.");
+            Assert.AreEqual(32, cmd.CETFP.Second, "CETFP_Second is incorrect.");
+            Assert.AreEqual(32, cmd1.CETFP.Second, "CETFP_Second 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Second, cmd1.CETFP.Second, "CETFP_Second equal is incorrect.");
             #endregion
 
             #region CETFP_HunSec
-            Assert.AreEqual(83, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
-            Assert.AreEqual(83, cmd1.CETFP_HunSec, "CETFP_HunSec 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_HunSec, cmd1.CETFP_HunSec, "CETFP_HunSec equal is incorrect.");
+            //Assert.AreEqual(83, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+            //Assert.AreEqual(83, cmd1.CETFP_HunSec, "CETFP_HunSec 1 is incorrect.");
+            //Assert.AreEqual(cmd.CETFP_HunSec, cmd1.CETFP_HunSec, "CETFP_HunSec equal is incorrect.");
             #endregion
 
             #region CERECORD
@@ -2031,13 +2045,14 @@ using System.Text;
             cmd.Mode = AdcpCommands.AdcpMode.DVL;
             cmd.CEI = new TimeValue(1, 2, 3, 4);
             cmd.CEPO = "33";
-            cmd.CETFP_Year = 2022;
-            cmd.CETFP_Month = 4;
-            cmd.CETFP_Day = 20;
-            cmd.CETFP_Hour = 3;
-            cmd.CETFP_Minute = 2;
-            cmd.CETFP_Second = 32;
-            cmd.CETFP_HunSec = 83;
+            //cmd.CETFP_Year = 2022;
+            //cmd.CETFP_Month = 4;
+            //cmd.CETFP_Day = 20;
+            //cmd.CETFP_Hour = 3;
+            //cmd.CETFP_Minute = 2;
+            //cmd.CETFP_Second = 32;
+            //cmd.CETFP_HunSec = 83;
+            cmd.CETFP = new DateTime(2022, 4, 20, 3, 2, 32, 83);
             cmd.CERECORD = false;
             cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
             cmd.CWS = 23.234f;
@@ -2073,45 +2088,45 @@ using System.Text;
             #endregion
 
             #region CETFP_Year
-            Assert.AreEqual(2022, cmd.CETFP_Year, "CETFP_Year is incorrect.");
-            Assert.AreEqual(2022, cmd1.CETFP_Year, "CETFP_Year 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Year, cmd1.CETFP_Year, "CETFP_Year equal is incorrect.");
+            Assert.AreEqual(2022, cmd.CETFP.Year, "CETFP_Year is incorrect.");
+            Assert.AreEqual(2022, cmd1.CETFP.Year, "CETFP_Year 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Year, cmd1.CETFP.Year, "CETFP_Year equal is incorrect.");
             #endregion
 
             #region CETFP_Month
-            Assert.AreEqual(4, cmd.CETFP_Month, "CETFP_Month is incorrect.");
-            Assert.AreEqual(4, cmd1.CETFP_Month, "CETFP_Month 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Month, cmd1.CETFP_Month, "CETFP_Month equal is incorrect.");
+            Assert.AreEqual(4, cmd.CETFP.Month, "CETFP_Month is incorrect.");
+            Assert.AreEqual(4, cmd1.CETFP.Month, "CETFP_Month 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Month, cmd1.CETFP.Month, "CETFP_Month equal is incorrect.");
             #endregion
 
             #region CETFP_Day
-            Assert.AreEqual(20, cmd.CETFP_Day, "CETFP_Day is incorrect.");
-            Assert.AreEqual(20, cmd1.CETFP_Day, "CETFP_Day 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Day, cmd1.CETFP_Day, "CETFP_Day equal is incorrect.");
+            Assert.AreEqual(20, cmd.CETFP.Day, "CETFP_Day is incorrect.");
+            Assert.AreEqual(20, cmd1.CETFP.Day, "CETFP_Day 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Day, cmd1.CETFP.Day, "CETFP_Day equal is incorrect.");
             #endregion
 
             #region CETFP_Hour
-            Assert.AreEqual(3, cmd.CETFP_Hour, "CETFP_Hour is incorrect.");
-            Assert.AreEqual(3, cmd1.CETFP_Hour, "CETFP_Hour 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Hour, cmd1.CETFP_Hour, "CETFP_Hour equal is incorrect.");
+            Assert.AreEqual(3, cmd.CETFP.Hour, "CETFP_Hour is incorrect.");
+            Assert.AreEqual(3, cmd1.CETFP.Hour, "CETFP_Hour 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Hour, cmd1.CETFP.Hour, "CETFP_Hour equal is incorrect.");
             #endregion
 
             #region CETFP_Minute
-            Assert.AreEqual(2, cmd.CETFP_Minute, "CETFP_Minute is incorrect.");
-            Assert.AreEqual(2, cmd1.CETFP_Minute, "CETFP_Minute 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Minute, cmd1.CETFP_Minute, "CETFP_Minute equal is incorrect.");
+            Assert.AreEqual(2, cmd.CETFP.Minute, "CETFP_Minute is incorrect.");
+            Assert.AreEqual(2, cmd1.CETFP.Minute, "CETFP_Minute 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Minute, cmd1.CETFP.Minute, "CETFP_Minute equal is incorrect.");
             #endregion
 
             #region CETFP_Second
-            Assert.AreEqual(32, cmd.CETFP_Second, "CETFP_Second is incorrect.");
-            Assert.AreEqual(32, cmd1.CETFP_Second, "CETFP_Second 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_Second, cmd1.CETFP_Second, "CETFP_Second equal is incorrect.");
+            Assert.AreEqual(32, cmd.CETFP.Second, "CETFP_Second is incorrect.");
+            Assert.AreEqual(32, cmd1.CETFP.Second, "CETFP_Second 1 is incorrect.");
+            Assert.AreEqual(cmd.CETFP.Second, cmd1.CETFP.Second, "CETFP_Second equal is incorrect.");
             #endregion
 
             #region CETFP_HunSec
-            Assert.AreEqual(83, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
-            Assert.AreEqual(83, cmd1.CETFP_HunSec, "CETFP_HunSec 1 is incorrect.");
-            Assert.AreEqual(cmd.CETFP_HunSec, cmd1.CETFP_HunSec, "CETFP_HunSec equal is incorrect.");
+            //Assert.AreEqual(83, cmd.CETFP_HunSec, "CETFP_HunSec is incorrect.");
+            //Assert.AreEqual(83, cmd1.CETFP_HunSec, "CETFP_HunSec 1 is incorrect.");
+            //Assert.AreEqual(cmd.CETFP_HunSec, cmd1.CETFP_HunSec, "CETFP_HunSec equal is incorrect.");
             #endregion
 
             #region CERECORD
@@ -2231,13 +2246,26 @@ using System.Text;
         /// Test getting the Time command string.
         /// </summary>
         [Test]
-        public void TestTimeCmdStr()
+        public void TestLocalTimeCmdStr()
         {
             AdcpCommands cmd = new AdcpCommands();
 
             string dateTime = DateTime.Now.ToString("yyyy/MM/dd,HH:mm:ss", CultureInfo.CreateSpecificCulture("en-US"));
 
-            Assert.AreEqual(AdcpCommands.CMD_STIME + " " + dateTime, cmd.Time_CmdStr(), "Time Command String is incorrect.");
+            Assert.AreEqual(AdcpCommands.CMD_STIME + " " + dateTime, cmd.LocalTime_CmdStr(), "Time Command String is incorrect.");
+        }
+
+        /// <summary>
+        /// Test getting the Time command string.
+        /// </summary>
+        [Test]
+        public void TestUtcTimeCmdStr()
+        {
+            AdcpCommands cmd = new AdcpCommands();
+
+            string dateTime = DateTime.Now.ToUniversalTime().ToString("yyyy/MM/dd,HH:mm:ss", CultureInfo.CreateSpecificCulture("en-US"));
+
+            Assert.AreEqual(AdcpCommands.CMD_STIME + " " + dateTime, cmd.GmtTime_CmdStr(), "Time Command String is incorrect.");
         }
 
         #endregion
@@ -2269,13 +2297,14 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CETFP_Year = 2012;
-            cmd.CETFP_Month = 11;
-            cmd.CETFP_Day = 21;
-            cmd.CETFP_Hour = 12;
-            cmd.CETFP_Minute = 03;
-            cmd.CETFP_Second = 15;
-            cmd.CETFP_HunSec = 67;
+            //cmd.CETFP_Year = 2012;
+            //cmd.CETFP_Month = 11;
+            //cmd.CETFP_Day = 21;
+            //cmd.CETFP_Hour = 12;
+            //cmd.CETFP_Minute = 03;
+            //cmd.CETFP_Second = 15;
+            //cmd.CETFP_HunSec = 67;
+            cmd.CETFP = new DateTime(2012, 11, 21, 12, 03, 15, (int)(67 * MathHelper.HUNSEC_TO_MILLISEC));
 
             Assert.AreEqual("CETFP 2012/11/21,12:03:15.67", cmd.CETFP_CmdStr(), "CETFP Command String is incorrect.");
         }

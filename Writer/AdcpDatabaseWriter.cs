@@ -64,6 +64,10 @@
  * 10/22/2012      RC          2.15       When writing the ensemble data, try to get the ADCP Configurtation to also write to the project.
  * 12/28/2012      RC          2.17       Make AdcpConfiguration::AdcpSubsystemConfigExist() take only 1 argument.
  * 03/06/2013      RC          2.18       Changed the format of the database.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 07/26/2013      RC          2.19.3     Added EnsembleWriteEvent event to send when an ensemble has been written to the database.
+ * 08/09/2013      RC          2.19.4     Added AppConfiguration.
+ * 08/19/2013      RC          2.19.4     Put PublishEnsembleWrite() in AddIncomingData() to know when an ensemble is received to write.
  * 
  */
 
@@ -91,7 +95,7 @@ namespace RTI
     /// Data is received by subscribing to CurrentDataSetManager.Instance.ReceiveRecordDataset.
     /// To set a new project set the property SelectedProject
     /// </summary>
-    public class AdcpDatabaseWriter
+    public class AdcpDatabaseWriter: IDisposable
     {
         #region Variables
 
@@ -143,6 +147,25 @@ namespace RTI
 
         #endregion
 
+        #region App Configuration
+
+        /// <summary>
+        /// Flag if the AppConfiguration need to be updated.
+        /// </summary>
+        private bool _isAppConfigurationNeedUpdate;
+
+        /// <summary>
+        /// Lock for the _isAppConfigurationNeedUpdate flag.
+        /// </summary>
+        private object _lockIsAppConfigurationNeedUpdate;
+
+        /// <summary>
+        /// String to hold the latest application configuration JSON string.
+        /// </summary>
+        private string _appConfigurationJsonStr;
+
+        #endregion
+
         #endregion
 
         #region Properties
@@ -190,6 +213,8 @@ namespace RTI
             // Commands and options flags and locks
             _isAdcpConfigurationNeedUpdate = false;
             _lockIsAdcpConfigurationNeedUpdate = new object();
+            _isAppConfigurationNeedUpdate = false;
+            _lockIsAppConfigurationNeedUpdate = new object();
 
             // Initialize the thread
             _continue = true;
@@ -215,9 +240,13 @@ namespace RTI
                 // Wake up the thread to process data
                 _eventWaitData.Set();
             }
+
+            // Publish the Ensemble ID that was written to the database
+            // This ID is the ensemble number
+            PublishEnsembleWrite(adcpData.EnsembleData.EnsembleNumber);
         }
 
-        #region Update AdcpConfiguration
+        #region AdcpConfiguration
 
         /// <summary>
         /// Update the database with the latest AdcpConfiguration.
@@ -238,7 +267,7 @@ namespace RTI
             // Wake up the thread to process data
             _eventWaitData.Set();
         }
-
+        
         /// <summary>
         /// Update the database with the latest AdcpCommands.
         /// This will set the AdcpConfiguration's AdcpCommand.
@@ -287,7 +316,123 @@ namespace RTI
             UpdateAdcpConfiguration(SelectedProject.Configuration);
         }
 
+        /// <summary>
+        /// Check if the AdcpConfiguration needs to be updated in the database.
+        /// If it needs to be updated, the query will be run against the database.
+        /// The flag will then be reset.
+        /// 
+        /// The flag is locked because of a multithreaded environment.
+        /// </summary>
+        /// <param name="cnn">Database connection.</param>
+        /// <param name="selectedProject">Selected Project to get the lateset AdcpConfiguration.</param>
+        private void CheckCommandsAndOptions(SQLiteConnection cnn, Project selectedProject)
+        {
+            // Check if the ADCP Commands needs to be updated
+            if (_isAdcpConfigurationNeedUpdate)
+            {
+                // Send the query to the database
+                UpdateAdcpConfiguration(cnn, selectedProject);
+
+                // Lock the flag and reset the value
+                lock (_lockIsAdcpConfigurationNeedUpdate)
+                {
+                    _isAdcpConfigurationNeedUpdate = false;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Update the row with the latest ADCP Configuration.
+        /// </summary>
+        /// <param name="cnn">Connection to the database.</param>
+        /// <param name="project">Project to set configuration to.</param>
+        private void UpdateAdcpConfiguration(SQLiteConnection cnn, Project project)
+        {
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(project.Configuration);                                    // Serialize object to JSON
+            string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_ADCP_CONFIGURATION, json);
+            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS, jsonCmd);                 // Create query string
+
+            using (DbCommand cmd = cnn.CreateCommand())
+            {
+                cmd.CommandText = query;                // Set query string
+                cmd.ExecuteNonQuery();                  // Execute the query
+            }
+        }
+
         #endregion
+
+        #region App Configuration
+
+        /// <summary>
+        /// Store the config temporarly.  Then set the flag
+        /// that the application configuration needs to be updated.
+        /// Then wakeup the write thread to do the write.
+        /// </summary>
+        /// <param name="config">JSON string to write to the AppConfiguration column.</param>
+        public void UpdateAppConfiguration(string config)
+        {
+            // Store the latest config
+            // Then wake up the thread to update the config to the database
+            _appConfigurationJsonStr = config;
+
+            // Update the flag
+            lock (_lockIsAppConfigurationNeedUpdate)
+            {
+                _isAppConfigurationNeedUpdate = true;
+            }
+
+            // Wake up the thread to process data
+            _eventWaitData.Set();
+        }
+
+        /// <summary>
+        /// Check if the AdcpConfiguration needs to be updated in the database.
+        /// If it needs to be updated, the query will be run against the database.
+        /// The flag will then be reset.
+        /// 
+        /// The flag is locked because of a multithreaded environment.
+        /// </summary>
+        /// <param name="cnn">Database connection.</param>
+        /// <param name="selectedProject">Selected Project to get the lateset AdcpConfiguration.</param>
+        private void CheckAppConfiguration(SQLiteConnection cnn, Project selectedProject)
+        {
+            // Check if the ADCP Commands needs to be updated
+            if (_isAppConfigurationNeedUpdate)
+            {
+                // Send the query to the database
+                UpdateAppConfiguration(cnn, selectedProject);
+
+                // Lock the flag and reset the value
+                lock (_lockIsAppConfigurationNeedUpdate)
+                {
+                    _isAppConfigurationNeedUpdate = false;          // Reset flag
+                    _appConfigurationJsonStr = "";                  // Reset string
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Update the row with the latest Application Configuration.
+        /// </summary>
+        /// <param name="cnn">Connection to the database.</param>
+        /// <param name="project">Project to set configuration to.</param>
+        private void UpdateAppConfiguration(SQLiteConnection cnn, Project project)
+        {
+            string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_APP_CONFIGURATION, _appConfigurationJsonStr);        // Set the column name and JSON string
+            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS, jsonCmd);                  // Create query string
+
+            using (DbCommand cmd = cnn.CreateCommand())
+            {
+                cmd.CommandText = query;                // Set query string
+                cmd.ExecuteNonQuery();                  // Execute the query
+            }
+        }
+
+        #endregion
+
+        #region Process Thread
 
         /// <summary>
         /// Decode the ADCP data received using a seperate
@@ -362,6 +507,9 @@ namespace RTI
                             // Check if Commands and Options need to be updated
                             CheckCommandsAndOptions(cnn, _selectedProject);
 
+                            // Check if Application Configurations nees to be updated
+                            CheckAppConfiguration(cnn, _selectedProject);
+
                             // Commit the transaction
                             dbTrans.Commit();
                         }
@@ -420,7 +568,7 @@ namespace RTI
         /// 
         /// Stop the thread.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
             // Write the remaining data in the queue
             while (_datasetQueue.Count > 0 || _isAdcpConfigurationNeedUpdate)
@@ -479,21 +627,15 @@ namespace RTI
             // Check if the project is set
             if (_selectedProject != null && dataset != null)
             {
-                // Check if ensemble data is available
-                // Ensemble data must be available to write any other data
-                // Everything keys off the ensemble number
-                //if (dataset.IsEnsembleAvail)
-                //{
-                int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Ensemble data !!!THIS MUST BE WRITTEN FIRST FOR FOREIGN KEY
+                int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Write data
 
-                //// Check if Beam velocity data is available
-                //if (dataset.IsBeamVelocityAvail)
-                //{
-                //    WriteBeamToDatabase(dataset, cnn, ensId);
-                //}
-                //}
+                // Publish the Ensemble ID that was written to the database
+                // This ID is also the last count of the number of ensembles in the database
+                //PublishEnsembleWrite(ensId);
             }
         }
+
+        #endregion
 
         #region Write Ensembles to Database
 
@@ -710,51 +852,95 @@ namespace RTI
 
         #endregion
 
-        #region Set AdcpConfiguration To Database
+        #region Update Ensemble GPS
 
         /// <summary>
-        /// Check if the AdcpConfiguration needs to be updated in the database.
-        /// If it needs to be updated, the query will be run against the database.
-        /// The flag will then be reset.
-        /// 
-        /// The flag is locked because of a multithreaded environment.
+        /// Update the ensemble in the database with the latest GPS data.
+        /// This will replace any NmeaDataset in the Ensemble stored in the
+        /// database.  It will use the ensemble number to find the ensemble
+        /// to update.
         /// </summary>
-        /// <param name="cnn">Database connection.</param>
-        /// <param name="selectedProject">Selected Project to get the lateset AdcpConfiguration.</param>
-        private void CheckCommandsAndOptions(SQLiteConnection cnn, Project selectedProject)
+        /// <param name="nmea">Nmea Dataset.</param>
+        /// <param name="ensNum">Ensemble number.</param>
+        public void UpdateNmeaDataSet(DataSet.NmeaDataSet nmea, int ensNum)
         {
-            // Check if the ADCP Commands needs to be updated
-            if (_isAdcpConfigurationNeedUpdate)
-            {
-                // Send the query to the database
-                UpdateAdcpConfiguration(cnn, selectedProject);
+            // Open a connection to the database
+            SQLiteConnection cnn = DbCommon.OpenProjectDB(_selectedProject);
 
-                // Lock the flag and reset the value
-                lock (_lockIsAdcpConfigurationNeedUpdate)
+            // Write the data
+            UpdateEnsembleToDatabaseGps(nmea, ensNum, cnn);
+
+            // Close the connection
+            cnn.Close();
+        }
+
+        /// <summary>
+        /// Write the NMEA dataset to the ensemble in the database.
+        /// This will replace any previous ensemble GPS data with the same ensemble number.
+        /// </summary>
+        /// <param name="nmea">NMEA dataset.</param>
+        /// <param name="ensNum">Ensemble number.</param>
+        /// <param name="cnn">Database connection.</param>
+        private void UpdateEnsembleToDatabaseGps(DataSet.NmeaDataSet nmea, int ensNum, SQLiteConnection cnn)
+        {
+            try
+            {
+                using (DbCommand cmd = cnn.CreateCommand())
                 {
-                    _isAdcpConfigurationNeedUpdate = false;
+                    // Create the statement
+                    cmd.CommandText = string.Format("UPDATE {0} SET {1}='{2}' WHERE {3}={4};",          // SQL Query
+                                    DbCommon.TBL_ENS_ENSEMBLE,                                          // Ensemble Table
+                                    DbCommon.COL_NMEA_DS,                                               // NMEA DataSet Column
+                                    Newtonsoft.Json.JsonConvert.SerializeObject(nmea),                  // NMEA data as JSON
+                                    DbCommon.COL_ENS_ENS_NUM,                                           // Ensemble Number Column
+                                    ensNum);                                                            // Ensemble Number
+
+                    // Run the command
+                    cmd.ExecuteNonQuery();
                 }
             }
-        }
-
-
-        /// <summary>
-        /// Update the row with the latest ADCP Configuration.
-        /// </summary>
-        /// <param name="cnn">Connection to the database.</param>
-        /// <param name="project">Project to set configuration to.</param>
-        private void UpdateAdcpConfiguration(SQLiteConnection cnn, Project project)
-        {
-            string json = Newtonsoft.Json.JsonConvert.SerializeObject(project.Configuration);                                    // Serialize object to JSON
-            string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_ADCP_CONFIGURATION, json);
-            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS, jsonCmd);                 // Create query string
-
-            using (DbCommand cmd = cnn.CreateCommand())
+            catch (SQLiteException e)
             {
-                cmd.CommandText = query;                // Set query string
-                cmd.ExecuteNonQuery();                  // Execute the query
+                log.Error("Error updating GPS Ensemble data to database.", e);
             }
         }
+
+        #endregion
+
+        #region Events
+
+        #region Ensemble Write Event
+
+        /// <summary>
+        /// Event To subscribe to. 
+        /// </summary>
+        /// <param name="count">Number of ensembles in the database.</param>
+        public delegate void EnsembleWriteEventHandler(long count);
+
+        /// <summary>
+        /// Subscribe to this event.  This will hold all subscribers.
+        /// 
+        /// To subscribe:
+        /// writer.EnsembleWriteEvent += new writer.EnsembleWriteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// writer.EnsembleWriteEvent -= (method to call)
+        /// </summary>
+        public event EnsembleWriteEventHandler EnsembleWriteEvent;
+
+        /// <summary>
+        /// Verify there is a subscriber before calling the
+        /// subscribers with the new event.
+        /// </summary>
+        private void PublishEnsembleWrite(long count)
+        {
+            if (EnsembleWriteEvent != null)
+            {
+                EnsembleWriteEvent(count);
+            }
+        }
+
+        #endregion
 
         #endregion
     }

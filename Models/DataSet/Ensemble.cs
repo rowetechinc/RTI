@@ -2127,6 +2127,9 @@ namespace RTI
             /// Read the JSON object and convert to the object.  This will allow the serializer to
             /// automatically convert the object.  No special instructions need to be done and all
             /// the properties found in the JSON string need to be used.
+            /// 
+            /// Newtonsoft.Json.JsonConvert.DeserializeObject[DataSet.Ensemble](ensembleJsonStr).
+            /// 
             /// </summary>
             /// <param name="reader">NOT USED. JSON reader.</param>
             /// <param name="objectType">NOT USED> Type of object.</param>

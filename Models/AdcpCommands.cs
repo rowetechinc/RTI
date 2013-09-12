@@ -84,6 +84,13 @@
  * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
  * 01/02/2013      RC          2.17       Added list functions for all the commands that have a list of options. 
  * 01/22/2013      RC          2.17       Made CEPO command the first command in the list because CEPO will change all values to defaults.
+ * 05/17/2013      RC          2.19       Added GetUtcSystemTimeCommand() to set the time to UTC time and changed GetSystemTimeCommand() to GetLocalSystemTimeCommand().
+ *                                          Changed the name of Time_CmdStr() to LocalTime_CmdStr().  Added UtcTime_CmdStr().
+ * 05/25/2013      RC          2.19       Check for empty buffer in DecodeBREAK().
+ * 05/30/2013      RC          2.19       Added TimeValue constructor that takes seconds.  Added TimeValue.ToStringD() to give the time i seconds as a double.
+ * 06/11/2013      RC          2.19       Added SPOS command.
+ * 06/12/2013      RC          2.19       Added DecodeENGCONF().
+ * 08/23/2013      RC          2.19.4     Added DEFAULT_SALINITY_VALUE_ESTUARY.
  * 
  */
 
@@ -92,6 +99,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
 using System.ComponentModel;
+using DotSpatial.Positioning;
 
 
 namespace RTI
@@ -301,6 +309,21 @@ namespace RTI
             }
 
             /// <summary>
+            /// Set the time value based off the seconds given.
+            /// This will convert the seconds to Hours, Minutes, Seconds 
+            /// and HunSec.
+            /// </summary>
+            /// <param name="seconds">Time as seconds.</param>
+            public TimeValue(float seconds)
+            {
+                TimeSpan ts = TimeSpan.FromSeconds(seconds);
+                Hour = Convert.ToUInt16(ts.Hours);
+                Minute = Convert.ToUInt16(ts.Minutes);
+                Second = Convert.ToUInt16(ts.Seconds);
+                HunSec = (ushort)Math.Round(ts.Milliseconds * 0.1);
+            }
+
+            /// <summary>
             /// Return the string version of this class.
             /// </summary>
             /// <returns>String version of this class.  HH:MM:SS.hh</returns>
@@ -393,6 +416,15 @@ namespace RTI
             public int ToSeconds()
             {
                 return (int)Math.Round((3600 * Hour) + (60 * Minute) + Second + (HunSec / 100.0));
+            }
+
+            /// <summary>
+            /// Return the number of seconds in the time as a double.
+            /// </summary>
+            /// <returns>Number of seconds in the time as a double.</returns>
+            public double ToSecondsD()
+            {
+                return (3600 * Hour) + (60 * Minute) + Second + (HunSec / 100.0);
             }
         }
 
@@ -867,6 +899,82 @@ namespace RTI
 
         #endregion
 
+        #region ENGCONF
+
+        /// <summary>
+        /// Class to hold all the devices
+        /// that are enabled in the ADCP.
+        /// 
+        /// Fram     0
+        /// RTC      0
+        /// KELLER30 0
+        /// cd       0
+        /// EMAC     0
+        /// A11 RCVR 1
+        /// SLEEP    0
+        /// 
+        /// </summary>
+        public class EngConf
+        {
+
+            #region Properties
+
+            /// <summary>
+            /// FRAM.
+            /// </summary>
+            public bool IsFram { get; set; }
+
+            /// <summary>
+            /// Real Time Clock.
+            /// </summary>
+            public bool IsRtc { get; set; }
+
+            /// <summary>
+            /// Keller 30 Pressure Sensor.
+            /// </summary>
+            public bool IsPressureSensor { get; set; }
+
+            /// <summary>
+            /// cd
+            /// </summary>
+            public bool IsCd { get; set; }
+
+            /// <summary>
+            /// Ethernet.
+            /// </summary>
+            public bool IsEmac { get; set; }
+
+            /// <summary>
+            /// A11 Receiver
+            /// Old or new receiver.
+            /// </summary>
+            public bool IsA11Rcvr { get; set; }
+
+            /// <summary>
+            /// Sleep.
+            /// </summary>
+            public bool IsSleep { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            public EngConf()
+            {
+                // Initialize the values
+                IsFram = false;
+                IsRtc = false;
+                IsPressureSensor = false;
+                IsCd = false;
+                IsEmac = false;
+                IsA11Rcvr = false;
+                IsSleep = false;
+            }
+        }
+
+        #endregion
+
         #endregion
 
         #region Adcp Command Payload
@@ -947,6 +1055,27 @@ namespace RTI
 
         #endregion
 
+        #region Clock
+
+        /// <summary>
+        /// The time zone options for the user to use
+        /// for the ADCP time.
+        /// </summary>
+        public enum AdcpTimeZone
+        {
+            /// <summary>
+            /// Local time zone of the user.
+            /// </summary>
+            LOCAL,
+
+            /// <summary>
+            /// Greenwich Mean Time zone.
+            /// </summary>
+            GMT
+        }
+
+        #endregion
+
         #endregion
 
         /// <summary>
@@ -967,6 +1096,11 @@ namespace RTI
             /// Salt water salinity value for CWS.
             /// </summary>
             public const float DEFAULT_SALINITY_VALUE_SALT = 35.0f;
+
+            /// <summary>
+            /// Estuary water salinity value for CWS.
+            /// </summary>
+            public const float DEFAULT_SALINITY_VALUE_ESTUARY = 15.0f;
 
             #endregion
 
@@ -1084,6 +1218,17 @@ namespace RTI
             /// the CEPO command or the system will reject the command.
             /// </summary>
             public const string CMD_CEPO = "CEPO";
+
+            /// <summary>
+            /// Ensemble Command: ADCP Position
+            /// Parameter: aa.aaaaaaaaa, bb.bbbbbbbbb, cc.cc, dd.dd 
+            /// Set the ADCP position.
+            /// aa.aaaaaaaaa = Latitude in decimal degrees.
+            /// bb.bbbbbbbbb = Longitude in decimal degrees.
+            /// cc.cc = Water Depth in meters.
+            /// dd.dd = Pressure Sensor Height in meters.
+            /// </summary>
+            public const string CMD_SPOS = "SPOS";
 
             #endregion
 
@@ -1436,6 +1581,13 @@ namespace RTI
             public const string CMD_ENGPNI = "ENGPNI";
 
             /// <summary>
+            /// Engineering Command: Get Hardware configuration of the ADCP.
+            /// Parameter:
+            /// Hardware configuration of the ADCP.
+            /// </summary>
+            public const string CMD_ENGCONF = "ENGCONF";
+
+            /// <summary>
             /// Engineering Command: Change IP address
             /// Parameter: nnn.nnn.nnn.nnn
             /// Change the IP address.  
@@ -1583,6 +1735,26 @@ namespace RTI
             /// Default CVSF value.
             /// </summary>
             public const float DEFAULT_CVSF = 1.000f;
+
+            /// <summary>
+            /// Default latitude value.
+            /// </summary>
+            public Latitude DEFAULT_LAT = new Latitude();
+
+            /// <summary>
+            /// Default longitude value.
+            /// </summary>
+            public Longitude DEFAULT_LONG = new Longitude();
+
+            /// <summary>
+            /// Default water depth in meters.
+            /// </summary>
+            public const float DEFAULT_WATER_DEPTH = 0.0f;
+
+            /// <summary>
+            /// Default pressure sensor height in meters.
+            /// </summary>
+            public const float DEFAULT_PSEN_HEIGHT = 0.0f;
 
             #endregion
 
@@ -1887,186 +2059,33 @@ namespace RTI
             #region CETFP
 
             /// <summary>
+            /// Ensemble Time of First Ping
+            /// Sets the time that the system will awaken and start
+            /// pinging.
+            /// 
+            /// All digits including the space following CETFP and
+            /// the seperator must be part of the command or the system 
+            /// will reject the command.
+            /// 
+            /// This is the time and date of the first ping.
+            /// If there is a deployment, this would be the time
+            /// the pinging would start.  
+            /// 
+            /// Command: CETFP
+            /// Scale: YYYY/MM/DD,HH:mm:SS.hh
+            /// Range: Date and Time
+            /// </summary>
+            public DateTime CETFP { get; set; }
+
+            /// <summary>
             /// Return a string representation of CETFP.
             /// </summary>
             /// <returns>String representation of CETFP</returns>
             public string CETFP_ToString()
             {
-                return CETFP_Year.ToString("0000", CultureInfo.CreateSpecificCulture("en-US")) + "/" + CETFP_Month.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "/" + CETFP_Day.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "," + CETFP_Hour.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CETFP_Minute.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CETFP_Second.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "." + CETFP_HunSec.ToString("00", CultureInfo.CreateSpecificCulture("en-US"));
+                return CETFP.Year.ToString("0000", CultureInfo.CreateSpecificCulture("en-US")) + "/" + CETFP.Month.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "/" + CETFP.Day.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "," + CETFP.Hour.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CETFP.Minute.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + ":" + CETFP.Second.ToString("00", CultureInfo.CreateSpecificCulture("en-US")) + "." + CETFP_HunSec.ToString("00", CultureInfo.CreateSpecificCulture("en-US"));
             }
 
-            /// <summary>
-            /// Years in CETFP.
-            /// This starts at 2000.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Years in 2000.
-            /// Range: 0 to 99.
-            /// </summary>
-            private UInt16 _cETFP_Year;
-            /// <summary>
-            /// Years in CETFP.
-            /// This starts at 2000.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Years in 2000.
-            /// Range: 2000 to 2099.
-            /// </summary>
-            public UInt16 CETFP_Year
-            {
-                get { return _cETFP_Year; }
-                set
-                {
-                    if (value >= MIN_YEAR && value <= MAX_YEAR)
-                    {
-                        _cETFP_Year = value;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Month in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Months
-            /// Range: 1 to 12.
-            /// </summary>
-            private UInt16 _cETFP_Month;
-            /// <summary>
-            /// Month in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Months
-            /// Range: 1 to 12.
-            /// </summary>
-            public UInt16 CETFP_Month
-            {
-                get { return _cETFP_Month; }
-                set
-                {
-                    if (value >= MIN_MONTH && value <= MAX_MONTH)
-                    {
-                        _cETFP_Month = value;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Day in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Days
-            /// Range: 1 to 31.
-            /// </summary>
-            private UInt16 _cETFP_Day;
-            /// <summary>
-            /// Day in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Days
-            /// Range: 1 to 31.
-            /// </summary>
-            public UInt16 CETFP_Day
-            {
-                get { return _cETFP_Day; }
-                set
-                {
-                    if (value >= MIN_DAY && value <= MAX_DAY)
-                    {
-                        _cETFP_Day = value;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Hours in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Hours
-            /// Range: 0 to 23.
-            /// </summary>
-            private UInt16 _cETFP_Hour;
-            /// <summary>
-            /// Hours in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Hours
-            /// Range: 0 to 23.
-            /// </summary>
-            public UInt16 CETFP_Hour
-            {
-                get { return _cETFP_Hour; }
-                set
-                {
-                    if (value >= MIN_HOUR && value <= MAX_HOUR)
-                    {
-                        _cETFP_Hour = value;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Minutes in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Minutes
-            /// Range: 0 to 59.
-            /// </summary>
-            private UInt16 _cETFP_Minute;
-            /// <summary>
-            /// Minutes in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Minutes
-            /// Range: 0 to 59.
-            /// </summary>
-            public UInt16 CETFP_Minute
-            {
-                get { return _cETFP_Minute; }
-                set
-                {
-                    if (value >= MIN_MINSEC && value <= MAX_MINSEC)
-                    {
-                        _cETFP_Minute = value;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Seconds in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Second
-            /// Range: 0 to 59.
-            /// </summary>
-            private UInt16 _cETFP_Second;
-            /// <summary>
-            /// Seconds in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Second
-            /// Range: 0 to 59.
-            /// </summary>
-            public UInt16 CETFP_Second
-            {
-                get { return _cETFP_Second; }
-                set
-                {
-                    if (value >= MIN_MINSEC && value <= MAX_MINSEC)
-                    {
-                        _cETFP_Second = value;
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Hundredth of seconds in CETFP.
-            /// Limit to 2 digits.
-            /// 
-            /// Scale: Hundredth of Second
-            /// Range: 0 to 59.
-            /// </summary>
-            private UInt16 _cETFP_HunSec;
             /// <summary>
             /// Hundredth of seconds in CETFP.
             /// Limit to 2 digits.
@@ -2076,14 +2095,7 @@ namespace RTI
             /// </summary>
             public UInt16 CETFP_HunSec
             {
-                get { return _cETFP_HunSec; }
-                set
-                {
-                    if (value >= MIN_HUNSEC && value <= MAX_HUNSEC)
-                    {
-                        _cETFP_HunSec = value;
-                    }
-                }
+                get { return (UInt16)Math.Round(CETFP.Millisecond / MathHelper.HUNSEC_TO_MILLISEC); }
             }
 
             #endregion
@@ -2185,6 +2197,30 @@ namespace RTI
             /// Range: (at least 1 subsystem)
             /// </summary>
             public string CEPO { get; set; }
+
+            #region SPOS
+
+            /// <summary>
+            /// Latitude position of the ADCP.
+            /// </summary>
+            public Latitude SPOS_Latitude { get; set; }
+
+            /// <summary>
+            /// Longitude position of the ADCP.
+            /// </summary>
+            public Longitude SPOS_Longitude { get; set; }
+
+            /// <summary>
+            /// Water depth in meters.
+            /// </summary>
+            public float SPOS_WaterDepth { get; set; }
+
+            /// <summary>
+            /// Pressure Sensor height in meters.
+            /// </summary>
+            public float SPOS_PsensHeight { get; set; }
+
+            #endregion
 
             #endregion
 
@@ -2419,25 +2455,31 @@ namespace RTI
 
                 // Ensemble defaults
                 CEI = new TimeValue(DEFAULT_CEI_HOUR, DEFAULT_CEI_MINUTE, DEFAULT_CEI_SECOND, DEFAULT_CEI_HUNSEC);
-                CEI_Hour = DEFAULT_CEI_HOUR;
-                CEI_Minute = DEFAULT_CEI_MINUTE;
-                CEI_Second = DEFAULT_CEI_SECOND;
-                CEI_HunSec = DEFAULT_CEI_HUNSEC;
+                //CEI_Hour = DEFAULT_CEI_HOUR;
+                //CEI_Minute = DEFAULT_CEI_MINUTE;
+                //CEI_Second = DEFAULT_CEI_SECOND;
+                //CEI_HunSec = DEFAULT_CEI_HUNSEC;
 
                 // Time of First ping default
                 // Use the current time
-                DateTime timeNow = DateTime.Now;
-                CETFP_Year = (UInt16)(timeNow.Year);
-                CETFP_Month = (UInt16)timeNow.Month;
-                CETFP_Day = (UInt16)timeNow.Day;
-                CETFP_Hour = (UInt16)timeNow.Hour;
-                CETFP_Minute = (UInt16)timeNow.Minute;
-                CETFP_Second = (UInt16)timeNow.Second;
-                CETFP_HunSec = DEFAULT_CETFP_HUNSEC;
+                CETFP = DateTime.Now;
+                //DateTime timeNow = DateTime.Now;
+                //CETFP_Year = (UInt16)(timeNow.Year);
+                //CETFP_Month = (UInt16)timeNow.Month;
+                //CETFP_Day = (UInt16)timeNow.Day;
+                //CETFP_Hour = (UInt16)timeNow.Hour;
+                //CETFP_Minute = (UInt16)timeNow.Minute;
+                //CETFP_Second = (UInt16)timeNow.Second;
+                //CETFP_HunSec = DEFAULT_CETFP_HUNSEC;
 
                 CERECORD = DEFAULT_CERECORD;
                 CEOUTPUT = DEFAULT_CEOUTPUT;
                 CEPO = DEFAULT_CEPO;
+
+                SPOS_Latitude = DEFAULT_LAT;
+                SPOS_Longitude = DEFAULT_LONG;
+                SPOS_WaterDepth = DEFAULT_WATER_DEPTH;
+                SPOS_PsensHeight = DEFAULT_PSEN_HEIGHT;
 
                 // Environmental defaults
                 CWS = DEFAULT_CWS;
@@ -2459,10 +2501,21 @@ namespace RTI
             /// the current time to the device.
             /// STIME.
             /// </summary>
-            /// <returns></returns>
-            public static string GetTimeCommand()
+            /// <returns>The command with the time as a string properly formated for the ADCP time command.</returns>
+            public static string GetLocalSystemTimeCommand()
             {
                 return String.Format("{0} {1}", CMD_STIME, DateTime.Now.ToString("yyyy/MM/dd,HH:mm:ss", CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            /// <summary>
+            /// Return the command to set
+            /// the current time as UTC time to the device.
+            /// STIME.
+            /// </summary>
+            /// <returns>The command with the time as a string properly formated for the ADCP time command.</returns>
+            public static string GetGmtSystemTimeCommand()
+            {
+                return String.Format("{0} {1}", CMD_STIME, DateTime.Now.ToUniversalTime().ToString("yyyy/MM/dd,HH:mm:ss", CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -2474,7 +2527,7 @@ namespace RTI
             /// decimal numbers.
             /// </summary>
             /// <returns>List of all the commands and there value.</returns>
-            public List<string> GetCommandList()
+            public List<string> GetCommandList(AdcpTimeZone tz = AdcpTimeZone.LOCAL)
             {
                 List<string> list = new List<string>();
                 list.Add(CEPO_CmdStr());                                // CEPO     THIS WILL SET DEFAULTS SO IT MUST BE SET FIRST
@@ -2483,6 +2536,7 @@ namespace RTI
                 list.Add(CETFP_CmdStr());                               // CETFP
                 list.Add(CERECORD_CmdStr());                            // CERECORD  CultureInfo.CreateSpecificCulture("en-US")   Thread.CurrentThread.CurrentCulture = CultureInfo.CreateSpecificCulture("en-US");
                 list.Add(CEOUTPUT_CmdStr());                            // CEOUTPUT
+                list.Add(SPOS_CmdStr());                                // SPOS
 
                 list.Add(CWS_CmdStr());                                 // CWS
                 list.Add(CWT_CmdStr());                                 // CWT
@@ -2496,21 +2550,45 @@ namespace RTI
                 list.Add(C485B_CmdStr());                               // C485B
                 list.Add(C422B_CmdStr());                               // C422B
 
-                list.Add(Time_CmdStr());                                // Time         SET THE TIME LAST, IT TAKES THE LONGEST TO SET
+                if (tz == AdcpTimeZone.LOCAL)
+                {
+                    list.Add(LocalTime_CmdStr());                       // Local Time         SET THE TIME LAST, IT TAKES THE LONGEST TO SET
+                }
+                else
+                {
+                    list.Add(GmtTime_CmdStr());                         // GMT Time           SET THE TIME LAST, IT TAKES THE LONGEST TO SET
+                }
 
                 return list;
             }
 
             /// <summary>
+            /// A shorten list of commands that are neccessary for a deployment.
             /// Create a list of all the deployment commands and there value.
             /// Add all the commands to the list and there value.
             /// </summary>
+            /// <param name="tz">Timezone to use.</param>
             /// <returns>List of all the commands and there value.</returns>
-            public List<string> GetDeploymentCommandList()
+            public List<string> GetDeploymentCommandList(AdcpTimeZone tz = AdcpTimeZone.LOCAL)
             {
                 List<string> list = new List<string>();
 
-                list.Add(String.Format("{0} {1}", CMD_CETFP, CETFP_ToString()));                                                                // CETFP
+                list.Add(CEPO_CmdStr());                            // CEPO
+                list.Add(CEOUTPUT_CmdStr());                        // CEOUTPUT
+                list.Add(SPOS_CmdStr());                            // SPOS
+                list.Add(CWS_CmdStr());                             // CWS
+                list.Add(CWT_CmdStr());                             // CWT
+                list.Add(CEI_CmdStr());                             // CEI
+                list.Add(CETFP_CmdStr());                           // CETFP
+
+                if (tz == AdcpTimeZone.LOCAL)
+                {
+                    list.Add(LocalTime_CmdStr());                   // Local Time         SET THE TIME LAST, IT TAKES THE LONGEST TO SET
+                }
+                else
+                {
+                    list.Add(GmtTime_CmdStr());                     // GMT Time           SET THE TIME LAST, IT TAKES THE LONGEST TO SET
+                }
 
                 return list;
             }
@@ -2532,12 +2610,13 @@ namespace RTI
                 StringBuilder sb = new StringBuilder();
 
                 sb.AppendLine(Mode_ToString());                     // Mode
-                sb.AppendLine(Time_CmdStr());                       // DateTime
+                sb.AppendLine(LocalTime_CmdStr());                  // DateTime
                 sb.AppendLine(CEI_CmdStr());                        // CEI
                 sb.AppendLine(CETFP_CmdStr());                      // CETFP
                 sb.AppendLine(CERECORD_CmdStr());                   // CERECORD
                 sb.AppendLine(CEOUTPUT_CmdStr());                   // CEOUTPUT
                 sb.AppendLine(CEPO_CmdStr());                       // CEPO
+                sb.AppendLine(SPOS_CmdStr());                       // SPOS
 
                 sb.AppendLine(CWS_CmdStr());                        // CWS
                 sb.AppendLine(CWT_CmdStr());                        // CWT
@@ -2547,6 +2626,56 @@ namespace RTI
                 sb.AppendLine(CHO_CmdStr());                        // CHO
                 sb.AppendLine(CVSF_CmdStr());                       // CVSF
                 
+                sb.AppendLine(C232B_CmdStr());                      // C232B
+                sb.AppendLine(C485B_CmdStr());                      // C485B
+                sb.AppendLine(C422B_CmdStr());                      // C422B
+
+                // Add the subsystem commands
+
+                return sb.ToString();
+            }
+
+            /// <summary>
+            /// This will be a string representation
+            /// of the object.  It will also be 
+            /// used to pass to the ADCP for all the 
+            /// commands.
+            /// 
+            /// Put all the values in United States English format.
+            /// Other formats can use a comma instead of a decimal point for
+            /// decimal numbers.
+            /// </summary>
+            /// <returns>All the commands as a string.</returns>
+            public string ToString(AdcpTimeZone tz = AdcpTimeZone.LOCAL)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine(Mode_ToString());                     // Mode
+
+                if (tz == AdcpTimeZone.LOCAL)
+                {
+                    sb.AppendLine(LocalTime_CmdStr());             // Local DateTime
+                }
+                else
+                {
+                    sb.AppendLine(GmtTime_CmdStr());               // Gmt DateTime
+                }
+                
+                sb.AppendLine(CEI_CmdStr());                        // CEI
+                sb.AppendLine(CETFP_CmdStr());                      // CETFP
+                sb.AppendLine(CERECORD_CmdStr());                   // CERECORD
+                sb.AppendLine(CEOUTPUT_CmdStr());                   // CEOUTPUT
+                sb.AppendLine(CEPO_CmdStr());                       // CEPO
+                sb.AppendLine(SPOS_CmdStr());                       // SPOS
+
+                sb.AppendLine(CWS_CmdStr());                        // CWS
+                sb.AppendLine(CWT_CmdStr());                        // CWT
+                sb.AppendLine(CTD_CmdStr());                        // CTD
+                sb.AppendLine(CWSS_CmdStr());                       // CWSS
+                sb.AppendLine(CHS_CmdStr());                        // CHS
+                sb.AppendLine(CHO_CmdStr());                        // CHO
+                sb.AppendLine(CVSF_CmdStr());                       // CVSF
+
                 sb.AppendLine(C232B_CmdStr());                      // C232B
                 sb.AppendLine(C485B_CmdStr());                      // C485B
                 sb.AppendLine(C422B_CmdStr());                      // C422B
@@ -2707,12 +2836,21 @@ namespace RTI
             #region Time
 
             /// <summary>
-            /// Return the Time command string.
+            /// Return the Local System Time command string.
             /// </summary>
             /// <returns>Command to send to the ADCP with the parameters.</returns>
-            public string Time_CmdStr()
+            public string LocalTime_CmdStr()
             {
-                return string.Format("{0}", GetTimeCommand());
+                return string.Format("{0}", GetLocalSystemTimeCommand());
+            }
+
+            /// <summary>
+            /// Return the GMT System Time command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string GmtTime_CmdStr()
+            {
+                return string.Format("{0}", GetGmtSystemTimeCommand());
             }
 
             #endregion
@@ -2778,6 +2916,23 @@ namespace RTI
             public string CEPO_CmdStr()
             {
                 return String.Format("{0} {1}", CMD_CEPO, CEPO.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+            }
+
+            #endregion
+
+            #region SPOS
+
+            /// <summary>
+            /// Return the SPOS command string.
+            /// </summary>
+            /// <returns>Command to send to the ADCP with the parameters.</returns>
+            public string SPOS_CmdStr()
+            {
+                return string.Format("{0} {1}, {2}, {3}, {4}", CMD_SPOS, 
+                                                                SPOS_Latitude.DecimalDegrees.ToString("0.0000000000000"),
+                                                                SPOS_Longitude.DecimalDegrees.ToString("0.0000000000000"),
+                                                                SPOS_WaterDepth.ToString("0.000"),
+                                                                SPOS_PsensHeight.ToString("0.000"));
             }
 
             #endregion
@@ -2916,7 +3071,7 @@ namespace RTI
 
             #endregion
 
-            #region Decode
+            #region Decode Commands
 
             #region ENGPNI
 
@@ -3000,6 +3155,12 @@ namespace RTI
                 string fw = "";
                 string hw = "";
                 Firmware firmware = new Firmware();
+
+                // Check if the buffer given was empty
+                if (string.IsNullOrEmpty(buffer))
+                {
+                    return new BreakStmt();
+                }
 
                 // Break up the lines
                 char[] delimiters = new char[] { '\r', '\n' };
@@ -3445,6 +3606,87 @@ namespace RTI
             {
                 DecodeCSHOW decoder = new DecodeCSHOW();
                 return decoder.Decode(buffer, serial);
+            }
+
+            #endregion
+
+            #region ENGCONF
+
+            /// <summary>
+            /// Decode the ENGCONF command.  This will
+            /// tell you what devices are enabled.
+            /// 
+            /// Ex:
+            /// ENGCONF
+            /// Fram     0
+            /// RTC      0
+            /// KELLER30 0
+            /// cd       0
+            /// EMAC     0
+            /// A11 RCVR 1
+            /// SLEEP    0
+            /// engconf
+            /// </summary>
+            /// <param name="buffer">Buffer to decode.</param>
+            /// <returns>Results of the buffer decoding.</returns>
+            public static EngConf DecodeENGCONF(string buffer)
+            {
+                // Initialize the value
+                EngConf engConf = new EngConf();
+
+                // Get each line of the buffer
+                string[] lines = buffer.Split('\n');
+
+                foreach (var line in lines)
+                {
+                    // Parse the string of all it elements
+                    // KELLER30 0
+                    char[] delimiters = { ' ' };
+                    string[] hdwrInfo = line.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+                    // Ensure it contains a type and value
+                    if (hdwrInfo.Length > 1)
+                    {
+                        int value = 0;
+                        // Parse the last value to get the value
+                        int.TryParse(hdwrInfo[hdwrInfo.Length-1], out value);
+                        bool result = false;
+                        if (value >= 1)
+                        {
+                            result = true;
+                        }
+
+                        // Look for each value in the buffer
+                        switch (hdwrInfo[0])
+                        {
+                            case "Fram":
+                                engConf.IsFram = result;
+                                break;
+                            case "RTC":
+                                engConf.IsRtc = result;
+                                break;
+                            case "KELLER30":
+                                engConf.IsPressureSensor = result;
+                                break;
+                            case "cd":
+                                engConf.IsCd = result;
+                                break;
+                            case "EMAC":
+                                engConf.IsEmac = result;
+                                break;
+                            case "A11":
+                                engConf.IsA11Rcvr = result;
+                                break;
+                            case "SLEEP":
+                                engConf.IsSleep = result;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+
+                return engConf;
             }
 
             #endregion

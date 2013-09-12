@@ -39,6 +39,7 @@
  * 12/28/2012      RC          2.17       Made SubsystemConfiguration take a Subsystem in its constructor.
  *                                         Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
  *                                         AdcpSubsystemConfigExist() take only 1 argument.
+ * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
  *
  */
 
@@ -271,7 +272,6 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_singleSubsystemConfiguration, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual("2", config.CEPO, "Adcp Configuration CEPO is incorrect.");
             Assert.AreEqual("2", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(1, config.SubsystemConfigDict.Count, "Num of SubsystemConfig created is incorrect.");
 
@@ -285,7 +285,7 @@ namespace RTI
             Assert.IsNotNull(ssConfig, "SubsystemConfiguration is null");
             Assert.AreEqual('2', Convert.ToChar(ssConfig.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration Subsystem Code is incorrect.");       // Code of subsystem
             Assert.AreEqual(0, ssConfig.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration Subsystem Index is incorrect.");                       // Index of Subsystem Code within SerialNumber
-            Assert.AreEqual(0, ssConfig.CepoIndex, "Subsystem Configuration Index is incorrect.");                                          // Index of Config within CEPO
+            Assert.AreEqual(0, ssConfig.SubsystemConfig.CepoIndex, "Subsystem Configuration Index is incorrect.");                                          // Index of Config within CEPO
         }
 
         /// <summary>
@@ -297,7 +297,6 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemConfigurations, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual("222", config.CEPO, "Adcp Configuration CEPO is incorrect.");
             Assert.AreEqual("222", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(3, config.SubsystemConfigDict.Count, "Num of SubsystemConfig created is incorrect.");
 
@@ -333,19 +332,19 @@ namespace RTI
             Assert.IsNotNull(resultConfig1, "SubsystemConfiguration 1 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig1.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 1 Subsystem Code is incorrect.");        // Code of Subsystem
             Assert.AreEqual(0, resultConfig1.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 1 Subsystem Index is incorrect.");                        // Index of Subsystem Code within SerialNumber
-            Assert.AreEqual(0, resultConfig1.CepoIndex, "SubsystemConfiguration 1 Index is incorrect.");                                            // Index of SubsystemConfiguration within CEPO
+            Assert.AreEqual(0, resultConfig1.SubsystemConfig.CepoIndex, "SubsystemConfiguration 1 Index is incorrect.");                                            // Index of SubsystemConfiguration within CEPO
 
             // SubsystemConfiguration 2
             Assert.IsNotNull(resultConfig2, "SubsystemConfiguration 2 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig2.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2 Subsystem Code is incorrect.");
             Assert.AreEqual(0, resultConfig2.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2 Subsystem Index is incorrect.");
-            Assert.AreEqual(1, resultConfig2.CepoIndex, "SubsystemConfiguration 2 Index is incorrect.");
+            Assert.AreEqual(1, resultConfig2.SubsystemConfig.CepoIndex, "SubsystemConfiguration 2 Index is incorrect.");
 
             // SubsystemConfiguration 3
             Assert.IsNotNull(resultConfig3, "SubsystemConfiguration 3 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig3.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3 Subsystem Code is incorrect.");
             Assert.AreEqual(0, resultConfig3.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3 Subsystem Index is incorrect.");
-            Assert.AreEqual(2, resultConfig3.CepoIndex, "SubsystemConfiguration 3 Index is incorrect.");
+            Assert.AreEqual(2, resultConfig3.SubsystemConfig.CepoIndex, "SubsystemConfiguration 3 Index is incorrect.");
         }
 
         /// <summary>
@@ -357,7 +356,6 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemMultipleConfigurations, _multipleSubsystemSerialNumber);
 
-            Assert.AreEqual("2232332", config.CEPO, "Adcp Configuration CEPO is incorrect.");
             Assert.AreEqual("2232332", config.Commands.CEPO, "Commands CEPO is incorrect.");
             Assert.AreEqual(7, config.SubsystemConfigDict.Count, "Num of SubsystemConfig created is incorrect.");
 
@@ -431,25 +429,25 @@ namespace RTI
             Assert.IsNotNull(resultConfig2_1, "SubsystemConfiguration 2_1 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig2_1.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_1 Subsystem Code is incorrect.");
             Assert.AreEqual(0, resultConfig2_1.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_1 Subsystem Index is incorrect.");
-            Assert.AreEqual(0, resultConfig2_1.CepoIndex, "SubsystemConfiguration 2_1 Index is incorrect.");
+            Assert.AreEqual(0, resultConfig2_1.SubsystemConfig.CepoIndex, "SubsystemConfiguration 2_1 Index is incorrect.");
 
             // SubsystemConfiguration 2_2
             Assert.IsNotNull(resultConfig2_2, "SubsystemConfiguration 2_2 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig2_2.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_2 Subsystem Code is incorrect.");
             Assert.AreEqual(0, resultConfig2_2.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_2 Subsystem Index is incorrect.");
-            Assert.AreEqual(1, resultConfig2_2.CepoIndex, "SubsystemConfiguration 2_2 Index is incorrect.");
+            Assert.AreEqual(1, resultConfig2_2.SubsystemConfig.CepoIndex, "SubsystemConfiguration 2_2 Index is incorrect.");
 
             // SubsystemConfiguration 2_3
             Assert.IsNotNull(resultConfig2_3, "SubsystemConfiguration 2_3 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig2_3.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_3 Subsystem Code is incorrect.");
             Assert.AreEqual(0, resultConfig2_3.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_3 Subsystem Index is incorrect.");
-            Assert.AreEqual(3, resultConfig2_3.CepoIndex, "SubsystemConfiguration 2_3 Index is incorrect.");
+            Assert.AreEqual(3, resultConfig2_3.SubsystemConfig.CepoIndex, "SubsystemConfiguration 2_3 Index is incorrect.");
 
             // SubsystemConfiguration 2_4
             Assert.IsNotNull(resultConfig2_4, "SubsystemConfiguration 2_4 is null");
             Assert.AreEqual('2', Convert.ToChar(resultConfig2_4.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 2_4 Subsystem Code is incorrect.");
             Assert.AreEqual(0, resultConfig2_4.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 2_4 Subsystem Index is incorrect.");
-            Assert.AreEqual(6, resultConfig2_4.CepoIndex, "SubsystemConfiguration 2_4 Index is incorrect.");
+            Assert.AreEqual(6, resultConfig2_4.SubsystemConfig.CepoIndex, "SubsystemConfiguration 2_4 Index is incorrect.");
 
 
 
@@ -458,19 +456,19 @@ namespace RTI
             Assert.IsNotNull(resultConfig3_1, "SubsystemConfiguration 3_1 is null");
             Assert.AreEqual('3', Convert.ToChar(resultConfig3_1.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3_1 Subsystem Code is incorrect.");            // Subsystem Code
             Assert.AreEqual(1, resultConfig3_1.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3_1 Subsystem Index is incorrect.");                            // Index within serial number of Subsystem code
-            Assert.AreEqual(2, resultConfig3_1.CepoIndex, "SubsystemConfiguration 3_1 Index is incorrect.");                                                // Index within CEPO of configuration
+            Assert.AreEqual(2, resultConfig3_1.SubsystemConfig.CepoIndex, "SubsystemConfiguration 3_1 Index is incorrect.");                                                // Index within CEPO of configuration
 
             // SubsystemConfiguration 3_2
             Assert.IsNotNull(resultConfig3_2, "SubsystemConfiguration 3_2 is null");
             Assert.AreEqual('3', Convert.ToChar(resultConfig3_2.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3_2 Subsystem Code is incorrect.");
             Assert.AreEqual(1, resultConfig3_2.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3_2 Subsystem Index is incorrect.");
-            Assert.AreEqual(4, resultConfig3_2.CepoIndex, "SubsystemConfiguration 3_2 Index is incorrect.");
+            Assert.AreEqual(4, resultConfig3_2.SubsystemConfig.CepoIndex, "SubsystemConfiguration 3_2 Index is incorrect.");
 
             // SubsystemConfiguration 3_3
             Assert.IsNotNull(resultConfig3_3, "SubsystemConfiguration 3_3 is null");
             Assert.AreEqual('3', Convert.ToChar(resultConfig3_3.SubsystemConfig.SubSystem.Code), "SubsystemConfiguration 3_3 Subsystem Code is incorrect.");
             Assert.AreEqual(1, resultConfig3_3.SubsystemConfig.SubSystem.Index, "SubsystemConfiguration 3_3 Subsystem Index is incorrect.");
-            Assert.AreEqual(5, resultConfig3_3.CepoIndex, "SubsystemConfiguration 3_3 Index is incorrect.");
+            Assert.AreEqual(5, resultConfig3_3.SubsystemConfig.CepoIndex, "SubsystemConfiguration 3_3 Index is incorrect.");
         }
 
         #endregion
@@ -666,13 +664,13 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_singleSubsystemConfiguration, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual(2012, config.Commands.CETFP_Year, "CETFP Year is incorrect");
-            Assert.AreEqual(09, config.Commands.CETFP_Month, "CETFP Month is incorrect");
-            Assert.AreEqual(24, config.Commands.CETFP_Day, "CETFP Day is incorrect");
-            Assert.AreEqual(12, config.Commands.CETFP_Hour, "CETFP Hour is incorrect");
-            Assert.AreEqual(30, config.Commands.CETFP_Minute, "CETFP Minute is incorrect");
-            Assert.AreEqual(10, config.Commands.CETFP_Second, "CETFP Second is incorrect");
-            Assert.AreEqual(25, config.Commands.CETFP_HunSec, "CETFP HunSec is incorrect");
+            Assert.AreEqual(2012, config.Commands.CETFP.Year, "CETFP Year is incorrect");
+            Assert.AreEqual(09, config.Commands.CETFP.Month, "CETFP Month is incorrect");
+            Assert.AreEqual(24, config.Commands.CETFP.Day, "CETFP Day is incorrect");
+            Assert.AreEqual(12, config.Commands.CETFP.Hour, "CETFP Hour is incorrect");
+            Assert.AreEqual(30, config.Commands.CETFP.Minute, "CETFP Minute is incorrect");
+            Assert.AreEqual(10, config.Commands.CETFP.Second, "CETFP Second is incorrect");
+            //Assert.AreEqual(25, config.Commands.CETFP.HunSec, "CETFP HunSec is incorrect");
         }
 
         /// <summary>
@@ -686,13 +684,13 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemConfigurations, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual(2012, config.Commands.CETFP_Year, "CETFP Year is incorrect");
-            Assert.AreEqual(09, config.Commands.CETFP_Month, "CETFP Month is incorrect");
-            Assert.AreEqual(24, config.Commands.CETFP_Day, "CETFP Day is incorrect");
-            Assert.AreEqual(12, config.Commands.CETFP_Hour, "CETFP Hour is incorrect");
-            Assert.AreEqual(30, config.Commands.CETFP_Minute, "CETFP Minute is incorrect");
-            Assert.AreEqual(10, config.Commands.CETFP_Second, "CETFP Second is incorrect");
-            Assert.AreEqual(25, config.Commands.CETFP_HunSec, "CETFP HunSec is incorrect");
+            Assert.AreEqual(2012, config.Commands.CETFP.Year, "CETFP Year is incorrect");
+            Assert.AreEqual(09, config.Commands.CETFP.Month, "CETFP Month is incorrect");
+            Assert.AreEqual(24, config.Commands.CETFP.Day, "CETFP Day is incorrect");
+            Assert.AreEqual(12, config.Commands.CETFP.Hour, "CETFP Hour is incorrect");
+            Assert.AreEqual(30, config.Commands.CETFP.Minute, "CETFP Minute is incorrect");
+            Assert.AreEqual(10, config.Commands.CETFP.Second, "CETFP Second is incorrect");
+            //Assert.AreEqual(25, config.Commands.CETFP_HunSec, "CETFP HunSec is incorrect");
         }
 
         /// <summary>
@@ -706,13 +704,13 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemMultipleConfigurations, _multipleSubsystemSerialNumber);
 
-            Assert.AreEqual(2012, config.Commands.CETFP_Year, "CETFP Year is incorrect");
-            Assert.AreEqual(09, config.Commands.CETFP_Month, "CETFP Month is incorrect");
-            Assert.AreEqual(24, config.Commands.CETFP_Day, "CETFP Day is incorrect");
-            Assert.AreEqual(12, config.Commands.CETFP_Hour, "CETFP Hour is incorrect");
-            Assert.AreEqual(30, config.Commands.CETFP_Minute, "CETFP Minute is incorrect");
-            Assert.AreEqual(10, config.Commands.CETFP_Second, "CETFP Second is incorrect");
-            Assert.AreEqual(25, config.Commands.CETFP_HunSec, "CETFP HunSec is incorrect");
+            Assert.AreEqual(2012, config.Commands.CETFP.Year, "CETFP Year is incorrect");
+            Assert.AreEqual(09, config.Commands.CETFP.Month, "CETFP Month is incorrect");
+            Assert.AreEqual(24, config.Commands.CETFP.Day, "CETFP Day is incorrect");
+            Assert.AreEqual(12, config.Commands.CETFP.Hour, "CETFP Hour is incorrect");
+            Assert.AreEqual(30, config.Commands.CETFP.Minute, "CETFP Minute is incorrect");
+            Assert.AreEqual(10, config.Commands.CETFP.Second, "CETFP Second is incorrect");
+            //Assert.AreEqual(25, config.Commands.CETFP_HunSec, "CETFP HunSec is incorrect");
         }
 
         #endregion

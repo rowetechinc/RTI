@@ -54,6 +54,9 @@
  * 12/20/2012      RC          2.17       Updated comments to ADCP User Guide Rev H.
  *                                         Added 2 new WP broadband pulse types based off ADCP User Guide Rev H.
  * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
+ * 05/30/2013      RC          2.19       Replaced Subsystem and CepoIndex with SubsystemConfig which contains this information.
+ * 06/11/2013      RC          2.19       Added CBI_BurstPairFlag.
+ * 06/14/2013      RC          2.19       Added GetDeploymentCommandList().
  *
  */
 
@@ -339,6 +342,11 @@ namespace RTI
             /// Also the value to disable the command.
             /// </summary>
             public const UInt16 DEFAULT_CBI_NUM_ENS = 0;
+
+            /// <summary>
+            /// Default value for CBI_BurstPairFlag.
+            /// </summary>
+            public const bool DEFAULT_CBI_BURST_PAIR_FLAG = false;
 
             #region Water Profile
 
@@ -2429,6 +2437,28 @@ namespace RTI
                 }
             }
 
+            /// <summary>
+            /// Set the Burst Pair flag.  If Burst Pair is set to TRUE,
+            /// the next subsystem will be interleaved (alternating pings)
+            /// with the current subsystem during the burst.  The CBI commands
+            /// for the pair should be set to the same value(s).
+            /// </summary>
+            private bool _cBI_BurstPairFlag;
+            /// <summary>
+            /// Set the Burst Pair flag.  If Burst Pair is set to TRUE,
+            /// the next subsystem will be interleaved (alternating pings)
+            /// with the current subsystem during the burst.  The CBI commands
+            /// for the pair should be set to the same value(s).
+            /// </summary>
+            public bool CBI_BurstPairFlag
+            {
+                get { return _cBI_BurstPairFlag; }
+                set
+                {
+                    _cBI_BurstPairFlag = value;
+                }
+            }
+
             #endregion
 
             #region Bottom Track Properties
@@ -3217,14 +3247,7 @@ namespace RTI
             /// <summary>
             /// Settings are associated with this subsystem.
             /// </summary>
-            public Subsystem SubSystem { get; set; }
-
-            /// <summary>
-            /// CEPO Index.  This is the index within the 
-            /// CEPO command that describes which configuration
-            /// these commands are associated with.
-            /// </summary>
-            public int CepoIndex { get; set; }
+            public SubsystemConfiguration SubsystemConfig { get; set; }
 
             #endregion
 
@@ -3233,15 +3256,11 @@ namespace RTI
             /// A default value of 0 is used for CEPO index.  If there is only
             /// 1 subsystem, then 0 should always work.
             /// </summary>
-            /// <param name="ss">Subsystem associated with these options.</param>
-            /// <param name="cepoIndex">CEPO Index.  The default value is DEFAULT_CEPO_INDEX.</param>
-            public AdcpSubsystemCommands(Subsystem ss, int cepoIndex = DEFAULT_CEPO_INDEX)
+            /// <param name="ssConfig">Subsystem Configuration associated with these options.</param>
+            public AdcpSubsystemCommands(SubsystemConfiguration ssConfig)
             {
                 // Set the subsystem
-                SubSystem = ss;
-
-                // Set the CEPO index
-                CepoIndex = cepoIndex;
+                SubsystemConfig = ssConfig;
 
                 // Set default values
                 SetDefaults();
@@ -3260,10 +3279,7 @@ namespace RTI
             public AdcpSubsystemCommands()
             {
                 // Set empty subsystem.
-                SubSystem = new Subsystem();
-
-                // Set empty CEPO index
-                CepoIndex = DEFAULT_CEPO_INDEX;
+                SubsystemConfig = new SubsystemConfiguration();
 
                 // Set Default values
                 SetDefaultOptions();
@@ -3301,6 +3317,7 @@ namespace RTI
 
                 CBI_BurstInterval = new TimeValue();
                 CBI_NumEnsembles = DEFAULT_CBI_NUM_ENS;
+                CBI_BurstPairFlag = DEFAULT_CBI_BURST_PAIR_FLAG;
 
                 // Bottom Track defaults
                 CBTON = DEFAULT_CBTON;
@@ -3323,9 +3340,9 @@ namespace RTI
             /// </summary>
             public void SetFrequencyDefaults()
             {
-                if (SubSystem != null)
+                if (SubsystemConfig.SubSystem != null)
                 {
-                    switch (SubSystem.Code)
+                    switch (SubsystemConfig.SubSystem.Code)
                     {
                         case Subsystem.SUB_38KHZ_VERT_PISTON_F:
                         case Subsystem.SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
@@ -3616,6 +3633,25 @@ namespace RTI
             }
 
             /// <summary>
+            /// A shorten list of commands that are neccessary for a deployment.
+            /// Create a list of all the deployment commands and there value.
+            /// Add all the commands to the list and there value.
+            /// </summary>
+            /// <returns>List of all the commands and there value.</returns>
+            public List<string> GetDeploymentCommandList()
+            {
+                List<string> list = new List<string>();
+
+                list.Add(CBI_CmdStr());                // CBI
+                list.Add(CWPBB_CmdStr());              // CWBB
+                list.Add(CWPBL_CmdStr());              // CWPBL
+                list.Add(CWPBS_CmdStr());              // CWPBS
+                list.Add(CWPBN_CmdStr());              // CWPBN
+
+                return list;
+            }
+
+            /// <summary>
             /// String of all the commands and there value.
             /// 
             /// Put all the values in United States English format.
@@ -3705,7 +3741,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPON_CmdStr()
             {
-                return CWPON_CmdStr(CepoIndex);
+                return CWPON_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3736,7 +3772,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBB_CmdStr()
             {
-                return CWPBB_CmdStr(CepoIndex);
+                return CWPBB_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3771,7 +3807,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPAP_CmdStr()
             {
-                return CWPAP_CmdStr(CepoIndex);
+                return CWPAP_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3803,7 +3839,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBP_CmdStr()
             {
-                return CWPBP_CmdStr(CepoIndex);
+                return CWPBP_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3836,7 +3872,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPST_CmdStr()
             {
-                return CWPST_CmdStr(CepoIndex);
+                return CWPST_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3866,7 +3902,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBL_CmdStr()
             {
-                return CWPBL_CmdStr(CepoIndex);
+                return CWPBL_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3896,7 +3932,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBS_CmdStr()
             {
-                return CWPBS_CmdStr(CepoIndex);
+                return CWPBS_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3926,7 +3962,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPX_CmdStr()
             {
-                return CWPX_CmdStr(CepoIndex);
+                return CWPX_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3956,7 +3992,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBN_CmdStr()
             {
-                return CWPBN_CmdStr(CepoIndex);
+                return CWPBN_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -3986,7 +4022,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPP_CmdStr()
             {
-                return CWPP_CmdStr(CepoIndex);
+                return CWPP_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4016,7 +4052,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPAI_CmdStr()
             {
-                return CWPAI_CmdStr(CepoIndex);
+                return CWPAI_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4046,7 +4082,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPTBP_CmdStr()
             {
-                return CWPTBP_CmdStr(CepoIndex);
+                return CWPTBP_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4066,8 +4102,16 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBI_CmdStr(int cepoIndex)
             {
-                return string.Format("{0}[{1}] {2},{3}", CMD_CBI, cepoIndex, CBI_BurstInterval.ToString(),
-                                                                                CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                // Determine the pair flag value
+                string pairFlag = "0";
+                if (CBI_BurstPairFlag)
+                {
+                    pairFlag = "1";
+                }
+
+                return string.Format("{0}[{1}] {2},{3},{4}", CMD_CBI, cepoIndex, CBI_BurstInterval.ToString(),
+                                                                                CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                pairFlag);
             }
 
             /// <summary>
@@ -4077,7 +4121,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBI_CmdStr()
             {
-                return CBI_CmdStr(CepoIndex);
+                return CBI_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4107,7 +4151,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTON_CmdStr()
             {
-                return CBTON_CmdStr(CepoIndex);
+                return CBTON_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4139,7 +4183,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTBB_CmdStr()
             {
-                return CBTBB_CmdStr(CepoIndex);
+                return CBTBB_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4171,7 +4215,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTST_CmdStr()
             {
-                return CBTST_CmdStr(CepoIndex);
+                return CBTST_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4201,7 +4245,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTBL_CmdStr()
             {
-                return CBTBL_CmdStr(CepoIndex);
+                return CBTBL_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4231,7 +4275,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTMX_CmdStr()
             {
-                return CBTMX_CmdStr(CepoIndex);
+                return CBTMX_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4261,7 +4305,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTTBP_CmdStr()
             {
-                return CBTTBP_CmdStr(CepoIndex);
+                return CBTTBP_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4294,7 +4338,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTT_CmdStr()
             {
-                return CBTT_CmdStr(CepoIndex);
+                return CBTT_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4324,7 +4368,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTON_CmdStr()
             {
-                return CWTON_CmdStr(CepoIndex);
+                return CWTON_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4354,7 +4398,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTBB_CmdStr()
             {
-                return CWTBB_CmdStr(CepoIndex);
+                return CWTBB_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4384,7 +4428,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTBL_CmdStr()
             {
-                return CWTBL_CmdStr(CepoIndex);
+                return CWTBL_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4414,7 +4458,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTBS_CmdStr()
             {
-                return CWTBS_CmdStr(CepoIndex);
+                return CWTBS_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion
@@ -4444,7 +4488,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTTBP_CmdStr()
             {
-                return CWTTBP_CmdStr(CepoIndex);
+                return CWTTBP_CmdStr(SubsystemConfig.CepoIndex);
             }
 
             #endregion

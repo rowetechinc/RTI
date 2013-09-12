@@ -1,5 +1,90 @@
 RTI Changelog
 
+RTI-2.19
+ - Changed the version number.
+ - Added AdcpEthernet.cs and AdcpEthernetOptions.cs.
+ - In AdcpBinaryCodec, if VerifyEnsembleNumberAndSize() fails in DecodingIncomingData(), i remove a byte from the buffer and try again.
+ - In VelocityVector, fixed bug in GenerateAmplitudeVectors() where the VelociytVector was not created. 
+ - In Project.cs, fixed bug where GetAdcpConfigurationFromDb() was commented out.  
+ - Changed namespace from Screen to ScreenData.  
+ - In SerialConnection, fixed IsAvailable() if the port is not open, it would get a null for BreakState.
+ - In SerialConnection, set the initial port and baud rate given in the constuctor to the serial port.
+ - In AdcpSerialPort, added ability to scan for serial ports with an ADCP connected.
+ - Updated README to give instructions how to start to use the code.
+ - Define default values in SerialOptions.
+ - Added ability to handle a single beam system.
+ - In SerialConnection, fixed connecting multiple times to a serial port.  Threads were left running when multiple connections were attempted.
+ - In AdcpSerialPort, fixed BUG in ScanSerialConnection() where the serial connection was not shutdown after scanning and cause the read thread to remain alive.
+ - In AdcpSerialPort, added the class AdcpSerialOptions.  Make the ScanSerialConnection() return a list of AdcpSerialOptions.
+ - In SerialNumber, added SerialNumberDescString and GetSerialNumberDescString().
+ - In SerialConnection, make a public property for SerialPortOptions to allow others to see the settings.
+ - Added ToString() to AdcpSerialPort and SerialConnection.
+ - In AdcpCommands, added GetUtcTimeCommand() to set the time to UTC time and changed GetSystemTimeCommand() to GetLocalSystemTimeCommand().
+ - In AdcpSerialPort, changed SetSystemDateTime() to SetLocalSystemDateTime().  Added SetUtcSystemDateTime().
+ - In AdcpCommands, changed the name of Time_CmdStr() to LocalTime_CmdStr().  Added UtcTime_CmdStr().
+ - Added MaintenceLog.
+ - In SerialConnection, check for empty or null string in SendDataWaitReply().  MAX_DISPLAY_BUFFER increased to ensure the entire HELP message can be displayed.
+ - In AdcpCommands, check for empty buffer in DecodeBREAK().
+ - In AdcpCommands, added TimeValue constructor that takes seconds.  Added TimeValue.ToStringD() to give the time i seconds as a double.
+ - In AdcpSubsystemCommands, replaced Subsystem and CepoIndex with SubsystemConfig which contains this information.
+ - Removed the redudant CepoIndex in SubsystemConfig and AdcpSubsystemConfig.  Made AdcpSubsystemConfig take a SubsystemConfig for its constructor.
+ - In Subsystem, added CodedDescString() and Display to display the Subsystem as a string.
+ - In Subsystem, added CodeToChar() to convert the code to a char.
+ - In AdcpSubsystemCommands, added CBI_BurstPairFlag.
+ - In AdcpCommands, added SPOS.
+ - In AdcpCommands, added DecodeENGCONF().
+ - In MathHelper, added HUNSEC_TO_MILLISEC.
+ - In AdcpCommands, updated GetDeploymentCommandList().
+ - In AdcpSubystemCommands, added GetDeploymentCommandList().
+ - In AdcpBinaryWriter, set a default MaxFileSize.  Added a constructor that takes a project.  Added serialnumber to the file name.
+ - In Project, added BinaryWriter to the write binary data to the project.
+ - In Project, Added Database reader and writer to the project.
+ - Replaced Shutdown() with IDisposable.
+ - Added a class to decode and add NMEA data from a text file to the project.
+ - Changed version to 2.19.1.
+ - In MaintenceLog, added AddEntry() and ClearLog().
+ - In Subsystem, Added SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c, SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d and SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e
+ - In SubsystemConfiguration, Added IndexCodeString().
+ - Changed version to 2.19.2.
+ - In Transform, Updated how Pitch and Roll are used per SM and transform to Instrument also.
+ - In Project, added Flush() to flush the files.
+ - Changed version to 2.19.3.
+ - In EnsembleDataSet, added SubsystemConfigurationIndex to SubsystemConfiguration for output for JSON.
+ - In BaseDataSet, added CEPO index JSON string and renamed SubsystemConfigurationNumber to SubsystemConfigurationIndex. 
+ - In AdcpConfiguration, in SubsystemConfiguration constructor, i give the CEPO index now.
+ - In SubsystemConfiguration, added SubsystemConfigIndex property.  This is to differentiate between CepoIndex and SubsystemConfigIndex.
+ - In AdcpDatabaseWriter, added EnsembleWriteEvent event to send when an ensemble has been written to the database.
+ - In Project, added ProjectEnsembleWriteEvent to send event when an ensemble has been written to the project.
+ - In Project, subscribe to dbWriter to know when an ensemble has been written to the project.
+ - In Project, subscribe to binaryWriter to know when an ensemble has been written to the binary file.
+ - In MaitenceLog, fixed bug setting the date and time to string.  Minutes and Month were swapped.
+ - In AdcpSerialPort, add flag properties to know what mode the ADCP connection is in.
+ - In MathHelper, added BoolToTrueFalseStr() and BoolToOnOffStr().
+ - In PniPrimeCompassBinaryCodec, renamed Parameter and Configuration to PniParamater and PniConfiguration.    Added more responses and decoded them.
+ - Changed version to 2.19.4.
+ - In AdcpDvlCodec, have ProcessDataEventHandler match AdcpBinaryCodec and give both binary and ensemble.  Removed BinaryRecordEvent.
+ - In SerialConnection, added a soft BREAK in SendBreak() for connections that can not handle hard BREAKs.
+ - In DbCommons, added COL_CMD_APP_CONFIGURATION.
+ - In Project, added the column AppConfiguration to tblOptions to hold application specific options.  Changed Project DB rev to D2.
+ - In Project, added WriteAppConfiguration().
+ - In AdcpDatabaseWriter, added AppConfiguration.
+ - In SubsystemConfiguration, convert to and from JSON.
+ - In BottomTrackDataSet, fixed a bug with the GetAverageRange() using ElementMulitplier instead of Range.Length.
+ - In ScreenMarkBadBelowBottom, use BottomTrackDataSet's GetAverageRange().
+ - In EnsembleHelper, in SetVelocitiesBad(), also set the VelocityVector to bad velocity if it exist.
+ - In AdcpSerialPort, added a wait state in TestSerialBaudConnection() to allow the BREAK response get received.
+ - In Subsystem, Encode and Decode to JSON.
+ - In RemoveShipSpeed, added gpsHeadingOffset to account for the GPS not aligned with the ADCP.
+ - In BottomTrackDataSet, added IsBeamVelocityGood.  A good way to check for 3 beam solutions or any bad values.
+ - In AdcpBinaryWriter, moved the PublishEnsembleWrite() to AddIncomingData() so that it will display updates everytime it receives data.
+ - In AdcpDatabaseWriter, put PublishEnsembleWrite() in AddIncomingData() to know when an ensemble is received to write.
+ - In Longitude and Latitude,  made a constructor the JSON constructor.
+ - In AdcpConfiguration, added StringDesc property.
+ - In AdcpCommand, added DEFAULT_SALINITY_VALUE_ESTUARY.
+ - Changed version to 2.19.5.
+ - In AdcpSerialPort, in TestSerialBaudConnection(), limited the baud rates to test.
+
+
 RTI-2.18
  - Changed the version number.
  - In AdcpBinaryWriter, made FileSize a public property to monitor the recording.

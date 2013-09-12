@@ -50,6 +50,11 @@
  * 02/14/2012      RC          2.03       Moved file extension to Commns.cs.
  * 02/17/2012      RC          2.03       Set the file size to 0 when getting a new file name.
  * 01/24/2013      RC          2.18       Made FileSize a public property to monitor the recording.
+ * 06/17/2013      RC          2.19       Set a default MaxFileSize.  Add a constructor that takes a project.
+ *                                         Added serialnumber to the file name.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 07/26/2013      RC          2.19.3     Added EnsembleWriteEvent event to send when an ensemble has been written to the file.
+ * 08/19/2013      RC          2.19.4     Moved the PublishEnsembleWrite() to AddIncomingData() so that it will display updates everytime it receives data.
  *       
  * 
  */
@@ -69,12 +74,20 @@ namespace RTI
     /// from the ADCP serial port and
     /// write it to a file.
     /// </summary>
-    public class AdcpBinaryWriter
+    public class AdcpBinaryWriter: IDisposable
     {
+        #region Variables
+
         /// <summary>
         /// Setup logger to report errors.
         /// </summary>
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// Default size of a binary file.
+        /// 50MB
+        /// </summary>
+        public const long DEFAULT_BINARY_FILE_SIZE = 1048576 * 50;
 
         /// <summary>
         /// A buffer will be used to write
@@ -128,6 +141,7 @@ namespace RTI
         /// </summary>
         BinaryWriter _binWriter = null;
 
+        #endregion
 
         #region Properties
 
@@ -157,11 +171,8 @@ namespace RTI
                 // Reset the file index
                 _fileNameIndex = 0;
 
-                if (_selectedProject != null)
-                {
-                    // Get a new file name
-                    _fileName = GetNewFileName();
-                }
+                // Reset Filename
+                ResetFileName();
             }
         }
 
@@ -194,7 +205,7 @@ namespace RTI
         /// Set the maximum file size.
         /// </summary>
         /// <param name="maxFileSize">Maximum file size for the binary file.</param>
-        public AdcpBinaryWriter(long maxFileSize)
+        public AdcpBinaryWriter(long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
         {
             _maxFileSize = maxFileSize;
 
@@ -204,12 +215,31 @@ namespace RTI
         }
 
         /// <summary>
+        /// Constructor that takes a project
+        /// 
+        /// Set the maximum file size.
+        /// </summary>
+        /// <param name="selectedProject">Selected Project to write to.</param>
+        /// <param name="maxFileSize">Maximum file size for the binary file.</param>
+        public AdcpBinaryWriter(Project selectedProject, long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
+        {
+            _maxFileSize = maxFileSize;
+
+            // Write buffer
+            _writeBuffer = new List<byte[]>();
+            _writeBufferIndex = 0;
+
+            // Set the project.
+            SelectedProject = selectedProject;
+        }
+
+        /// <summary>
         /// On shutdown close the file.
         /// This will write any remaining
         /// data to the file and close the
         /// file.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
             Flush();
         }
@@ -239,6 +269,23 @@ namespace RTI
                 // Keep track of the number of bytes in the list
                 // The list stores byte arrays, this is to keep track of the total number of bytes.
                 _writeBufferIndex += data.Length;
+
+                // Publish the number of bytes written
+                PublishEnsembleWrite(data.Length);
+            }
+        }
+
+        /// <summary>
+        /// Reset the file name.  If the project changes
+        /// or the max file is met, a new file name will need
+        /// to be generated.
+        /// </summary>
+        public void ResetFileName()
+        {
+            if (_selectedProject != null)
+            {
+                // Get a new file name
+                _fileName = GetNewFileName();
             }
         }
 
@@ -340,7 +387,7 @@ namespace RTI
                 Flush();
 
                 // Generate new file name
-                _fileName = GetNewFileName();
+                ResetFileName();
             }
 
             try
@@ -352,6 +399,9 @@ namespace RTI
 
             // Keep track of the file size
             _fileSize += data.Length;
+
+            // Publish that the ensembles have been written to the file
+            //PublishEnsembleWrite(_fileSize);
         }
 
         /// <summary>
@@ -406,8 +456,45 @@ namespace RTI
         /// <returns>New file name with project name and index.</returns>
         private string GenerateFileName(int index)
         {
-            return _selectedProject.ProjectFolderPath + @"\" + _selectedProject.ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;
+            return _selectedProject.ProjectFolderPath + @"\" + _selectedProject.SerialNumber.SerialNumberString + "_" + _selectedProject.ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;
         }
+
+        #endregion
+
+        #region Events
+
+        #region Ensemble Write Event
+
+        /// <summary>
+        /// Event To subscribe to. 
+        /// </summary>
+        /// <param name="count">Number of ensembles in the database.</param>
+        public delegate void EnsembleWriteEventHandler(long count);
+
+        /// <summary>
+        /// Subscribe to this event.  This will hold all subscribers.
+        /// 
+        /// To subscribe:
+        /// writer.EnsembleWriteEvent += new writer.EnsembleWriteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// writer.EnsembleWriteEvent -= (method to call)
+        /// </summary>
+        public event EnsembleWriteEventHandler EnsembleWriteEvent;
+
+        /// <summary>
+        /// Verify there is a subscriber before calling the
+        /// subscribers with the new event.
+        /// </summary>
+        private void PublishEnsembleWrite(long count)
+        {
+            if (EnsembleWriteEvent != null)
+            {
+                EnsembleWriteEvent(count);
+            }
+        }
+
+        #endregion
 
         #endregion
     }

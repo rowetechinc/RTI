@@ -45,6 +45,8 @@
  *                                         AdcpSubsystemConfigExist(), RemoveAdcpSubsystemConfig() and GetAdcpSubsystemConfig()  take only 1 argument.
  * 01/02/2013      RC          2.17       Set a default CEPO when a serial number is give in the constructor.
  * 01/14/2013      RC          2.17       In DecodeCepo() fixed converting the subsystem code from a char to a decimal using MathHelper.
+ * 05/09/2013      RC          2.19       Removed the redundant CEPO command and only use the CEPO in the Commands property.
+ * 07/26/2013      RC          2.19.3     In SubsystemConfiguration constructor, i give the CEPO index now.
  * 
  */
 
@@ -80,25 +82,6 @@ namespace RTI
         public Dictionary<string, AdcpSubsystemConfig> SubsystemConfigDict { get; set; }
 
         /// <summary>
-        /// CEPO string that defines the ADCP configuration.
-        /// </summary>
-        private string _cEPO;
-        /// <summary>
-        /// CEPO string that defines the ADCP configuration.
-        /// </summary>
-        public string CEPO 
-        {
-            get { return _cEPO; } 
-            set
-            {
-                _cEPO = value;
-
-                // Set the ADCP Commands CEPO
-                Commands.CEPO = value;
-            }
-        }
-
-        /// <summary>
         /// Serial Number for the ADCP.
         /// </summary>
         private SerialNumber _serialNumber;
@@ -115,7 +98,7 @@ namespace RTI
                     _serialNumber = value;
 
                     // Clear CEPO
-                    CEPO = AdcpCommands.DEFAULT_CEPO;
+                    Commands.CEPO = AdcpCommands.DEFAULT_CEPO;
 
                     // Clear the dictionary
                     SubsystemConfigDict.Clear();
@@ -144,7 +127,7 @@ namespace RTI
             SubsystemConfigDict = new Dictionary<string, AdcpSubsystemConfig>();
             Commands = new AdcpCommands();
             _serialNumber = new SerialNumber();
-            CEPO = AdcpCommands.DEFAULT_CEPO;               // Must go after Commands is created
+            //CEPO = AdcpCommands.DEFAULT_CEPO;               // Must go after Commands is created
             DeploymentOptions = new DeploymentOptions();
         }
 
@@ -163,6 +146,8 @@ namespace RTI
 
         #region Methods
 
+        #region Configuration
+
         /// <summary>
         /// Take the CEPO command and decode the command
         /// for the ADCP configuration.
@@ -176,7 +161,8 @@ namespace RTI
             if (ValidateCEPO(cepo, serial))
             {
                 // Set CEPO and serial
-                CEPO = cepo;
+                //CEPO = cepo;
+                Commands.CEPO = cepo;
                 _serialNumber = serial;         // Set the private property for serial number or CEPO will be reset
 
                 // Decode CEPO command
@@ -202,7 +188,8 @@ namespace RTI
                 return false;
             }
 
-            return SubsystemConfigDict.ContainsKey(AdcpSubsystemConfig.GetString(ssConfig));
+            //return SubsystemConfigDict.ContainsKey(AdcpSubsystemConfig.GetString(ssConfig));
+            return SubsystemConfigDict.ContainsKey(ssConfig.DescString());
         }
 
         /// <summary>
@@ -229,11 +216,12 @@ namespace RTI
                     SortedList<int, AdcpSubsystemConfig> tempList = new SortedList<int, AdcpSubsystemConfig>();
                     foreach (AdcpSubsystemConfig asConfig in SubsystemConfigDict.Values)
                     {
-                        tempList.Add(asConfig.CepoIndex, asConfig);
+                        tempList.Add(asConfig.SubsystemConfig.CepoIndex, asConfig);
                     }
 
                     // Clear the dictionary and the CEPO command
-                    CEPO = "";
+                    //CEPO = "";
+                    Commands.CEPO = AdcpCommands.DEFAULT_CEPO;
                     SubsystemConfigDict.Clear();
 
                     // Redo the CEPO command
@@ -241,10 +229,11 @@ namespace RTI
                     for (int x = 0; x < tempList.Count; x++)
                     {
                         // Redo the cepo value
-                        CEPO += Convert.ToChar(tempList.Values[x].SubsystemConfig.SubSystem.Code);
+                        //CEPO += Convert.ToChar(tempList.Values[x].SubsystemConfig.SubSystem.Code);
+                        Commands.CEPO += Convert.ToChar(tempList.Values[x].SubsystemConfig.SubSystem.Code);
 
                         // Change the configs CEPO index
-                        tempList.Values[x].CepoIndex = x;
+                        tempList.Values[x].SubsystemConfig.CepoIndex = Convert.ToByte(x);
 
                         // Add config to the dictionary
                         AddConfig(tempList.Values[x]);
@@ -301,19 +290,21 @@ namespace RTI
             asConfig = null;
 
             // Generate a new CEPO
-            string cepo = CEPO + Convert.ToChar(ss.Code);
+            //string cepo = CEPO + Convert.ToChar(ss.Code);
+            string cepo = Commands.CEPO + Convert.ToChar(ss.Code);
 
             // Validate the new CEPO
             // If it pass, then add the new configuration to the dictionary
             if (ValidateCEPO(cepo, SerialNumber))
             {
                 // Set the CEPO
-                CEPO = cepo;
+                //CEPO = cepo;
+                Commands.CEPO = cepo;
 
                 // Get the CEPO index
                 // The index will be the last character in the CEPO command
                 // Subtract 1 because it is 0 based
-                int cepoIndex = CEPO.Length - 1;
+                int cepoIndex = Commands.CEPO.Length - 1;
 
                 // Add the configuration to the dictionary
                 // Set the AdcpSubsystemConfig to give to the user
@@ -324,6 +315,8 @@ namespace RTI
 
             return false;
         }
+
+        #endregion
 
         #region Decode
 
@@ -448,9 +441,9 @@ namespace RTI
                 }
 
                 // Create all the subsystem configurations and add to the dictionary
-                SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, (byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
-                asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);                        // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
-                SubsystemConfigDict.Add(asConfig.ToString(), asConfig);
+                SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, (byte)cepoIndex, (byte)ssCount);   // SubsystemConfiguration with the CEPO index and Index of the SubsystemConfiguration
+                asConfig = new AdcpSubsystemConfig(ssConfig);                                                       // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
+                SubsystemConfigDict.Add(asConfig.ToString(), asConfig);                                             // Add to the dictionary the configuration with the string as the key
             }
 
             return asConfig;
@@ -480,7 +473,7 @@ namespace RTI
             }
 
             // Set the new Configuration index
-            asConfig.SubsystemConfig.ConfigNumber = (byte)ssCount;
+            asConfig.SubsystemConfig.CepoIndex = (byte)ssCount;
 
             // Add it to the dictionary
             SubsystemConfigDict.Add(asConfig.ToString(), asConfig);
@@ -517,8 +510,8 @@ namespace RTI
                 }
 
                 // Create all the subsystem configurations and add to the dictionary
-                SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, (byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
-                asConfig = new AdcpSubsystemConfig(ssConfig, cepoIndex);                        // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
+                SubsystemConfiguration ssConfig = new SubsystemConfiguration(ss, (byte)cepoIndex, (byte)ssCount);    // SubsystemConfiguration with the Index of the SubsystemConfiguration
+                asConfig = new AdcpSubsystemConfig(ssConfig);                        // AdcpSubsystemConfig with the Subsystem, SubsystemConfig and CEPO index
                 if (!SubsystemConfigDict.ContainsKey(asConfig.ToString()))
                 {
                     SubsystemConfigDict.Add(asConfig.ToString(), asConfig);

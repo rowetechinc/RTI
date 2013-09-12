@@ -34,6 +34,8 @@
  * -----------------------------------------------------------------
  * 03/05/2012      RC          2.05       Initial coding
  * 12/24/2012      RC          2.17       Moved SetVelocitiesBad() to EnsembleHelper.
+ * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
+ * 08/13/2013      RC          2.19.4     Get the AverageRange from BottomTrackDataSet.
  * 
  */
 
@@ -42,7 +44,7 @@ using RTI.DataSet;
 using System;
 namespace RTI
 {
-    namespace Screen
+    namespace ScreenData
     {
         /// <summary>
         /// Screen the velocity data for any data below the Bottom.  
@@ -65,77 +67,50 @@ namespace RTI
             /// <returns>True = Screen could be done.</returns>
             public static bool Screen(ref DataSet.Ensemble ensemble)
             {
-                // Ensure bottom track data exist
-                if (ensemble.IsBottomTrackAvail &&          // Needed for Bottom Depth 
-                    ensemble.IsAncillaryAvail &&            // Needed for Blank and Bin Size
-                    ensemble.IsEnsembleAvail                // Needed for number of bins
-                    )
+                if (ensemble != null)
                 {
-                    // Get the bottom
-                    double bottom = GetAverageRange(ensemble);
-                    
-                    // Ensure we found a bottom
-                    if (bottom == DataSet.Ensemble.BAD_RANGE)
+                    // Ensure bottom track data exist
+                    if (ensemble.IsBottomTrackAvail &&          // Needed for Bottom Depth 
+                        ensemble.IsAncillaryAvail &&            // Needed for Blank and Bin Size
+                        ensemble.IsEnsembleAvail                // Needed for number of bins
+                        )
+                    {
+                        // Get the bottom
+                        double bottom = ensemble.BottomTrackData.GetAverageRange();
+
+                        // Ensure we found a bottom
+                        if (bottom == DataSet.Ensemble.BAD_RANGE)
+                        {
+                            return false;
+                        }
+
+                        // Get the bottom bin
+                        int bottomBin = GetBottomBin(ensemble, bottom);
+
+                        // Check if the bottom bin is at or beyond
+                        // the number of bins
+                        if (bottomBin < 0 || bottomBin >= ensemble.EnsembleData.NumBins)
+                        {
+                            return true;
+                        }
+
+                        // Set all the velocities bad
+                        // for the bins below the bottom.
+                        // This will also set the Good Pings bad
+                        for (int bin = bottomBin; bin < ensemble.EnsembleData.NumBins; bin++)
+                        {
+                            EnsembleHelper.SetVelocitiesBad(ref ensemble, bin);
+                        }
+
+
+                        return true;
+                    }
+                    else
                     {
                         return false;
                     }
-
-                    // Get the bottom bin
-                    int bottomBin = GetBottomBin(ensemble, bottom);
-
-                    // Check if the bottom bin is at or beyond
-                    // the number of bins
-                    if (bottomBin < 0 || bottomBin >= ensemble.EnsembleData.NumBins)
-                    {
-                        return true;
-                    }
-
-                    // Set all the velocities bad
-                    // for the bins below the bottom.
-                    // This will also set the Good Pings bad
-                    for (int bin = bottomBin; bin < ensemble.EnsembleData.NumBins; bin++)
-                    {
-                        EnsembleHelper.SetVelocitiesBad(ref ensemble, bin);
-                    }
-
-
-                        return true;
                 }
-                else
-                {
-                    return false;
-                }
-            }
-
-            /// <summary>
-            /// This method is similar to BottomTrackDataSet.GetAverageRange() except
-            /// it will not use the value if there is not at least 2 good values.  Anything
-            /// less than 2 good values will not be used.  This is to ensure the 1 bad value is
-            /// not used.  If we get 1 good and 1 bad, it is better than nothing.
-            /// </summary>
-            /// <param name="ensemble">Ensemble to get the range.</param>
-            /// <returns>Average of the range values.</returns>
-            private static double GetAverageRange(DataSet.Ensemble ensemble)
-            {
-                int count = 0;
-                double result = 0;
-                for (int beam = 0; beam < ensemble.BottomTrackData.ElementsMultiplier; beam++)
-                {
-                    if (ensemble.BottomTrackData.Range[beam] > DataSet.Ensemble.BAD_RANGE)
-                    {
-                        result += ensemble.BottomTrackData.Range[beam];
-                        count++;
-                    }
-                }
-
-                // If all values are bad
-                // Return a bad range
-                if (count < 2)
-                {
-                    return DataSet.Ensemble.BAD_RANGE;
-                }
-
-                return result / count;
+                return false;
             }
 
             /// <summary>

@@ -37,11 +37,18 @@
  * 12/28/2012      RC          2.17       Removed SubsystemConfiguration.Empty and replaced is IsEmpty().
  *                                         Made SubsystemConfiguration take a Subsystem in its constructor.
  *                                         Added DescString().
+ * 07/25/2013     RC           2.19.1     Added IndexCodeString().
+ * 07/26/2013     RC           2.19.3     Added SubsystemConfigIndex property.  This is to differentiate between CepoIndex and SubsystemConfigIndex.
+ * 08/12/2013     RC           2.19.4     Convert to and from JSON.
+ * 08/14/2013     RC           2.19.4     Fixed JSON conversions.
+ * 08/22/2013     RC           2.19.4     Added StringDesc property.
  * 
  */
 
 
 using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace RTI
@@ -54,6 +61,7 @@ namespace RTI
     /// Use this configuration with the Subsystem Type to
     /// separate the ensemble for each setup/subsystem.
     /// </summary>
+    [JsonConverter(typeof(SubsystemConfigurationSerializer))]
     public class SubsystemConfiguration
     {
         #region Variables
@@ -84,10 +92,24 @@ namespace RTI
         public Subsystem SubSystem { get; set; }
 
         /// <summary>
-        /// Number that identifies which configuration is being
-        /// used for the current subsystem.
+        /// CEPO index.  This is the location within
+        /// the CEPO command that this configuration 
+        /// is located.
         /// </summary>
-        public byte ConfigNumber { get; set; }
+        public byte CepoIndex { get; set; }
+
+        /// <summary>
+        /// Index for the SubsystemConfiguration.  Multiple
+        /// configurations can be created for a Subsystem.  This
+        /// index determines which order the SubsystemConfiguration
+        /// is in.
+        /// </summary>
+        public byte SubsystemConfigIndex { get; set; }
+
+        /// <summary>
+        /// Description string as a property.
+        /// </summary>
+        public string StringDesc { get { return DescString(); } }
 
         #endregion
 
@@ -103,11 +125,14 @@ namespace RTI
         /// Set the Command Setup value.
         /// </summary>
         /// <param name="ss">Subsystem for the configuration.</param>
-        /// <param name="cmdSetup">Set the command setup.</param>
-        public SubsystemConfiguration(Subsystem ss, byte cmdSetup)
+        /// <param name="cepoIndex">CEPO index.</param>
+        /// <param name="ssConfigIndex">SubsystemConfiguration Index.</param>
+        [JsonConstructor]
+        public SubsystemConfiguration(Subsystem ss, byte cepoIndex, byte ssConfigIndex)
         {
             SubSystem = ss;
-            ConfigNumber = cmdSetup;
+            CepoIndex = cepoIndex;
+            SubsystemConfigIndex = ssConfigIndex;
         }
 
         /// <summary>
@@ -130,7 +155,7 @@ namespace RTI
         /// <returns>TRUE = Empty Configuration.</returns>
         public bool IsEmpty()
         {
-            if (SubSystem.IsEmpty() && ConfigNumber == DEFAULT_SETUP)
+            if (SubSystem.IsEmpty() && CepoIndex == DEFAULT_SETUP)
             {
                 return true;
             }
@@ -150,7 +175,7 @@ namespace RTI
             result[0] = (byte)0;
             result[1] = (byte)0;
             result[2] = (byte)0;
-            result[COMMAND_SETUP_START] = ConfigNumber;
+            result[COMMAND_SETUP_START] = CepoIndex;
 
             return result;
         }
@@ -165,7 +190,7 @@ namespace RTI
         {
             if (data.Length >= NUM_BYTES)
             {
-                ConfigNumber = data[COMMAND_SETUP_START];
+                CepoIndex = data[COMMAND_SETUP_START];
             }
             else
             {
@@ -178,7 +203,7 @@ namespace RTI
         /// </summary>
         private void SetDefault()
         {
-            ConfigNumber = DEFAULT_SETUP;
+            CepoIndex = DEFAULT_SETUP;
             SubSystem = new Subsystem();
         }
 
@@ -191,13 +216,15 @@ namespace RTI
         public string CommandSetupToString()
         {
             //return Convert.ToString(Convert.ToChar(CommandSetup));
-            return Convert.ToString(ConfigNumber);
+            return Convert.ToString(CepoIndex);
         }
 
         /// <summary>
         /// Return a description string of this object.  This will
         /// include the configuration number in brackets and the
         /// subsystem description.
+        /// 
+        /// [CEPO Index] Subsystem description
         /// </summary>
         /// <returns>Description string for this object.</returns>
         public string DescString()
@@ -205,18 +232,29 @@ namespace RTI
             return String.Format("[{0}] {1}", CommandSetupToString(), SubSystem.DescString());
         }
 
+        /// <summary>
+        /// Return the CEPO index and the Subsystem code for this configuration.
+        /// 
+        /// [CEPO Index] Code
+        /// </summary>
+        /// <returns>[CEPO Index] Code</returns>
+        public string IndexCodeString()
+        {
+            return String.Format("[{0}] {1}", CommandSetupToString(), SubSystem.CodeToString());
+        }
+
         #endregion
 
         #region Overrides
 
-        /// <summary>
-        /// Return the CommandSetup as a string.
-        /// </summary>
-        /// <returns>CommandSetup as as string.</returns>
-        public override string ToString()
-        {
-            return CommandSetupToString();
-        }
+        ///// <summary>
+        ///// Return the CommandSetup as a string.
+        ///// </summary>
+        ///// <returns>CommandSetup as as string.</returns>
+        //public override string ToString()
+        //{
+        //    return CommandSetupToString();
+        //}
 
         /// <summary>
         /// Determine if the 2 SubsystemConfigurations given are the equal.
@@ -239,7 +277,7 @@ namespace RTI
             }
 
             // Return true if the fields match:
-            return (config1.SubSystem == config2.SubSystem && config1.ConfigNumber == config2.ConfigNumber);
+            return (config1.SubSystem == config2.SubSystem && config1.CepoIndex == config2.CepoIndex && config1.SubsystemConfigIndex == config2.SubsystemConfigIndex);
         }
 
         /// <summary>
@@ -259,7 +297,7 @@ namespace RTI
         /// <returns>Hash the Code.</returns>
         public override int GetHashCode()
         {
-            return ConfigNumber.GetHashCode();
+            return CepoIndex.GetHashCode();
         }
 
         /// <summary>
@@ -275,9 +313,127 @@ namespace RTI
 
             SubsystemConfiguration p = (SubsystemConfiguration)obj;
 
-            return (SubSystem == p.SubSystem && ConfigNumber == p.ConfigNumber);
+            return (SubSystem == p.SubSystem && CepoIndex == p.CepoIndex && SubsystemConfigIndex == p.SubsystemConfigIndex);
         }
 
         #endregion
     }
+
+    #region JSON
+
+    /// <summary>
+    /// Convert this object to a JSON object.
+    /// Calling this method is twice as fast as calling the default serializer:
+    /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.SubsystemConfiguration).
+    /// 
+    /// 50ms for this method.
+    /// 100ms for calling SerializeObject default.
+    /// 
+    /// Use this method whenever possible to convert to JSON.
+    /// 
+    /// http://james.newtonking.com/projects/json/help/
+    /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+    /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+    /// </summary>
+    public class SubsystemConfigurationSerializer : JsonConverter
+    {
+        #region JSON Names
+
+        /// <summary>
+        /// JSON object name for SubSystem.
+        /// </summary>
+        public const string JSON_STR_SUBSYSTEM = "SubSystem";
+
+
+        /// <summary>
+        /// JSON object name for CepoIndex.
+        /// </summary>
+        public const string JSON_STR_CEPO_INDEX = "CepoIndex";
+
+        /// <summary>
+        /// JSON object name for SubsystemConfigIndex.
+        /// </summary>
+        public const string JSON_STR_SUBSYSTEM_CONFIG_INDEX = "SubsystemConfigIndex";
+
+        #endregion
+
+        /// <summary>
+        /// Write the JSON string.  This will convert all the properties to a JSON string.
+        /// This is done manaully to improve conversion time.  The default serializer will check
+        /// each property if it can convert.  This will convert the properties automatically.  This
+        /// will double the speed.
+        /// 
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.SubsystemConfiguration).
+        /// 
+        /// </summary>
+        /// <param name="writer">JSON Writer.</param>
+        /// <param name="value">Object to write to JSON.</param>
+        /// <param name="serializer">Serializer to convert the object.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            // Cast the object
+            var data = value as SubsystemConfiguration;
+
+            // Start the object
+            writer.Formatting = Formatting.None;                    // Make the text not indented, so not as human readable.  This will save disk space
+            writer.WriteStartObject();                              // Start the JSON object
+
+            // SubSystem
+            writer.WritePropertyName(JSON_STR_SUBSYSTEM);                                           // Subsystem name
+            writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(data.SubSystem));      // Subsystem value
+
+            // CEPO Index
+            writer.WritePropertyName(JSON_STR_CEPO_INDEX);                                          // CEPO Index name
+            writer.WriteValue(data.CepoIndex);                                                      // CEPO Index value
+
+            // Subsystem Config index
+            writer.WritePropertyName(JSON_STR_SUBSYSTEM_CONFIG_INDEX);                              // Subsystem Config Index name
+            writer.WriteValue(data.SubsystemConfigIndex);                                           // Subsystem Config Index value
+
+            // End the object
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Read the JSON object and convert to the object.  This will allow the serializer to
+        /// automatically convert the object.  No special instructions need to be done and all
+        /// the properties found in the JSON string need to be used.
+        /// 
+        /// SubsystemConfiguration subsysConfig = Newtonsoft.Json.JsonConvert.DeserializeObject{ensemble.SubsystemConfiguration}(encodedSubsystemConfig)
+        /// 
+        /// </summary>
+        /// <param name="reader">NOT USED. JSON reader.</param>
+        /// <param name="objectType">NOT USED> Type of object.</param>
+        /// <param name="existingValue">NOT USED.</param>
+        /// <param name="serializer">Serialize the object.</param>
+        /// <returns>Serialized object.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType != JsonToken.Null)
+            {
+                // Load the object
+                JObject jsonObject = JObject.Load(reader);
+
+                byte cepoIndex = jsonObject[JSON_STR_CEPO_INDEX].ToObject<byte>(); ;
+                byte configIndex = jsonObject[JSON_STR_SUBSYSTEM_CONFIG_INDEX].ToObject<byte>(); ;
+                Subsystem ss = jsonObject[JSON_STR_SUBSYSTEM].ToObject<Subsystem>();
+
+                return new SubsystemConfiguration(ss, cepoIndex, configIndex);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Check if the given object is the correct type.
+        /// </summary>
+        /// <param name="objectType">Object to convert.</param>
+        /// <returns>TRUE = object given is the correct type.</returns>
+        public override bool CanConvert(Type objectType)
+        {
+            return typeof(SubsystemConfiguration).IsAssignableFrom(objectType);
+        }
+    }
+
+    #endregion
 }

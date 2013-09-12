@@ -54,6 +54,16 @@
  * 02/06/2013      RC          2.18       Changed the database revision to C1 because we added a new table, tblOptions.
  * 02/07/2013      RC          2.18       Added VerifyDatabase() to verify a database when copying a new project database.
  * 03/08/2013      RC          2.18       Added ValidateVersion() to validate which version of the Project file.
+ * 04/09/2013      RC          2.19       Fixed bug where GetAdcpConfigurationFromDb() was commented out.
+ * 06/17/2013      RC          2.19       Added BinaryWriter to the write binary data to the project.
+ * 06/27/2013      RC          2.19       Added Database reader and writer to the project.
+ * 06/28/2013      RC          2.19       Added IDisposable to properly shutdown and replace Shutdown.
+ * 07/25/2013      RC          2.19.2     Added Flush() to flush the files.
+ * 07/26/2013      RC          2.19.3     Added ProjectEnsembleWriteEvent to send event when an ensemble has been written to the project.
+ *                                         Subscribe to dbWriter to know when an ensemble has been written to the project.
+ *                                         Subscribe to binaryWriter to know when an ensemble has been written to the binary file.
+ * 08/09/2013      RC          2.19.4     Added the column AppConfiguration to tblOptions to hold application specific options.
+ *                                         Added WriteAppConfiguration().  Changed Project DB rev to D2.
  */
 
 using System;
@@ -77,7 +87,7 @@ namespace RTI
     /// will be stored.  The date is to keep track of
     /// the project.
     /// </summary>
-    public class Project
+    public class Project: IDisposable
     {
         #region Variables
 
@@ -91,14 +101,35 @@ namespace RTI
         /// Revision B includes the Adcp commands and options.
         /// Revision C changed the options table.
         /// Revision D made all the columns JSON data.
+        /// Revision D2 added AppConfiguration column.
         /// </summary>
-        public const string REV = "D1";
+        public const string REV = "D2";
 
         /// <summary>
         /// ID for project if no project 
         /// ID is given.
         /// </summary>
         public const int EmptyID = -1;
+
+        /// <summary>
+        /// Binary writer to buffer writing the
+        /// ADCP data to binary file.
+        /// </summary>
+        private AdcpBinaryWriter _binaryWriter;
+
+        /// <summary>
+        /// ADCP database writer.  This will write
+        /// data to the database file for the
+        /// project.
+        /// </summary>
+        private AdcpDatabaseWriter _dbWriter;
+
+        /// <summary>
+        /// ADCP database reader.
+        /// This will read the data from the
+        /// database file for the project.
+        /// </summary>
+        private AdcpDatabaseReader _dbReader;
 
         #endregion
 
@@ -161,6 +192,13 @@ namespace RTI
                 {
                     Configuration.SerialNumber = value;
                 }
+
+                // This will reset the file name with the new serial number
+                //_binaryWriter.SelectedProject = this;
+                if (_binaryWriter != null)
+                {
+                    _binaryWriter.ResetFileName();
+                }
             }
         }
 
@@ -193,6 +231,9 @@ namespace RTI
 
             // Create the database file
             CreateProjectDatabase();
+
+            // Initialize the object
+            Initialize();
         }
 
         /// <summary>
@@ -217,6 +258,9 @@ namespace RTI
 
             // Create the database file
             CreateProjectDatabase();
+
+            // Initialize the object
+            Initialize();
         }
 
         /// <summary>
@@ -243,6 +287,9 @@ namespace RTI
 
             // Create the database file
             CreateProjectDatabase();
+
+            // Initialize the object
+            Initialize();
         }
 
         /// <summary>
@@ -270,6 +317,43 @@ namespace RTI
 
             // Copy the database file
             CopyProjectDatabase(dbFilePath);
+
+            // Initialize the object
+            Initialize();
+        }
+
+        /// <summary>
+        /// Destructor.
+        /// Close the writers.
+        /// </summary>
+        public void Dispose()
+        {
+            // Unsubscribe
+            _dbWriter.EnsembleWriteEvent -= _dbWriter_EnsembleWriteEvent;
+            _binaryWriter.EnsembleWriteEvent -= _binaryWriter_EnsembleWriteEvent;
+
+            _dbWriter.Dispose();
+            _binaryWriter.Dispose();
+            _dbReader.Dispose();
+        }
+
+        /// <summary>
+        /// Initialize the object
+        /// </summary>
+        private void Initialize()
+        {
+            // Create reader and writers
+            _binaryWriter = new AdcpBinaryWriter(this);
+            _dbWriter = new AdcpDatabaseWriter() { SelectedProject = this };
+            _dbReader = new AdcpDatabaseReader();
+
+            // Subscribe to the events of the writer
+            _dbWriter.EnsembleWriteEvent += new AdcpDatabaseWriter.EnsembleWriteEventHandler(_dbWriter_EnsembleWriteEvent);
+            _binaryWriter.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriter_EnsembleWriteEvent);
+
+            // Check the if the serial number can
+            // be set from the first ensemble if it is empty
+            CheckSerialNumber();
         }
 
         /// <summary>
@@ -282,11 +366,29 @@ namespace RTI
         {
             if (string.IsNullOrEmpty(serialNumStr))
             {
-                SerialNumber = new SerialNumber();
+                    SerialNumber = new SerialNumber();
             }
             else
             {
                 SerialNumber = new SerialNumber(serialNumStr);
+            }
+        }
+
+        /// <summary>
+        /// Check if the serial number is empty.
+        /// If it is empty, try to get the serial number
+        /// from the first ensemble.
+        /// </summary>
+        private void CheckSerialNumber()
+        {
+            if (SerialNumber.IsEmpty())
+            {
+                // Get the serialnumber from the first ensemble
+                DataSet.Ensemble ens = GetFirstEnsemble();
+                if (ens != null && ens.IsEnsembleAvail)
+                {
+                    SerialNumber = ens.EnsembleData.SysSerialNumber;
+                }
             }
         }
 
@@ -389,7 +491,7 @@ namespace RTI
                 //"PRAGMA main.journal_mode=WAL",
                 //"PRAGMA main.cache_size=5000",
                 "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT)",
-                "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, AdcpConfiguration TEXT, Revision TEXT, Misc TEXT)",
+                "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
                 string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, {4});", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", "'D1'"),   // Put at least 1 entry so an insert does not have to be done later
             };
 
@@ -565,7 +667,7 @@ namespace RTI
                 }
             }
 
-            return new AdcpSubsystemCommands(asConfig.SubsystemConfig.SubSystem, asConfig.CepoIndex);
+            return new AdcpSubsystemCommands(asConfig.SubsystemConfig);
         }
 
         #endregion
@@ -605,45 +707,107 @@ namespace RTI
         {
             AdcpConfiguration config = new AdcpConfiguration(SerialNumber);
 
-            //string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS);
-            //try
-            //{
-            //    // Query the database for the ADCP settings
-            //    DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
+            string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS);
+            try
+            {
+                // Query the database for the ADCP settings
+                DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
 
-            //    // Go through the result settings the settings
-            //    // If more than 1 result is found, return the first one found
-            //    foreach (DataRow r in dt.Rows)
-            //    {
-            //        // Check if there is data
-            //        if (r[DbCommon.COL_CMD_ADCP_CONFIGURATION] == DBNull.Value)
-            //        {
-            //            break;
-            //        }
+                // Go through the result settings the settings
+                // If more than 1 result is found, return the first one found
+                foreach (DataRow r in dt.Rows)
+                {
+                    // Check if there is data
+                    if (r[DbCommon.COL_CMD_ADCP_CONFIGURATION] == DBNull.Value)
+                    {
+                        break;
+                    }
 
-            //        // This will call the default constructor or pass to the constructor parameter a null
-            //        // The constructor parameter must be set after creating the object.
-            //        string json = Convert.ToString(r[DbCommon.COL_CMD_ADCP_CONFIGURATION]);
-            //        if (!String.IsNullOrEmpty(json))
-            //        {
-            //            config = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpConfiguration>(json);
-            //        }
+                    // This will call the default constructor or pass to the constructor parameter a null
+                    // The constructor parameter must be set after creating the object.
+                    string json = Convert.ToString(r[DbCommon.COL_CMD_ADCP_CONFIGURATION]);
+                    if (!String.IsNullOrEmpty(json))
+                    {
+                        config = Newtonsoft.Json.JsonConvert.DeserializeObject<AdcpConfiguration>(json);
+                    }
 
 
-            //        // Only read the first row
-            //        break;
-            //    }
-            //}
-            //catch (SQLiteException e)
-            //{
-            //    log.Error("SQL Error getting ADCP Configuration from the project.", e);
-            //}
-            //catch (Exception ex)
-            //{
-            //    log.Error("Error getting ADCP Configuration from the project.", ex);
-            //}
+                    // Only read the first row
+                    break;
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error("SQL Error getting ADCP Configuration from the project.", e);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error getting ADCP Configuration from the project.", ex);
+            }
 
             return config;
+        }
+
+        #endregion
+
+        #region App Configuration
+
+        /// <summary>
+        /// Get the Application Configuration from the database.  This will read the database
+        /// table for the configuration.  If one exist, it will set the configuration.
+        /// If one does not exist, it will return the default values.
+        /// </summary>
+        /// <returns>Application Configurations found in the project DB file.</returns>
+        public string GetAppConfigurationFromDb()
+        {
+            string config = "";
+
+            string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS);
+            try
+            {
+                // Query the database for the ADCP settings
+                DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
+
+                // Go through the result settings the settings
+                // If more than 1 result is found, return the first one found
+                foreach (DataRow r in dt.Rows)
+                {
+                    // Check if there is data
+                    if (r[DbCommon.COL_CMD_APP_CONFIGURATION] == DBNull.Value)
+                    {
+                        break;
+                    }
+
+                    // Get the JSON string from the project
+                    config = Convert.ToString(r[DbCommon.COL_CMD_APP_CONFIGURATION]);
+
+
+                    // Only read the first row
+                    break;
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error("SQL Error getting ADCP Configuration from the project.", e);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error getting ADCP Configuration from the project.", ex);
+            }
+
+            return config;
+        }
+
+        /// <summary>
+        /// Write the JSON string to the project database file.
+        /// The parameter is a string so any JSON string can be written
+        /// to the project file.  This will support other applications (Non-RTI)
+        /// saving settings to the project.
+        /// </summary>
+        /// <param name="config">JSON string of the config.</param>
+        public void WriteAppConfiguration(string config)
+        {
+            _dbWriter.UpdateAppConfiguration(config);
         }
 
         #endregion
@@ -669,6 +833,186 @@ namespace RTI
         public string GetProjectImagePath()
         {
             return ProjectFolderPath + @"\" + ProjectName + ".png";
+        }
+
+        #endregion
+
+        #region Record
+
+        #region Record Ensembles
+
+        /// <summary>
+        /// Record the binary data to the project.
+        /// This will take the binary data and add it
+        /// to the projects buffer to written to the file.
+        /// </summary>
+        /// <param name="data">Data to write.</param>
+        /// <returns>TRUE = Data written to binary file.</returns>
+        public bool RecordBinary(byte[] data)
+        {
+            if (_binaryWriter != null)
+            {
+                _binaryWriter.AddIncomingData(data);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Record to the database project file.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to record.</param>
+        /// <returns>True if ensemble could be recorded.</returns>
+        public bool RecordDb(DataSet.Ensemble ensemble)
+        {
+            if (_dbWriter != null)
+            {
+                _dbWriter.AddIncomingData(ensemble);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Flush the writers.  This will flush
+        /// the binary and database writer.
+        /// </summary>
+        public void Flush()
+        {
+            if (_binaryWriter != null)
+            {
+                _binaryWriter.Flush();
+            }
+
+            if (_dbWriter != null)
+            {
+                _dbWriter.Flush();
+            }
+        }
+
+        #endregion
+
+        #region Record Commands and Options
+
+        ///// <summary>
+        ///// Write the AdcpConfiguration to the project database file.
+        ///// </summary>
+        ///// <param name="config">AdcpConfiguration with all configurations.</param>
+        //public void WriteAdcpConfiguration(AdcpConfiguration config)
+        //{
+        //    _dbWriter.UpdateAdcpConfiguration(config);
+        //}
+
+        /// <summary>
+        /// Write the updated configuration to the project database file.
+        /// </summary>
+        public void WriteAdcpConfiguration()
+        {
+            _dbWriter.UpdateAdcpConfiguration(Configuration);
+        }
+
+        ///// <summary>
+        ///// Write the AdcpCommands to the project database file.
+        ///// </summary>
+        ///// <param name="commands">AdcpCommands to update.</param>
+        //public void WriteAdcpCommands(AdcpCommands commands)
+        //{
+        //    _dbWriter.UpdateAdcpCommands(commands);
+        //}
+
+
+        ///// <summary>
+        ///// Write the DeploymentOptions to the project database file.
+        ///// </summary>
+        ///// <param name="options">DeploymentOptions to update.</param>
+        //public void WriteDeploymentOptions(DeploymentOptions options)
+        //{
+        //    _dbWriter.UpdateDeploymentOptions(options);
+        //}
+
+        ///// <summary>
+        ///// Write the AdcpSubsystemCommands to the project database file.
+        ///// </summary>
+        ///// <param name="asConfig">AdcpSubsystemConfig the configuration description and commands.</param>
+        //public void WriteAdcpSubsystemConfigurationCommands(AdcpSubsystemConfig asConfig)
+        //{
+        //    _dbWriter.UpdateAdcpSubsystemConfigurationCommands(asConfig);
+        //}
+
+        #endregion
+
+        #region Update GPS Data
+
+        /// <summary>
+        /// Update the ensemble with the given Nmea DataSet.  The
+        /// ensemble will be based off the ensemble number given.
+        /// </summary>
+        /// <param name="nmea">Nmea Dataset.</param>
+        /// <param name="ensNum">Ensemble number.</param>
+        public void UpdateNmeaDataSet(DataSet.NmeaDataSet nmea, int ensNum)
+        {
+            _dbWriter.UpdateNmeaDataSet(nmea, ensNum);
+        }
+
+        #endregion
+
+        #endregion
+
+        #region Get Ensemble
+
+        /// <summary>
+        /// Playback the given ensemble.
+        /// </summary>
+        /// <param name="index">Index for the ensemble.</param>
+        /// <returns>Ensemble read from the database.</returns>
+        public DataSet.Ensemble GetEnsemble(long index)
+        {
+            return _dbReader.GetEnsemble(this, index);
+        }
+
+        /// <summary>
+        /// Get a fixed number of ensembles starting at index from the project.
+        /// This will open the database for the given project.   It will then read
+        /// the ensemble starting at index.  
+        /// 
+        /// The index starts with 1 in the database.
+        /// </summary>
+        /// <param name="index">Start location.</param>
+        /// <param name="size">Number of ensembles to read.</param>
+        /// <returns>Cache with the read ensembles.</returns>
+        public Cache<long, DataSet.Ensemble> GetEnsembles(long index, uint size)
+        {
+            return _dbReader.GetEnsembles(this, index, size);
+        }
+
+        /// <summary>
+        /// Return the first ensemble found.  This will get the total number
+        /// of ensembles to have a timeout.  It will then start to look for
+        /// first ensemble.  The first ensemble found will be returned.
+        /// </summary>
+        /// <returns>First ensemble in the project.</returns>
+        public DataSet.Ensemble GetFirstEnsemble()
+        {
+            return _dbReader.GetFirstEnsemble(this);
+        }
+
+        /// <summary>
+        /// Get all the ensembles for the given project.  This will
+        /// get ensemble from the database and store to a cache.
+        /// </summary>
+        /// <returns>Cache of all the ensembles.</returns>
+        public Cache<long, DataSet.Ensemble> GetAllEnsembles()
+        {
+            return _dbReader.GetAllEnsembles(this);
+        }
+
+        /// <summary>
+        /// Get the number of ensembles in the given
+        /// project.
+        /// </summary>
+        public int GetNumberOfEnsembles()
+        {
+            return _dbReader.GetNumberOfEnsembles(this);
         }
 
         #endregion
@@ -750,5 +1094,109 @@ namespace RTI
 
         #endregion
 
+        #region EventHandlers
+
+        /// <summary>
+        /// Event recieved when an ensemble has been written to the
+        /// database.  This will also return the last row ID of the
+        /// ensemble.  The row ID is also the number of ensembles in
+        /// the project.
+        /// </summary>
+        /// <param name="count">Number of ensembles in the database.</param>
+        void _dbWriter_EnsembleWriteEvent(long count)
+        {
+            // Publish that the project has been written to
+            PublishProjectEnsembleWrite(count);
+        }
+
+        /// <summary>
+        /// Event recieved when an ensemble has been written to the
+        /// binary file.  This will also return the file size of the
+        /// binary file.
+        /// </summary>
+        /// <param name="count">File size of the binary file in bytes.</param>
+        void _binaryWriter_EnsembleWriteEvent(long count)
+        {
+            // Publish that the project has been written to
+            PublishBinaryEnsembleWrite(count);
+        }
+
+        #endregion
+
+        #region Events
+
+        #region Project Ensemble Write
+
+        /// <summary>
+        /// Event To subscribe to. 
+        /// </summary>
+        /// <param name="count">Number of ensembles in the database.</param>
+        public delegate void ProjectEnsembleWriteEventHandler(long count);
+
+        /// <summary>
+        /// Subscribe to this event.  This will hold all subscribers.
+        /// 
+        /// To subscribe:
+        /// prj.ProjectEnsembleWriteEvent += new prj.ProjectEnsembleWriteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// prj.ProjectEnsembleWriteEvent -= (method to call)
+        /// </summary>
+        public event ProjectEnsembleWriteEventHandler ProjectEnsembleWriteEvent;
+
+        /// <summary>
+        /// Publish that an ensemble has been written to the database (Project).
+        /// This will give the number of ensembles in the project.
+        /// 
+        /// Verify there is a subscriber before calling the
+        /// subscribers with the new event.
+        /// </summary>
+        private void PublishProjectEnsembleWrite(long count)
+        {
+            if (ProjectEnsembleWriteEvent != null)
+            {
+                ProjectEnsembleWriteEvent(count);
+            }
+        }
+
+        #endregion
+
+        #region Binary Ensemble Write
+
+        /// <summary>
+        /// Event To subscribe to. 
+        /// </summary>
+        /// <param name="count">Size of the binary file in bytes.</param>
+        public delegate void BinaryEnsembleWriteEventHandler(long count);
+
+        /// <summary>
+        /// Subscribe to this event.  This will hold all subscribers.
+        /// 
+        /// To subscribe:
+        /// prj.BinaryEnsembleWriteEvent += new prj.BinaryEnsembleWriteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// prj.BinaryEnsembleWriteEvent -= (method to call)
+        /// </summary>
+        public event BinaryEnsembleWriteEventHandler BinaryEnsembleWriteEvent;
+
+        /// <summary>
+        /// Publish that an ensemble has been written to the database (Project).
+        /// This will give the number of ensembles in the project.
+        /// 
+        /// Verify there is a subscriber before calling the
+        /// subscribers with the new event.
+        /// </summary>
+        private void PublishBinaryEnsembleWrite(long count)
+        {
+            if (BinaryEnsembleWriteEvent != null)
+            {
+                BinaryEnsembleWriteEvent(count);
+            }
+        }
+
+        #endregion
+
+        #endregion
     }
 }

@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 03/05/2012      RC          2.05       Initial coding
  * 08/23/2012      RC          2.13       Added 3 beam solution check.  Also fixed bug in earth and instrument when not check if velocity is bad when threshold checking.
+ * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
  * 
  */
 
@@ -42,7 +43,7 @@ using RTI.DataSet;
 using System;
 namespace RTI
 {
-    namespace Screen
+    namespace ScreenData
     {
         /// <summary>
         /// Screen the velocity data.  

@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 02/14/2012      RC          2.03       Initial coding
  * 01/16/2013      RC          2.17       Fixed bug in how the screening for bad ranges was done.
+ * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
  * 
  */
 
@@ -41,7 +42,7 @@ using RTI.DataSet;
 using System;
 namespace RTI
 {
-    namespace Screen
+    namespace ScreenData
     {
         /// <summary>
         /// This class will screen the Bottom Track Range.

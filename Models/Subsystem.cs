@@ -47,11 +47,17 @@
  * 11/30/2012      RC          2.17       Added a note about the subsystem code being EMPTY.
  * 12/27/2012      RC          2.17       Removed Subsystem.Empty.  It was not readonly.
  * 01/14/2013      RC          2.17       Convert the subsystem char to a decimal using ConvertSubsystemCode().
+ * 05/30/2013      RC          2.19       Added CodedDescString() and Display to display the Subsystem as a string.
+ * 06/10/2013      RC          2.19       Added CodeToChar() to convert the code to a char.
+ * 07/22/2013      RC          2.19.1     Added SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c, SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d and SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e
+ * 08/14/2013      RC          2.19.4     Encode and Decode to JSON.
  *
  */
 
 using System;
 using System.Collections.ObjectModel;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 namespace RTI
 {
     /// <summary>
@@ -59,6 +65,7 @@ namespace RTI
     /// This includes the subsystem index and system code.
     /// The code designates the type of system.
     /// </summary>
+    [JsonConverter(typeof(SubsystemSerializer))]
     public class Subsystem
     {
         #region Variables
@@ -335,6 +342,27 @@ namespace RTI
         /// </summary>
         public const byte SUB_SPARE_b = 0x62;
 
+        /// <summary>
+        /// 1.2 MHz 4 beam 20 degree piston opposite facing
+        /// ASCII: c
+        /// Hex: 0x63
+        /// </summary>
+        public const byte SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c = 0x63;
+
+        /// <summary>
+        /// 600 KHz 4 beam 20 degree piston opposite facing
+        /// ASCII: c
+        /// Hex: 0x63
+        /// </summary>
+        public const byte SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d = 0x64;
+
+        /// <summary>
+        /// 300 KHz 4 beam 20 degree piston opposite facing
+        /// ASCII: c
+        /// Hex: 0x63
+        /// </summary>
+        public const byte SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e = 0x65;
+
         #endregion
 
         #region Properties
@@ -354,6 +382,14 @@ namespace RTI
         /// can be found in the RTI ADCP User Guide.
         /// </summary>
         public byte Code { get; set; }
+
+        /// <summary>
+        /// Used to display in a list.
+        /// Set the DisplayMember of the combobox.
+        /// http://stackoverflow.com/questions/3664956/c-sharp-combobox-overridden-tostring
+        /// </summary>
+        [JsonIgnore]
+        public string Display { get { return CodedDescString(); } }
 
         #endregion
 
@@ -438,6 +474,15 @@ namespace RTI
         }
 
         /// <summary>
+        /// Convert the code to a char.
+        /// </summary>
+        /// <returns>Code as a char.</returns>
+        public char CodeToChar()
+        {
+            return Convert.ToChar(Code);
+        }
+
+        /// <summary>
         /// Return the string version of the code.
         /// This will convert the code from a hex byte value to 
         /// a string character.
@@ -445,7 +490,7 @@ namespace RTI
         /// <returns>Code as a string.</returns>
         public string CodeToString()
         {
-            return Convert.ToString(Convert.ToChar(Code));
+            return Convert.ToString(CodeToChar());
         }
 
         /// <summary>
@@ -456,6 +501,16 @@ namespace RTI
         public string DescString()
         {
             return DescString(Code);
+        }
+
+        /// <summary>
+        /// Create a string for the subsystem that includes the
+        /// code and the description.
+        /// </summary>
+        /// <returns>String of the subsystem with the code and description.</returns>
+        public string CodedDescString()
+        {
+            return CodeToString() + " - " + DescString(Code);
         }
 
         /// <summary>
@@ -815,4 +870,114 @@ namespace RTI
         }
 
     }
+
+#region JSON
+
+    /// <summary>
+    /// Convert this object to a JSON object.
+    /// Calling this method is twice as fast as calling the default serializer:
+    /// Newtonsoft.Json.JsonConvert.SerializeObject(subsystem).
+    /// 
+    /// 50ms for this method.
+    /// 100ms for calling SerializeObject default.
+    /// 
+    /// Use this method whenever possible to convert to JSON.
+    /// 
+    /// http://james.newtonking.com/projects/json/help/
+    /// http://james.newtonking.com/projects/json/help/index.html?topic=html/ReadingWritingJSON.htm
+    /// http://blog.maskalik.com/asp-net/json-net-implement-custom-serialization
+    /// </summary>
+    public class SubsystemSerializer : JsonConverter
+    {
+        #region Variables
+
+        /// <summary>
+        /// JSON object name for Subsystem Index.
+        /// </summary>
+        public const string JSON_STR_SUBSYSTEM_INDEX = "SubsystemIndex";
+
+        /// <summary>
+        /// JSON object name for Subsystem Code.
+        /// </summary>
+        public const string JSON_STR_SUBSYSTEM_CODE = "SubsystemCode";
+
+        #endregion
+
+        /// <summary>
+        /// Write the JSON string.  This will convert all the properties to a JSON string.
+        /// This is done manaully to improve conversion time.  The default serializer will check
+        /// each property if it can convert.  This will convert the properties automatically.  This
+        /// will double the speed.
+        /// 
+        /// Newtonsoft.Json.JsonConvert.SerializeObject(subSystem).
+        /// 
+        /// </summary>
+        /// <param name="writer">JSON Writer.</param>
+        /// <param name="value">Object to write to JSON.</param>
+        /// <param name="serializer">Serializer to convert the object.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            // Cast the object
+            var data = value as Subsystem;
+
+            // Start the object
+            writer.Formatting = Formatting.None;                    // Make the text not indented, so not as human readable.  This will save disk space
+            writer.WriteStartObject();                              // Start the JSON object
+
+            // Subsystem Index
+            writer.WritePropertyName(JSON_STR_SUBSYSTEM_INDEX);     // Subsystem Index name
+            writer.WriteValue(data.Index);                // Subsystem Index value
+
+            // Subsystem Index
+            writer.WritePropertyName(JSON_STR_SUBSYSTEM_CODE);      // Subsystem Index name
+            writer.WriteValue(data.Code);                 // Subsystem Index value
+
+            // End the object
+            writer.WriteEndObject();
+        }
+
+        /// <summary>
+        /// Read the JSON object and convert to the object.  This will allow the serializer to
+        /// automatically convert the object.  No special instructions need to be done and all
+        /// the properties found in the JSON string need to be used.
+        /// 
+        /// Subsystem ss = Newtonsoft.Json.JsonConvert.DeserializeObject{Subsystem}(encodedEns)
+        /// 
+        /// </summary>
+        /// <param name="reader">NOT USED. JSON reader.</param>
+        /// <param name="objectType">NOT USED> Type of object.</param>
+        /// <param name="existingValue">NOT USED.</param>
+        /// <param name="serializer">Serialize the object.</param>
+        /// <returns>Serialized object.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            if (reader.TokenType != JsonToken.Null)
+            {
+                // Load the object
+                JObject jsonObject = JObject.Load(reader);
+
+                // Subsystem Index
+                ushort subsystem_index = (ushort)jsonObject[JSON_STR_SUBSYSTEM_INDEX];
+
+                // Subsystem Code
+                byte subsystem_code = jsonObject[JSON_STR_SUBSYSTEM_CODE].ToObject<byte>();
+
+                return new Subsystem(subsystem_code, subsystem_index);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Check if the given object is the correct type.
+        /// </summary>
+        /// <param name="objectType">Object to convert.</param>
+        /// <returns>TRUE = object given is the correct type.</returns>
+        public override bool CanConvert(Type objectType)
+        {
+            return typeof(Subsystem).IsAssignableFrom(objectType);
+        }
+    }
+
+#endregion
 }

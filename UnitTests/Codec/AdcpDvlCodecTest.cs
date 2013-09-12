@@ -32,6 +32,7 @@
  * 03/29/2012      RC          2.07       Changed the Status to an object in ensemble.
  * 02/20/2013      RC          2.18       Updated test with latest changes to setting the time for PRTI sentences.
  * 02/28/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
+ * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
  * 
  * 
  */
@@ -75,7 +76,7 @@ namespace RTI
             AdcpDvlCodec codec = new AdcpDvlCodec();
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveMsg);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea));
-            codec.Shutdown(); 
+            codec.Dispose(); 
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -149,8 +150,9 @@ namespace RTI
         /// Receive the data from the event handler and set the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveMsg(DataSet.Ensemble adcpData)
+        public void ReceiveMsg(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvData01 = adcpData;
             _eventWaitResponse.Set();
@@ -170,7 +172,7 @@ namespace RTI
             AdcpDvlCodec codec = new AdcpDvlCodec();
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveMsg02);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea));
-            codec.Shutdown();                                                           // Clear the remaining data
+            codec.Dispose();                                                           // Clear the remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -243,8 +245,9 @@ namespace RTI
         /// Receive the data from the event handler and set the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveMsg02(DataSet.Ensemble adcpData)
+        public void ReceiveMsg02(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvData02 = adcpData;
             _eventWaitResponse.Set();
@@ -270,7 +273,7 @@ namespace RTI
 
             string nmea1 = "-24,-347,79380,,,,,0000*04";
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea1));
-            codec.Shutdown();
+            codec.Dispose();
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -283,8 +286,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveMsgIncomplete(DataSet.Ensemble adcpData)
+        public void ReceiveMsgIncomplete(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvData1 = adcpData;
             _eventWaitResponse.Set();
@@ -306,7 +310,7 @@ namespace RTI
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveMsgBad);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(badNmea));
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(goodNmea));
-            codec.Shutdown();                                                           // Clear the remaining data
+            codec.Dispose();                                                           // Clear the remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -372,8 +376,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveMsgBad(DataSet.Ensemble adcpData)
+        public void ReceiveMsgBad(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvBad = adcpData;
             _eventWaitResponse.Set();
@@ -405,7 +410,7 @@ namespace RTI
                 codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(badNmea));
             }
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(goodNmea));
-            codec.Shutdown();                                                           // Clear the remaining data
+            codec.Dispose();                                                           // Clear the remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -471,8 +476,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveMsgMaxBuffSize(DataSet.Ensemble adcpData)
+        public void ReceiveMsgMaxBuffSize(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvMaxBuffSize = adcpData;
             _eventWaitResponse.Set();
@@ -496,7 +502,7 @@ namespace RTI
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveBadNmea);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(badNmea));
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(badNmea1));
-            codec.Shutdown();                                                           // Clear the remaining data
+            codec.Dispose();                                                           // Clear the remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -513,8 +519,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveBadNmea(DataSet.Ensemble adcpData)
+        public void ReceiveBadNmea(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvBadNmea = adcpData;
             _eventWaitResponse.Set();
@@ -536,7 +543,7 @@ namespace RTI
             AdcpDvlCodec codec = new AdcpDvlCodec();
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveBadNmeaCombine);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea1));
-            codec.Shutdown();
+            codec.Dispose();
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -559,8 +566,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveBadNmeaCombine(DataSet.Ensemble adcpData)
+        public void ReceiveBadNmeaCombine(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvBadNmeaCombine = adcpData;
             _eventWaitResponse.Set();
@@ -583,7 +591,7 @@ namespace RTI
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveBadNmeaCombineSeperate);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea1));
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea2));
-            codec.Shutdown();                                                       // Clear remaining data
+            codec.Dispose();                                                       // Clear remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -606,8 +614,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveBadNmeaCombineSeperate(DataSet.Ensemble adcpData)
+        public void ReceiveBadNmeaCombineSeperate(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvBadNmeaCombineSeperate = adcpData;
             _eventWaitResponse.Set();
@@ -630,7 +639,7 @@ namespace RTI
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveNmeaCombineSeperate);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea1));
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea2));
-            codec.Shutdown();                                                       // Clear remaining data
+            codec.Dispose();                                                       // Clear remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -653,8 +662,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveNmeaCombineSeperate(DataSet.Ensemble adcpData)
+        public void ReceiveNmeaCombineSeperate(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvNmeaCombineSeperate = adcpData;
             _eventWaitResponse.Set();
@@ -681,7 +691,7 @@ namespace RTI
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea00));
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea1));
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea2));
-            codec.Shutdown();                                                       // Clear remaining data
+            codec.Dispose();                                                       // Clear remaining data
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -704,8 +714,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveNmeaMultiple(DataSet.Ensemble adcpData)
+        public void ReceiveNmeaMultiple(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvNmeaMultiple = adcpData;
             _eventWaitResponse.Set();
@@ -727,7 +738,7 @@ namespace RTI
             AdcpDvlCodec codec = new AdcpDvlCodec();
             codec.ProcessDataEvent += new AdcpDvlCodec.ProcessDataEventHandler(ReceiveNmeaCombine);
             codec.AddIncomingData(System.Text.Encoding.ASCII.GetBytes(nmea1));
-            codec.Shutdown();
+            codec.Dispose();
 
             _eventWaitResponse.WaitOne(TIMEOUT);
 
@@ -748,8 +759,9 @@ namespace RTI
         /// the value.
         /// Then unsubscribe.
         /// </summary>
+        /// <param name="binaryData">Binary Data.</param>
         /// <param name="adcpData">Data from event handler.</param>
-        public void ReceiveNmeaCombine(DataSet.Ensemble adcpData)
+        public void ReceiveNmeaCombine(byte[] binaryData, DataSet.Ensemble adcpData)
         {
             recvNmeaCombine = adcpData;
             _eventWaitResponse.Set();

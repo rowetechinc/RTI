@@ -39,6 +39,7 @@
  * 11/30/2012      RC          2.17       Changed ToString() and GetString() to [Config] SSDesc.
  *                                         Added a note about the subsystem code being EMPTY.
  * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ * 05/30/2013      RC          2.19       Take SubsystemConfiguration in the constructor and remove CepoIndex.  CepoIndex is in SubsystemConfiguration.  Added Display.
  * 
  * 
  */
@@ -53,7 +54,7 @@ namespace RTI
     /// A Configuration is a setup on the ADCP.  An ADCP can have multiple configurations.
     /// Each configuration will have different command settings.  A configuration is based 
     /// off a subsystem type.  The CEPO command determine the ping order of each configuration.
-    /// This object will store the subsytem type and configuration number.  It will also store all
+    /// This object will store the subsytem type and configuration number (CEPO index).  It will also store all
     /// the command settings for this configuration.
     /// </summary>
     public class AdcpSubsystemConfig
@@ -66,30 +67,22 @@ namespace RTI
         public SubsystemConfiguration SubsystemConfig { get; set; }
 
         /// <summary>
-        /// CEPO index.  Location within the CEPO this
-        /// configuration is located.
-        /// </summary>
-        private int _cepoIndex;
-        /// <summary>
-        /// CEPO index.  Location within the CEPO this
-        /// configuration is located.
-        /// </summary>
-        public int CepoIndex 
-        {
-            get { return _cepoIndex; } 
-            set
-            {
-                _cepoIndex = value;
-
-                // Set the Command's CEPO index
-                Commands.CepoIndex = value;
-            }
-        }
-
-        /// <summary>
         /// Subsystem commands associated with this configuration.
         /// </summary>
         public AdcpSubsystemCommands Commands { get; set; }
+
+        /// <summary>
+        /// Interface a user can setup to give predictions
+        /// on the ADCP usage.
+        /// </summary>
+        public IPredictor Predictor { get; set; }
+
+        /// <summary>
+        /// Used to display in a list.
+        /// Set the DisplayMember of the combobox.
+        /// http://stackoverflow.com/questions/3664956/c-sharp-combobox-overridden-tostring
+        /// </summary>
+        public string Display { get { return SubsystemConfig.SubSystem.CodedDescString(); } }
 
         #endregion
 
@@ -106,12 +99,10 @@ namespace RTI
         /// This will also create SubsystemCommands with default values.
         /// </summary>
         /// <param name="ssConfig">Subsystem Configuration.</param>
-        /// <param name="cepoIndex">CEPO index.</param>
-        public AdcpSubsystemConfig(SubsystemConfiguration ssConfig, int cepoIndex)
+        public AdcpSubsystemConfig(SubsystemConfiguration ssConfig)
         {
             SubsystemConfig = ssConfig;
-            Commands = new AdcpSubsystemCommands(ssConfig.SubSystem, cepoIndex);            // Create commands before settings CepoIndex
-            CepoIndex = cepoIndex;
+            Commands = new AdcpSubsystemCommands(ssConfig);            // Create commands before settings CepoIndex
         }
 
         /// <summary>
@@ -124,8 +115,7 @@ namespace RTI
         {
             //Subsystem = new Subsystem();
             SubsystemConfig = new SubsystemConfiguration();
-            Commands = new AdcpSubsystemCommands(SubsystemConfig.SubSystem, CepoIndex);            // Create commands before settings CepoIndex
-            CepoIndex = 0;
+            Commands = new AdcpSubsystemCommands(SubsystemConfig);            // Create commands before settings CepoIndex
         }
 
         /// <summary>
@@ -189,7 +179,7 @@ namespace RTI
         /// <returns>Hashcode for the object.</returns>
         public override int GetHashCode()
         {
-            return SubsystemConfig.SubSystem.GetHashCode() + SubsystemConfig.GetHashCode() + CepoIndex;
+            return SubsystemConfig.SubSystem.GetHashCode() + SubsystemConfig.GetHashCode() + SubsystemConfig.CepoIndex;
         }
 
         /// <summary>
@@ -206,7 +196,7 @@ namespace RTI
 
             AdcpSubsystemConfig p = (AdcpSubsystemConfig)obj;
 
-            return (SubsystemConfig == p.SubsystemConfig) && (CepoIndex == p.CepoIndex);
+            return (SubsystemConfig == p.SubsystemConfig);
         }
 
         /// <summary>
@@ -230,7 +220,7 @@ namespace RTI
             }
 
             // Return true if the fields match:
-            return (asConfig1.SubsystemConfig == asConfig2.SubsystemConfig) && (asConfig1.CepoIndex == asConfig2.CepoIndex);
+            return (asConfig1.SubsystemConfig == asConfig2.SubsystemConfig);
         }
 
         /// <summary>

@@ -54,6 +54,8 @@
  * 02/23/2012      RC          2.07       Add the incoming data to the buffer not using a for loop.
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 06/21/2012      RC          2.12       Remove the queue and put the data in the buffer when received.
+ * 03/20/2013      RC          2.19       If VerifyEnsembleNumberAndSize() fails in DecodingIncomingData(), i remove a byte from the buffer and try again.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 
  */
 
@@ -74,7 +76,7 @@ namespace RTI
     /// This will parse the data into an 
     /// Ensemble object.
     /// </summary>
-    public class AdcpBinaryCodec : ICodec
+    public class AdcpBinaryCodec : ICodec, IDisposable
     {
 
         #region Variables 
@@ -218,7 +220,7 @@ namespace RTI
         /// <summary>
         /// Shutdown this object.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
             StopThread();
         }
@@ -334,6 +336,16 @@ namespace RTI
                             }
                         }
 
+                    }
+                    // Checksum or Ensemble failed
+                    else
+                    {
+                        // Lock the buffer while removing
+                        lock (_bufferLock)
+                        {
+                            // Remove the first element to continue searching
+                            _incomingDataBuffer.RemoveAt(0);
+                        }
                     }
                 }
                 // Not a good header start

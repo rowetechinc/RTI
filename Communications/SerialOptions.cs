@@ -36,9 +36,11 @@
  * 02/02/2012      RC          2.0        Added additional baudrate options. 
  * 07/03/2012      RC          2.12       Made the object smaller.  Make the options static.
  * 08/21/2012      RC          2.13       Added IsPortAvailable() to check if a port is usable.
+ * 04/30/2013      RC          2.19       Define the default values.
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace RTI
@@ -52,6 +54,30 @@ namespace RTI
     /// </summary>
     public class SerialOptions
     {
+
+        #region Default Values
+
+        /// <summary>
+        /// Default Baud Rate.
+        /// </summary>
+        public const int DEFAULT_BAUD = 115200;
+
+        /// <summary>
+        /// Default Data bits.
+        /// </summary>
+        public const int DEFAULT_DATA_BITS = 8;
+
+        /// <summary>
+        /// Default Parity.
+        /// </summary>
+        public const System.IO.Ports.Parity DEFAULT_PARITY = System.IO.Ports.Parity.None;
+
+        /// <summary>
+        /// Default Stop Bits.
+        /// </summary>
+        public const System.IO.Ports.StopBits DEFAULT_STOP_BITS = System.IO.Ports.StopBits.One;
+
+        #endregion
 
         #region Static Properties
 
@@ -67,14 +93,16 @@ namespace RTI
                 // Get all the available COM ports
                 string[] ports = System.IO.Ports.SerialPort.GetPortNames();
 
-                // Populate the list with all available COM ports
-                List<string> list = new List<string>();
-                foreach (string port in ports)
-                {
-                    list.Add(port);
-                }
+                return ports.ToList();
 
-                return list;
+                //// Populate the list with all available COM ports
+                //List<string> list = new List<string>();
+                //foreach (string port in ports)
+                //{
+                //    list.Add(port);
+                //}
+
+                //return list;
             }
         }
 
@@ -212,10 +240,10 @@ namespace RTI
             {
                 Port = portOptions[0];
             }
-            BaudRate = 115200;
-            DataBits = 8;
-            Parity = System.IO.Ports.Parity.None;
-            StopBits = System.IO.Ports.StopBits.One;
+            BaudRate = DEFAULT_BAUD;
+            DataBits = DEFAULT_DATA_BITS;
+            Parity = DEFAULT_PARITY;
+            StopBits = DEFAULT_STOP_BITS;
         }
 
         /// <summary>

@@ -21,6 +21,13 @@
 // | Tidyup  (Ben Tombs)      | 10/21/2010 | Original copy submitted from modified GeoFrameworks 2.0
 // | Shade1974 (Ted Dunsford) | 10/21/2010 | Added file headers reviewed formatting with resharper.
 // ********************************************************************************************************
+// -----------------------------------------------------------------
+// Date            Initials    Version    Comments
+// -----------------------------------------------------------------
+// 08/21/2013      RC          2.19.4     Made a constructor the JSON constructor.
+//
+
+
 using System;
 using System.Text;
 using System.Globalization;
@@ -31,6 +38,7 @@ using System.Xml.Serialization;
 #if !PocketPC || DesignTime
 
 using System.ComponentModel;
+using Newtonsoft.Json;
 
 #endif
 
@@ -194,9 +202,9 @@ namespace DotSpatial.Positioning
         /// Creates a new instance with the specified hours, minutes and
         /// seconds.
         /// </summary>
-        /// <param name="hours">The hours.</param>
-        /// <param name="minutes">The minutes.</param>
-        /// <param name="seconds">The seconds.</param>
+        /// <param name="Hours">The hours.</param>
+        /// <param name="Minutes">The minutes.</param>
+        /// <param name="Seconds">The seconds.</param>
         /// <example>
         /// This example demonstrates how to create an angular measurement of 34°12'29.2 in
         /// hours, minutes and seconds.
@@ -210,9 +218,10 @@ namespace DotSpatial.Positioning
         ///
         /// <returns>An <strong>Longitude</strong> containing the specified value.</returns>
         /// <remarks></remarks>
-        public Longitude(int hours, int minutes, double seconds)
+        [JsonConstructor]
+        public Longitude(int Hours, int Minutes, double Seconds)
         {
-            _decimalDegrees = ToDecimalDegrees(hours, minutes, seconds);
+            _decimalDegrees = ToDecimalDegrees(Hours, Minutes, Seconds);
         }
 
         /// <summary>

@@ -66,6 +66,15 @@
  * 09/21/2012      RC          2.15       Added SendDataGetReply() to send data and get the response back.
  * 10/18/2012      RC          2.15       In SendDataWaitReply(), when checking if the reponse matches the command, make the command and response both lower case so they will match in case.
  * 10/25/2012      RC          2.16       Added a check for IO exception in Connect(), to see if the port exist.
+ * 04/26/2013      RC          2.19       Fixed IsAvailable() if the port is not open, it would get a null for BreakState.
+ *                                         Set the initial port and baud rate given in the constuctor to the serial port.
+ * 05/03/2013      RC          2.19       Fixed connecting multiple times to a serial port.  Threads were left running when multiple connections were attempted.
+ * 05/15/2013      RC          2.19       Make a public property for SerialPortOptions to allow others to see the settings.
+ * 05/17/2013      RC          2.19       Added ToString().
+ * 05/23/2013      RC          2.19       Check for empty or null string in SendDataWaitReply().
+ *                                         MAX_DISPLAY_BUFFER increased to ensure the entire HELP message can be displayed.
+ * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 08/09/2013      RC          2.19.4     Added a soft BREAK in SendBreak() for connections that can not handle hard BREAKs.
  * 
  */
 
@@ -88,7 +97,7 @@ namespace RTI
     /// To send data to the serial port, the sendBuffer must
     /// be filled and then the SendDataCommand must be given.
     /// </summary>
-    public abstract class SerialConnection
+    public abstract class SerialConnection: IDisposable
     {
         // Setup logger
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -124,7 +133,7 @@ namespace RTI
         /// <summary>
         /// Max to set to observable collection.
         /// </summary>
-        private int MAX_DISPLAY_BUFFER = 3000;
+        private int MAX_DISPLAY_BUFFER = 5000;
 
         /// <summary>
         /// Serial port connection.
@@ -226,6 +235,11 @@ namespace RTI
         #region Properties
 
         /// <summary>
+        /// Allow others to see the serial port options.
+        /// </summary>
+        public SerialOptions SerialOptions { get { return _serialOptions; } }
+
+        /// <summary>
         /// Store the receive buffer as a string.
         /// This will keep in tact all the new lines.
         /// 
@@ -263,7 +277,17 @@ namespace RTI
         {
             // Initialize ranges
             _serialOptions = serialOptions;                         // Serial port options
-            _serialPort = new SerialPort();                         // Serial port
+            try
+            {
+                _serialPort = new SerialPort(serialOptions.Port, serialOptions.BaudRate);                         // Serial port
+            }
+            catch (Exception)
+            {
+                // If the port is an old connection or no port is given and
+                // that connection cannot be made, then it will throw an
+                // Argument exception.  This will then set the variable with no port.
+                _serialPort = new SerialPort();
+            }
 
             // Initialize the thread
             _threadWait = new EventWaitHandle(false, EventResetMode.AutoReset);
@@ -282,21 +306,25 @@ namespace RTI
         ///  This must be called when destorying the object to 
         ///  ensure the ReadThread is stopped.
         /// </summary>
-        public void Shutdown()
+        public void Dispose()
         {
+            // Set the flag to stop the Read thread
             _stopThread = true;
 
-            // Wake up the thread to stop thread
-            //_threadWait.Set();
-            //_threadWait.Dispose();
+            // Disconnect the serial port
+            Disconnect();
 
-            SubShutdown();
+            // Call any subsystem shutdown methods
+            // Any objects that extend this object
+            // must implement this method to ensure
+            // proper shutdown.
+            SubDispose();
         }
 
         /// <summary>
         /// Virtual method to extend the shutdown method.
         /// </summary>
-        protected virtual void SubShutdown()
+        protected virtual void SubDispose()
         {
             // Put shutdown process in here for any objects that
             // extend this object.
@@ -359,23 +387,27 @@ namespace RTI
                     {
                         // Port is already in use
                         log.Warn("COMM Port already in use: " + _serialOptions.Port, ex);
+                        Disconnect();
                         return false;
                     }
                     catch (System.ArgumentOutOfRangeException ex_range)
                     {
                         // Not sure what is causing this exception yet
                         log.Error("Error COMM Port: " + _serialOptions.Port, ex_range);
+                        Disconnect();
                         return false;
                     }
                     catch (System.IO.IOException io_ex)
                     {
                         // The Serial port does not exist
                         log.Warn(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port), io_ex);
+                        Disconnect();
                         return false;
                     }
                     catch (Exception ex)
                     {
                         log.Error("Error Opening in COMM Port: " + _serialOptions.Port, ex);
+                        Disconnect();
                         return false;
                     }
                 }
@@ -386,6 +418,7 @@ namespace RTI
 
             // Serial port could not be opened
             // Either a bad string or a string not given for the port
+            Disconnect();
             return false;
         }
 
@@ -394,9 +427,15 @@ namespace RTI
         /// </summary>
         public void Disconnect()
         {
-            //_timer.Enabled = false;             // Stop checking serial port
-            _serialPort.Close();
-            _serialPort.Dispose();
+            // Close and dispose the serial port
+            if (_serialPort != null)
+            {
+                // Close the port
+                _serialPort.Close();
+
+                // Dispose of the port
+                _serialPort.Dispose();
+            }
         }
 
         /// <summary>
@@ -405,7 +444,12 @@ namespace RTI
         /// <returns>True = Break / False = No Break.</returns>
         public bool IsBreakState()
         {
-            return _serialPort.BreakState;
+            if (_serialPort != null)
+            {
+                return _serialPort.BreakState;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -414,18 +458,47 @@ namespace RTI
         /// <returns>True = Serial Port Open / False = Serial Port is NOT open.</returns>
         public bool IsOpen()
         {
-            return _serialPort.IsOpen;
+            if (_serialPort != null)
+            {
+                return _serialPort.IsOpen;
+            }
+
+            return false;
         }
 
         /// <summary>
         /// Check if the serial port is available.
         /// The serial port is available if it is open 
         /// and if it is not in a break state.
+        /// 
+        /// Make it check each one sequentially so that
+        /// if any fail above, the next will not be checked.
+        /// If the port is not open, it can not check for a 
+        /// break state.
+        /// 
         /// </summary>
         /// <returns>TRUE = Serial Port available to send or receive data.</returns>
         public bool IsAvailable()
         {
-            return _serialPort != null && _serialPort.IsOpen && !_serialPort.BreakState;
+            // Check if the serial port is null
+            if (_serialPort == null)
+            {
+                return false;
+            }
+
+            // Check if the serial port is open
+            if (!_serialPort.IsOpen)
+            {
+                return false;
+            }
+
+            // Check if the serial port is in a break state
+            if (_serialPort.BreakState)
+            {
+                return false;
+            }
+
+        return true;
         }
 
         /// <summary>
@@ -453,6 +526,9 @@ namespace RTI
         {
             if (IsAvailable())
             {
+                // Clear the buffer
+                _receiveBufferString = string.Empty;
+
                 // Send a break to the serial port
                 _serialPort.BreakState = true;
 
@@ -465,6 +541,15 @@ namespace RTI
 
                 // Wait for state to change back
                 System.Threading.Thread.Sleep(WAIT_STATE);
+
+                // Check if something is in the buffer
+                if (string.IsNullOrEmpty(_receiveBufferString))
+                {
+                    // Send a Text BREAK just incase the instrument cannot take a break
+                    // This is the case if using wireless serial communication or
+                    // ethernet
+                    SendDataWaitReply(Commands.AdcpCommands.CMD_BREAK, 2000);
+                }
             }
         }
 
@@ -693,6 +778,16 @@ namespace RTI
         /// <return>Flag if was successful sending the command.</return>
         public bool SendDataWaitReply(string data, int timeout = 1000)
         {
+            // If no data was given
+            // return true that no data could be sent.
+            // I am not return false, because it would 
+            // try to retry with empty or null again.
+            if (string.IsNullOrEmpty(data))
+            {
+                return true;
+            }
+
+            // Assume good result
             bool result = true;
 
             // Reset the validate message
@@ -807,6 +902,8 @@ namespace RTI
 
         #region Events
 
+        #region Send Serial Data
+
         /// <summary>
         /// Event To subscribe to.  This gives the paramater
         /// that will be passed when subscribing to the event.
@@ -843,6 +940,23 @@ namespace RTI
         /// _serialConnection.ReceiveSerialData -= (method to call)
         /// </summary>
         public event ReceiveSerialDataEventHandler ReceiveSerialData;
+
+        #endregion
+
+        #endregion
+
+        #region Overrides
+
+        /// <summary>
+        /// Display the object to a string.
+        /// </summary>
+        /// <returns>String of the object.</returns>
+        public override string ToString()
+        {
+            string result = SerialOptions.ToString();
+
+            return result;
+        }
 
         #endregion
     }

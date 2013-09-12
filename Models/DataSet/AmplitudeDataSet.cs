@@ -44,6 +44,7 @@
  * 02/21/2013      RC          2.18       Added ToJson() and ToJsonStub() to convert this object to a JSON string.
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
+ * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  *       
  * 
  */
@@ -275,10 +276,12 @@ namespace RTI
                 {
                     // Write an array of float values for each beam's value
                     writer.WriteStartArray();
-                    writer.WriteValue(data.AmplitudeData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
-                    writer.WriteValue(data.AmplitudeData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
-                    writer.WriteValue(data.AmplitudeData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
-                    writer.WriteValue(data.AmplitudeData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+
+                    for (int beam = 0; beam < data.ElementsMultiplier; beam++)
+                    {
+                        writer.WriteValue(data.AmplitudeData[bin, beam]);
+                    }
+
                     writer.WriteEndArray();
                 }
                 writer.WriteEndArray();

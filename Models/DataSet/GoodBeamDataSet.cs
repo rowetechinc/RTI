@@ -45,6 +45,7 @@
  * 03/30/2012      RC          2.07       Moved Converters.cs methods to MathHelper.cs.
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
+ * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  * 
  */
 
@@ -269,10 +270,16 @@ namespace RTI
                 {
                     // Write an array of float values for each beam's value
                     writer.WriteStartArray();
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
-                    writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+                    //writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_0_INDEX]);
+                    //writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_1_INDEX]);
+                    //writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_2_INDEX]);
+                    //writer.WriteValue(data.GoodBeamData[bin, DataSet.Ensemble.BEAM_3_INDEX]);
+
+                    for (int beam = 0; beam < data.ElementsMultiplier; beam++)
+                    {
+                        writer.WriteValue(data.GoodBeamData[bin, beam]);
+                    }
+
                     writer.WriteEndArray();
                 }
                 writer.WriteEndArray();

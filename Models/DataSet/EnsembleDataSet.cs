@@ -69,6 +69,7 @@
  *                                         Make the time the current time for PRTI messages.
  *                                         Made the time for PRTI be the current time.  Set the start time to AncillaryDataSet.LastPingTime.
  * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
+ * 07/26/2013      RC          2.19.3     Added SubsystemConfigurationIndex to SubsystemConfiguration.  Output for JSON.
  * 
  */
 
@@ -357,7 +358,7 @@ namespace RTI
                 SysFirmware = new Firmware();
 
                 // Create Subsystem Configuration based off Firmware and Serialnumber
-                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0);
+                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -394,7 +395,7 @@ namespace RTI
                 SysFirmware = new Firmware();
 
                 // Create Subsystem Configuration based off Firmware and Serialnumber
-                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0);
+                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -593,7 +594,7 @@ namespace RTI
                 else
                 {
                     // Create a default SubsystemConfig with a configuration of 0
-                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0);
+                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
                 }
 
                 // Set the time and date
@@ -847,9 +848,13 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_CODE);
                 writer.WriteValue(data.SubsystemConfig.SubSystem.Code);
 
-                // SubsystemConfiguration ConfigNumber
-                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_CONFIGNUMBER);
-                writer.WriteValue(data.SubsystemConfig.ConfigNumber);
+                // CEPO Index
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_CEPOINDEX);
+                writer.WriteValue(data.SubsystemConfig.CepoIndex);
+
+                // SubsystemConfiguration Index
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SSCONFIG_INDEX);
+                writer.WriteValue(data.SubsystemConfig.SubsystemConfigIndex);
 
                 // Status Value
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_STATUS);
@@ -939,8 +944,9 @@ namespace RTI
                     // SubsystemConfig
                     ushort index = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_INDEX];
                     byte ssCode = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_SUBSYSTEM_CODE].ToObject<byte>();
-                    byte configNum = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_CONFIGNUMBER].ToObject<byte>();
-                    SubsystemConfiguration SubsystemConfig = new SubsystemConfiguration(new Subsystem(ssCode, index), configNum);
+                    byte cepoIndex = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_CEPOINDEX].ToObject<byte>();
+                    byte configNum = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_SSCONFIG_INDEX].ToObject<byte>();
+                    SubsystemConfiguration SubsystemConfig = new SubsystemConfiguration(new Subsystem(ssCode, index), cepoIndex, configNum);
 
                     // Status
                     Status status = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS]);

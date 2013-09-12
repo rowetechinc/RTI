@@ -30,6 +30,7 @@
  *                                         Added a test for encode and decode.
  * 02/20/2013      RC          2.18       Updated test with latest changes to setting the time for PRTI sentences.
  * 02/25/2012      RC          2.18       Added JSON test.
+ * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
  * 
  */
 
@@ -233,7 +234,7 @@ namespace RTI
 
             ensemble.EnsembleData.SysSerialNumber = new SerialNumber("01370000000000000000000000000001");
             ensemble.EnsembleData.SysFirmware = new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3);
-            ensemble.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2);
+            ensemble.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2, 2);
             ensemble.EnsembleData.Status = new Status(0x4000);
 
             Assert.AreEqual(new SerialNumber("01370000000000000000000000000001"), ensemble.EnsembleData.SysSerialNumber, "Modded Serial Number is incorrect.");
@@ -242,7 +243,7 @@ namespace RTI
             // 0x7 will come from the serial number.  Because the firmware version is less
             // than 0.2.13, the SubsystemCode is treated as an index.  Index 1 in the subsystem from the serial number is 7.
             Assert.AreEqual(new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3), ensemble.EnsembleData.SysFirmware, "Modded Firmware is incorrect.");
-            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2), ensemble.EnsembleData.SubsystemConfig, "Modded Subsystem Configuration is incorrect.");
+            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2, 2), ensemble.EnsembleData.SubsystemConfig, "Modded Subsystem Configuration is incorrect.");
             Assert.AreEqual(new Status(0x4000), ensemble.EnsembleData.Status, "Modded Status is incorrect.");
 
             // Encode the data
@@ -267,7 +268,7 @@ namespace RTI
             Assert.AreEqual(DateTime.Now.Second, ensemble.EnsembleData.Second, "ens1 Second is incorrect.");
             Assert.AreEqual(new SerialNumber("01370000000000000000000000000001"), ensemble.EnsembleData.SysSerialNumber, "ens1 Serial Number is incorrect.");
             Assert.AreEqual(new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3), ensemble.EnsembleData.SysFirmware, "ens1 Firmware is incorrect.");
-            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2), ensemble.EnsembleData.SubsystemConfig, "ens1 Subsystem Configuration is incorrect.");
+            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2, 0), ensemble.EnsembleData.SubsystemConfig, "ens1 Subsystem Configuration is incorrect.");
             Assert.AreEqual(new Status(0x4000), ensemble.EnsembleData.Status, "ens1 Status is incorrect.");
 
         }
@@ -312,12 +313,12 @@ namespace RTI
 
             adcpData.EnsembleData.SysSerialNumber = new SerialNumber("01300000000000000000000000000001");
             adcpData.EnsembleData.SysFirmware = new Firmware(0x1, 5, 2, 3);
-            adcpData.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(0x1), 2);
+            adcpData.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(0x1), 2, 2);
             adcpData.EnsembleData.Status = new Status(0x4000);
 
             Assert.AreEqual(new SerialNumber("01300000000000000000000000000001"), adcpData.EnsembleData.SysSerialNumber, "Modded Serial Number is incorrect.");
             Assert.AreEqual(new Firmware(0x1, 5, 2, 3), adcpData.EnsembleData.SysFirmware, "Modded Firmware is incorrect.");
-            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(0x1), 2), adcpData.EnsembleData.SubsystemConfig, "Modded Subsystem Configuration is incorrect.");
+            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(0x1), 2, 2), adcpData.EnsembleData.SubsystemConfig, "Modded Subsystem Configuration is incorrect.");
             Assert.AreEqual(new Status(0x4000), adcpData.EnsembleData.Status, "Modded Status is incorrect.");
 
             // Encode the data
@@ -342,7 +343,7 @@ namespace RTI
             Assert.AreEqual(DateTime.Now.Second, adcpData.EnsembleData.Second, "ens1 Second is incorrect.");
             Assert.AreEqual(new SerialNumber("01300000000000000000000000000001"), adcpData.EnsembleData.SysSerialNumber, "ens1 Serial Number is incorrect.");
             Assert.AreEqual(new Firmware(0x1, 5, 2, 3), adcpData.EnsembleData.SysFirmware, "ens1 Firmware is incorrect.");
-            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(0x1), 2), adcpData.EnsembleData.SubsystemConfig, "ens1 Subsystem Configuration is incorrect.");
+            Assert.AreEqual(new SubsystemConfiguration(new Subsystem(0x1), 2, 0), adcpData.EnsembleData.SubsystemConfig, "ens1 Subsystem Configuration is incorrect.");
             Assert.AreEqual(new Status(0x4000), adcpData.EnsembleData.Status, "ens1 Status is incorrect.");
 
         }
@@ -367,7 +368,7 @@ namespace RTI
 
             adcpData.EnsembleData.SysSerialNumber = new SerialNumber("01300000000000000000000000000001");
             adcpData.EnsembleData.SysFirmware = new Firmware(Subsystem.EMPTY_CODE, 0, 2, 3);                                     // SubsystemCode is SubsystemIndex because of firmware version
-            adcpData.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2);
+            adcpData.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2, 2);
 
             byte[] newEns = adcpData.EnsembleData.Encode();
 
@@ -386,7 +387,7 @@ namespace RTI
 
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, newAdcpData.EnsembleData.SysFirmware.GetSubsystemCode(newAdcpData.EnsembleData.SysSerialNumber), "SysFirmware SubsystemCode is incorrect.");
             Assert.AreEqual(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), newAdcpData.EnsembleData.SysFirmware.GetSubsystem(newAdcpData.EnsembleData.SysSerialNumber), "SysFirmware GetSubsystem() is incorrect.");
-            Assert.AreEqual(2, newAdcpData.EnsembleData.SubsystemConfig.ConfigNumber, "SubsystemConfig config number is incorrect.");
+            Assert.AreEqual(2, newAdcpData.EnsembleData.SubsystemConfig.CepoIndex, "SubsystemConfig config number is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, newAdcpData.EnsembleData.SubsystemConfig.SubSystem.Code, "SubsystemConfig Subsystem code is incorrect.");
 
             //DataSet.Ensemble result = adcpData.Clone();
@@ -417,12 +418,12 @@ namespace RTI
 
             adcpData.EnsembleData.SysSerialNumber = new SerialNumber("01300000000000000000000000000001");
             adcpData.EnsembleData.SysFirmware = new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3);
-            adcpData.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2);
+            adcpData.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2, 2);
 
 
             DataSet.Ensemble result = adcpData.Clone();
 
-            Assert.AreEqual(2, result.EnsembleData.SubsystemConfig.ConfigNumber, "SubsystemConfig config number is incorrect.");
+            Assert.AreEqual(2, result.EnsembleData.SubsystemConfig.CepoIndex, "SubsystemConfig config number is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, result.EnsembleData.SubsystemConfig.SubSystem.Code, "SubsystemConfig Subsystem code is incorrect.");
             Assert.AreEqual(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), result.EnsembleData.SysFirmware.GetSubsystem(result.EnsembleData.SysSerialNumber), "SysFirmware GetSubsystem is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, result.EnsembleData.SysFirmware.GetSubsystemCode(result.EnsembleData.SysSerialNumber), "Firmware SubsystemCode is incorrect.");
@@ -432,7 +433,7 @@ namespace RTI
             // But the next time it is cloned, it will see the firmware version and do the change from SubsystemIndex to SubsystemCode again
             DataSet.Ensemble result1 = result.Clone();
 
-            Assert.AreEqual(2, result1.EnsembleData.SubsystemConfig.ConfigNumber, "Result 1 SubsystemConfig config number is incorrect.");
+            Assert.AreEqual(2, result1.EnsembleData.SubsystemConfig.CepoIndex, "Result 1 SubsystemConfig config number is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, result1.EnsembleData.SubsystemConfig.SubSystem.Code, "Result 1 SubsystemConfig Subsystem code is incorrect.");
             Assert.AreEqual(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), result1.EnsembleData.SysFirmware.GetSubsystem(result1.EnsembleData.SysSerialNumber), "Result 1 SysFirmware GetSubsystem is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, result1.EnsembleData.SysFirmware.GetSubsystemCode(result1.EnsembleData.SysSerialNumber), "Result 1 Firmware SubsystemCode is incorrect.");
@@ -456,7 +457,7 @@ namespace RTI
             ensemble.EnsembleData.ActualPingCount = 2;
             ensemble.EnsembleData.SysSerialNumber = new SerialNumber("01300000000000000000000000000001");
             ensemble.EnsembleData.SysFirmware = new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3);
-            ensemble.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2);
+            ensemble.EnsembleData.SubsystemConfig = new SubsystemConfiguration(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), 2, 2);
             ensemble.EnsembleData.Status = new Status(1);
             ensemble.EnsembleData.Year = DateTime.Now.Year;
             ensemble.EnsembleData.Month = DateTime.Now.Month;
@@ -486,7 +487,7 @@ namespace RTI
             Assert.AreEqual(2, decoded.SysFirmware.FirmwareMinor, "Firmware Minor is incorrect.");
             Assert.AreEqual(3, decoded.SysFirmware.FirmwareRevision, "Firmware Revision is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, decoded.SysFirmware.GetSubsystemCode(decoded.SysSerialNumber), "Firmware Subsystem code is incorrect.");
-            Assert.AreEqual(2, decoded.SubsystemConfig.ConfigNumber, "SubsystemConfig config number is incorrect.");
+            Assert.AreEqual(2, decoded.SubsystemConfig.CepoIndex, "SubsystemConfig config number is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, decoded.SubsystemConfig.SubSystem.Code, "SubsystemConfig Subsystem code is incorrect.");
             Assert.AreEqual(new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3), decoded.SysFirmware.GetSubsystem(decoded.SysSerialNumber), "SysFirmware GetSubsystem is incorrect.");
             Assert.AreEqual(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, decoded.SysFirmware.GetSubsystemCode(decoded.SysSerialNumber), "Firmware SubsystemCode is incorrect.");

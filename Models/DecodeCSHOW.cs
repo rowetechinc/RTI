@@ -484,15 +484,17 @@ namespace RTI
                     #endregion
 
                     // If all the values are good, set the values to config
-                    if (yearGood && monthGood && dayGood && hrGood && minGood && secGood && hunSecGood)
+                    if ( year + month + day + hr + min + sec > 0  && yearGood && monthGood && dayGood && hrGood && minGood && secGood && hunSecGood)
                     {
-                        config.Commands.CETFP_Year = year;
-                        config.Commands.CETFP_Month = month;
-                        config.Commands.CETFP_Day = day;
-                        config.Commands.CETFP_Hour = hr;
-                        config.Commands.CETFP_Minute = min;
-                        config.Commands.CETFP_Second = sec;
-                        config.Commands.CETFP_HunSec = hunSec;
+                        //config.Commands.CETFP_Year = year;
+                        //config.Commands.CETFP_Month = month;
+                        //config.Commands.CETFP_Day = day;
+                        //config.Commands.CETFP_Hour = hr;
+                        //config.Commands.CETFP_Minute = min;
+                        //config.Commands.CETFP_Second = sec;
+                        //config.Commands.CETFP_HunSec = hunSec;
+
+                        config.Commands.CETFP = new DateTime(year, month, day, hr, min, sec, (int)Math.Round(hunSec * MathHelper.HUNSEC_TO_MILLISEC));
                     }
 
 
@@ -950,11 +952,11 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Convert the int to a bool
                         bool cwponValue = RTI.Commands.AdcpSubsystemCommands.DEFAULT_CWPON;
-                        if (values[ssConfig.CepoIndex] == 1)
+                        if (values[ssConfig.SubsystemConfig.CepoIndex] == 1)
                         {
                             cwponValue = true;
                         }
@@ -996,9 +998,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cwpBBValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cwpBBValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPBB_NUM_PARAM values
                         if (cwpBBValues.Length >= AdcpSubsystemCommands.CWPBB_NUM_PARAM)
@@ -1055,9 +1057,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cwpapValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cwpapValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPAP_NUM_PARAM values
                         if (cwpapValues.Length >= AdcpSubsystemCommands.CWPAP_NUM_PARAM)
@@ -1105,9 +1107,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cwpstValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cwpstValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPST_NUM_PARAM values
                         if (cwpstValues.Length >= AdcpSubsystemCommands.CWPST_NUM_PARAM)
@@ -1147,10 +1149,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CWPBL = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWPBL = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1179,10 +1181,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Bin Size
-                        ssConfig.Commands.CWPBS = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWPBS = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1211,10 +1213,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // CWPX
-                        ssConfig.Commands.CWPX = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWPX = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1243,10 +1245,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // CWPX
-                        ssConfig.Commands.CWPBN = (ushort)values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWPBN = (ushort)values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1275,10 +1277,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // CWPP
-                        ssConfig.Commands.CWPP = (ushort)values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWPP = (ushort)values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1309,9 +1311,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cwpBBValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cwpBBValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPBP_NUM_PARAM values
                         if (cwpBBValues.Length >= AdcpSubsystemCommands.CWPBP_NUM_PARAM)
@@ -1352,10 +1354,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CWPTBP = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWPTBP = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1382,10 +1384,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Decode the TimeValue and set it to CWPAI
-                        TimeValue time = DecodeTimeValue(values[ssConfig.CepoIndex]);
+                        TimeValue time = DecodeTimeValue(values[ssConfig.SubsystemConfig.CepoIndex]);
                         ssConfig.Commands.CWPAI = time;
                     }
                 }
@@ -1421,9 +1423,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        string[] cbiValues = (values[ssConfig.CepoIndex]).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        string[] cbiValues = (values[ssConfig.SubsystemConfig.CepoIndex]).Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                         // Ensure there are at least CWPBP_NUM_PARAM values
                         if (cbiValues.Length >= AdcpSubsystemCommands.CBI_NUM_PARAM)
@@ -1473,11 +1475,11 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Convert the int to a bool
                         bool cbtonValue = RTI.Commands.AdcpSubsystemCommands.DEFAULT_CBTON;
-                        if (values[ssConfig.CepoIndex] == 1)
+                        if (values[ssConfig.SubsystemConfig.CepoIndex] == 1)
                         {
                             cbtonValue = true;
                         }
@@ -1519,9 +1521,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cbtbbValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cbtbbValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPBB_NUM_PARAM values
                         if (cbtbbValues.Length >= AdcpSubsystemCommands.CBTBB_NUM_PARAM)
@@ -1593,9 +1595,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cbtstValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cbtstValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPST_NUM_PARAM values
                         if (cbtstValues.Length >= AdcpSubsystemCommands.CWPST_NUM_PARAM)
@@ -1635,10 +1637,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CBTBL = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CBTBL = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1667,10 +1669,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CBTMX = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CBTMX = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1699,10 +1701,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CBTTBP = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CBTTBP = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1731,9 +1733,9 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
-                        float[] cbttValues = DecodeGroupedFloatValues(values[ssConfig.CepoIndex]);
+                        float[] cbttValues = DecodeGroupedFloatValues(values[ssConfig.SubsystemConfig.CepoIndex]);
 
                         // Ensure there are at least CWPBB_NUM_PARAM values
                         if (cbttValues.Length >= AdcpSubsystemCommands.CBTT_NUM_PARAM)
@@ -1782,11 +1784,11 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Convert the int to a bool
                         bool cwtonValue = RTI.Commands.AdcpSubsystemCommands.DEFAULT_CWTON;
-                        if (values[ssConfig.CepoIndex] == 1)
+                        if (values[ssConfig.SubsystemConfig.CepoIndex] == 1)
                         {
                             cwtonValue = true;
                         }
@@ -1826,11 +1828,11 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Convert the int to a bool
                         bool cwtbbValue = RTI.Commands.AdcpSubsystemCommands.DEFAULT_CWTBB;
-                        if (values[ssConfig.CepoIndex] == 1)
+                        if (values[ssConfig.SubsystemConfig.CepoIndex] == 1)
                         {
                             cwtbbValue = true;
                         }
@@ -1870,10 +1872,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CWTBL = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWTBL = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1902,10 +1904,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CWTBS = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWTBS = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }
@@ -1934,10 +1936,10 @@ namespace RTI
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
                     // Check if the index exist in the dictionary of AdcpSubsystemConfig
-                    if (values.ContainsKey(ssConfig.CepoIndex))
+                    if (values.ContainsKey(ssConfig.SubsystemConfig.CepoIndex))
                     {
                         // Blank
-                        ssConfig.Commands.CWTTBP = values[ssConfig.CepoIndex];
+                        ssConfig.Commands.CWTTBP = values[ssConfig.SubsystemConfig.CepoIndex];
                     }
                 }
             }

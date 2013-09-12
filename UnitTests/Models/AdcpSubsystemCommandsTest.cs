@@ -37,6 +37,7 @@
  * 10/04/2012      RC          2.15       Added CBI command.
  * 10/16/2012      RC          2.15       Added at least Minimum values to all values.
  * 10/17/2012      RC          2.15       Added Max values for the CWPAP commands.
+ * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
  *
  */
 
@@ -63,7 +64,7 @@ namespace RTI
         {
             // Create the commands with the correct frequency in Subsystem
             Subsystem ss = new Subsystem(Subsystem.SUB_38KHZ_VERT_PISTON_F, 1);
-            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CWPON, commands.CWPON, "CWPON is incorrect.");
 
@@ -128,7 +129,7 @@ namespace RTI
         {
             // Create the commands with the correct frequency in Subsystem
             Subsystem ss = new Subsystem(Subsystem.SUB_75KHZ_4BEAM_30DEG_ARRAY_L, 1);
-            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CWPON, commands.CWPON, "CWPON is incorrect.");
 
@@ -193,7 +194,7 @@ namespace RTI
         {
             // Create the commands with the correct frequency in Subsystem
             Subsystem ss = new Subsystem(Subsystem.SUB_150KHZ_VERT_PISTON_D, 1);
-            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CWPON, commands.CWPON, "CWPON is incorrect.");
 
@@ -258,7 +259,7 @@ namespace RTI
         {
             // Create the commands with the correct frequency in Subsystem
             Subsystem ss = new Subsystem(Subsystem.SUB_300KHZ_VERT_PISTON_C, 1);
-            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CWPON, commands.CWPON, "CWPON is incorrect.");
 
@@ -323,7 +324,7 @@ namespace RTI
         {
             // Create the commands with the correct frequency in Subsystem
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CWPON, commands.CWPON, "CWPON is incorrect.");
 
@@ -387,7 +388,7 @@ namespace RTI
         public void TestDefaults1200()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_1_2MHZ_VERT_PISTON_A, 1);
-            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands commands = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CWPON, commands.CWPON, "CWPON is incorrect.");
 
@@ -457,7 +458,7 @@ namespace RTI
         public void TestCWPON()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPON = true;
 
@@ -471,7 +472,7 @@ namespace RTI
         public void TestCWPON1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPON = false;
 
@@ -491,7 +492,7 @@ namespace RTI
         public void TestCWPBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = 0.10f;
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
@@ -507,7 +508,7 @@ namespace RTI
         public void TestCWPBB_SetBad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCwpbbTransmitPulseType("garabage");
 
@@ -521,7 +522,7 @@ namespace RTI
         public void TestCWPBB_SetBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_BROADBAND);
 
@@ -535,7 +536,7 @@ namespace RTI
         public void TestCWPBB_SetNB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_NARROWBAND);
 
@@ -549,7 +550,7 @@ namespace RTI
         public void TestCWPBB_SetP2PC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_PTP_CODED);
 
@@ -563,7 +564,7 @@ namespace RTI
         public void TestCWPBB_SetP2PNC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_PTP_NONCODED);
 
@@ -577,7 +578,7 @@ namespace RTI
         public void TestCWPBB_GetDefault()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             string type = ssc.GetCwpbbTransmitPulseType();
 
@@ -591,7 +592,7 @@ namespace RTI
         public void TestCWPBB_GetNB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NARROWBAND;
             string type = ssc.GetCwpbbTransmitPulseType();
@@ -606,7 +607,7 @@ namespace RTI
         public void TestCWPBB_GetBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND;
             string type = ssc.GetCwpbbTransmitPulseType();
@@ -621,7 +622,7 @@ namespace RTI
         public void TestCWPBB_GetBBP2PC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
             string type = ssc.GetCwpbbTransmitPulseType();
@@ -636,7 +637,7 @@ namespace RTI
         public void TestCWPBB_GetBBP2PNC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
             string type = ssc.GetCwpbbTransmitPulseType();
@@ -655,7 +656,7 @@ namespace RTI
         public void TestCWPBB_LL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = 0.05f;
 
@@ -669,7 +670,7 @@ namespace RTI
         public void TestCWPBB_LLBad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = -10;
 
@@ -683,7 +684,7 @@ namespace RTI
         public void TestCWPBB_LLBadMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = -10;
 
@@ -697,7 +698,7 @@ namespace RTI
         public void TestCWPBB_LLBadMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = 10;
 
@@ -711,7 +712,7 @@ namespace RTI
         public void TestCWPBB_LLCornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = AdcpSubsystemCommands.MIN_CWPBB_LAGLENGTH;
 
@@ -725,7 +726,7 @@ namespace RTI
         public void TestCWPBB_LLCornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = AdcpSubsystemCommands.MAX_CWPBB_LAGLENGTH;
 
@@ -745,7 +746,7 @@ namespace RTI
         public void TestCWPST()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_CorrelationThresh = 0.3256f;
             ssc.CWPST_QVelocityThresh = 0.125f;
@@ -766,7 +767,7 @@ namespace RTI
         public void TestCWPST_BadCorrThreshMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_CorrelationThresh = -0.2f;
 
@@ -781,7 +782,7 @@ namespace RTI
         public void TestCWPST_BadCorreThreshMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_CorrelationThresh = 1.2f;
 
@@ -796,7 +797,7 @@ namespace RTI
         public void TestCWPST_BadCorreThreshCornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_CorrelationThresh = AdcpSubsystemCommands.MIN_CWPST_CORR_THRESH;
 
@@ -811,7 +812,7 @@ namespace RTI
         public void TestCWPST_BadCorreThreshCornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_CorrelationThresh = AdcpSubsystemCommands.MAX_CWPST_CORR_THRESH;
 
@@ -829,7 +830,7 @@ namespace RTI
         public void TestCWPST_QVelBad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_QVelocityThresh = -0.125f;
 
@@ -843,7 +844,7 @@ namespace RTI
         public void TestCWPST_QVelMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_QVelocityThresh = AdcpSubsystemCommands.MIN_CWPST_Q_VELOCITY_THRESH;
 
@@ -861,7 +862,7 @@ namespace RTI
         public void TestCWPST_VVelBad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_VVelocityThresh = -0.125f;
 
@@ -875,7 +876,7 @@ namespace RTI
         public void TestCWPST_VVelMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPST_VVelocityThresh = AdcpSubsystemCommands.MIN_CWPST_V_VELOCITY_THRESH;
 
@@ -895,7 +896,7 @@ namespace RTI
         public void TestCWPBL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBL = 15.3f;
 
@@ -910,7 +911,7 @@ namespace RTI
         public void TestCWPBL_BadCWPBLMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBL = -0.2f;
 
@@ -925,7 +926,7 @@ namespace RTI
         public void TestCWPBL_BadCWPBLMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBL = 120.23f;
 
@@ -940,7 +941,7 @@ namespace RTI
         public void TestCWPBL_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBL = AdcpSubsystemCommands.MIN_CWPBL;
 
@@ -955,7 +956,7 @@ namespace RTI
         public void TestCWPBL_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBL = AdcpSubsystemCommands.MAX_CWPBL;
 
@@ -973,7 +974,7 @@ namespace RTI
         public void TestCWPBS()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBS = 1.235f;
 
@@ -987,7 +988,7 @@ namespace RTI
         public void TestCWPBS_Min()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBS = -1000.235f;
 
@@ -1001,7 +1002,7 @@ namespace RTI
         public void TestCWPBS_Max()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBS = 1000.235f;
 
@@ -1015,7 +1016,7 @@ namespace RTI
         public void TestCWPBS_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBS = AdcpSubsystemCommands.MIN_CWPBS;
 
@@ -1029,7 +1030,7 @@ namespace RTI
         public void TestCWPBS_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBS = AdcpSubsystemCommands.MAX_CWPBS;
 
@@ -1047,7 +1048,7 @@ namespace RTI
         public void TestCWPX()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPX = 1.235f;
 
@@ -1061,7 +1062,7 @@ namespace RTI
         public void TestCWPX_Min()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPX = -1.235f;
 
@@ -1075,7 +1076,7 @@ namespace RTI
         public void TestCWPX_Max()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPX = 1000.235f;
 
@@ -1089,7 +1090,7 @@ namespace RTI
         public void TestCWPX_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPX = AdcpSubsystemCommands.MIN_CWPX;
 
@@ -1103,7 +1104,7 @@ namespace RTI
         public void TestCWPX_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPX = AdcpSubsystemCommands.MAX_CWPX;
 
@@ -1121,7 +1122,7 @@ namespace RTI
         public void TestCWPBN()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBN = 15;
 
@@ -1136,7 +1137,7 @@ namespace RTI
         public void TestCWPBN_BadMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBN = 222;
 
@@ -1151,7 +1152,7 @@ namespace RTI
         public void TestCWPBN_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBN = AdcpSubsystemCommands.MIN_CWPBN;
 
@@ -1166,7 +1167,7 @@ namespace RTI
         public void TestCWPBN_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBN = AdcpSubsystemCommands.MAX_CWPBN;
 
@@ -1184,7 +1185,7 @@ namespace RTI
         public void TestCWPP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPP = 15;
 
@@ -1199,7 +1200,7 @@ namespace RTI
         public void TestCWPP_BadMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPP = 22222;
 
@@ -1214,7 +1215,7 @@ namespace RTI
         public void TestCWPP_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPP = AdcpSubsystemCommands.MIN_CWPP;
 
@@ -1229,7 +1230,7 @@ namespace RTI
         public void TestCWPP_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPP = AdcpSubsystemCommands.MAX_CWPP;
 
@@ -1247,7 +1248,7 @@ namespace RTI
         public void TestCWPBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBP_NumPingsAvg = 15;
             ssc.CWPBP_TimeBetweenBasePings = 0.4f;
@@ -1266,7 +1267,7 @@ namespace RTI
         public void TestCWPBP_BadCWPBP_NumPingsAvgMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBP_NumPingsAvg = 22222;
 
@@ -1281,7 +1282,7 @@ namespace RTI
         public void TestCWPBP_CornerCWPBP_NumPingsAvgMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBP_NumPingsAvg = AdcpSubsystemCommands.MIN_CWPBP_NUM_PING;
 
@@ -1296,7 +1297,7 @@ namespace RTI
         public void TestCWPBP_CornerCWPBP_NumPingsAvgMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBP_NumPingsAvg = AdcpSubsystemCommands.MAX_CWPBP_NUM_PING;
 
@@ -1314,7 +1315,7 @@ namespace RTI
         public void TestCWPBP_TimeBetweenPings_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBP_TimeBetweenBasePings = -0.4f;
 
@@ -1328,7 +1329,7 @@ namespace RTI
         public void TestCWPBP_TimeBetweenPings_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBP_TimeBetweenBasePings = AdcpSubsystemCommands.MIN_CWPBP_TIME_BETWEEN_PINGS;
 
@@ -1348,7 +1349,7 @@ namespace RTI
         public void TestCWPTBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPTBP = 15.004f;
 
@@ -1363,7 +1364,7 @@ namespace RTI
         public void TestCWPTBP_BadMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPTBP = -154.235f;
 
@@ -1378,7 +1379,7 @@ namespace RTI
         public void TestCWPTBP_BadMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPTBP = 86500.004f;
 
@@ -1393,7 +1394,7 @@ namespace RTI
         public void TestCWPTBP_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPTBP = AdcpSubsystemCommands.MIN_CWPTBP;
 
@@ -1408,7 +1409,7 @@ namespace RTI
         public void TestCWPTBP_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPTBP = AdcpSubsystemCommands.MAX_CWPTBP;
 
@@ -1426,7 +1427,7 @@ namespace RTI
         public void TestCWPAI()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAI = new TimeValue(1,2,3,4);
 
@@ -1440,7 +1441,7 @@ namespace RTI
         public void TestCWPAI_CornerMinute()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAI = new TimeValue(1, 60, 3, 4);
 
@@ -1454,7 +1455,7 @@ namespace RTI
         public void TestCWPAI_CornerSeconds()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAI = new TimeValue(1, 17, 63, 4);
 
@@ -1468,7 +1469,7 @@ namespace RTI
         public void TestCWPAI_CornerHunSeconds()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAI = new TimeValue(1, 17, 33, 124);
 
@@ -1482,7 +1483,7 @@ namespace RTI
         public void TestCWPAI_CornerOver()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAI = new TimeValue(502, 97, 83, 124);
 
@@ -1500,7 +1501,7 @@ namespace RTI
         public void TestCWPAP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_NumPingsAvg = 50;
             ssc.CWPAP_Lag = 0.33f;
@@ -1525,7 +1526,7 @@ namespace RTI
         public void TestCWPAP_BadNumPingsAvgMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_NumPingsAvg = 0;
 
@@ -1540,7 +1541,7 @@ namespace RTI
         public void TestCWPAP_BadNumPingsAvgMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_NumPingsAvg = 110;
 
@@ -1555,7 +1556,7 @@ namespace RTI
         public void TestCWPAP_NumPing_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_NumPingsAvg = AdcpSubsystemCommands.MIN_CWPAP_NUMPINGS;
 
@@ -1571,7 +1572,7 @@ namespace RTI
         public void TestCWPAP_NumPing_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_NumPingsAvg = AdcpSubsystemCommands.MAX_CWPAP_NUMPINGS;
 
@@ -1589,7 +1590,7 @@ namespace RTI
         public void TestCWPAP_Lag_Min()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Lag = -0.33f;
 
@@ -1603,7 +1604,7 @@ namespace RTI
         public void TestCWPAP_Lag_Max()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Lag = 23.33f;
 
@@ -1617,7 +1618,7 @@ namespace RTI
         public void TestCWPAP_Lag_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Lag = AdcpSubsystemCommands.MIN_CWPAP_LAG;
 
@@ -1631,7 +1632,7 @@ namespace RTI
         public void TestCWPAP_Lag_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Lag = AdcpSubsystemCommands.MAX_CWPAP_LAG;
 
@@ -1649,7 +1650,7 @@ namespace RTI
         public void TestCWPAP_Blank_Min()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Blank = -1.44f;
 
@@ -1663,7 +1664,7 @@ namespace RTI
         public void TestCWPAP_Blank_Max()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Blank = 100000.44f;
 
@@ -1677,7 +1678,7 @@ namespace RTI
         public void TestCWPAP_Blank_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Blank = AdcpSubsystemCommands.MIN_CWPAP_BLANK;
 
@@ -1691,7 +1692,7 @@ namespace RTI
         public void TestCWPAP_Blank_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_Blank = AdcpSubsystemCommands.MAX_CWPAP_BLANK;
 
@@ -1709,7 +1710,7 @@ namespace RTI
         public void TestCWPAP_BinSize_Min()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_BinSize = -2.55f;
 
@@ -1723,7 +1724,7 @@ namespace RTI
         public void TestCWPAP_BinSize_Max()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_BinSize = 20000000.55f;
 
@@ -1737,7 +1738,7 @@ namespace RTI
         public void TestCWPAP_BinSize_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_BinSize = AdcpSubsystemCommands.MIN_CWPAP_BINSIZE;
 
@@ -1751,7 +1752,7 @@ namespace RTI
         public void TestCWPAP_BinSize_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_BinSize = AdcpSubsystemCommands.MAX_CWPAP_BINSIZE;
 
@@ -1769,7 +1770,7 @@ namespace RTI
         public void TestCWPAP_TimeBetweenPing_Min()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_TimeBetweenPing = -3.66f;
 
@@ -1783,7 +1784,7 @@ namespace RTI
         public void TestCWPAP_TimeBetweenPing_Max()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_TimeBetweenPing = 30000000.66f;
 
@@ -1797,7 +1798,7 @@ namespace RTI
         public void TestCWPAP_TimeBetweenPing_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_TimeBetweenPing = AdcpSubsystemCommands.MIN_CWPAP_TIME_BETWEEN_PING;
 
@@ -1811,7 +1812,7 @@ namespace RTI
         public void TestCWPAP_TimeBetweenPing_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPAP_TimeBetweenPing = AdcpSubsystemCommands.MAX_CWPAP_TIME_BETWEEN_PING;
 
@@ -1833,7 +1834,7 @@ namespace RTI
         public void TestCBI_BurstInterval()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_BurstInterval = new TimeValue(1, 2, 3, 4);
 
@@ -1847,7 +1848,7 @@ namespace RTI
         public void TestCBI_BurstInterval_CornerMinute()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_BurstInterval = new TimeValue(1, 60, 3, 4);
 
@@ -1861,7 +1862,7 @@ namespace RTI
         public void TestCBI_BurstInterval_CornerSeconds()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_BurstInterval = new TimeValue(1, 17, 63, 4);
 
@@ -1875,7 +1876,7 @@ namespace RTI
         public void TestCBI_BurstInterval_CornerHunSeconds()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_BurstInterval = new TimeValue(1, 17, 33, 124);
 
@@ -1889,7 +1890,7 @@ namespace RTI
         public void TestCBI_BurstInterval_CornerOver()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_BurstInterval = new TimeValue(502, 97, 83, 124);
 
@@ -1907,7 +1908,7 @@ namespace RTI
         public void TestCBI_NumEnsembles()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_NumEnsembles = 15;
 
@@ -1922,7 +1923,7 @@ namespace RTI
         public void TestCBI_NumEnsembles_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBI_NumEnsembles = AdcpSubsystemCommands.MIN_CBI_NUM_ENS;
 
@@ -1942,7 +1943,7 @@ namespace RTI
         public void TestCBTON()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTON = true;
 
@@ -1956,7 +1957,7 @@ namespace RTI
         public void TestCBTON1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTON = false;
 
@@ -1974,7 +1975,7 @@ namespace RTI
         public void TestCBTBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED;
             ssc.CBTBB_LongRangeDepth = 1.231f;
@@ -1992,7 +1993,7 @@ namespace RTI
         public void TestCBTBB_Default()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_CBTBB_MODE, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
             Assert.AreEqual(AdcpSubsystemCommands.DEFAULT_600_CBTBB_LONGRANGEDEPTH, ssc.CBTBB_LongRangeDepth, "CBTBB_LongRangeDepth is incorrect.");
@@ -2009,7 +2010,7 @@ namespace RTI
         public void TestCBTBB_GetModeDefault()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             string type = ssc.GetCBTBB_Mode();
 
@@ -2024,7 +2025,7 @@ namespace RTI
         public void TestCBTBB_GetModeNB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NARROWBAND_LONG_RANGE;
             string type = ssc.GetCBTBB_Mode();
@@ -2040,7 +2041,7 @@ namespace RTI
         public void TestCBTBB_GetModeBBC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED;
             string type = ssc.GetCBTBB_Mode();
@@ -2056,7 +2057,7 @@ namespace RTI
         public void TestCBTBB_GetModeBBNC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED;
             string type = ssc.GetCBTBB_Mode();
@@ -2073,7 +2074,7 @@ namespace RTI
         public void TestCBTBB_GetModeBBNCP2P()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED_P2P;
             string type = ssc.GetCBTBB_Mode();
@@ -2089,7 +2090,7 @@ namespace RTI
         public void TestCBTBB_GetModeAutoSwitch()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P;
             string type = ssc.GetCBTBB_Mode();
@@ -2105,7 +2106,7 @@ namespace RTI
         public void TestCBTBB_GetModeNA3()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_3;
             string type = ssc.GetCBTBB_Mode();
@@ -2121,7 +2122,7 @@ namespace RTI
         public void TestCBTBB_GetModeNA5()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_5;
             string type = ssc.GetCBTBB_Mode();
@@ -2137,7 +2138,7 @@ namespace RTI
         public void TestCBTBB_GetModeNA6()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_6;
             string type = ssc.GetCBTBB_Mode();
@@ -2153,7 +2154,7 @@ namespace RTI
         public void TestCBTBB_SetModeNB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_NARROWBAND);
 
@@ -2167,7 +2168,7 @@ namespace RTI
         public void TestCBTBB_SetModeBBC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_BROADBAND_CODED);
 
@@ -2181,7 +2182,7 @@ namespace RTI
         public void TestCBTBB_SetModeBBNC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_BROADBAND_NONCODED);
 
@@ -2195,7 +2196,7 @@ namespace RTI
         public void TestCBTBB_SetModeBBNCP2P()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_BROADBAND_NONCODED_P2P);
 
@@ -2209,7 +2210,7 @@ namespace RTI
         public void TestCBTBB_SetModeAutoSwitch()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_NB_BBNONCODED_BBNONCODEDP2P);
 
@@ -2223,7 +2224,7 @@ namespace RTI
         public void TestCBTBB_SetModeNA3()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_NA_3);
 
@@ -2237,7 +2238,7 @@ namespace RTI
         public void TestCBTBB_SetModeNA5()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_NA_5);
 
@@ -2251,7 +2252,7 @@ namespace RTI
         public void TestCBTBB_SetModeNA6()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.SetCBTBB_Mode(AdcpSubsystemCommands.BT_BB_MODE_NA_6);
 
@@ -2269,7 +2270,7 @@ namespace RTI
         public void TestCBTBB_Mode_NB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NARROWBAND_LONG_RANGE;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.NARROWBAND_LONG_RANGE, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2282,7 +2283,7 @@ namespace RTI
         public void TestCBTBB_Mode_BB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2295,7 +2296,7 @@ namespace RTI
         public void TestCBTBB_Mode_BBNC()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2308,7 +2309,7 @@ namespace RTI
         public void TestCBTBB_Mode_BBNCP2P()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED_P2P;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED_P2P, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2321,7 +2322,7 @@ namespace RTI
         public void TestCBTBB_Mode_NA3()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_3;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.NA_3, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2334,7 +2335,7 @@ namespace RTI
         public void TestCBTBB_Mode_NA5()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_5;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.NA_5, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2347,7 +2348,7 @@ namespace RTI
         public void TestCBTBB_Mode_NA6()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_6;
             Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.NA_6, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
@@ -2364,7 +2365,7 @@ namespace RTI
         public void TestCBTBB_P2P_Lag_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_PulseToPulseLag = -34.5f;
 
@@ -2378,7 +2379,7 @@ namespace RTI
         public void TestCBTBB_P2P_Lag_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_PulseToPulseLag = AdcpSubsystemCommands.MIN_CBTBB_PULSETOPULSE_LAG;
 
@@ -2396,7 +2397,7 @@ namespace RTI
         public void TestCBTBB_LRD_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_LongRangeDepth = -1.231f;
 
@@ -2410,7 +2411,7 @@ namespace RTI
         public void TestCBTBB_LRD_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBB_LongRangeDepth = AdcpSubsystemCommands.MIN_CBTBB_LONGRANGEDEPTH;
 
@@ -2430,7 +2431,7 @@ namespace RTI
         public void TestCBTST()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_CorrelationThresh = 0.3256f;
             ssc.CBTST_QVelocityThresh = 0.125f;
@@ -2451,7 +2452,7 @@ namespace RTI
         public void TestCBTST_BadCorrThreshMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_CorrelationThresh = -0.2f;
 
@@ -2466,7 +2467,7 @@ namespace RTI
         public void TestCBTST_BadCorreThreshMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_CorrelationThresh = 1.2f;
 
@@ -2481,7 +2482,7 @@ namespace RTI
         public void TestCBTST_BadCorreThreshCornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_CorrelationThresh = AdcpSubsystemCommands.MIN_CBTST_CORR_THRESH;
 
@@ -2496,7 +2497,7 @@ namespace RTI
         public void TestCBTST_BadCorreThreshCornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_CorrelationThresh = AdcpSubsystemCommands.MAX_CBTST_CORR_THRESH;
 
@@ -2514,7 +2515,7 @@ namespace RTI
         public void TestCBTST_QVelThreshMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_QVelocityThresh = -0.2f;
 
@@ -2528,7 +2529,7 @@ namespace RTI
         public void TestCBTST_QVelThreshCornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_QVelocityThresh = AdcpSubsystemCommands.MIN_CBTST_QVEL_THRESH;
 
@@ -2546,7 +2547,7 @@ namespace RTI
         public void TestCBTST_VVelThreshMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_VVelocityThresh = -0.2f;
 
@@ -2560,7 +2561,7 @@ namespace RTI
         public void TestCBTST_VVelThreshCornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTST_VVelocityThresh = AdcpSubsystemCommands.MIN_CBTST_VVEL_THRESH;
 
@@ -2580,7 +2581,7 @@ namespace RTI
         public void TestCBTBL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBL = 1.3f;
 
@@ -2595,7 +2596,7 @@ namespace RTI
         public void TestCWPBL_BadCBTBLMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBL = -0.2f;
 
@@ -2610,7 +2611,7 @@ namespace RTI
         public void TestCBTBL_BadCBTBLMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBL = 120.23f;
 
@@ -2625,7 +2626,7 @@ namespace RTI
         public void TestCBTBL_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBL = AdcpSubsystemCommands.MIN_CBTBL;
 
@@ -2640,7 +2641,7 @@ namespace RTI
         public void TestCBTBL_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTBL = AdcpSubsystemCommands.MAX_CBTBL;
 
@@ -2658,7 +2659,7 @@ namespace RTI
         public void TestCBTMX()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTMX = 15.3f;
 
@@ -2673,7 +2674,7 @@ namespace RTI
         public void TestCWPMX_BadCBTMXMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTMX = -0.2f;
 
@@ -2688,7 +2689,7 @@ namespace RTI
         public void TestCBTMX_BadCBTMXMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTMX = 1200000.23f;
 
@@ -2703,7 +2704,7 @@ namespace RTI
         public void TestCBTMX_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTMX = AdcpSubsystemCommands.MIN_CBTMX;
 
@@ -2718,7 +2719,7 @@ namespace RTI
         public void TestCBTMX_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTMX = AdcpSubsystemCommands.MAX_CBTMX;
 
@@ -2736,7 +2737,7 @@ namespace RTI
         public void TestCBTTBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTTBP = 15.3f;
 
@@ -2751,7 +2752,7 @@ namespace RTI
         public void TestCBTTBP_BadCBTTBPMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTTBP = -0.2f;
 
@@ -2766,7 +2767,7 @@ namespace RTI
         public void TestCBTTBP_BadCBTTBPMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTTBP = 1200000.23f;
 
@@ -2781,7 +2782,7 @@ namespace RTI
         public void TestCBTTBP_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTTBP = AdcpSubsystemCommands.MIN_CBTTBP;
 
@@ -2796,7 +2797,7 @@ namespace RTI
         public void TestCBTTBP_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTTBP = AdcpSubsystemCommands.MAX_CBTTBP;
 
@@ -2814,7 +2815,7 @@ namespace RTI
         public void TestCBTT()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_SNRShallowDetectionThresh = 15.3f;
             ssc.CBTT_DepthSNR = 22.345f;
@@ -2836,7 +2837,7 @@ namespace RTI
         public void TestCBTT_SNR_Shallow_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_SNRShallowDetectionThresh = -15.3f;
 
@@ -2850,7 +2851,7 @@ namespace RTI
         public void TestCBTT_SNR_Shallow_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_SNRShallowDetectionThresh = AdcpSubsystemCommands.MIN_CBTT_SNR_SHALLOW_THRESH;
 
@@ -2868,7 +2869,7 @@ namespace RTI
         public void TestCBTT_SNR_SNR_Depth_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_DepthSNR = -15.3f;
 
@@ -2882,7 +2883,7 @@ namespace RTI
         public void TestCBTT_SNR_Depth_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_DepthSNR = AdcpSubsystemCommands.MIN_CBTT_DEPTH_SNR;
 
@@ -2900,7 +2901,7 @@ namespace RTI
         public void TestCBTT_SNR_Deep_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_SNRDeepDetectionThresh = -15.3f;
 
@@ -2914,7 +2915,7 @@ namespace RTI
         public void TestCBTT_SNR_Deep_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_SNRDeepDetectionThresh = AdcpSubsystemCommands.MIN_CBTT_SNR_DEEP_THRESH;
 
@@ -2932,7 +2933,7 @@ namespace RTI
         public void TestCBTT_SNR_Gain_Depth_Bad()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_DepthGain = -15.3f;
 
@@ -2946,7 +2947,7 @@ namespace RTI
         public void TestCBTT_Gain_Depth_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CBTT_DepthGain = AdcpSubsystemCommands.MIN_CBTT_DEPTH_GAIN;
 
@@ -2959,14 +2960,14 @@ namespace RTI
 
         #region CWTON
 
-        /// <summary>
+        /// <summary>new SubsystemConfiguration(ss, 0, 0)
         /// Test setting the CWTON command.
         /// </summary>
         [Test]
         public void TestCWTON()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTON = true;
 
@@ -2980,7 +2981,7 @@ namespace RTI
         public void TestCWTON1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 0);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTON = false;
 
@@ -2998,7 +2999,7 @@ namespace RTI
         public void TestCWTBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBB = true;
 
@@ -3012,7 +3013,7 @@ namespace RTI
         public void TestCWTBB1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBB = false;
 
@@ -3030,7 +3031,7 @@ namespace RTI
         public void TestCWTBL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBL = 1.3f;
 
@@ -3045,7 +3046,7 @@ namespace RTI
         public void TestCWTBL_BadCWTBLMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBL = -0.2f;
 
@@ -3060,7 +3061,7 @@ namespace RTI
         public void TestCWTBL_BadCWTBLMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBL = 120.23f;
 
@@ -3075,7 +3076,7 @@ namespace RTI
         public void TestCWTBL_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBL = AdcpSubsystemCommands.MIN_CWTBL;
 
@@ -3090,7 +3091,7 @@ namespace RTI
         public void TestCWTBL_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBL = AdcpSubsystemCommands.MAX_CWTBL;
 
@@ -3108,7 +3109,7 @@ namespace RTI
         public void TestCWTBS()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBS = 1.3f;
 
@@ -3122,7 +3123,7 @@ namespace RTI
         public void TestCWTBS_BadCWTBSMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBS = -0.2f;
 
@@ -3136,7 +3137,7 @@ namespace RTI
         public void TestCWTBS_BadCWTBSMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBS = 120.23f;
 
@@ -3150,7 +3151,7 @@ namespace RTI
         public void TestCWTBS_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBS = AdcpSubsystemCommands.MIN_CWTBS;
 
@@ -3164,7 +3165,7 @@ namespace RTI
         public void TestCWTBS_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTBS = AdcpSubsystemCommands.MAX_CWTBS;
 
@@ -3182,7 +3183,7 @@ namespace RTI
         public void TestCWTTBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTTBP = 15.004f;
 
@@ -3197,7 +3198,7 @@ namespace RTI
         public void TestCWTTBP_BadMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTTBP = -154.235f;
 
@@ -3212,7 +3213,7 @@ namespace RTI
         public void TestCWTTBP_BadMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTTBP = 86500.004f;
 
@@ -3227,7 +3228,7 @@ namespace RTI
         public void TestCCWTTBP_CornerMin()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTTBP = AdcpSubsystemCommands.MIN_CWTTBP;
 
@@ -3242,7 +3243,7 @@ namespace RTI
         public void TestCWTTBP_CornerMax()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWTTBP = AdcpSubsystemCommands.MAX_CWTTBP;
 
@@ -3262,7 +3263,7 @@ namespace RTI
         public void TestToString()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             string result = ssc.ToString();
 
@@ -3308,7 +3309,7 @@ namespace RTI
         public void TestCommandList()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             List<string> list = ssc.GetCommandList();
 
@@ -3362,7 +3363,7 @@ namespace RTI
         public void CWPON_CmdStr()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPON = false;
 
             Assert.AreEqual("CWPON[7] 0", ssc.CWPON_CmdStr(7), "CWPON Cmd Str is incorrect.");
@@ -3375,7 +3376,7 @@ namespace RTI
         public void CWPON_CmdStr1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 3, 0));
             ssc.CWPON = true;
 
             Assert.AreEqual("CWPON[3] 1", ssc.CWPON_CmdStr(3), "CWPON Cmd Str is incorrect.");
@@ -3388,7 +3389,7 @@ namespace RTI
         public void CWPON_CmdStr2()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPON = true;
 
             Assert.AreEqual("CWPON[4] 1", ssc.CWPON_CmdStr(), "CWPON Cmd Str is incorrect.");
@@ -3405,7 +3406,7 @@ namespace RTI
         public void CWPBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
             ssc.CWPBB_LagLength = 0.0023f;
 
@@ -3419,7 +3420,7 @@ namespace RTI
         public void CWPBB1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
             ssc.CWPBB_LagLength = 0.0024f;
 
@@ -3437,7 +3438,7 @@ namespace RTI
         public void CWPAP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPAP_NumPingsAvg = 2;
             ssc.CWPAP_Lag = 0.04565f;
             ssc.CWPAP_Blank = 1.5f;
@@ -3454,7 +3455,7 @@ namespace RTI
         public void CWPAP1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPAP_NumPingsAvg = 3;
             ssc.CWPAP_Lag = 0.04565f;
             ssc.CWPAP_Blank = 1.5f;
@@ -3475,7 +3476,7 @@ namespace RTI
         public void CWPBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPBP_NumPingsAvg = 2;
             ssc.CWPBP_TimeBetweenBasePings = 0.025f;
 
@@ -3489,7 +3490,7 @@ namespace RTI
         public void CWPBP1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPBP_NumPingsAvg = 3;
             ssc.CWPBP_TimeBetweenBasePings = 0.025f;
 
@@ -3507,7 +3508,7 @@ namespace RTI
         public void CWPST()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPST_CorrelationThresh = 0.33f;
             ssc.CWPST_QVelocityThresh = 0.44f;
             ssc.CWPST_VVelocityThresh = 0.55f;
@@ -3522,7 +3523,7 @@ namespace RTI
         public void CWPST1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPST_CorrelationThresh = 0.33f;
             ssc.CWPST_QVelocityThresh = 0.44f;
             ssc.CWPST_VVelocityThresh = 0.55f;
@@ -3541,7 +3542,7 @@ namespace RTI
         public void CWPBL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPBL = 0.2345f;
 
             Assert.AreEqual("CWPBL[7] 0.2345", ssc.CWPBL_CmdStr(7), "CWPBL Cmd Str is incorrect.");
@@ -3554,7 +3555,7 @@ namespace RTI
         public void CWPBL1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPBL = 0.2345f;
 
             Assert.AreEqual("CWPBL[4] 0.2345", ssc.CWPBL_CmdStr(), "CWPBL Cmd Str is incorrect.");
@@ -3571,7 +3572,7 @@ namespace RTI
         public void CWPBS()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPBS = 0.2345f;
 
             Assert.AreEqual("CWPBS[7] 0.2345", ssc.CWPBS_CmdStr(7), "CWPBS Cmd Str is incorrect.");
@@ -3584,7 +3585,7 @@ namespace RTI
         public void CWPBS1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPBS = 0.2345f;
 
             Assert.AreEqual("CWPBS[4] 0.2345", ssc.CWPBS_CmdStr(), "CWPBS Cmd Str is incorrect.");
@@ -3601,7 +3602,7 @@ namespace RTI
         public void CWPX()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPX = 0.2345f;
 
             Assert.AreEqual("CWPX[7] 0.2345", ssc.CWPX_CmdStr(7), "CWPX Cmd Str is incorrect.");
@@ -3614,7 +3615,7 @@ namespace RTI
         public void CWPX1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPX = 0.2345f;
 
             Assert.AreEqual("CWPX[4] 0.2345", ssc.CWPX_CmdStr(), "CWPX Cmd Str is incorrect.");
@@ -3631,7 +3632,7 @@ namespace RTI
         public void CWPBN()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPBN = 33;
 
             Assert.AreEqual("CWPBN[7] 33", ssc.CWPBN_CmdStr(7), "CWPBN Cmd Str is incorrect.");
@@ -3644,7 +3645,7 @@ namespace RTI
         public void CWPBN1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPBN = 33;
 
             Assert.AreEqual("CWPBN[4] 33", ssc.CWPBN_CmdStr(), "CWPBN Cmd Str is incorrect.");
@@ -3661,7 +3662,7 @@ namespace RTI
         public void CWPP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPP = 33;
 
             Assert.AreEqual("CWPP[7] 33", ssc.CWPP_CmdStr(7), "CWPP Cmd Str is incorrect.");
@@ -3674,7 +3675,7 @@ namespace RTI
         public void CWPP1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPP = 33;
 
             Assert.AreEqual("CWPP[4] 33", ssc.CWPP_CmdStr(), "CWPP Cmd Str is incorrect.");
@@ -3691,7 +3692,7 @@ namespace RTI
         public void CWPAI()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPAI = new TimeValue(0,0,1,0);
 
             Assert.AreEqual("CWPAI[7] 00:00:01.00", ssc.CWPAI_CmdStr(7), "CWPAI Cmd Str is incorrect.");
@@ -3704,7 +3705,7 @@ namespace RTI
         public void CWPAI1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPAI = new TimeValue(0, 0, 1, 0);
 
             Assert.AreEqual("CWPAI[4] 00:00:01.00", ssc.CWPAI_CmdStr(), "CWPAI Cmd Str is incorrect.");
@@ -3721,7 +3722,7 @@ namespace RTI
         public void CWPTBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWPTBP = 0.001f;
 
             Assert.AreEqual("CWPTBP[7] 0.001", ssc.CWPTBP_CmdStr(7), "CWPTBP Cmd Str is incorrect.");
@@ -3734,7 +3735,7 @@ namespace RTI
         public void CWPTBP1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWPTBP = 0.001f;
 
             Assert.AreEqual("CWPTBP[4] 0.001", ssc.CWPTBP_CmdStr(), "CWPTBP Cmd Str is incorrect.");
@@ -3751,11 +3752,11 @@ namespace RTI
         public void CBI()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CBI_NumEnsembles = 3;
             ssc.CBI_BurstInterval = new TimeValue(0, 0, 1, 0);
 
-            Assert.AreEqual("CBI[7] 00:00:01.00,3", ssc.CBI_CmdStr(7), "CBI Cmd Str is incorrect.");
+            Assert.AreEqual("CBI[7] 00:00:01.00,3,0", ssc.CBI_CmdStr(7), "CBI Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3765,11 +3766,11 @@ namespace RTI
         public void CBI1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBI_NumEnsembles = 3;
             ssc.CBI_BurstInterval = new TimeValue(0, 0, 1, 0);
 
-            Assert.AreEqual("CBI[4] 00:00:01.00,3", ssc.CBI_CmdStr(), "CBI Cmd Str is incorrect.");
+            Assert.AreEqual("CBI[4] 00:00:01.00,3,0", ssc.CBI_CmdStr(), "CBI Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3779,11 +3780,11 @@ namespace RTI
         public void CBI2()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBI_NumEnsembles = 3;
             ssc.CBI_BurstInterval = new TimeValue(0, 0, 3, 0);
 
-            Assert.AreEqual("CBI[4] 00:00:03.00,3", ssc.CBI_CmdStr(4), "CBI Cmd Str is incorrect.");
+            Assert.AreEqual("CBI[4] 00:00:03.00,3,0", ssc.CBI_CmdStr(4), "CBI Cmd Str is incorrect.");
         }
 
         #endregion
@@ -3797,7 +3798,7 @@ namespace RTI
         public void CBTON_CmdStr()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTON = false;
 
             Assert.AreEqual("CBTON[0] 0", ssc.CBTON_CmdStr(0), "CBTON Cmd Str is incorrect.");
@@ -3810,7 +3811,7 @@ namespace RTI
         public void CBTON_CmdStr1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 7));
             ssc.CBTON = true;
 
             Assert.AreEqual("CBTON[7] 1", ssc.CBTON_CmdStr(7), "CBTON Cmd Str is incorrect.");
@@ -3823,7 +3824,7 @@ namespace RTI
         public void CBTON_CmdStr2()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 4));
             ssc.CBTON = true;
 
             Assert.AreEqual("CBTON[4] 1", ssc.CBTON_CmdStr(), "CBTON Cmd Str is incorrect.");
@@ -3836,7 +3837,7 @@ namespace RTI
         public void CBTON_CmdStr23()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 23, 23));
             ssc.CBTON = true;
 
             Assert.AreEqual("CBTON[23] 1", ssc.CBTON_CmdStr(23), "CBTON Cmd Str is incorrect.");
@@ -3853,7 +3854,7 @@ namespace RTI
         public void CBTBB()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 3, 3));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NARROWBAND_LONG_RANGE;
             ssc.CBTBB_PulseToPulseLag = 0.0023f;
             ssc.CBTBB_LongRangeDepth = 0.123456f;
@@ -3868,12 +3869,12 @@ namespace RTI
         public void CBTBB1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED;
             ssc.CBTBB_PulseToPulseLag = 0.0021f;
             ssc.CBTBB_LongRangeDepth = 0.1234561f;
 
-            Assert.AreEqual("CBTBB[4] 1,0.0021,0.1234561", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 1,0.0021,0.1234561", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3883,12 +3884,12 @@ namespace RTI
         public void CBTBB2()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED;
             ssc.CBTBB_PulseToPulseLag = 0.0023f;
             ssc.CBTBB_LongRangeDepth = 0.123456f;
 
-            Assert.AreEqual("CBTBB[4] 2,0.0023,0.123456", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 2,0.0023,0.123456", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3898,12 +3899,12 @@ namespace RTI
         public void CBTBB3()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_3;
             ssc.CBTBB_PulseToPulseLag = 0.0023f;
             ssc.CBTBB_LongRangeDepth = 0.1234563f;
 
-            Assert.AreEqual("CBTBB[4] 3,0.0023,0.1234563", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 3,0.0023,0.1234563", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3913,12 +3914,12 @@ namespace RTI
         public void CBTBB4()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_NON_CODED_P2P;
             ssc.CBTBB_PulseToPulseLag = 0.0024f;
             ssc.CBTBB_LongRangeDepth = 0.1234564f;
 
-            Assert.AreEqual("CBTBB[4] 4,0.0024,0.1234564", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 4,0.0024,0.1234564", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3928,12 +3929,12 @@ namespace RTI
         public void CBTBB5()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 5);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_5;
             ssc.CBTBB_PulseToPulseLag = 0.0025f;
             ssc.CBTBB_LongRangeDepth = 0.1234565f;
 
-            Assert.AreEqual("CBTBB[5] 5,0.0025,0.1234565", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 5,0.0025,0.1234565", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3943,12 +3944,12 @@ namespace RTI
         public void CBTBB6()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 5);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.NA_6;
             ssc.CBTBB_PulseToPulseLag = 0.0026f;
             ssc.CBTBB_LongRangeDepth = 0.1234566f;
 
-            Assert.AreEqual("CBTBB[5] 6,0.0026,0.1234566", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 6,0.0026,0.1234566", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3958,12 +3959,12 @@ namespace RTI
         public void CBTBB7()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 7);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P;
             ssc.CBTBB_PulseToPulseLag = 0.0027f;
             ssc.CBTBB_LongRangeDepth = 0.1234567f;
 
-            Assert.AreEqual("CBTBB[7] 7,0.0027,0.1234567", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
+            Assert.AreEqual("CBTBB[0] 7,0.0027,0.1234567", ssc.CBTBB_CmdStr(), "CBTBB Cmd Str is incorrect.");
         }
 
         /// <summary>
@@ -3973,7 +3974,7 @@ namespace RTI
         public void CBTBB77()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 7);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 77, 77));
             ssc.CBTBB_Mode = AdcpSubsystemCommands.eCBTBB_Mode.AUTO_SWITCH_NARROWBAND_BB_NONCODED_BB_NONCODED_P2P;
             ssc.CBTBB_PulseToPulseLag = 0.0027f;
             ssc.CBTBB_LongRangeDepth = 0.1234567f;
@@ -3992,7 +3993,7 @@ namespace RTI
         public void CBTST()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 6, 0));
             ssc.CBTST_CorrelationThresh = 0.33f;
             ssc.CBTST_QVelocityThresh = 0.44f;
             ssc.CBTST_VVelocityThresh = 0.55f;
@@ -4007,7 +4008,7 @@ namespace RTI
         public void CBTST1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBTST_CorrelationThresh = 0.33f;
             ssc.CBTST_QVelocityThresh = 0.44f;
             ssc.CBTST_VVelocityThresh = 0.55f;
@@ -4026,7 +4027,7 @@ namespace RTI
         public void CBTBL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CBTBL = 0.2345f;
 
             Assert.AreEqual("CBTBL[7] 0.2345", ssc.CBTBL_CmdStr(7), "CBTBL Cmd Str is incorrect.");
@@ -4039,7 +4040,7 @@ namespace RTI
         public void CBTBL1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBTBL = 0.2345f;
 
             Assert.AreEqual("CBTBL[4] 0.2345", ssc.CBTBL_CmdStr(), "CBTBL Cmd Str is incorrect.");
@@ -4056,7 +4057,7 @@ namespace RTI
         public void CBTMX()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CBTMX = 5.2345f;
 
             Assert.AreEqual("CBTMX[7] 5.2345", ssc.CBTMX_CmdStr(7), "CBTMX Cmd Str is incorrect.");
@@ -4069,7 +4070,7 @@ namespace RTI
         public void CBTMX1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBTMX = 5.2345f;
 
             Assert.AreEqual("CBTMX[4] 5.2345", ssc.CBTMX_CmdStr(), "CBTMX Cmd Str is incorrect.");
@@ -4086,7 +4087,7 @@ namespace RTI
         public void CBTTBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CBTTBP = 0.001f;
 
             Assert.AreEqual("CBTTBP[7] 0.001", ssc.CBTTBP_CmdStr(7), "CBTTBP Cmd Str is incorrect.");
@@ -4099,7 +4100,7 @@ namespace RTI
         public void CBTTBP1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBTTBP = 0.001f;
 
             Assert.AreEqual("CBTTBP[4] 0.001", ssc.CBTTBP_CmdStr(), "CBTTBP Cmd Str is incorrect.");
@@ -4116,7 +4117,7 @@ namespace RTI
         public void CBTT()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CBTT_SNRShallowDetectionThresh = 0.001f;
             ssc.CBTT_DepthSNR = 0.002f;
             ssc.CBTT_SNRDeepDetectionThresh = 0.003f;
@@ -4132,7 +4133,7 @@ namespace RTI
         public void CBTT1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CBTT_SNRShallowDetectionThresh = 0.001f;
             ssc.CBTT_DepthSNR = 0.002f;
             ssc.CBTT_SNRDeepDetectionThresh = 0.003f;
@@ -4152,7 +4153,7 @@ namespace RTI
         public void CWTON_CmdStr()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWTON = false;
 
             Assert.AreEqual("CWTON[7] 0", ssc.CWTON_CmdStr(7), "CWTON Cmd Str is incorrect.");
@@ -4165,7 +4166,7 @@ namespace RTI
         public void CWTON_CmdStr1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 3, 0));
             ssc.CWTON = true;
 
             Assert.AreEqual("CWTON[3] 1", ssc.CWTON_CmdStr(3), "CWTON Cmd Str is incorrect.");
@@ -4178,7 +4179,7 @@ namespace RTI
         public void CWTON_CmdStr2()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWTON = true;
 
             Assert.AreEqual("CWTON[4] 1", ssc.CWTON_CmdStr(), "CWTON Cmd Str is incorrect.");
@@ -4195,7 +4196,7 @@ namespace RTI
         public void CWTBB_CmdStr()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWTBB = false;
 
             Assert.AreEqual("CWTBB[7] 0", ssc.CWTBB_CmdStr(7), "CWTBB Cmd Str is incorrect.");
@@ -4208,7 +4209,7 @@ namespace RTI
         public void CWTBB_CmdStr1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 3, 0));
             ssc.CWTBB = true;
 
             Assert.AreEqual("CWTBB[3] 1", ssc.CWTBB_CmdStr(3), "CWTBB Cmd Str is incorrect.");
@@ -4221,7 +4222,7 @@ namespace RTI
         public void CWTBB_CmdStr2()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWTBB = true;
 
             Assert.AreEqual("CWTBB[4] 1", ssc.CWTBB_CmdStr(), "CWTBB Cmd Str is incorrect.");
@@ -4238,7 +4239,7 @@ namespace RTI
         public void CWTBL()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWTBL = 0.2345f;
 
             Assert.AreEqual("CWTBL[7] 0.2345", ssc.CWTBL_CmdStr(7), "CWTBL Cmd Str is incorrect.");
@@ -4251,7 +4252,7 @@ namespace RTI
         public void CWTBL1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWTBL = 0.2345f;
 
             Assert.AreEqual("CWTBL[4] 0.2345", ssc.CWTBL_CmdStr(), "CWTBL Cmd Str is incorrect.");
@@ -4268,7 +4269,7 @@ namespace RTI
         public void CWTBS()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWTBS = 0.2345f;
 
             Assert.AreEqual("CWTBS[7] 0.2345", ssc.CWTBS_CmdStr(7), "CWTBS Cmd Str is incorrect.");
@@ -4281,7 +4282,7 @@ namespace RTI
         public void CWTBS1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWTBS = 0.2345f;
 
             Assert.AreEqual("CWTBS[4] 0.2345", ssc.CWTBS_CmdStr(), "CWTBS Cmd Str is incorrect.");
@@ -4298,7 +4299,7 @@ namespace RTI
         public void CWTTBP()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 3);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
             ssc.CWTTBP = 0.001f;
 
             Assert.AreEqual("CWTTBP[7] 0.001", ssc.CWTTBP_CmdStr(7), "CWTTBP Cmd Str is incorrect.");
@@ -4311,7 +4312,7 @@ namespace RTI
         public void CWTTBP1()
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
-            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(ss, 4);
+            AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
             ssc.CWTTBP = 0.001f;
 
             Assert.AreEqual("CWTTBP[4] 0.001", ssc.CWTTBP_CmdStr(), "CWTTBP Cmd Str is incorrect.");

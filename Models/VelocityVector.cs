@@ -37,7 +37,7 @@
  * 03/16/2012      RC          2.06       Set the magnitude to absolute value.  No negatives.
  * 06/07/2012      RC          2.11       Added GenerateVelocityVectors() and GenerateAmplitudeVectors().
  * 03/07/2013      RC          2.18       In CreateVelocityVector(), create the VelocityVector before setting the values.
- *       
+ * 03/22/2013      RC          2.19       Fixed bug in GenerateAmplitudeVectors() where the VelociytVector was not created.      
  * 
  */
 
@@ -230,6 +230,7 @@ namespace RTI
                             avg /= count;
                         }
 
+                        vv[bin] = new VelocityVector();
                         vv[bin].Magnitude = avg;
                         vv[bin].DirectionXNorth = 0;
                         vv[bin].DirectionYNorth = 0;

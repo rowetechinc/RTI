@@ -70,9 +70,12 @@
     <Compile Include="Codec\AdcpDatabaseCodec.cs" />
     <Compile Include="Codec\AdcpDvlCodec.cs" />
     <Compile Include="Codec\ICodec.cs" />
+    <Compile Include="Codec\ImportGpsText.cs" />
     <Compile Include="Codec\PniPrimeCompassBinaryCodec.cs" />
     <Compile Include="Commons\Commons.cs" />
     <Compile Include="Commons\DbCommon.cs" />
+    <Compile Include="Communications\AdcpEthernet.cs" />
+    <Compile Include="Communications\AdcpEthernetOptions.cs" />
     <Compile Include="Communications\AdcpSerialPort.cs" />
     <Compile Include="Communications\GpsSerialPort.cs" />
     <Compile Include="Communications\SerialConnection.cs" />
@@ -129,11 +132,14 @@
     <Compile Include="Models\DataSet\InstrumentWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\InstrumentVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\NmeaDataSet.cs" />
+    <Compile Include="Models\IPredictor.cs" />
+    <Compile Include="Models\MaintenceLog.cs" />
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />
     <Compile Include="Models\Subsystem.cs" />
     <Compile Include="Models\SubsystemConfiguration.cs" />
     <Compile Include="Models\SystemTestResult.cs" />
+    <Compile Include="Models\Transform.cs" />
     <Compile Include="Models\UniqueID.cs" />
     <Compile Include="Models\VelocityVector.cs" />
     <Compile Include="Models\DVL\Interfaces.cs" />
@@ -148,6 +154,7 @@
     <Compile Include="Post Process\Screen\RemoveShipSpeed.cs" />
     <Compile Include="Post Process\Screen\ScreenBottomTrackRange.cs" />
     <Compile Include="Post Process\Screen\ScreenErrorVelocityThreshold.cs" />
+    <Compile Include="Post Process\Screen\ScreenForce3BeamSolution.cs" />
     <Compile Include="Post Process\Screen\ScreenMarkBadBelowBottom.cs" />
     <Compile Include="Post Process\Screen\ScreenVelocity.cs" />
     <Compile Include="Post Process\Screen\ScreenVerticalVelocityThreshold.cs" />
@@ -158,6 +165,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Reader\AdcpDatabaseReader.cs" />
+    <Compile Include="Writer\AdcpImportBinaryFile.cs" />
     <Compile Include="Utils\Cache.cs" />
     <Compile Include="Utils\EnsembleHelper.cs" />
     <Compile Include="Utils\MathHelper.cs" />

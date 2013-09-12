@@ -36,6 +36,7 @@
  * 01/17/2013      RC          2.17       Added BottomTrack.
  * 02/20/2013      RC          2.18       Added Beam and Instrument Velocity, Good Beam and Earth and Water Mass.
  * 03/06/2013      RC          2.18       Maded AddNmea() only take an ensemble.
+ * 08/13/2013      RC          2.19.4     In SetVelocitiesBad(), also set the VelocityVector to bad velocity if it exist.
  * 
  */
 
@@ -470,6 +471,12 @@ namespace RTI
                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+
+                // Velocity Vectors
+                if (ensemble.EarthVelocityData.IsVelocityVectorAvail)
+                {
+                    ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
+                }
             }
             if (ensemble.IsGoodEarthAvail && bin < ensemble.GoodEarthData.GoodEarthData.GetLength(0))
             {
@@ -479,7 +486,7 @@ namespace RTI
                 ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = 0;
             }
 
-            // Earth Velocities
+            // Instrument Velocities
             if (ensemble.IsInstrumentVelocityAvail && bin < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(0))
             {
                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
@@ -487,6 +494,7 @@ namespace RTI
                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
             }
+
         }
 
         #endregion

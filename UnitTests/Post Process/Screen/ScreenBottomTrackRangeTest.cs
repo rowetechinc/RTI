@@ -57,7 +57,7 @@ namespace RTI
             ens.BottomTrackData.Range[DataSet.Ensemble.BEAM_2_INDEX] = 12.56f;
             ens.BottomTrackData.Range[DataSet.Ensemble.BEAM_3_INDEX] = 12.78f;
 
-            Screen.ScreenBottomTrackRange.ScreenBottomTrackRangeResult result = Screen.ScreenBottomTrackRange.Screen(ref ens);
+            ScreenData.ScreenBottomTrackRange.ScreenBottomTrackRangeResult result = ScreenData.ScreenBottomTrackRange.Screen(ref ens);
 
             Assert.AreEqual(12.34f, ens.BottomTrackData.Range[DataSet.Ensemble.BEAM_0_INDEX], "Range 0 is incorrect.");
             Assert.AreEqual(12.45f, ens.BottomTrackData.Range[DataSet.Ensemble.BEAM_1_INDEX], "Range 1 is incorrect.");

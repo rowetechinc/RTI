@@ -70,6 +70,7 @@
  *                                         Made the time for PRTI be the current time.  Set the start time to AncillaryDataSet.LastPingTime.
  * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
  * 07/26/2013      RC          2.19.3     Added SubsystemConfigurationIndex to SubsystemConfiguration.  Output for JSON.
+ * 10/02/2013      RC          2.20.2     Fixed bug where i was not consistent in Encode() in setting the number of elements.
  * 
  */
 
@@ -618,6 +619,8 @@ namespace RTI
                 int index = 0;
                 
                 // Get the length
+                // Encode using the maximum number of elements available even if the original data
+                // did not contain the latest revision of values (NumElements vs NUM_DATA_ELEMENTS)
                 byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_INT32];
                 System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(EnsembleNumber), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT32);
                 System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(NumBins), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_INT32);
@@ -642,7 +645,7 @@ namespace RTI
                 System.Buffer.BlockCopy(SubsystemConfig.Encode(), 0, payload, newIndex, SubsystemConfiguration.NUM_BYTES);
 
                 // Generate header for the dataset
-                byte[] header = this.GenerateHeader(NumElements);
+                byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
 
                 // Create the array to hold the dataset
                 byte[] result = new byte[payload.Length + header.Length];

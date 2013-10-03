@@ -38,6 +38,7 @@
  * 10/16/2012      RC          2.15       Added at least Minimum values to all values.
  * 10/17/2012      RC          2.15       Added Max values for the CWPAP commands.
  * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
+ * 09/17/2013      RC          2.20.0     Updated test to 2.20.0 with latest broadband modes.
  *
  */
 
@@ -495,10 +496,10 @@ namespace RTI
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             ssc.CWPBB_LagLength = 0.10f;
-            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
 
             Assert.AreEqual(0.10f, ssc.CWPBB_LagLength, "CWPBB Lag Length is incorrect.");
-            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED, ssc.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE, ssc.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type is incorrect.");
         }
 
         /// <summary>
@@ -552,9 +553,9 @@ namespace RTI
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
-            ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_PTP_CODED);
+            ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_BB_PTP);
 
-            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED, ssc.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE, ssc.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type is incorrect.");
         }
 
         /// <summary>
@@ -566,9 +567,9 @@ namespace RTI
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
-            ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_PTP_NONCODED);
+            ssc.SetCwpbbTransmitPulseType(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_NONCODED_BB_PTP);
 
-            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED, ssc.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_BROADBAND_PULSE_TO_PULSE, ssc.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type is incorrect.");
         }
 
         /// <summary>
@@ -624,10 +625,10 @@ namespace RTI
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
-            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
             string type = ssc.GetCwpbbTransmitPulseType();
 
-            Assert.AreEqual(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_PTP_CODED, type, "CWPBB Transmit Pulse Type is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_BB_PTP, type, "CWPBB Transmit Pulse Type is incorrect.");
         }
 
         /// <summary>
@@ -639,10 +640,10 @@ namespace RTI
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
-            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE;
             string type = ssc.GetCwpbbTransmitPulseType();
 
-            Assert.AreEqual(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_PTP_NONCODED, type, "CWPBB Transmit Pulse Type is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.TRANSMIT_PULSE_TYPE_NONCODED_PTP, type, "CWPBB Transmit Pulse Type is incorrect.");
         }
 
         #endregion
@@ -3407,7 +3408,7 @@ namespace RTI
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 7, 0));
-            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
             ssc.CWPBB_LagLength = 0.0023f;
 
             Assert.AreEqual("CWPBB[7] 3,0.0023", ssc.CWPBB_CmdStr(7), "CWPBB Cmd Str is incorrect.");
@@ -3421,7 +3422,7 @@ namespace RTI
         {
             Subsystem ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B, 1);
             AdcpSubsystemCommands ssc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 4, 0));
-            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssc.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
             ssc.CWPBB_LagLength = 0.0024f;
 
             Assert.AreEqual("CWPBB[4] 3,0.0024", ssc.CWPBB_CmdStr(), "CWPBB Cmd Str is incorrect.");

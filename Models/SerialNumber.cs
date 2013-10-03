@@ -88,6 +88,7 @@ namespace RTI
         /// <summary>
         /// Maximum size for the serial number.
         /// </summary>
+        [JsonIgnore]
         public int MAX_SERIAL_NUMBER = 999999;
 
         #region Sizes

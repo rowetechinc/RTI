@@ -40,6 +40,7 @@
  *                                         Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
  *                                         AdcpSubsystemConfigExist() take only 1 argument.
  * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
+ * 09/17/2013      RC          2.20.0     Updated test to 2.20.0 with latest broadband modes.
  *
  */
 
@@ -106,7 +107,7 @@ namespace RTI
             sb.Append("    CEPO 2\r\n");
             sb.Append("    CBI[0] 00:00:01.00,100 \r\n");
             sb.Append("    CETFP 2012/09/24,12:30:10.25\r\n"); 
-            sb.Append("    CERECORD 1\r\n"); 
+            sb.Append("    CERECORD 1,1\r\n"); 
             sb.Append("    CEOUTPUT 1\r\n"); 
             sb.Append("    CWPON[0] 1 \r\n"); 
             sb.Append("    CWPBB[0] 1,0.042 \r\n"); 
@@ -162,7 +163,7 @@ namespace RTI
             sb.Append("  CEPO 222\r\n");
             sb.Append("  CBI[0] 00:00:01.01,101 [1] 00:00:01.02,102 [2] 00:00:03.01,103 \r\n");
             sb.Append("  CETFP 2012/09/24,12:30:10.25\r\n"); 
-            sb.Append("  CERECORD 0\r\n");
+            sb.Append("  CERECORD 0,0\r\n");
             sb.Append("  CEOUTPUT 0\r\n");
             sb.Append("  CWPON[0] 1 [1] 0 [2] 1 \r\n");
             sb.Append("  CWPBB[0] 1,0.042 [1] 2,0.043 [2] 3,0.044 \r\n");
@@ -216,7 +217,7 @@ namespace RTI
             sb.Append("    CEPO 2232332\r\n");
             sb.Append("    CBI[0] 00:00:01.01,101 [1] 00:00:01.02,102 [2] 00:02:03.01,102 [3] 00:00:01.03,103 [4] 00:00:03.04,104 [5] 00:00:01.05,105 [6] 00:06:03.01,106 \r\n");
             sb.Append("    CETFP 2012/09/24,12:30:10.25\r\n"); 
-            sb.Append("    CERECORD 1\r\n");
+            sb.Append("    CERECORD 1,1\r\n");
             sb.Append("    CEOUTPUT 1\r\n");
             sb.Append("    CWPON[0] 1 [1] 0 [2] 1 [3] 1 [4] 0 [5] 1 [6] 1 \r\n");
             sb.Append("    CWPBB[0] 1,0.042 [1] 2,0.042 [2] 3,0.084 [3] 2,0.044 [4] 1,0.084 [5] 1,0.085 [6] 3,0.043 \r\n");
@@ -524,7 +525,8 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_singleSubsystemConfiguration, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual(true, config.Commands.CERECORD, "CERECORD is incorrect");
+            Assert.AreEqual(true, config.Commands.CERECORD_EnsemblePing, "CERECORD Ensemble Pingis incorrect");
+            Assert.AreEqual(true, config.Commands.CERECORD_SinglePing, "CERECORD Single Ping is incorrect");
         }
 
         /// <summary>
@@ -536,7 +538,8 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemConfigurations, _singleSubsystemSerialNumber);
 
-            Assert.AreEqual(false, config.Commands.CERECORD, "CERECORD is incorrect");
+            Assert.AreEqual(false, config.Commands.CERECORD_EnsemblePing, "CERECORD Ensemble Ping is incorrect");
+            Assert.AreEqual(false, config.Commands.CERECORD_SinglePing, "CERECORD Single Ping is incorrect");
         }
 
         /// <summary>
@@ -548,7 +551,8 @@ namespace RTI
             DecodeCSHOW d = new DecodeCSHOW();
             AdcpConfiguration config = d.Decode(_multipleSubsystemMultipleConfigurations, _multipleSubsystemSerialNumber);
 
-            Assert.AreEqual(true, config.Commands.CERECORD, "CERECORD is incorrect");
+            Assert.AreEqual(true, config.Commands.CERECORD_EnsemblePing, "CERECORD Ensemble Ping is incorrect");
+            Assert.AreEqual(true, config.Commands.CERECORD_SinglePing, "CERECORD Single Ping is incorrect");
         }
 
         #endregion
@@ -943,10 +947,10 @@ namespace RTI
             Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND, resultConfig1.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 1 is incorrect.");
 
             Assert.AreEqual(0.043, resultConfig2.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 2 is incorrect");
-            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED, resultConfig2.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2 is incorrect.");
+            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE, resultConfig2.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2 is incorrect.");
 
             Assert.AreEqual(0.044, resultConfig3.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 3 is incorrect");
-            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED, resultConfig3.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 3 is incorrect.");
+            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE, resultConfig3.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 3 is incorrect.");
         }
 
         /// <summary>
@@ -1031,18 +1035,18 @@ namespace RTI
             Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND, resultConfig2_1.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_1 is incorrect.");
 
             Assert.AreEqual(0.042, resultConfig2_2.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 2_2 is incorrect");
-            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED, resultConfig2_2.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_2 is incorrect.");
+            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE, resultConfig2_2.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_2 is incorrect.");
 
             Assert.AreEqual(0.044, resultConfig2_3.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 2_3 is incorrect");
-            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED, resultConfig2_3.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_3 is incorrect.");
+            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE, resultConfig2_3.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_3 is incorrect.");
 
             Assert.AreEqual(0.043, resultConfig2_4.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 2_4 is incorrect");
-            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED, resultConfig2_4.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_4 is incorrect.");
+            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE, resultConfig2_4.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 2_4 is incorrect.");
 
 
 
             Assert.AreEqual(0.084, resultConfig3_1.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 3_1 is incorrect");
-            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED, resultConfig3_1.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 3_1 is incorrect.");
+            Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE, resultConfig3_1.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 3_1 is incorrect.");
 
             Assert.AreEqual(0.084, resultConfig3_2.Commands.CWPBB_LagLength, 0.0001, "CWPBB LagLength 3_2 is incorrect");
             Assert.AreEqual(RTI.Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND, resultConfig3_2.Commands.CWPBB_TransmitPulseType, "CWPBB Transmit Pulse Type 3_2 is incorrect.");

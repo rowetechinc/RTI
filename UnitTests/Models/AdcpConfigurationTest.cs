@@ -35,6 +35,7 @@
  *                                         Made SubsystemConfiguration take a Subsystem in its constructor.
  *                                         Make AdcpConfiguration::AdcpSubsystemConfigExist() take only 1 argument.
  * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
+ * 09/17/2013      RC          2.20.0     Updated test to 2.20.0 with latest broadband modes.
  * 
  * 
  */
@@ -678,7 +679,7 @@ namespace RTI
             //config.Commands.CETFP_HunSec = 2;
             config.Commands.CETFP = new DateTime(2022, 2, 2, 2, 2, 2);
 
-            config.Commands.CERECORD = false;
+            config.Commands.CERECORD_EnsemblePing = false;
             config.Commands.CEOUTPUT = AdcpCommands.AdcpOutputMode.ASCII;
 
             config.Commands.CWS = 33;
@@ -700,7 +701,7 @@ namespace RTI
             // Change the Subsystem Configuration
             ssConfig.Commands.CWPON = false;
             ssConfig.Commands.CWPBB_LagLength = 0.2345f;
-            ssConfig.Commands.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+            ssConfig.Commands.CWPBB_TransmitPulseType = AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
             ssConfig.Commands.CWPAP_NumPingsAvg = 34;
             ssConfig.Commands.CWPAP_TimeBetweenPing = 23.45f;
             ssConfig.Commands.CWPAP_Lag = 0.2345f;
@@ -775,7 +776,7 @@ namespace RTI
             //Assert.AreEqual(2, newConfig.Commands.CETFP_HunSec, "CETFP_HunSec is incorrect.");
 
 
-            Assert.AreEqual(false, newConfig.Commands.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(false, newConfig.Commands.CERECORD_EnsemblePing, "CERECORD is incorrect.");
             Assert.AreEqual(AdcpCommands.AdcpOutputMode.ASCII, newConfig.Commands.CEOUTPUT, "CEOUTPUT is incorrect.");
 
             Assert.AreEqual(33, newConfig.Commands.CWS, 0.0001, "CWS is incorrect.");
@@ -806,7 +807,7 @@ namespace RTI
 
             Assert.AreEqual(false, newSsConfig.Commands.CWPON, "CWPON is incorrect.");
             Assert.AreEqual(0.2345f, newSsConfig.Commands.CWPBB_LagLength, 0.0001, "CWPBB_LagLength is incorrect.");
-            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED, newSsConfig.Commands.CWPBB_TransmitPulseType, "CWPBB_TransmitPulseType is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE, newSsConfig.Commands.CWPBB_TransmitPulseType, "CWPBB_TransmitPulseType is incorrect.");
             Assert.AreEqual(34, newSsConfig.Commands.CWPAP_NumPingsAvg, "CWPAP_NumPingsAvg is incorrect.");
             Assert.AreEqual(0.2345f, newSsConfig.Commands.CWPBB_LagLength, 0.0001, "CWPBB_LagLength is incorrect.");
             Assert.AreEqual(23.45f, newSsConfig.Commands.CWPAP_TimeBetweenPing, 0.0001, "CWPAP_TimeBetweenPing is incorrect.");

@@ -268,53 +268,53 @@ namespace RTI
             _eventWaitData.Set();
         }
         
-        /// <summary>
-        /// Update the database with the latest AdcpCommands.
-        /// This will set the AdcpConfiguration's AdcpCommand.
-        /// </summary>
-        /// <param name="commands">AdcpCommands to update.</param>
-        public void UpdateAdcpCommands(AdcpCommands commands)
-        {
-            // Set the new Commands to the AdcpConfiguration
-            SelectedProject.Configuration.Commands = commands;
+        ///// <summary>
+        ///// Update the database with the latest AdcpCommands.
+        ///// This will set the AdcpConfiguration's AdcpCommand.
+        ///// </summary>
+        ///// <param name="commands">AdcpCommands to update.</param>
+        //public void UpdateAdcpCommands(AdcpCommands commands)
+        //{
+        //    // Set the new Commands to the AdcpConfiguration
+        //    SelectedProject.Configuration.Commands = commands;
 
-            // Update the database.
-            UpdateAdcpConfiguration(SelectedProject.Configuration);
-        }
+        //    // Update the database.
+        //    UpdateAdcpConfiguration(SelectedProject.Configuration);
+        //}
 
-        /// <summary>
-        /// Update the database with the latest DeploymentOptions.
-        /// This will set the AdcpConfiguration's DeploymentOptions.
-        /// </summary>
-        /// <param name="options">DeploymentOptions to update.</param>
-        public void UpdateDeploymentOptions(DeploymentOptions options)
-        {
-            // Set the new Commands to the AdcpConfiguration
-            SelectedProject.Configuration.DeploymentOptions = options;
+        ///// <summary>
+        ///// Update the database with the latest DeploymentOptions.
+        ///// This will set the AdcpConfiguration's DeploymentOptions.
+        ///// </summary>
+        ///// <param name="options">DeploymentOptions to update.</param>
+        //public void UpdateDeploymentOptions(DeploymentOptions options)
+        //{
+        //    // Set the new Commands to the AdcpConfiguration
+        //    SelectedProject.Configuration.DeploymentOptions = options;
 
-            // Update the database.
-            UpdateAdcpConfiguration(SelectedProject.Configuration);
-        }
+        //    // Update the database.
+        //    UpdateAdcpConfiguration(SelectedProject.Configuration);
+        //}
 
-        /// <summary>
-        /// Find the AdcpSubsystemConfig in the dictionary.  Set the commands to the correct
-        /// AdcpSubsystemConfig then write the AdcpConfiguration to the database.
-        /// </summary>
-        /// <param name="asConfig">AdcpSubsystemConfig to match and get the commands.</param>
-        public void UpdateAdcpSubsystemConfigurationCommands(AdcpSubsystemConfig asConfig)
-        {
-            // Find the SubsystemConfiguration and update the commands
-            foreach (AdcpSubsystemConfig asc in SelectedProject.Configuration.SubsystemConfigDict.Values)
-            {
-                if (asc == asConfig)
-                {
-                    asc.Commands = asConfig.Commands;
-                }
-            }
+        ///// <summary>
+        ///// Find the AdcpSubsystemConfig in the dictionary.  Set the commands to the correct
+        ///// AdcpSubsystemConfig then write the AdcpConfiguration to the database.
+        ///// </summary>
+        ///// <param name="asConfig">AdcpSubsystemConfig to match and get the commands.</param>
+        //public void UpdateAdcpSubsystemConfigurationCommands(AdcpSubsystemConfig asConfig)
+        //{
+        //    // Find the SubsystemConfiguration and update the commands
+        //    foreach (AdcpSubsystemConfig asc in SelectedProject.Configuration.SubsystemConfigDict.Values)
+        //    {
+        //        if (asc == asConfig)
+        //        {
+        //            asc.Commands = asConfig.Commands;
+        //        }
+        //    }
 
-            // Update the database.
-            UpdateAdcpConfiguration(SelectedProject.Configuration);
-        }
+        //    // Update the database.
+        //    UpdateAdcpConfiguration(SelectedProject.Configuration);
+        //}
 
         /// <summary>
         /// Check if the AdcpConfiguration needs to be updated in the database.
@@ -353,10 +353,18 @@ namespace RTI
             string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_ADCP_CONFIGURATION, json);
             string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS, jsonCmd);                 // Create query string
 
-            using (DbCommand cmd = cnn.CreateCommand())
+            try
             {
-                cmd.CommandText = query;                // Set query string
-                cmd.ExecuteNonQuery();                  // Execute the query
+                using (DbCommand cmd = cnn.CreateCommand())
+                {
+                    Debug.WriteLine(query);
+                    cmd.CommandText = query;                // Set query string
+                    cmd.ExecuteNonQuery();                  // Execute the query
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error(string.Format("Error updating AdcpConfiguration in project: {0}", query), e);
             }
         }
 

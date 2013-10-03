@@ -37,6 +37,7 @@
  * 02/20/2013      RC          2.18       Added Beam and Instrument Velocity, Good Beam and Earth and Water Mass.
  * 03/06/2013      RC          2.18       Maded AddNmea() only take an ensemble.
  * 08/13/2013      RC          2.19.4     In SetVelocitiesBad(), also set the VelocityVector to bad velocity if it exist.
+ * 10/03/2013      RC          2.20.2     Fixed bug in AddNmea() where the datatype was not set correctly.  It is a byte type.
  * 
  */
 
@@ -423,7 +424,7 @@ namespace RTI
         /// <param name="ensemble">Ensemble to add the dataset.</param>
         public static void AddNmea(ref DataSet.Ensemble ensemble)
         {
-            ensemble.AddNmeaData(DataSet.Ensemble.DATATYPE_FLOAT,
+            ensemble.AddNmeaData(DataSet.Ensemble.DATATYPE_BYTE,
                                             DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
                                             DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                          // Image

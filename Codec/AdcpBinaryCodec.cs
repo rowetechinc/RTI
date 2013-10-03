@@ -56,6 +56,7 @@
  * 06/21/2012      RC          2.12       Remove the queue and put the data in the buffer when received.
  * 03/20/2013      RC          2.19       If VerifyEnsembleNumberAndSize() fails in DecodingIncomingData(), i remove a byte from the buffer and try again.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 09/12/2013      RC          2.20.0     Added buffer lock to AddIncomingData().
  * 
  */
 
@@ -171,7 +172,11 @@ namespace RTI
         {
             if (data != null && data.Length > 0)
             {
-                _incomingDataBuffer.AddRange(data);
+                // Lock the buffer while clearing
+                lock (_bufferLock)
+                {
+                    _incomingDataBuffer.AddRange(data);
+                }
             }
 
             // Wake up the thread to process data

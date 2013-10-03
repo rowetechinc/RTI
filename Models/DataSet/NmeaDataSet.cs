@@ -42,6 +42,7 @@
  * 01/11/2012      RC          1.12       Fixed bug in SetNmeaStringArray() where if checkSumLoc was negative it would try to remove the string.
  * 02/20/2013      RC          2.18       Added an empty constructor.  Made the properties' Setter public for JSON coding.
  * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
+ * 10/03/2013      RC          2.20.2     Fixed bug in constructor where the data type was not set correctly.  It is a byte type.
  *       
  * 
  */
@@ -213,7 +214,7 @@ namespace RTI
             /// </summary>
             /// <param name="nmeaData">String containing NMEA data.</param>
             public NmeaDataSet(string nmeaData) :
-                base(DataSet.Ensemble.DATATYPE_FLOAT, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NmeaID)
+                base(DataSet.Ensemble.DATATYPE_BYTE, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NmeaID)
             {
                 // Initialize all values
                 GPGGA = null;
@@ -249,7 +250,7 @@ namespace RTI
             /// <param name="NmeaStrings">List containing NMEA sentences.</param>
             [JsonConstructor]
             public NmeaDataSet(List<string> NmeaStrings) :
-                base(DataSet.Ensemble.DATATYPE_FLOAT, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NmeaID)
+                base(DataSet.Ensemble.DATATYPE_BYTE, 0, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.NmeaID)
             {
                 // Initialize all values
                 GPGGA = null;

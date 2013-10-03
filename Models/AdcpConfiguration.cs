@@ -47,6 +47,8 @@
  * 01/14/2013      RC          2.17       In DecodeCepo() fixed converting the subsystem code from a char to a decimal using MathHelper.
  * 05/09/2013      RC          2.19       Removed the redundant CEPO command and only use the CEPO in the Commands property.
  * 07/26/2013      RC          2.19.3     In SubsystemConfiguration constructor, i give the CEPO index now.
+ * 09/25/2013      RC          2.20.1     Added SerialOptions to keep track of the serial connection for this project.
+ * 09/30/2013      RC          2.20.2     Fixed bug in AddConfig() when setting the Configuration Index and the CEPO index.
  * 
  */
 
@@ -116,6 +118,11 @@ namespace RTI
         /// </summary>
         public DeploymentOptions DeploymentOptions { get; set; }
 
+        /// <summary>
+        /// Serial connection options for the ADCP.
+        /// </summary>
+        public AdcpSerialPort.AdcpSerialOptions SerialOptions { get; set; }
+
         #endregion
 
         /// <summary>
@@ -127,8 +134,8 @@ namespace RTI
             SubsystemConfigDict = new Dictionary<string, AdcpSubsystemConfig>();
             Commands = new AdcpCommands();
             _serialNumber = new SerialNumber();
-            //CEPO = AdcpCommands.DEFAULT_CEPO;               // Must go after Commands is created
             DeploymentOptions = new DeploymentOptions();
+            SerialOptions = new AdcpSerialPort.AdcpSerialOptions();
         }
 
         /// <summary>
@@ -142,6 +149,7 @@ namespace RTI
             _serialNumber = serial; 
             SetCepo(_serialNumber.SubsystemsString(), _serialNumber);       // Must go after Commands is created
             DeploymentOptions = new DeploymentOptions();
+            SerialOptions = new AdcpSerialPort.AdcpSerialOptions();
         }
 
         #region Methods
@@ -214,9 +222,11 @@ namespace RTI
                 {
                     // Remove all the configurations from the dictionary and put in an sorted list by CEPO index
                     SortedList<int, AdcpSubsystemConfig> tempList = new SortedList<int, AdcpSubsystemConfig>();
+                    //List<AdcpSubsystemConfig> tempList = new List<AdcpSubsystemConfig>();
                     foreach (AdcpSubsystemConfig asConfig in SubsystemConfigDict.Values)
                     {
                         tempList.Add(asConfig.SubsystemConfig.CepoIndex, asConfig);
+                        //tempList.Add(asConfig);
                     }
 
                     // Clear the dictionary and the CEPO command
@@ -229,11 +239,7 @@ namespace RTI
                     for (int x = 0; x < tempList.Count; x++)
                     {
                         // Redo the cepo value
-                        //CEPO += Convert.ToChar(tempList.Values[x].SubsystemConfig.SubSystem.Code);
                         Commands.CEPO += Convert.ToChar(tempList.Values[x].SubsystemConfig.SubSystem.Code);
-
-                        // Change the configs CEPO index
-                        tempList.Values[x].SubsystemConfig.CepoIndex = Convert.ToByte(x);
 
                         // Add config to the dictionary
                         AddConfig(tempList.Values[x]);
@@ -473,7 +479,11 @@ namespace RTI
             }
 
             // Set the new Configuration index
-            asConfig.SubsystemConfig.CepoIndex = (byte)ssCount;
+            asConfig.SubsystemConfig.SubsystemConfigIndex = (byte)ssCount;
+
+            // Set the new CEPO index
+            // This is the last index for the CEPO command
+            asConfig.SubsystemConfig.CepoIndex = Convert.ToByte(SubsystemConfigDict.Values.Count);
 
             // Add it to the dictionary
             SubsystemConfigDict.Add(asConfig.ToString(), asConfig);

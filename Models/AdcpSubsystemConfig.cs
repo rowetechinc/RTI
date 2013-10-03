@@ -49,6 +49,7 @@ namespace RTI
     using System;
     using System.Collections.Generic;
     using RTI.Commands;
+    using Newtonsoft.Json;
 
     /// <summary> 
     /// A Configuration is a setup on the ADCP.  An ADCP can have multiple configurations.
@@ -75,6 +76,7 @@ namespace RTI
         /// Interface a user can setup to give predictions
         /// on the ADCP usage.
         /// </summary>
+        [JsonIgnore]
         public IPredictor Predictor { get; set; }
 
         /// <summary>

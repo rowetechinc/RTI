@@ -75,6 +75,7 @@
  *                                         MAX_DISPLAY_BUFFER increased to ensure the entire HELP message can be displayed.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 08/09/2013      RC          2.19.4     Added a soft BREAK in SendBreak() for connections that can not handle hard BREAKs.
+ * 09/25/2013      RC          2.20.1     In SendDataWaitReply() check the response if it is a BREAK and handle differently.
  * 
  */
 
@@ -772,6 +773,7 @@ namespace RTI
         /// Send data through the serial port and wait for a response
         /// back from the serial port.  If the response was the same
         /// as the message sent, then return true.
+        /// 
         /// </summary>
         /// <param name="data">Data to send through the serial port.</param>
         /// <param name="timeout">Timeout to wait in milliseconds.  Default = 1 sec.</param>
@@ -810,12 +812,24 @@ namespace RTI
             // checking what was echoed back.
             if (_validateMsg.Length >= data.Length)
             {
-                // Compare sent vs what was echoed back
-                //if (data.ToLower().CompareTo(_validateMsg.Substring(0, data.Length).ToLower()) != 0)
-                if(!_validateMsg.ToLower().Contains(data.ToLower()))
+                // Special case for BREAK response.  It will give the banner as the response
+                if (data == Commands.AdcpCommands.CMD_BREAK)
                 {
-                    log.Warn(string.Format("Error sending data to serial port. Sent data: {0} length: {1}  Received Data: {2} length: {3}", data, data.Length, _validateMsg, _validateMsg.Length));
-                    result = false;
+                    if(!_validateMsg.Contains(" Rowe Technologies Inc."))
+                    {
+                        log.Warn(string.Format("Error sending BREAK to serial port. Sent data: {0} length: {1}  Received Data: {2} length: {3}", data, data.Length, _validateMsg, _validateMsg.Length));
+                        result = false;
+                    }
+                }
+                else
+                {
+                    // Compare sent vs what was echoed back
+                    //if (data.ToLower().CompareTo(_validateMsg.Substring(0, data.Length).ToLower()) != 0)
+                    if (!_validateMsg.ToLower().Contains(data.ToLower()))
+                    {
+                        log.Warn(string.Format("Error sending data to serial port. Sent data: {0} length: {1}  Received Data: {2} length: {3}", data, data.Length, _validateMsg, _validateMsg.Length));
+                        result = false;
+                    }
                 }
             }
             // string lengths did not match

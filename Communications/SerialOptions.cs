@@ -272,6 +272,10 @@ namespace RTI
             }
         }
 
+        #endregion
+
+        #region Override
+
         /// <summary>
         /// Give a string representation for all the settings.
         /// </summary>
@@ -279,6 +283,76 @@ namespace RTI
         public override string ToString()
         {
             return Port + ": " + BaudRate + " " + DataBits + " " + Parity.ToString() + " " + StopBits.ToString();
+        }
+
+        /// <summary>
+        /// Hashcode for the object.
+        /// This will return the hashcode for the
+        /// this object's string.
+        /// </summary>
+        /// <returns>Hashcode for the object.</returns>
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+        /// <summary>
+        /// Determine if the given object is equal to this
+        /// object.  This will check if the Status Value match.
+        /// </summary>
+        /// <param name="obj">Object to compare with this object.</param>
+        /// <returns>TRUE = Status Value matched.</returns>
+        public override bool Equals(object obj)
+        {
+            //Check for null and compare run-time types.
+            if (obj == null || GetType() != obj.GetType()) return false;
+
+            SerialOptions p = (SerialOptions)obj;
+
+            return Port == p.Port &&
+                    BaudRate == p.BaudRate &&
+                    DataBits == p.DataBits &&
+                    Parity == p.Parity &&
+                    StopBits == p.StopBits;
+        }
+
+        /// <summary>
+        /// Determine if the two AdcpConnectionListItemViewModel Value given are the equal.
+        /// </summary>
+        /// <param name="option1">First SerialOptions to check.</param>
+        /// <param name="option2">SerialOptions to check against.</param>
+        /// <returns>True if there options match.</returns>
+        public static bool operator ==(SerialOptions option1, SerialOptions option2)
+        {
+            // If both are null, or both are same instance, return true.
+            if (System.Object.ReferenceEquals(option1, option2))
+            {
+                return true;
+            }
+
+            // If one is null, but not both, return false.
+            if (((object)option1 == null) || ((object)option2 == null))
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return option1.Port == option2.Port &&
+                    option1.BaudRate == option2.BaudRate &&
+                    option1.DataBits == option2.DataBits &&
+                    option1.Parity == option2.Parity &&
+                    option1.StopBits == option2.StopBits;
+        }
+
+        /// <summary>
+        /// Return the opposite of ==.
+        /// </summary>
+        /// <param name="option1">First SerialOptions to check.</param>
+        /// <param name="option2">SerialOptions to check against.</param>
+        /// <returns>Return the opposite of ==.</returns>
+        public static bool operator !=(SerialOptions option1, SerialOptions option2)
+        {
+            return !(option1 == option2);
         }
 
         #endregion

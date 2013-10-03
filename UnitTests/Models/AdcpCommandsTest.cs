@@ -77,7 +77,7 @@ using System.Text;
             Assert.AreEqual(tv1.Second, commands.CEI_Second);
             Assert.AreEqual(tv1.HunSec, commands.CEI_HunSec);
 
-            Assert.AreEqual(false, commands.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(false, commands.CERECORD_EnsemblePing, "CERECORD is incorrect.");
             Assert.AreEqual(AdcpCommands.AdcpOutputMode.Binary, commands.CEOUTPUT, "CEOUTPUT is incorrect.");
 
             // Environmental defaults
@@ -893,9 +893,9 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CERECORD = true;
+            cmd.CERECORD_EnsemblePing = true;
 
-            Assert.AreEqual(true, cmd.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(true, cmd.CERECORD_EnsemblePing, "CERECORD is incorrect.");
         }
 
         /// <summary>
@@ -906,9 +906,9 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CERECORD = false;
+            cmd.CERECORD_EnsemblePing = false;
 
-            Assert.AreEqual(false, cmd.CERECORD, "CERECORD is incorrect.");
+            Assert.AreEqual(false, cmd.CERECORD_EnsemblePing, "CERECORD is incorrect.");
         }
 
         #endregion
@@ -1886,7 +1886,7 @@ using System.Text;
             //cmd.CETFP_Second = 32;
             //cmd.CETFP_HunSec = 83;
             cmd.CETFP = new DateTime(2022, 4, 20, 3, 2, 32, 83);
-            cmd.CERECORD = false;
+            cmd.CERECORD_EnsemblePing = false;
             cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
             cmd.CWS = 23.234f;
             cmd.CWT = 934.123f;
@@ -1962,9 +1962,9 @@ using System.Text;
             #endregion
 
             #region CERECORD
-            Assert.AreEqual(false, cmd.CERECORD, "CERECORD is incorrect.");
-            Assert.AreEqual(false, cmd1.CERECORD, "CERECORD 1 is incorrect.");
-            Assert.AreEqual(cmd.CERECORD, cmd1.CERECORD, "CERECORD equal is incorrect.");
+            Assert.AreEqual(false, cmd.CERECORD_EnsemblePing, "CERECORD is incorrect.");
+            Assert.AreEqual(false, cmd1.CERECORD_EnsemblePing, "CERECORD 1 is incorrect.");
+            Assert.AreEqual(cmd.CERECORD_EnsemblePing, cmd1.CERECORD_EnsemblePing, "CERECORD equal is incorrect.");
             #endregion
 
             #region CEOUTPUT
@@ -2053,7 +2053,7 @@ using System.Text;
             //cmd.CETFP_Second = 32;
             //cmd.CETFP_HunSec = 83;
             cmd.CETFP = new DateTime(2022, 4, 20, 3, 2, 32, 83);
-            cmd.CERECORD = false;
+            cmd.CERECORD_EnsemblePing = false;
             cmd.CEOUTPUT = AdcpCommands.AdcpOutputMode.Binary;
             cmd.CWS = 23.234f;
             cmd.CWT = 934.123f;
@@ -2130,9 +2130,9 @@ using System.Text;
             #endregion
 
             #region CERECORD
-            Assert.AreEqual(false, cmd.CERECORD, "CERECORD is incorrect.");
-            Assert.AreEqual(false, cmd1.CERECORD, "CERECORD 1 is incorrect.");
-            Assert.AreEqual(cmd.CERECORD, cmd1.CERECORD, "CERECORD equal is incorrect.");
+            Assert.AreEqual(false, cmd.CERECORD_EnsemblePing, "CERECORD is incorrect.");
+            Assert.AreEqual(false, cmd1.CERECORD_EnsemblePing, "CERECORD 1 is incorrect.");
+            Assert.AreEqual(cmd.CERECORD_EnsemblePing, cmd1.CERECORD_EnsemblePing, "CERECORD equal is incorrect.");
             #endregion
 
             #region CEOUTPUT
@@ -2321,9 +2321,10 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CERECORD = false;
+            cmd.CERECORD_EnsemblePing = false;
+            cmd.CERECORD_SinglePing = false;
 
-            Assert.AreEqual("CERECORD 0", cmd.CERECORD_CmdStr(), "CERECORD Command String is incorrect.");
+            Assert.AreEqual("CERECORD 0,0", cmd.CERECORD_CmdStr(), "CERECORD Command String is incorrect.");
         }
 
         /// <summary>
@@ -2334,9 +2335,10 @@ using System.Text;
         {
             AdcpCommands cmd = new AdcpCommands();
 
-            cmd.CERECORD = true;
+            cmd.CERECORD_EnsemblePing = true;
+            cmd.CERECORD_SinglePing = true;
 
-            Assert.AreEqual("CERECORD 1", cmd.CERECORD_CmdStr(), "CERECORD Command String is incorrect.");
+            Assert.AreEqual("CERECORD 1,1", cmd.CERECORD_CmdStr(), "CERECORD Command String is incorrect.");
         }
 
         #endregion

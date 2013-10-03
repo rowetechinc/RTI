@@ -110,6 +110,9 @@
     <Compile Include="DotSpatial\Positioning\Satellite.cs" />
     <Compile Include="DotSpatial\Positioning\SignalToNoiseRatio.cs" />
     <Compile Include="DotSpatial\Positioning\Speed.cs" />
+    <Compile Include="Exporter\CsvExporterWriter.cs" />
+    <Compile Include="Exporter\IExporterWriter.cs" />
+    <Compile Include="Exporter\MatlabExporterWriter.cs" />
     <Compile Include="Models\AdcpCommands.cs" />
     <Compile Include="Models\AdcpConfiguration.cs" />
     <Compile Include="Models\AdcpSubsystemCommands.cs" />

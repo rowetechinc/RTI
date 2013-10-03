@@ -79,6 +79,9 @@
  * 07/31/2013      RC          2.19.3     Add flag properties to know what mode the ADCP connection is in.
  * 08/14/2013      RC          2.19.4     Added a wait state in TestSerialBaudConnection() to allow the BREAK response get received.
  * 08/28/2013      RC          2.19.5     In TestSerialBaudConnection(), limited the baud rates to test.
+ * 09/17/2013      RC          2.20.0     Added another StartPinging() that does not set the time also.
+ * 09/25/2013      RC          2.20.1     In TestSerialBaudConnection(), check if the serial port is open and disconnect if it is to prevent exception.  Change the timeout for the response.
+ * 09/30/2013      RC          2.20.1     Fixed bug in GetAdcpConfiguration() where the serial options were not set and lost by the constructor.
  * 
  */
 
@@ -184,6 +187,8 @@ namespace RTI
                 Firmware = new Firmware();
             }
 
+            #region Override
+
             /// <summary>
             /// Display the object to a string.
             /// </summary>
@@ -197,6 +202,76 @@ namespace RTI
 
                 return result;
             }
+
+            /// <summary>
+            /// Hashcode for the object.
+            /// This will return the hashcode for the
+            /// this object's string.
+            /// </summary>
+            /// <returns>Hashcode for the object.</returns>
+            public override int GetHashCode()
+            {
+                return ToString().GetHashCode();
+            }
+
+            /// <summary>
+            /// Determine if the given object is equal to this
+            /// object.  This will check if the Status Value match.
+            /// </summary>
+            /// <param name="obj">Object to compare with this object.</param>
+            /// <returns>TRUE = Status Value matched.</returns>
+            public override bool Equals(object obj)
+            {
+                //Check for null and compare run-time types.
+                if (obj == null || GetType() != obj.GetType()) return false;
+
+                AdcpSerialOptions p = (AdcpSerialOptions)obj;
+
+                return SerialOptions == p.SerialOptions &&
+                        SerialNumber == p.SerialNumber &&
+                        Hardware == p.Hardware &&
+                        Firmware == p.Firmware;
+            }
+
+            /// <summary>
+            /// Determine if the two AdcpConnectionListItemViewModel Value given are the equal.
+            /// </summary>
+            /// <param name="option1">First AdcpSerialOptions to check.</param>
+            /// <param name="option2">AdcpSerialOptions to check against.</param>
+            /// <returns>True if there options match.</returns>
+            public static bool operator ==(AdcpSerialOptions option1, AdcpSerialOptions option2)
+            {
+                // If both are null, or both are same instance, return true.
+                if (System.Object.ReferenceEquals(option1, option2))
+                {
+                    return true;
+                }
+
+                // If one is null, but not both, return false.
+                if (((object)option1 == null) || ((object)option2 == null))
+                {
+                    return false;
+                }
+
+                // Return true if the fields match:
+                return option1.SerialOptions == option2.SerialOptions &&
+                        option1.SerialNumber == option2.SerialNumber &&
+                        option1.Hardware == option2.Hardware &&
+                        option1.Firmware == option2.Firmware;
+            }
+
+            /// <summary>
+            /// Return the opposite of ==.
+            /// </summary>
+            /// <param name="option1">First AdcpConnectionListItemViewModel to check.</param>
+            /// <param name="option2">AdcpConnectionListItemViewModel to check against.</param>
+            /// <returns>Return the opposite of ==.</returns>
+            public static bool operator !=(AdcpSerialOptions option1, AdcpSerialOptions option2)
+            {
+                return !(option1 == option2);
+            }
+
+            #endregion
         }
 
         #endregion
@@ -1775,6 +1850,7 @@ namespace RTI
         /// If any command cannot be sent, set the flag and
         /// return that a command could not be set.
         /// </summary>
+        /// <param name="UseLocal">Use the local time to set the ADCP time.  FALSE will set the GMT time.</param>
         /// <returns>TRUE = All commands sent. FALSE = 1 or more commands could not be sent.</returns>
         public bool StartPinging(bool UseLocal = true)
         {
@@ -1803,6 +1879,28 @@ namespace RTI
 
             // Return if either failed
             return timeResult & pingResult;
+        }
+
+        /// <summary>
+        /// Send the commands to the ADCP to start pinging.
+        /// To start pinging, send the command START.
+        /// If any command cannot be sent, set the flag and
+        /// return that a command could not be set.
+        /// </summary>
+        /// <returns>TRUE = All commands sent. FALSE = 1 or more commands could not be sent.</returns>
+        public bool StartPinging()
+        {
+            bool pingResult = false;
+
+            // Try to send the command, if it fails try again
+            pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
+            if (!pingResult)
+            {
+                pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
+            }
+
+            // Return if either failed
+            return pingResult;
         }
 
         /// <summary>
@@ -2093,25 +2191,25 @@ namespace RTI
         /// <summary>
         /// Send a list of commands.
         /// </summary>
-        /// <param name="cmds">List of commands.</param>
+        /// <param name="commands">List of commands.</param>
         /// <returns>TRUE = All commands were sent successfully.</returns>
-        public bool SendCommands(List<string> cmds)
+        public bool SendCommands(List<string> commands)
         {
             bool result = true;
 
-            foreach (string commands in cmds)
+            foreach (string cmd in commands)
             {
-                if (commands.CompareTo(RTI.Commands.AdcpCommands.CMD_START_PINGING) == 0)
+                if (cmd.CompareTo(RTI.Commands.AdcpCommands.CMD_START_PINGING) == 0)
                 {
                     // Start pinging
                     result &= StartPinging();
                 }
-                else if (commands.CompareTo(RTI.Commands.AdcpCommands.CMD_STOP_PINGING) == 0)
+                else if (cmd.CompareTo(RTI.Commands.AdcpCommands.CMD_STOP_PINGING) == 0)
                 {
                     // Stop pinging
                     result &= StopPinging();
                 }
-                else if (commands.CompareTo(RTI.Commands.AdcpCommands.CMD_BREAK) == 0)
+                else if (cmd.CompareTo(RTI.Commands.AdcpCommands.CMD_BREAK) == 0)
                 {
                     // Send a break
                     SendBreak();
@@ -2120,17 +2218,20 @@ namespace RTI
                 {
                     // Send the command within the buffer
                     // Try sending the command.  If it fails try one more time
-                    bool currResult = SendDataWaitReply(commands, TIMEOUT);
+                    bool currResult = SendDataWaitReply(cmd, TIMEOUT);
                     if (!currResult)
                     {
                         // Try again if failed first time
-                        currResult = SendDataWaitReply(commands, TIMEOUT);
+                        currResult = SendDataWaitReply(cmd, TIMEOUT);
                     }
 
                     // Keep track if any were false
                     // If any were false, this will stay false
                     result &= currResult;
                 }
+
+                // Write the line out
+                Debug.WriteLine(cmd);
             }
 
             return result;
@@ -2967,6 +3068,12 @@ namespace RTI
 
             //bauds.Insert(0, SerialOptions.DEFAULT_BAUD);                // Add this to the front of the list so the default is tried first to speed up the process
 
+            // Ensure the the serial port is not open now
+            if (IsOpen())
+            {
+                Disconnect();
+            }
+
             // Test all the baud rates until one is found
             foreach (var baud in bauds)
             {
@@ -2983,29 +3090,39 @@ namespace RTI
                     ReceiveBufferString = "";
 
                     // Send a break to the Port and see if there was a response
-                    string response = SendDataGetReply("", true, 500);              // True will send a break with no command
-                    Thread.Sleep(AdcpSerialPort.WAIT_STATE);                        // Wait to get the BREAK response, the initial response will be the echo back of BREAK 
-                    if (!string.IsNullOrEmpty(response))
+                    bool response = SendDataWaitReply(Commands.AdcpCommands.CMD_BREAK, 500);              // True will send a break with no command
+                    
+                    Thread.Sleep(AdcpSerialPort.WAIT_STATE);                                              // Wait to get the BREAK response, the initial response will be the echo back of BREAK 
+                    
+                    if (response)
                     {
-                        // Decode the data to see if the response is not garabage
-                        if (response.Contains(" Rowe Technologies Inc."))
+                        if (!string.IsNullOrEmpty(ReceiveBufferString))
                         {
+                            // Decode the data to see if the response is not garabage
+                            if (ReceiveBufferString.Contains(" Rowe Technologies Inc."))
+                            {
 
-                            // Decode the Break response
-                            Commands.BreakStmt breakStmt =  Commands.AdcpCommands.DecodeBREAK(response);
+                                // Decode the Break response
+                                Commands.BreakStmt breakStmt = Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
 
-                            // Close the connection
-                            Disconnect();
+                                // Close the connection
+                                Disconnect();
 
-                            // Return the options used to find the ADCP
-                            return new  AdcpSerialOptions() { SerialOptions = _serialOptions, SerialNumber = breakStmt.SerialNum, Firmware = breakStmt.FirmwareVersion, Hardware = breakStmt.Hardware };
+                                // Return the options used to find the ADCP
+                                return new AdcpSerialOptions() { SerialOptions = _serialOptions, SerialNumber = breakStmt.SerialNum, Firmware = breakStmt.FirmwareVersion, Hardware = breakStmt.Hardware };
+                            }
+                            else
+                            {
+                                // Nothing found for this baud rate so shutdown the connection
+                                Disconnect();
+                            }
+
                         }
-                        else
-                        {
-                            // Nothing found for this baud rate so shutdown the connection
-                            Disconnect();
-                        }
-
+                    }
+                    else
+                    {
+                        // Nothing found for this baud rate so shutdown the connection
+                        Disconnect();
                     }
                 }
             }
@@ -3047,6 +3164,15 @@ namespace RTI
 
             // Decode CSHOW for all the settings
             AdcpConfiguration adcpConfig = AdcpCommands.DecodeCSHOW(result, breakStmt.SerialNum);
+
+            AdcpSerialOptions adcpSerialOptions = new AdcpSerialOptions();
+            adcpSerialOptions.Firmware = breakStmt.FirmwareVersion;
+            adcpSerialOptions.Hardware = breakStmt.Hardware;
+            adcpSerialOptions.SerialNumber = breakStmt.SerialNum;
+            adcpSerialOptions.SerialOptions = SerialOptions;
+
+            // Set the ADCP serial options to the configuraiton
+            adcpConfig.SerialOptions = adcpSerialOptions;
 
             return adcpConfig;
         }

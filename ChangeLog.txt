@@ -1,5 +1,30 @@
 RTI Changelog
 
+RTI-2.20.0
+ - Changed the version number.
+ - In AdcpBinaryCodec, added buffer lock to AddIncomingData().
+ - In AdcpSubsystemCommands, updated CWPBB_TransmitPulseType options to user guide rev N.
+ - In AdcpCommands, removed giving the STIME in GetDeploymentCommandList().
+ - In AdcpSerialPort, added another StartPinging() that does not set the time also.
+ - In AdcpSubsystemCommands, removed the CBI command from the GetDeploymentCommandList().
+ - In AdcpCommands, added CERECORD command to GetDeploymentCommandList().
+ - In AdcpCommands, updated CERECORD to include SinglePing parameter.
+ - In DecodeCSHOW, updated DecodeCERECORD() with the new CERECORD command.
+ - Changed to version 2.20.1.
+ - In AdcpCommands, added DEFAULT_SAN_DIEGO_DECLINATION for CHO command.
+ - In AdcpCommands, added CHO command to GetDeploymentCommandList().
+ - In AdcpCommands, added DecodeSPOS(). 
+ - In SerialConnection, in SendDataWaitReply() check the response if it is a BREAK and handle differently.
+ - In AdcpSerialPort, in TestSerialBaudConnection(), check if the serial port is open and disconnect if it is to prevent exception.  Change the timeout for the response.
+ - In AdcpSerialPort, fixed bug in GetAdcpConfiguration() where the serial options were not set and lost by the constructor.
+ - Changed to version 2.20.2.
+ - In AdcpConfiguration, fixed bug in AddConfig() when setting the Configuration Index and the CEPO index.
+ - In Ensemble, Added EncodeMatlab() to get just the ensemble as Matlab datasets with the RTI header or checksum.
+ - Added the Exporter folder with the CSV and Matlab exporters.
+ - In EnsembleDataSet, fixed bug where i was not consistent in Encode() in setting the number of elements.
+ - In EnsembleHelper, fixed bug in AddNmea() where the datatype was not set correctly.  It is a byte type.
+ - In NmeaDataSet, fixed bug in constructor where the data type was not set correctly.  It is a byte type.
+
 RTI-2.19
  - Changed the version number.
  - Added AdcpEthernet.cs and AdcpEthernetOptions.cs.

@@ -689,12 +689,12 @@ namespace RTI
         /// If they could not be found in the database, then it will 
         /// give default values.
         /// </summary>
-        public void GetAdcpConfiguration()
+        public AdcpConfiguration GetAdcpConfiguration()
         {
             //SubsystemCommandList = GetAllAdcpSubsystemCommands();
 
             // Get the configuration from the database
-            Configuration = GetAdcpConfigurationFromDb();
+            return Configuration = GetAdcpConfigurationFromDb();
         }
 
         /// <summary>
@@ -746,6 +746,14 @@ namespace RTI
             }
 
             return config;
+        }
+
+        /// <summary>
+        /// Write the AdcpConfiguration to the project database file.
+        /// </summary>
+        public void WriteAdcpConfiguration()
+        {
+            _dbWriter.UpdateAdcpConfiguration(Configuration);
         }
 
         #endregion
@@ -889,55 +897,6 @@ namespace RTI
                 _dbWriter.Flush();
             }
         }
-
-        #endregion
-
-        #region Record Commands and Options
-
-        ///// <summary>
-        ///// Write the AdcpConfiguration to the project database file.
-        ///// </summary>
-        ///// <param name="config">AdcpConfiguration with all configurations.</param>
-        //public void WriteAdcpConfiguration(AdcpConfiguration config)
-        //{
-        //    _dbWriter.UpdateAdcpConfiguration(config);
-        //}
-
-        /// <summary>
-        /// Write the updated configuration to the project database file.
-        /// </summary>
-        public void WriteAdcpConfiguration()
-        {
-            _dbWriter.UpdateAdcpConfiguration(Configuration);
-        }
-
-        ///// <summary>
-        ///// Write the AdcpCommands to the project database file.
-        ///// </summary>
-        ///// <param name="commands">AdcpCommands to update.</param>
-        //public void WriteAdcpCommands(AdcpCommands commands)
-        //{
-        //    _dbWriter.UpdateAdcpCommands(commands);
-        //}
-
-
-        ///// <summary>
-        ///// Write the DeploymentOptions to the project database file.
-        ///// </summary>
-        ///// <param name="options">DeploymentOptions to update.</param>
-        //public void WriteDeploymentOptions(DeploymentOptions options)
-        //{
-        //    _dbWriter.UpdateDeploymentOptions(options);
-        //}
-
-        ///// <summary>
-        ///// Write the AdcpSubsystemCommands to the project database file.
-        ///// </summary>
-        ///// <param name="asConfig">AdcpSubsystemConfig the configuration description and commands.</param>
-        //public void WriteAdcpSubsystemConfigurationCommands(AdcpSubsystemConfig asConfig)
-        //{
-        //    _dbWriter.UpdateAdcpSubsystemConfigurationCommands(asConfig);
-        //}
 
         #endregion
 

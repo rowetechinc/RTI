@@ -14,7 +14,7 @@ Getting Started
 ------------------------
 Create a AdcpSerialPort object and subscribe to receive ReceiveAdcpSerialDataEvent events.
 Create a AdcpBinaryCodec object and pass the data from the AdcpSerialPort event to the AddIncomingData().
-Subscribe to AdcpBinaryCodec.ProcessDataEvent event.  This data will contain an Ensemble object will all the data decoded.
+Subscribe to AdcpBinaryCodec.ProcessDataEvent event.  This data will contain an Ensemble object with all the data decoded.
 You can then use the Ensemble object to display the data.  
 You can also serialize the data to JSON format using the command: Newtonsoft.Json.JsonConvert.SerializeObject(ensemble).
 

@@ -57,6 +57,8 @@
  * 05/30/2013      RC          2.19       Replaced Subsystem and CepoIndex with SubsystemConfig which contains this information.
  * 06/11/2013      RC          2.19       Added CBI_BurstPairFlag.
  * 06/14/2013      RC          2.19       Added GetDeploymentCommandList().
+ * 09/17/2013      RC          2.20.0     Updated CWPBB_TransmitPulseType options to user guide rev N.
+ *                                         Removed the CBI command from the GetDeploymentCommandList().
  *
  */
 
@@ -1525,30 +1527,37 @@ namespace RTI
 
                 /// <summary>
                 /// (2) Non-Coded Pulse-To-Pulse.
-                /// Provides ultra low variance for small bin sizes.
+                /// Narrowband and provides ultra low variance for small bin sizes.
                 /// Non-coded has slightly higher variance than the coded
                 /// transmit without the annoying autocorrelation side peaks.
                 /// </summary>
-                PULSE_TO_PULSE_NON_CODED = 2,
+                NONCODED_PULSE_TO_PULSE = 2,
 
                 /// <summary>
-                /// (3) Coded Pulse-To-Pulse. (no ambuguity resolver).
+                /// (3) Broadband Pulse-To-Pulse. (no ambuguity resolver).
                 /// Provides ultra low variance for small bin sizes.  Coded 
                 /// has slightly lower variance than the non-coded transmit.
                 /// </summary>
-                PULSE_TO_PULSE_CODED  = 3,
+                BROADBAND_PULSE_TO_PULSE  = 3,
+
+                /// <summary>
+                /// (4) Non Coded Broadband Pulse-To-Pulse. (no ambuguity resolver).
+                /// Narrowband and provides ultra low variance for small bin sizes.  Coded 
+                /// has slightly lower variance than the non-coded transmit.
+                /// </summary>
+                NONCODED_BROADBAND_PULSE_TO_PULSE = 4,
 
                 /// <summary>
                 /// Broadband with ambuguity resolver ping.
                 /// Used in conjunction with CWPBP.
                 /// </summary>
-                BROADBAND_AMBIGUITY_RESOLVER = 4,
+                BROADBAND_AMBIGUITY_RESOLVER = 5,
 
                 /// <summary>
                 /// Broadband pulse to pulse with ambiguity resolver ping.
                 /// Used in conjunction with CWPAP.
                 /// </summary>
-                BROADBAND_P2P_AMBIGUITY_RESOLVER = 5
+                BROADBAND_P2P_AMBIGUITY_RESOLVER = 6
             }
 
             /// <summary>
@@ -1564,12 +1573,17 @@ namespace RTI
             /// <summary>
             /// String for Transmit Pulse Type Pulse to Pulse Non-Coded.
             /// </summary>
-            public const string TRANSMIT_PULSE_TYPE_PTP_NONCODED = "Pulse to Pulse Non-Coded";
+            public const string TRANSMIT_PULSE_TYPE_NONCODED_PTP = "Non-Coded Pulse to Pulse";
 
             /// <summary>
-            /// String for Transmit Pulse Type Pulse to Pulse Coded.
+            /// String for Transmit Pulse Type Broadband Pulse to Pulse.
             /// </summary>
-            public const string TRANSMIT_PULSE_TYPE_PTP_CODED = "Pulse to Pulse Coded";
+            public const string TRANSMIT_PULSE_TYPE_BB_PTP = "Broadband Pulse to Pulse";
+
+            /// <summary>
+            /// String for Transmit Pulse Type Non-Coded Broadband Pulse to Pulse.
+            /// </summary>
+            public const string TRANSMIT_PULSE_TYPE_NONCODED_BB_PTP = "Non-Coded Broadband Pulse to Pulse";
 
             /// <summary>
             /// String for Transmit Pulse Type Broadband with ambiguity resolver ping.
@@ -1590,8 +1604,9 @@ namespace RTI
                 List<string> list = new List<string>();
                 list.Add(TRANSMIT_PULSE_TYPE_NARROWBAND);
                 list.Add(TRANSMIT_PULSE_TYPE_BROADBAND);
-                list.Add(TRANSMIT_PULSE_TYPE_PTP_NONCODED);
-                list.Add(TRANSMIT_PULSE_TYPE_PTP_CODED);
+                list.Add(TRANSMIT_PULSE_TYPE_NONCODED_PTP);
+                list.Add(TRANSMIT_PULSE_TYPE_BB_PTP);
+                list.Add(TRANSMIT_PULSE_TYPE_NONCODED_BB_PTP);
                 list.Add(TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER);
                 list.Add(TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER);
 
@@ -1615,11 +1630,14 @@ namespace RTI
                     case TRANSMIT_PULSE_TYPE_BROADBAND:
                         CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.BROADBAND;
                         break;
-                    case TRANSMIT_PULSE_TYPE_PTP_NONCODED:
-                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
+                    case TRANSMIT_PULSE_TYPE_NONCODED_PTP:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE;
                         break;
-                    case TRANSMIT_PULSE_TYPE_PTP_CODED:
-                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+                    case TRANSMIT_PULSE_TYPE_NONCODED_BB_PTP:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.NONCODED_BROADBAND_PULSE_TO_PULSE;
+                        break;
+                    case TRANSMIT_PULSE_TYPE_BB_PTP:
+                        CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
                         break;
                     case TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER:
                         CWPBB_TransmitPulseType = eCWPBB_TransmitPulseType.BROADBAND_AMBIGUITY_RESOLVER;
@@ -1646,10 +1664,12 @@ namespace RTI
                         return TRANSMIT_PULSE_TYPE_NARROWBAND;
                     case eCWPBB_TransmitPulseType.BROADBAND:
                         return TRANSMIT_PULSE_TYPE_BROADBAND;
-                    case eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED:
-                        return TRANSMIT_PULSE_TYPE_PTP_NONCODED;
-                    case eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED:
-                        return TRANSMIT_PULSE_TYPE_PTP_CODED;
+                    case eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE:
+                        return TRANSMIT_PULSE_TYPE_NONCODED_PTP;
+                    case eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE:
+                        return TRANSMIT_PULSE_TYPE_BB_PTP;
+                    case eCWPBB_TransmitPulseType.NONCODED_BROADBAND_PULSE_TO_PULSE:
+                        return TRANSMIT_PULSE_TYPE_NONCODED_BB_PTP;
                     case eCWPBB_TransmitPulseType.BROADBAND_AMBIGUITY_RESOLVER:
                         return TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER;
                     case eCWPBB_TransmitPulseType.BROADBAND_P2P_AMBIGUITY_RESOLVER:
@@ -1673,10 +1693,12 @@ namespace RTI
                         return eCWPBB_TransmitPulseType.NARROWBAND;
                     case TRANSMIT_PULSE_TYPE_BROADBAND:
                         return eCWPBB_TransmitPulseType.BROADBAND;
-                    case TRANSMIT_PULSE_TYPE_PTP_NONCODED:
-                        return eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
-                    case TRANSMIT_PULSE_TYPE_PTP_CODED:
-                        return eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+                    case TRANSMIT_PULSE_TYPE_NONCODED_PTP:
+                        return eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE;
+                    case TRANSMIT_PULSE_TYPE_BB_PTP:
+                        return eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
+                    case TRANSMIT_PULSE_TYPE_NONCODED_BB_PTP:
+                        return eCWPBB_TransmitPulseType.NONCODED_BROADBAND_PULSE_TO_PULSE;
                     case TRANSMIT_PULSE_TYPE_BB_AMBIGUITY_RESOLVER:
                         return eCWPBB_TransmitPulseType.BROADBAND_AMBIGUITY_RESOLVER;
                     case TRANSMIT_PULSE_TYPE_BB_PTP_AMBIGUITY_RESOLVER:
@@ -3642,11 +3664,13 @@ namespace RTI
             {
                 List<string> list = new List<string>();
 
-                list.Add(CBI_CmdStr());                // CBI
+                //list.Add(CBI_CmdStr());                // CBI
                 list.Add(CWPBB_CmdStr());              // CWBB
                 list.Add(CWPBL_CmdStr());              // CWPBL
                 list.Add(CWPBS_CmdStr());              // CWPBS
                 list.Add(CWPBN_CmdStr());              // CWPBN
+                list.Add(CWPP_CmdStr());               // CWPP
+                list.Add(CWPTBP_CmdStr());             // CWPTBP
 
                 return list;
             }

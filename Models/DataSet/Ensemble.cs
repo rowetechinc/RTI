@@ -65,7 +65,8 @@
  * 02/20/2013      RC          2.18       Added AddNmeaData() that takes no data.
  * 02/22/2013      RC          2.18       Removed the private set from all the properties so the object can be convert to a from JSON.
  * 02/25/2013      RC          2.18       Removed Orientation from all the datasets.  Replaced with SubsystemConfiguration.
- * 03/12/2013      RC          2.18       Improved the Ensemble.Clone() by using JSON to clone.                                     
+ * 03/12/2013      RC          2.18       Improved the Ensemble.Clone() by using JSON to clone.       
+ * 10/02/2013      RC          2.20.2     Added EncodeMatlab() to get just the ensemble as Matlab datasets with the RTI header or checksum.
  *       
  * 
  */
@@ -1680,6 +1681,17 @@ namespace RTI
                 System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT32, BYTES_IN_INT32);
 
                 return result;
+            }
+
+            /// <summary>
+            /// This will give only the datasets in Matlab format.  To specify only 1 or more datasets, set all the IsXXXAvail
+            /// methods to TRUE or FALSE.  Then call this method.
+            /// This will not include the RTI header and checksum to the data.
+            /// </summary>
+            /// <returns>A byte array of all the datasets in the ensemble in Matlab format.</returns>
+            public byte[] EncodeMatlab()
+            {
+                return GetAllDataSets();
             }
 
             /// <summary>

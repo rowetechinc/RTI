@@ -91,6 +91,12 @@
  * 06/11/2013      RC          2.19       Added SPOS command.
  * 06/12/2013      RC          2.19       Added DecodeENGCONF().
  * 08/23/2013      RC          2.19.4     Added DEFAULT_SALINITY_VALUE_ESTUARY.
+ * 09/17/2013      RC          2.20.0     Removed giving the STIME in GetDeploymentCommandList().
+ *                                         Added CERECORD command to GetDeploymentCommandList().
+ *                                         Updated CERECORD to include SinglePing parameter.
+ * 09/18/2013      RC          2.20.1     Added DEFAULT_SAN_DIEGO_DECLINATION for CHO command.
+ *                                         Added CHO command to GetDeploymentCommandList().
+ * 09/23/2013      RC          2.20.1     Added DecodeSPOS().
  * 
  */
 
@@ -100,6 +106,7 @@ using System.Text;
 using System.Globalization;
 using System.ComponentModel;
 using DotSpatial.Positioning;
+using Newtonsoft.Json;
 
 
 namespace RTI
@@ -1076,6 +1083,52 @@ namespace RTI
 
         #endregion
 
+        #region SPOS
+
+        /// <summary>
+        /// Class to hold all the SPOS values.
+        /// </summary>
+        public class SPOS
+        {
+            #region Properties
+
+            /// <summary>
+            /// Latitude position of the ADCP.
+            /// </summary>
+            public Latitude SPOS_Latitude { get; set; }
+
+            /// <summary>
+            /// Longitude position of the ADCP.
+            /// </summary>
+            public Longitude SPOS_Longitude { get; set; }
+
+            /// <summary>
+            /// Water depth in meters.
+            /// </summary>
+            public float SPOS_WaterDepth { get; set; }
+
+            /// <summary>
+            /// Pressure Sensor height in meters.
+            /// </summary>
+            public float SPOS_PsensHeight { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            public SPOS()
+            {
+                SPOS_Latitude = new Latitude();
+                SPOS_Longitude = new Longitude();
+                SPOS_WaterDepth = AdcpCommands.DEFAULT_WATER_DEPTH;
+                SPOS_PsensHeight = AdcpCommands.DEFAULT_PSEN_HEIGHT;
+            }
+        }
+
+
+        #endregion
+
         #endregion
 
         /// <summary>
@@ -1651,6 +1704,12 @@ namespace RTI
             public const float DEFAULT_CHO = 0.0f;
 
             /// <summary>
+            /// Declination for San Diego in degrees.  Used for CHO command 
+            /// in San Diego.
+            /// </summary>
+            public const float DEFAULT_SAN_DIEGO_DECLINATION = 12.05f;
+
+            /// <summary>
             /// Default Heading source.
             /// </summary>
             public const HeadingSrc DEFAULT_CHS = HeadingSrc.INTERNAL;
@@ -1714,9 +1773,14 @@ namespace RTI
             public const UInt16 DEFAULT_CETFP_HUNSEC = 0;
 
             /// <summary>
-            /// Default whethere to record on the system.
+            /// Default whether to record on the system.
             /// </summary>
             public const bool DEFAULT_CERECORD = false;
+
+            /// <summary>
+            /// Default whether to record single ping on the system.
+            /// </summary>
+            public const bool DEFAULT_CERECORD_SINGLEPING = false;
 
             /// <summary>
             /// Default whether to output data to serial port.
@@ -1739,11 +1803,13 @@ namespace RTI
             /// <summary>
             /// Default latitude value.
             /// </summary>
+            [JsonIgnore]
             public Latitude DEFAULT_LAT = new Latitude();
 
             /// <summary>
             /// Default longitude value.
             /// </summary>
+            [JsonIgnore]
             public Longitude DEFAULT_LONG = new Longitude();
 
             /// <summary>
@@ -2100,6 +2166,8 @@ namespace RTI
 
             #endregion
 
+            #region CERECORD
+
             /// <summary>
             /// Ensemble Recording
             /// When recording is enabled the ADCP searches for the next 
@@ -2116,26 +2184,67 @@ namespace RTI
             /// Note: Internal data recording during burst sampling only
             /// occurs at the end of the burst.
             /// 
-            /// Command: CERECORD n[cr]
+            /// Command: CERECORD n,x[cr]
             /// Scale: 0=disable, 1=enable.
             /// Range:
             /// </summary>
-            public bool CERECORD { get; set; }
+            public bool CERECORD_EnsemblePing { get; set; }
 
             /// <summary>
             /// Return a string of whether
             /// CERECORD is enabled or disabled.
             /// </summary>
             /// <returns>0 = Disabled / 1 = Enabled.</returns>
-            public string CERECORD_ToString()
+            public string CERECORD_EnsemblePing_ToString()
             {
-                if (CERECORD)
+                if (CERECORD_EnsemblePing)
                 {
                     return "1";
                 }
 
                 return "0";
             }
+
+            /// <summary>
+            /// Ensemble Recording
+            /// When single recording is enabled and the ADCP is started
+            /// (START [CR]) the firmware searches for the next available
+            /// file number to record to on the SD card.  The single ping file name
+            /// starts with the letter "S" followed by a 7 digit number and the ending with the
+            /// extension ".ens".  For example the first single ping file will be named
+            /// "S00000001.ens".  During deployment as each ping is completed the 
+            /// data is appended to the current file.  The 7 digit number following the
+            /// "S" is incremented each time the system is (re)started or when the file size
+            /// exceeds 16MBytes.  Each ping, whether Bottom Track or Water Profile, is 
+            /// considered to be a single ping.
+            /// 
+            /// Note: No error/threshold screening or coordinate transformation is 
+            /// preformed on the data contained in a single ping file.
+            /// 
+            /// Command: CERECORD x,n[cr]
+            /// Scale: 0=disable, 1=enable.
+            /// Range:
+            /// </summary>
+            public bool CERECORD_SinglePing { get; set; }
+
+            /// <summary>
+            /// Return a string of whether
+            /// CERECORD_SinglePing is enabled or disabled.
+            /// </summary>
+            /// <returns>0 = Disabled / 1 = Enabled.</returns>
+            public string CERECORD_SinglePing_ToString()
+            {
+                if (CERECORD_SinglePing)
+                {
+                    return "1";
+                }
+
+                return "0";
+            }
+
+            #endregion
+
+            #region CEOUTPUT
 
             /// <summary>
             /// Ensemble output type.
@@ -2186,6 +2295,10 @@ namespace RTI
                 }
             }
 
+            #endregion
+
+            #region CEPO
+
             /// <summary>
             /// Ensemble Ping Order
             /// Sets the order in which the various subsystems will be pinged. 
@@ -2197,6 +2310,8 @@ namespace RTI
             /// Range: (at least 1 subsystem)
             /// </summary>
             public string CEPO { get; set; }
+
+            #endregion
 
             #region SPOS
 
@@ -2472,7 +2587,8 @@ namespace RTI
                 //CETFP_Second = (UInt16)timeNow.Second;
                 //CETFP_HunSec = DEFAULT_CETFP_HUNSEC;
 
-                CERECORD = DEFAULT_CERECORD;
+                CERECORD_EnsemblePing = DEFAULT_CERECORD;
+                CERECORD_SinglePing = DEFAULT_CERECORD_SINGLEPING;
                 CEOUTPUT = DEFAULT_CEOUTPUT;
                 CEPO = DEFAULT_CEPO;
 
@@ -2578,8 +2694,10 @@ namespace RTI
                 list.Add(SPOS_CmdStr());                            // SPOS
                 list.Add(CWS_CmdStr());                             // CWS
                 list.Add(CWT_CmdStr());                             // CWT
+                list.Add(CHO_CmdStr());                             // CHO
                 list.Add(CEI_CmdStr());                             // CEI
                 list.Add(CETFP_CmdStr());                           // CETFP
+                list.Add(CERECORD_CmdStr());                        // CERECORD
 
                 if (tz == AdcpTimeZone.LOCAL)
                 {
@@ -2889,7 +3007,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CERECORD_CmdStr()
             {
-                return String.Format("{0} {1}", CMD_CERECORD, CERECORD_ToString());
+                return String.Format("{0} {1},{2}", CMD_CERECORD, CERECORD_EnsemblePing_ToString(), CERECORD_SinglePing_ToString());
             }
 
             #endregion
@@ -3687,6 +3805,79 @@ namespace RTI
                 }
 
                 return engConf;
+            }
+
+            #endregion
+
+            #region SPOS
+
+            /// <summary>
+            /// Decode the SPOS command.
+            /// 
+            /// Ex:
+            /// Lat =     2.00000000000000, Lon =     2.00000000000000, Depth =   200.000, P height =     0.000
+            /// </summary>
+            /// <param name="buffer">Buffer to decode.</param>
+            /// <returns>Results of the buffer decoding.</returns>
+            public static SPOS DecodeSPOS(string buffer)
+            {
+                SPOS spos = new SPOS();
+
+                // Seperate each value
+                string[] values = buffer.Split(',');
+
+                // Go through each value
+                foreach (var val in values)
+                {
+                    // Find all the values
+                    string[] sposVal = val.Split('=');
+                    if (sposVal.Length >= 2)
+                    {
+                        // Latitude
+                        if (sposVal[0].Contains("Lat"))
+                        {
+                            double lat = 0.0;
+                            if(double.TryParse(sposVal[1], out lat))
+                            {
+                                spos.SPOS_Latitude = new Latitude(lat);
+                            }
+                        }
+
+                        // Longitude
+                        if (sposVal[0].Contains("Lon"))
+                        {
+                            double lon = 0.0;
+                            if (double.TryParse(sposVal[1], out lon))
+                            {
+                                spos.SPOS_Longitude = new Longitude(lon);
+                            }
+                        }
+
+                        // Water Depth
+                        if (sposVal[0].Contains("Depth"))
+                        {
+                            float depth = 0.0f;
+                            if (float.TryParse(sposVal[1], out depth))
+                            {
+                                spos.SPOS_WaterDepth = depth;
+                            }
+                        }
+
+                        // Pressure Sensor Height
+                        if (sposVal[0].Contains("height"))
+                        {
+                            float height = 0.0f;
+                            if (float.TryParse(sposVal[1], out height))
+                            {
+                                spos.SPOS_PsensHeight = height;
+                            }
+                        }
+
+                    }
+
+                }
+
+                return spos;
             }
 
             #endregion

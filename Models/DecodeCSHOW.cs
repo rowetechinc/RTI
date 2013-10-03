@@ -37,6 +37,7 @@
  * 09/27/2012      RC          2.15       Fixed bug in Decoding Indexed values.  It did not handle spaces correctly.
  * 09/28/2012      RC          2.15       Added all remaining commands.
  * 10/04/2012      RC          2.15       Added CBI command.
+ * 09/17/2013      RC          2.20.0     Updated DecodeCERECORD() with the new CERECORD command.
  * 
  */
 namespace RTI
@@ -506,7 +507,7 @@ namespace RTI
         /// Decode the CERECORD line.  Flag to turn on or off internal recording.
         /// 
         /// Ex:
-        /// CERECORD 0
+        /// CERECORD 0,0
         /// </summary>
         /// <param name="buffer">Line for the command.</param>
         /// <param name="config">AdcpConfiguration to set the value.</param>
@@ -516,16 +517,37 @@ namespace RTI
 
             if (result.Length > 1 && result[0].Contains(RTI.Commands.AdcpCommands.CMD_CERECORD))
             {
-                int flag = 0;
-                if (int.TryParse(result[1], out flag))
+                // Split the values by the colon, then try to parse the values
+                string[] values = result[1].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (values.Length >= 2)
                 {
-                    if (flag == 1)
+                    // CERECORD Ensemble Ping
+                    int crecordValue = 0;
+                    if (int.TryParse(values[0], out crecordValue))
                     {
-                        config.Commands.CERECORD = true;
+                        if (crecordValue == 1)
+                        {
+                            config.Commands.CERECORD_EnsemblePing = true;
+                        }
+                        else
+                        {
+                            config.Commands.CERECORD_EnsemblePing = false;
+                        }
                     }
-                    else
+
+                    // CRECORD Single Ping
+                    int crecordSinglePingValue = 0;
+                    if (int.TryParse(values[1], out crecordSinglePingValue))
                     {
-                        config.Commands.CERECORD = false;
+                        if (crecordSinglePingValue == 1)
+                        {
+                            config.Commands.CERECORD_SinglePing = true;
+                        }
+                        else
+                        {
+                            config.Commands.CERECORD_SinglePing = false;
+                        }
                     }
                 }
             }
@@ -1017,11 +1039,11 @@ namespace RTI
                                 case (int)Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NARROWBAND:
                                     ssConfig.Commands.CWPBB_TransmitPulseType = Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NARROWBAND;
                                     break;
-                                case (int)Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED:
-                                    ssConfig.Commands.CWPBB_TransmitPulseType = Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_CODED;
+                                case (int)Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE:
+                                    ssConfig.Commands.CWPBB_TransmitPulseType = Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.BROADBAND_PULSE_TO_PULSE;
                                     break;
-                                case (int)Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED:
-                                    ssConfig.Commands.CWPBB_TransmitPulseType = Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.PULSE_TO_PULSE_NON_CODED;
+                                case (int)Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE:
+                                    ssConfig.Commands.CWPBB_TransmitPulseType = Commands.AdcpSubsystemCommands.eCWPBB_TransmitPulseType.NONCODED_PULSE_TO_PULSE;
                                     break;
                                 default:
                                     ssConfig.Commands.CWPBB_TransmitPulseType = Commands.AdcpSubsystemCommands.DEFAULT_CWPBB_TRANSMITPULSETYPE;

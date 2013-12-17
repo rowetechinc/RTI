@@ -55,6 +55,8 @@
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 07/26/2013      RC          2.19.3     Added EnsembleWriteEvent event to send when an ensemble has been written to the file.
  * 08/19/2013      RC          2.19.4     Moved the PublishEnsembleWrite() to AddIncomingData() so that it will display updates everytime it receives data.
+ * 10/10/2013      RC          2.21.0     Made MaxFileSize a public property.
+ * 10/14/2013      RC          2.21.0     Changed contructor to take individual name, folder and serial number to a project will not be needed.
  *       
  * 
  */
@@ -85,9 +87,9 @@ namespace RTI
 
         /// <summary>
         /// Default size of a binary file.
-        /// 50MB
+        /// 16MB
         /// </summary>
-        public const long DEFAULT_BINARY_FILE_SIZE = 1048576 * 50;
+        public const long DEFAULT_BINARY_FILE_SIZE = 1048576 * 16;
 
         /// <summary>
         /// A buffer will be used to write
@@ -95,14 +97,6 @@ namespace RTI
         /// instead of writing small chunks.
         /// </summary>
         private const long MAX_BUFFER_SIZE = 1048576 * 1;   // 1 MB
-
-        /// <summary>
-        /// Maximum file size in bytes.
-        /// When the file reaches the maximum size,
-        /// a new file will be created and the current
-        /// name indexed by 1.
-        /// </summary>
-        private long _maxFileSize = 0;
     
         /// <summary>
         /// Buffer to store large amounts of data.
@@ -129,12 +123,6 @@ namespace RTI
         /// </summary>
         private int _fileNameIndex = 0;
 
-        ///// <summary>
-        ///// Current size of the file to ensure
-        ///// it does not exceed a max value.
-        ///// </summary>
-        //private long _fileSize = 0;
-
         /// <summary>
         /// Writer to write binary data to
         /// a file.
@@ -146,33 +134,50 @@ namespace RTI
         #region Properties
 
         /// <summary>
-        /// Set or get the Selected Project.
-        /// When setting the project, it will
-        /// reopen the binary writer after the
-        /// new selected project is set.
+        /// Name to use for each file.
         /// </summary>
-        private Project _selectedProject;
+        private string _ProjectName;
         /// <summary>
-        /// Set or get the Selected Project.
-        /// When setting the project, it will
-        /// reopen the binary writer after the
-        /// new selected project is set.
+        /// Name to use for each file.
         /// </summary>
-        public  Project SelectedProject
+        public string ProjectName
         {
-            private get { return _selectedProject; }
+            get { return _ProjectName; }
             set
             {
-                _selectedProject = value;
+                _ProjectName = value;
+            }
+        }
 
-                // Clear the remaining data to the file
-                Flush();
+        /// <summary>
+        /// Folder path for the data.
+        /// </summary>
+        private string _ProjectFolderPath;
+        /// <summary>
+        /// Folder path for the data.
+        /// </summary>
+        public string ProjectFolderPath
+        {
+            get { return _ProjectFolderPath; }
+            set
+            {
+                _ProjectFolderPath = value;
+            }
+        }
 
-                // Reset the file index
-                _fileNameIndex = 0;
-
-                // Reset Filename
-                ResetFileName();
+        /// <summary>
+        /// Serial number for this project.
+        /// </summary>
+        private string _SerialNumber;
+        /// <summary>
+        /// Serial number for this project.
+        /// </summary>
+        public string SerialNumber
+        {
+            get { return _SerialNumber; }
+            set
+            {
+                _SerialNumber = value;
             }
         }
 
@@ -196,6 +201,27 @@ namespace RTI
             get { return _fileSize + _writeBufferIndex; }
         }
 
+        /// <summary>
+        /// Maximum file size in bytes.
+        /// When the file reaches the maximum size,
+        /// a new file will be created and the current
+        /// name indexed by 1.
+        /// </summary>
+        private long _MaxFileSize;
+        /// <summary>
+        /// Maximum file size in bytes.
+        /// When the file reaches the maximum size,
+        /// a new file will be created and the current
+        /// name indexed by 1.
+        /// </summary>
+        public long MaxFileSize 
+        {
+            get { return _MaxFileSize; }
+            set
+            {
+                _MaxFileSize = value;
+            }
+        }
 
         #endregion
 
@@ -204,10 +230,16 @@ namespace RTI
         /// 
         /// Set the maximum file size.
         /// </summary>
+        /// <param name="projectName">Project name.</param>
+        /// <param name="projectFolderPath">Project folder path.</param>
+        /// <param name="serialNum">Project serial number.</param>
         /// <param name="maxFileSize">Maximum file size for the binary file.</param>
-        public AdcpBinaryWriter(long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
+        public AdcpBinaryWriter(string projectName, string projectFolderPath, string serialNum, long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
         {
-            _maxFileSize = maxFileSize;
+            ProjectName = projectName;
+            ProjectFolderPath = projectFolderPath;
+            SerialNumber = serialNum;
+            MaxFileSize = maxFileSize;
 
             // Write buffer
             _writeBuffer = new List<byte[]>();
@@ -219,18 +251,21 @@ namespace RTI
         /// 
         /// Set the maximum file size.
         /// </summary>
-        /// <param name="selectedProject">Selected Project to write to.</param>
+        /// <param name="project">Project.</param>
         /// <param name="maxFileSize">Maximum file size for the binary file.</param>
-        public AdcpBinaryWriter(Project selectedProject, long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
+        public AdcpBinaryWriter(Project project, long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
         {
-            _maxFileSize = maxFileSize;
+            ProjectName = project.ProjectName;
+            ProjectFolderPath = project.ProjectFolderPath;
+            SerialNumber = project.SerialNumber.SerialNumberString;
+            MaxFileSize = maxFileSize;
 
             // Write buffer
             _writeBuffer = new List<byte[]>();
             _writeBufferIndex = 0;
 
             // Set the project.
-            SelectedProject = selectedProject;
+            //SelectedProject = selectedProject;
         }
 
         /// <summary>
@@ -254,8 +289,8 @@ namespace RTI
         public void AddIncomingData(byte[] data)
         {
             // Verify there is a project to write to
-            if (_selectedProject != null)
-            {
+            //if (_selectedProject != null)
+            //{
                 // Check if the file can fit in the buffer
                 // If not, write the current buffer to the file
                 if (data.Length + _writeBufferIndex >= MAX_BUFFER_SIZE)
@@ -272,7 +307,7 @@ namespace RTI
 
                 // Publish the number of bytes written
                 PublishEnsembleWrite(data.Length);
-            }
+            //}
         }
 
         /// <summary>
@@ -282,11 +317,11 @@ namespace RTI
         /// </summary>
         public void ResetFileName()
         {
-            if (_selectedProject != null)
-            {
+            //if (_selectedProject != null)
+            //{
                 // Get a new file name
                 _fileName = GetNewFileName();
-            }
+            //}
         }
 
         #region Open 
@@ -301,19 +336,19 @@ namespace RTI
             {
                 // Verify the system is recording in Live mode
                 // And a project has been selected
-                if (_selectedProject != null)
-                {
+                //if (_selectedProject != null)
+                //{
                     _binWriter = new BinaryWriter(File.Open(_fileName, FileMode.Append, FileAccess.Write));
 
                     // Set the file size
                     FileInfo finfo = new FileInfo(_fileName);
                     _fileSize = finfo.Length;
 
-                }
+                //}
             }
             catch (Exception e)
             {
-                log.Error("Error trying to open binary file for project: " + _selectedProject.ProjectName, e);
+                log.Error("Error trying to open binary file for project: " + ProjectName, e);
             }
         }
 
@@ -365,10 +400,13 @@ namespace RTI
             }
 
             // Flush the data to the file
-            _binWriter.Flush();
+            if (_binWriter != null)
+            {
+                _binWriter.Flush();
 
-            // Close the writer
-            _binWriter.Close();
+                // Close the writer
+                _binWriter.Close();
+            }
         }
 
 
@@ -381,7 +419,7 @@ namespace RTI
         private void Write(byte[] data)
         {
             // Check if the file will exceed the max size
-            if (data.Length + _fileSize > _maxFileSize)
+            if (data.Length + _fileSize > MaxFileSize)
             {
                 // Flush the current file
                 Flush();
@@ -456,7 +494,7 @@ namespace RTI
         /// <returns>New file name with project name and index.</returns>
         private string GenerateFileName(int index)
         {
-            return _selectedProject.ProjectFolderPath + @"\" + _selectedProject.SerialNumber.SerialNumberString + "_" + _selectedProject.ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;
+            return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;
         }
 
         #endregion

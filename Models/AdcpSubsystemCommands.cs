@@ -1563,12 +1563,12 @@ namespace RTI
             /// <summary>
             /// String for Transmit Pulse Type Narrowband.
             /// </summary>
-            public const string TRANSMIT_PULSE_TYPE_NARROWBAND = "NarrowBand";
+            public const string TRANSMIT_PULSE_TYPE_NARROWBAND = "Narrowband";
 
             /// <summary>
             /// String for Transmit Pulse Type Broadband.
             /// </summary>
-            public const string TRANSMIT_PULSE_TYPE_BROADBAND = "BroadBand";
+            public const string TRANSMIT_PULSE_TYPE_BROADBAND = "Broadband";
 
             /// <summary>
             /// String for Transmit Pulse Type Pulse to Pulse Non-Coded.

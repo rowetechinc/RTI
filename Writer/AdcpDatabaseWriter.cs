@@ -68,6 +68,7 @@
  * 07/26/2013      RC          2.19.3     Added EnsembleWriteEvent event to send when an ensemble has been written to the database.
  * 08/09/2013      RC          2.19.4     Added AppConfiguration.
  * 08/19/2013      RC          2.19.4     Put PublishEnsembleWrite() in AddIncomingData() to know when an ensemble is received to write.
+ * 10/28/2013      RC          2.21.0     Read and write the Project options to the project db file.
  * 
  */
 
@@ -166,6 +167,25 @@ namespace RTI
 
         #endregion
 
+        #region Project Options
+
+        /// <summary>
+        /// Flag if the Project Options need to be updated.
+        /// </summary>
+        private bool _isProjectOptionsNeedUpdate;
+
+        /// <summary>
+        /// Lock for the _isProjectOptionsNeedUpdate flag.
+        /// </summary>
+        private object _lockIsProjectOptionsNeedUpdate;
+
+        /// <summary>
+        /// String to hold the latest Project Options JSON string.
+        /// </summary>
+        private string _projectOptionsJsonStr;
+
+        #endregion
+
         #endregion
 
         #region Properties
@@ -215,6 +235,8 @@ namespace RTI
             _lockIsAdcpConfigurationNeedUpdate = new object();
             _isAppConfigurationNeedUpdate = false;
             _lockIsAppConfigurationNeedUpdate = new object();
+            _isProjectOptionsNeedUpdate = false;
+            _lockIsProjectOptionsNeedUpdate = new object();
 
             // Initialize the thread
             _continue = true;
@@ -267,54 +289,6 @@ namespace RTI
             // Wake up the thread to process data
             _eventWaitData.Set();
         }
-        
-        ///// <summary>
-        ///// Update the database with the latest AdcpCommands.
-        ///// This will set the AdcpConfiguration's AdcpCommand.
-        ///// </summary>
-        ///// <param name="commands">AdcpCommands to update.</param>
-        //public void UpdateAdcpCommands(AdcpCommands commands)
-        //{
-        //    // Set the new Commands to the AdcpConfiguration
-        //    SelectedProject.Configuration.Commands = commands;
-
-        //    // Update the database.
-        //    UpdateAdcpConfiguration(SelectedProject.Configuration);
-        //}
-
-        ///// <summary>
-        ///// Update the database with the latest DeploymentOptions.
-        ///// This will set the AdcpConfiguration's DeploymentOptions.
-        ///// </summary>
-        ///// <param name="options">DeploymentOptions to update.</param>
-        //public void UpdateDeploymentOptions(DeploymentOptions options)
-        //{
-        //    // Set the new Commands to the AdcpConfiguration
-        //    SelectedProject.Configuration.DeploymentOptions = options;
-
-        //    // Update the database.
-        //    UpdateAdcpConfiguration(SelectedProject.Configuration);
-        //}
-
-        ///// <summary>
-        ///// Find the AdcpSubsystemConfig in the dictionary.  Set the commands to the correct
-        ///// AdcpSubsystemConfig then write the AdcpConfiguration to the database.
-        ///// </summary>
-        ///// <param name="asConfig">AdcpSubsystemConfig to match and get the commands.</param>
-        //public void UpdateAdcpSubsystemConfigurationCommands(AdcpSubsystemConfig asConfig)
-        //{
-        //    // Find the SubsystemConfiguration and update the commands
-        //    foreach (AdcpSubsystemConfig asc in SelectedProject.Configuration.SubsystemConfigDict.Values)
-        //    {
-        //        if (asc == asConfig)
-        //        {
-        //            asc.Commands = asConfig.Commands;
-        //        }
-        //    }
-
-        //    // Update the database.
-        //    UpdateAdcpConfiguration(SelectedProject.Configuration);
-        //}
 
         /// <summary>
         /// Check if the AdcpConfiguration needs to be updated in the database.
@@ -440,6 +414,76 @@ namespace RTI
 
         #endregion
 
+        #region Project Options
+
+        /// <summary>
+        /// Store the options temporarly.  Then set the flag
+        /// that the Project Options needs to be updated.
+        /// Then wakeup the write thread to do the write.
+        /// </summary>
+        /// <param name="projectOptions">JSON string to write to the Project Options column.</param>
+        public void UpdateProjectOptions(string projectOptions)
+        {
+            // Store the latest config
+            // Then wake up the thread to update the options to the database
+            _projectOptionsJsonStr = projectOptions;
+
+            // Update the flag
+            lock (_lockIsProjectOptionsNeedUpdate)
+            {
+                _isProjectOptionsNeedUpdate = true;
+            }
+
+            // Wake up the thread to process data
+            _eventWaitData.Set();
+        }
+
+        /// <summary>
+        /// Check if the Project Options needs to be updated in the database.
+        /// If it needs to be updated, the query will be run against the database.
+        /// The flag will then be reset.
+        /// 
+        /// The flag is locked because of a multithreaded environment.
+        /// </summary>
+        /// <param name="cnn">Database connection.</param>
+        /// <param name="selectedProject">Selected Project to get the lateset Project options.</param>
+        private void CheckProjectOptions(SQLiteConnection cnn, Project selectedProject)
+        {
+            // Check if the ADCP Commands needs to be updated
+            if (_isProjectOptionsNeedUpdate)
+            {
+                // Send the query to the database
+                UpdateProjectOptions(cnn, selectedProject);
+
+                // Lock the flag and reset the value
+                lock (_lockIsProjectOptionsNeedUpdate)
+                {
+                    _isProjectOptionsNeedUpdate = false;          // Reset flag
+                    _projectOptionsJsonStr = "";                  // Reset string
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Update the row with the latest Project Options.
+        /// </summary>
+        /// <param name="cnn">Connection to the database.</param>
+        /// <param name="project">Project to set options to.</param>
+        private void UpdateProjectOptions(SQLiteConnection cnn, Project project)
+        {
+            string jsonCmd = String.Format("{0} = '{1}'", DbCommon.COL_CMD_PROJECT_OPTIONS, _projectOptionsJsonStr);            // Set the column name and JSON string
+            string query = String.Format("UPDATE {0} SET {1} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS, jsonCmd);                  // Create query string
+
+            using (DbCommand cmd = cnn.CreateCommand())
+            {
+                cmd.CommandText = query;                // Set query string
+                cmd.ExecuteNonQuery();                  // Execute the query
+            }
+        }
+
+        #endregion
+
         #region Process Thread
 
         /// <summary>
@@ -475,54 +519,60 @@ namespace RTI
                         // Open a connection to the database
                         SQLiteConnection cnn = DbCommon.OpenProjectDB(_selectedProject);
 
-                        // Start a transaction
-                        using (DbTransaction dbTrans = cnn.BeginTransaction())
+                        if (cnn != null)
                         {
-                            // Write all data to the database
-                            //for (int x = 0; x < count; x++)
-                            while (_datasetQueue.Count > 0)
+                            // Start a transaction
+                            using (DbTransaction dbTrans = cnn.BeginTransaction())
                             {
-                                // Remove dataset from the queue and write to the database
-                                DataSet.Ensemble ensemble = (DataSet.Ensemble)_datasetQueue.Dequeue();
-                                WriteEnsembleData(ensemble, cnn);
-
-                                // Set the serial number if it has not been set already to the project
-                                if (_selectedProject.SerialNumber.IsEmpty())
+                                // Write all data to the database
+                                //for (int x = 0; x < count; x++)
+                                while (_datasetQueue.Count > 0)
                                 {
-                                    _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
-                                }
+                                    // Remove dataset from the queue and write to the database
+                                    DataSet.Ensemble ensemble = (DataSet.Ensemble)_datasetQueue.Dequeue();
+                                    WriteEnsembleData(ensemble, cnn);
 
-                                // Add the ADCP Configuration to the project
-                                // Check if the configuration has already been added to the project.
-                                // If it has not been added to the project add it now.
-                                // Later it will be written to the project.
-                                // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
-                                if (ensemble.IsEnsembleAvail)
-                                {
-                                    SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
-                                    if (ssConfig != null)
+                                    // Set the serial number if it has not been set already to the project
+                                    if (_selectedProject.SerialNumber.IsEmpty())
                                     {
-                                        Subsystem ss = ensemble.EnsembleData.GetSubSystem();
-                                        CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
-                                        if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                        _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
+                                    }
+
+                                    // Add the ADCP Configuration to the project
+                                    // Check if the configuration has already been added to the project.
+                                    // If it has not been added to the project add it now.
+                                    // Later it will be written to the project.
+                                    // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
+                                    if (ensemble.IsEnsembleAvail)
+                                    {
+                                        SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
+                                        if (ssConfig != null)
                                         {
-                                            _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                            Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                            CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
+                                            if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                            {
+                                                _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                            }
                                         }
                                     }
                                 }
+
+                                // Check if Commands and Options need to be updated
+                                CheckCommandsAndOptions(cnn, _selectedProject);
+
+                                // Check if Application Configurations needs to be updated
+                                CheckAppConfiguration(cnn, _selectedProject);
+
+                                // Check if the Project options needs to be updated
+                                CheckProjectOptions(cnn, _selectedProject);
+
+                                // Commit the transaction
+                                dbTrans.Commit();
                             }
-
-                            // Check if Commands and Options need to be updated
-                            CheckCommandsAndOptions(cnn, _selectedProject);
-
-                            // Check if Application Configurations nees to be updated
-                            CheckAppConfiguration(cnn, _selectedProject);
-
-                            // Commit the transaction
-                            dbTrans.Commit();
+                            // Close the connection to the database
+                            cnn.Close();
                         }
-                        // Close the connection to the database
-                        cnn.Close();
                     }
                     catch (SQLiteException ex)
                     {

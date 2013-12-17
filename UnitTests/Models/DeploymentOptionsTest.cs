@@ -60,12 +60,15 @@ namespace RTI
         [Test]
         public void TestConstructor()
         {
-            DeploymentOptions options = new DeploymentOptions(5, 6, DeploymentOptions.AdcpBatteryType.Lithium_7DD, 77);
+            DeploymentOptions options = new DeploymentOptions(5, 6, DeploymentOptions.AdcpBatteryType.Lithium_7DD, 77, DeploymentOptions.AdcpDeploymentMode.DirectReading, 22, 33);
 
             Assert.AreEqual(5, options.Duration, "Duration is incorrect.");
             Assert.AreEqual(6, options.NumBatteries, "Number of Batteries is incorrect.");
             Assert.AreEqual(DeploymentOptions.AdcpBatteryType.Lithium_7DD, options.BatteryType, "Battery Type is incorrect.");
             Assert.AreEqual(77, options.DepthToBottom, "Depth to Bottom is incorrect.");
+            Assert.AreEqual(DeploymentOptions.AdcpDeploymentMode.DirectReading, options.DeploymentMode, "Deployment mode is incorrect");
+            Assert.AreEqual(22, options.InternalMemoryCardUsed, "Used Internal memory is incorrect.");
+            Assert.AreEqual(33, options.InternalMemoryCardTotalSize, "Internal Memory total size is incorrect.");
         }
 
         /// <summary>

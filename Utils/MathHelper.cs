@@ -47,12 +47,15 @@
  * 12/21/2012      RC          2.17       Removed the abolute value from PercentError per Steve Maier request.  He wants negative percent error.
  * 06/13/2013      RC          2.19       Added HUNSEC_TO_MILLISEC.
  * 07/31/2013      RC          2.19.3     Added BoolToTrueFalseStr() and BoolToOnOffStr().
+ * 11/18/2013      RC          2.21.0     Added TimeSpanPrettyFormat() to give the time span as a string with plurization.
+ * 12/05/2013      RC          2.21.0     Added seconds to TimeSpanPrettyFormat().
  * 
  */
 
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 
 namespace RTI
@@ -936,6 +939,43 @@ namespace RTI
             }
 
             return "Off";
+        }
+
+        #endregion
+
+        #region DateTime
+
+        /// <summary>
+        /// Give the time span with plurization.
+        /// </summary>
+        /// <param name="span">Time span between 2 date and times.</param>
+        /// <returns>String of the time span.</returns>
+        public static string TimeSpanPrettyFormat(TimeSpan span)
+        {
+            if (span == TimeSpan.Zero) return "0 minutes";
+
+            var sb = new StringBuilder();
+            if (span.Days > 0)
+                sb.AppendFormat("{0} day{1} ", span.Days, span.Days > 1 ? "s" : String.Empty);
+            if (span.Hours > 0)
+                sb.AppendFormat("{0} hour{1} ", span.Hours, span.Hours > 1 ? "s" : String.Empty);
+            if (span.Minutes > 0)
+                sb.AppendFormat("{0} minute{1} ", span.Minutes, span.Minutes > 1 ? "s" : String.Empty);
+            if (span.Seconds > 0)
+                sb.AppendFormat("{0} second{1} ", span.Seconds, span.Seconds > 1 ? "s" : String.Empty);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Get the time span between the two date times.  
+        /// dt1 - dt2
+        /// </summary>
+        /// <param name="dt1">Date Time 1.</param>
+        /// <param name="dt2">Date Time 2.</param>
+        /// <returns>String of the time span.</returns>
+        public static string TimeSpanPrettyFormat(DateTime dt1, DateTime dt2)
+        {
+            return TimeSpanPrettyFormat(dt1 - dt2);
         }
 
         #endregion

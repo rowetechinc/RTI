@@ -40,6 +40,7 @@
  * 03/06/2013      RC          2.18       Changed the format of the database.
  * 03/08/2013      RC          2.18       Removed cache and added an SQLiteConnection to improve performance.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 12/09/2013      RC          2.21.0     Added GetLastEnsemble().
  * 
  */
 namespace RTI
@@ -165,7 +166,7 @@ namespace RTI
 
         /// <summary>
         /// Return the first ensemble found.  This will get the total number
-        /// of ensembles to have a timeout.  It will then start to look for
+        /// of ensembles.  It will then start to look for
         /// first ensemble.  The first ensemble found will be returned.
         /// </summary>
         /// <param name="project">Project to get the ensemble.</param>
@@ -178,6 +179,33 @@ namespace RTI
             // Then return the first ensemble found
             int total = GetNumberOfEnsembles(project);
             for (int x = 0; x < total; x++)
+            {
+                ensemble = GetEnsemble(project, x);
+                if (ensemble != null)
+                {
+                    return ensemble;
+                }
+            }
+
+            return ensemble;
+        }
+
+        /// <summary>
+        /// Return the last ensemble found.  This will get the total number
+        /// of ensembles.  It will then start to look for
+        /// last ensemble.  The last ensemble found will be returned.
+        /// </summary>
+        /// <param name="project">Project to get the ensemble.</param>
+        /// <returns>Last ensemble in the project.</returns>
+        public DataSet.Ensemble GetLastEnsemble(Project project)
+        {
+            DataSet.Ensemble ensemble = null;
+
+            // Get the total number ensembles
+            // Then return the last ensemble found
+            // This will move backwards until it finds a good ensemble
+            int total = GetNumberOfEnsembles(project);
+            for (int x = total; x > 0 ; x--)
             {
                 ensemble = GetEnsemble(project, x);
                 if (ensemble != null)

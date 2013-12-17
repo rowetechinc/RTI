@@ -29,6 +29,9 @@
  * 10/08/2012      RC          2.15       Added new Battery Types.
  * 10/10/2012      RC          2.15       Changed Ints to UInt32.  Add Min values.
  *                                         Added GetBatteryList().
+ * 10/09/2013      RC          2.21.0     Added DeploymentMode.
+ * 10/14/2013      RC          2.21.0     Added InternalMemoryCardUsed and InternalMemoryCardTotal.
+ * 11/13/2014      RC          2.21.0     Added DVL and VM deployment modes.
  * 
  */
 
@@ -70,6 +73,49 @@ namespace RTI
             /// 7 DD cell Lithium: 800 Wh-hr.
             /// </summary>
             Lithium_7DD = 800
+        }
+
+
+        /// <summary>
+        /// Type of deployment the ADCP will be put in.
+        /// </summary>
+        public enum AdcpDeploymentMode
+        {
+            /// <summary>
+            /// Recording live data from the ADCP through a cable.
+            /// SeaPROFILER.
+            /// </summary>
+            DirectReading,
+
+            /// <summary>
+            /// Data recorded internally to the ADCP and deployed for a period of time alone.
+            /// SeaWATCH.
+            /// </summary>
+            SelfContained,
+
+            /// <summary>
+            /// Measure waves.
+            /// SeaWAVE.
+            /// </summary>
+            Waves,
+
+            /// <summary>
+            /// Measure River discharge.
+            /// RiverPROFILER.
+            /// </summary>
+            River,
+
+            /// <summary>
+            /// DVL system.
+            /// SeaPILOT.
+            /// </summary>
+            Dvl,
+
+            /// <summary>
+            /// Vessel Mounted system.
+            /// SeaTRAK.
+            /// </summary>
+            VM,
         }
 
         #endregion
@@ -115,6 +161,21 @@ namespace RTI
         /// </summary>
         public const UInt32 DEFAULT_DEPTH_TO_BOTTOM = 100;
 
+        /// <summary>
+        /// Default deployment is Direct reading.
+        /// </summary>
+        public const AdcpDeploymentMode DEFAULT_DEPLOYMENT_MODE = AdcpDeploymentMode.DirectReading;
+
+        /// <summary>
+        /// Default total memory card used.
+        /// </summary>
+        public const long DEFAULT_MEMORY_CARD_USED = 0;
+
+        /// <summary>
+        /// Default total size of the memory card.
+        /// </summary>
+        public const long DEFAULT_MEMORY_CARD_TOTAL = 0;
+
         #endregion
 
         #region Properties
@@ -139,6 +200,21 @@ namespace RTI
         /// </summary>
         public UInt32 DepthToBottom { get; set; }
 
+        /// <summary>
+        /// ADCP deployment mode.
+        /// </summary>
+        public AdcpDeploymentMode DeploymentMode { get; set; }
+
+        /// <summary>
+        /// Total used space in bytes on the internal memory card of the ADCP.
+        /// </summary>
+        public long InternalMemoryCardUsed { get; set; }
+
+        /// <summary>
+        /// Total size of the internal memory card of the ADCP in bytes.
+        /// </summary>
+        public long InternalMemoryCardTotalSize { get; set; }
+
         #endregion
 
         /// <summary>
@@ -158,12 +234,18 @@ namespace RTI
         /// <param name="numBatt">Number of batteries.</param>
         /// <param name="battType">Battery Type.</param>
         /// <param name="depthBottom">Depth to the bottom in meters.</param>
-        public DeploymentOptions(UInt32 duration, UInt32 numBatt, AdcpBatteryType battType, UInt32 depthBottom)
+        /// <param name="mode">Deployment mode.</param>
+        /// <param name="memoryCardUsed">Total bytes used on the memory card.</param>
+        /// <param name="memoryCardTotal">Total size in bytes of the memory card.</param>
+        public DeploymentOptions(UInt32 duration, UInt32 numBatt, AdcpBatteryType battType, UInt32 depthBottom, AdcpDeploymentMode mode, long memoryCardUsed, long memoryCardTotal)
         {
             Duration = duration;
             NumBatteries = numBatt;
             BatteryType = battType;
             DepthToBottom = depthBottom;
+            DeploymentMode = mode;
+            InternalMemoryCardUsed = memoryCardUsed;
+            InternalMemoryCardTotalSize = memoryCardTotal;
         }
 
         /// <summary>
@@ -175,6 +257,9 @@ namespace RTI
             NumBatteries = DEFAULT_NUM_BATTERIES;                           // Default Num Battery
             BatteryType = DEFAULT_BATTERY_TYPE;                             // Default Battery Type
             DepthToBottom = DEFAULT_DEPTH_TO_BOTTOM;                        // Default Depth to Bottom
+            DeploymentMode = DEFAULT_DEPLOYMENT_MODE;                       // Default Deployment mode
+            InternalMemoryCardUsed = DEFAULT_MEMORY_CARD_USED;              // Default used
+            InternalMemoryCardTotalSize = DEFAULT_MEMORY_CARD_TOTAL;        // Default total size
         }
 
         /// <summary>

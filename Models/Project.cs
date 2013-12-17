@@ -64,6 +64,9 @@
  *                                         Subscribe to binaryWriter to know when an ensemble has been written to the binary file.
  * 08/09/2013      RC          2.19.4     Added the column AppConfiguration to tblOptions to hold application specific options.
  *                                         Added WriteAppConfiguration().  Changed Project DB rev to D2.
+ * 10/09/2013      RC          2.21.0     Added EnableBackupBinaryWriter and _binaryWriterBackup to have a backup binary writer.
+ * 12/09/2013      RC          2.21.0     Added GetLastEnsemble().
+ * 12/16/2013      RC          2.21.0     Added Position column and change rev to D3.
  */
 
 using System;
@@ -102,8 +105,9 @@ namespace RTI
         /// Revision C changed the options table.
         /// Revision D made all the columns JSON data.
         /// Revision D2 added AppConfiguration column.
+        /// Revision D3 added Position column.
         /// </summary>
-        public const string REV = "D2";
+        public const string REV = "D3";
 
         /// <summary>
         /// ID for project if no project 
@@ -116,6 +120,11 @@ namespace RTI
         /// ADCP data to binary file.
         /// </summary>
         private AdcpBinaryWriter _binaryWriter;
+
+        /// <summary>
+        /// Backup binary writer.
+        /// </summary>
+        private AdcpBinaryWriter _binaryWriterBackup;
 
         /// <summary>
         /// ADCP database writer.  This will write
@@ -138,12 +147,32 @@ namespace RTI
         /// <summary>
         /// Name of the project.
         /// </summary>
-        public string ProjectName { get; set; }
+        public string ProjectName 
+        {
+            get { return Options.ProjectName; }
+            set 
+            { 
+                Options.ProjectName = value;
+
+                // Save the options to the db
+                WriteProjectOptions();
+            }
+        }
 
         /// <summary>
         /// Directory the project is located.
         /// </summary>
-        public string ProjectDir { get; set; }
+        public string ProjectDir 
+        {
+            get { return Options.ProjectDir; }
+            set 
+            { 
+                Options.ProjectDir = value;
+
+                // Save the options to the db
+                WriteProjectOptions();
+            }
+        }
 
         /// <summary>
         /// Folder path to the project.
@@ -152,7 +181,29 @@ namespace RTI
         /// ProjectDir/ProjectName
         /// It will not end with a '/'.
         /// </summary>
-        public string ProjectFolderPath { get; set; }
+        public string ProjectFolderPath
+        {
+            get { return Options.ProjectFolderPath; }
+        }
+
+        /// <summary>
+        /// Folder path to the backup project.
+        /// This will include the directory and
+        /// the directory created with the project name.
+        /// ProjectDir/ProjectName
+        /// It will not end with a '/'.
+        /// </summary>
+        public string BackupProjectFolderPath 
+        {
+            get { return Options.BackupProjectFolderPath; }
+            set 
+            { 
+                Options.BackupProjectFolderPath = value;
+                
+                // Save the options to the db
+                WriteProjectOptions();
+            } 
+        }
 
         /// <summary>
         /// ID within the Project database.
@@ -199,6 +250,10 @@ namespace RTI
                 {
                     _binaryWriter.ResetFileName();
                 }
+                if (_binaryWriterBackup != null)
+                {
+                    _binaryWriterBackup.ResetFileName();
+                }
             }
         }
 
@@ -207,6 +262,11 @@ namespace RTI
         /// deployment options set for the ADCP.
         /// </summary>
         public AdcpConfiguration Configuration { get; set; }
+
+        /// <summary>
+        /// Options for the project.
+        /// </summary>
+        public ProjectOptions Options { get; set; }
 
         #endregion
 
@@ -221,13 +281,14 @@ namespace RTI
         {
             // Set the initial settings
             ProjectID = Project.EmptyID;
-            SetFolders(name, dir);
+            //SetFolders(name, dir);
+            Options = new ProjectOptions(name, dir);
             DateCreated = DateTime.Now;
             LastDateModified = DateTime.Now;
             CreateSerialNumber(serialNum);
 
             // Create the directory if it does not exist
-            Directory.CreateDirectory(ProjectFolderPath);
+            Directory.CreateDirectory(Options.ProjectFolderPath);
 
             // Create the database file
             CreateProjectDatabase();
@@ -248,13 +309,14 @@ namespace RTI
         {
             // Set the initial settings
             ProjectID = id;
-            SetFolders(name, dir);
+            //SetFolders(name, dir);
+            Options = new ProjectOptions(name, dir);
             DateCreated = DateTime.Now;
             LastDateModified = DateTime.Now;
             CreateSerialNumber(serialNum);
 
             // Create the directory if it does not exist
-            Directory.CreateDirectory(ProjectFolderPath);
+            Directory.CreateDirectory(Options.ProjectFolderPath);
 
             // Create the database file
             CreateProjectDatabase();
@@ -276,14 +338,15 @@ namespace RTI
         public Project(int id, string name, string dir, DateTime dateCreated, DateTime lastDateModified, string serialNum)
         {
             // Set the initial settings
-            SetFolders(name, dir);
+            //SetFolders(name, dir);
+            Options = new ProjectOptions(name, dir);
             ProjectID = id;
             DateCreated = dateCreated;
             LastDateModified = lastDateModified;
             CreateSerialNumber(serialNum);
 
             // Create the directory if it does not exist
-            Directory.CreateDirectory(ProjectFolderPath);
+            Directory.CreateDirectory(Options.ProjectFolderPath);
 
             // Create the database file
             CreateProjectDatabase();
@@ -307,13 +370,14 @@ namespace RTI
         {
             // Set the initial settings
             ProjectID = Project.EmptyID;
-            SetFolders(name, dir);
+            //SetFolders(name, dir);
+            Options = new ProjectOptions(name, dir);
             DateCreated = DateTime.Now;
             LastDateModified = DateTime.Now;
             CreateSerialNumber(serialNum);
 
             // Create the directory if it does not exist
-            Directory.CreateDirectory(ProjectFolderPath);
+            Directory.CreateDirectory(Options.ProjectFolderPath);
 
             // Copy the database file
             CopyProjectDatabase(dbFilePath);
@@ -335,6 +399,25 @@ namespace RTI
             _dbWriter.Dispose();
             _binaryWriter.Dispose();
             _dbReader.Dispose();
+
+            // If the binary writer was enabled
+            // shut it down also
+            if (_binaryWriterBackup != null)
+            {
+                _binaryWriterBackup.EnsembleWriteEvent -= _binaryWriterBackup_EnsembleWriteEvent;
+                _binaryWriterBackup.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Save all the configurations to the project.
+        /// This will write them to the project.
+        /// </summary>
+        public void Save()
+        {
+            WriteAdcpConfiguration();
+            //WriteAppConfiguration();
+            //WriteProjectOptions();
         }
 
         /// <summary>
@@ -351,9 +434,33 @@ namespace RTI
             _dbWriter.EnsembleWriteEvent += new AdcpDatabaseWriter.EnsembleWriteEventHandler(_dbWriter_EnsembleWriteEvent);
             _binaryWriter.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriter_EnsembleWriteEvent);
 
+            // Get the options from the db
+            Options = GetProjectOptions();
+
+            // If a backup project folder path is given, create the backup writer
+            if (!string.IsNullOrEmpty(Options.BackupProjectFolderPath))
+            {
+                CreateBackupWriter(Options.ProjectName, Options.BackupProjectFolderPath, SerialNumber.ToString(), GetMaxBinaryFileSize());
+            }
+
+            //SetMaxBinaryFileSize(Options.MaxFileSize);
+            if (_binaryWriter != null)
+            {
+                _binaryWriter.MaxFileSize = Options.MaxFileSize;
+            }
+
+            if (_binaryWriterBackup != null)
+            {
+                _binaryWriterBackup.MaxFileSize = Options.MaxFileSize;
+            }
+
+
             // Check the if the serial number can
             // be set from the first ensemble if it is empty
             CheckSerialNumber();
+
+            // Write the current project options to the database
+            //WriteProjectOptions();
         }
 
         /// <summary>
@@ -392,19 +499,19 @@ namespace RTI
             }
         }
 
-        /// <summary>
-        /// Set the project name,
-        /// project folder and project
-        /// folder path.
-        /// </summary>
-        /// <param name="name">Name of the project.</param>
-        /// <param name="dir">Project folder.</param>
-        private void SetFolders(string name, string dir)
-        {
-            ProjectName = name;
-            ProjectDir = dir;
-            ProjectFolderPath = dir + @"\" + name;
-        }
+        ///// <summary>
+        ///// Set the project name,
+        ///// project folder and project
+        ///// folder path.
+        ///// </summary>
+        ///// <param name="name">Name of the project.</param>
+        ///// <param name="dir">Project folder.</param>
+        //private void SetFolders(string name, string dir)
+        //{
+        //    ProjectName = name;
+        //    ProjectDir = dir;
+        //    ProjectFolderPath = dir + @"\" + name;
+        //}
 
         #region Database
 
@@ -490,9 +597,9 @@ namespace RTI
                 //"PRAGMA main.synchronous=NORMAL",
                 //"PRAGMA main.journal_mode=WAL",
                 //"PRAGMA main.cache_size=5000",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT)",
-                "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
-                string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, {4});", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", "'D1'"),   // Put at least 1 entry so an insert does not have to be done later
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT)",
+                "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, ProjectOptions TEXT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
+                string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, \"{4}\");", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", REV),   // Put at least 1 entry so an insert does not have to be done later
             };
 
             //SQLiteConnection cnn = DbCommon.OpenProjectDB(project);
@@ -751,7 +858,7 @@ namespace RTI
         /// <summary>
         /// Write the AdcpConfiguration to the project database file.
         /// </summary>
-        public void WriteAdcpConfiguration()
+        private void WriteAdcpConfiguration()
         {
             _dbWriter.UpdateAdcpConfiguration(Configuration);
         }
@@ -820,6 +927,83 @@ namespace RTI
 
         #endregion
 
+        #region Project Options
+
+        /// <summary>
+        /// Get the project options from the database.
+        /// If they could not be found in the database, then it will 
+        /// give default values.
+        /// </summary>
+        /// <returns>Project options.</returns>
+        public ProjectOptions GetProjectOptions()
+        {
+            // Get the options from the database
+            return Options = GetProjectOptionsFromDb();
+        }
+
+        /// <summary>
+        /// Get the Project Options from the database.  This will read the database
+        /// table for the configuration.  If one exist, it will set the configuration.
+        /// If one does not exist, it will return the default values.
+        /// </summary>
+        /// <returns>Adcp Configurations found in the project DB file.</returns>
+        private ProjectOptions GetProjectOptionsFromDb()
+        {
+            //ProjectOptions config = new AdcpConfiguration(SerialNumber);
+
+            string query = String.Format("SELECT * FROM {0} WHERE ID=1;", DbCommon.TBL_ENS_OPTIONS);
+            try
+            {
+                // Query the database for the ADCP settings
+                DataTable dt = DbCommon.GetDataTableFromProjectDb(this, query);
+
+                // Go through the result settings the settings
+                // If more than 1 result is found, return the first one found
+                foreach (DataRow r in dt.Rows)
+                {
+                    // Check if there is data
+                    if (r[DbCommon.COL_CMD_PROJECT_OPTIONS] == DBNull.Value)
+                    {
+                        break;
+                    }
+
+                    // This will call the default constructor or pass to the constructor parameter a null
+                    // The constructor parameter must be set after creating the object.
+                    string json = Convert.ToString(r[DbCommon.COL_CMD_PROJECT_OPTIONS]);
+                    if (!String.IsNullOrEmpty(json))
+                    {
+                        Options = Newtonsoft.Json.JsonConvert.DeserializeObject<ProjectOptions>(json);
+                    }
+
+
+                    // Only read the first row
+                    break;
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error("SQL Error getting ADCP Configuration from the project.", e);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error getting ADCP Configuration from the project.", ex);
+            }
+
+            return Options;
+        }
+
+        /// <summary>
+        /// Serialize the project options to a JSON string. Then
+        /// write the Project options to the project database file.
+        /// </summary>
+        public void WriteProjectOptions()
+        {
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(Options);                                    // Serialize object to JSON
+            _dbWriter.UpdateProjectOptions(json);
+        }
+
+        #endregion
+
         #region Folder Paths
 
         /// <summary>
@@ -863,6 +1047,13 @@ namespace RTI
                 _binaryWriter.AddIncomingData(data);
             }
 
+            // If the backup binary writer is enabled
+            // also write to the backup
+            if (_binaryWriterBackup != null)
+            {
+                _binaryWriterBackup.AddIncomingData(data);
+            }
+
             return true;
         }
 
@@ -892,6 +1083,11 @@ namespace RTI
                 _binaryWriter.Flush();
             }
 
+            if (_binaryWriterBackup != null)
+            {
+                _binaryWriterBackup.Flush();
+            }
+
             if (_dbWriter != null)
             {
                 _dbWriter.Flush();
@@ -914,6 +1110,77 @@ namespace RTI
         }
 
         #endregion
+
+        #endregion
+
+        #region Binary Writer
+
+        /// <summary>
+        /// Get the maximum binary file size in bytes.
+        /// </summary>
+        /// <returns>Max binary file size in bytes.</returns>
+        public long GetMaxBinaryFileSize()
+        {
+            return Options.MaxFileSize;
+        }
+
+        /// <summary>
+        /// Set the maximum binary file size in bytes.
+        /// </summary>
+        /// <param name="size">Maximum binary file size in bytes.</param>
+        public void SetMaxBinaryFileSize(long size)
+        {
+            if (_binaryWriter != null)
+            {
+                _binaryWriter.MaxFileSize = size;
+            }
+
+            if (_binaryWriterBackup != null)
+            {
+                _binaryWriterBackup.MaxFileSize = size;
+            }
+
+            // Update the options
+            Options.MaxFileSize = size;
+            WriteProjectOptions();
+        }
+
+        /// <summary>
+        /// Create the backup writer.
+        /// </summary>
+        /// <param name="name">File names.</param>
+        /// <param name="folderPath">Folder path.</param>
+        /// <param name="serialNum">Serial number.</param>
+        /// <param name="maxFileSize">Maximum file size.</param>
+        public void CreateBackupWriter(string name, string folderPath, string serialNum, long maxFileSize)
+        {
+            _binaryWriterBackup = new AdcpBinaryWriter(name, folderPath, serialNum, maxFileSize);
+            _binaryWriterBackup.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriterBackup_EnsembleWriteEvent);
+
+            BackupProjectFolderPath = folderPath;
+
+            // Create the directory if it does not exist
+            if (!string.IsNullOrEmpty(BackupProjectFolderPath))
+            {
+                Directory.CreateDirectory(BackupProjectFolderPath);
+            }
+        }
+
+        /// <summary>
+        /// Remove the backup writer.
+        /// </summary>
+        public void RemoveBackupWriter()
+        {
+            // If the binary writer was enabled
+            // shut it down also
+            if (_binaryWriterBackup != null)
+            {
+                _binaryWriterBackup.EnsembleWriteEvent -= _binaryWriterBackup_EnsembleWriteEvent;
+                _binaryWriterBackup.Dispose();
+
+                BackupProjectFolderPath = null;
+            }
+        }
 
         #endregion
 
@@ -953,6 +1220,17 @@ namespace RTI
         public DataSet.Ensemble GetFirstEnsemble()
         {
             return _dbReader.GetFirstEnsemble(this);
+        }
+
+        /// <summary>
+        /// Return the last ensemble found.  This will get the total number
+        /// of ensembles to have a timeout.  It will then start to look for
+        /// last ensemble.  The last ensemble found will be returned.
+        /// </summary>
+        /// <returns>Last ensemble in the project.</returns>
+        public DataSet.Ensemble GetLastEnsemble()
+        {
+            return _dbReader.GetLastEnsemble(this);
         }
 
         /// <summary>
@@ -1080,6 +1358,17 @@ namespace RTI
             PublishBinaryEnsembleWrite(count);
         }
 
+        /// <summary>
+        /// Event recieved when an ensemble has been written to the
+        /// backup binary file.  This will also return the file size of the
+        /// backup binary file.
+        /// </summary>
+        /// <param name="count">File size of the backup binary file in bytes.</param>
+        void _binaryWriterBackup_EnsembleWriteEvent(long count)
+        {
+            PublishBinaryBackupEnsembleWrite(count);
+        }
+
         #endregion
 
         #region Events
@@ -1140,8 +1429,8 @@ namespace RTI
         public event BinaryEnsembleWriteEventHandler BinaryEnsembleWriteEvent;
 
         /// <summary>
-        /// Publish that an ensemble has been written to the database (Project).
-        /// This will give the number of ensembles in the project.
+        /// Publish that an ensemble has been written to the file.
+        /// This will give the number of bytes in the file.
         /// 
         /// Verify there is a subscriber before calling the
         /// subscribers with the new event.
@@ -1151,6 +1440,42 @@ namespace RTI
             if (BinaryEnsembleWriteEvent != null)
             {
                 BinaryEnsembleWriteEvent(count);
+            }
+        }
+
+        #endregion
+
+        #region Binary Backup Ensemble Write
+
+        /// <summary>
+        /// Event To subscribe to. 
+        /// </summary>
+        /// <param name="count">Size of the binary file in bytes.</param>
+        public delegate void BinaryBackupEnsembleWriteEventHandler(long count);
+
+        /// <summary>
+        /// Subscribe to this event.  This will hold all subscribers.
+        /// 
+        /// To subscribe:
+        /// prj.BinaryBackupEnsembleWriteEvent += new prj.BinaryBackupEnsembleWriteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// prj.BinaryBackupEnsembleWriteEvent -= (method to call)
+        /// </summary>
+        public event BinaryBackupEnsembleWriteEventHandler BinaryBackupEnsembleWriteEvent;
+
+        /// <summary>
+        /// Publish that an ensemble has been written to the backup file.
+        /// This will give the number of bytes in the backup file.
+        /// 
+        /// Verify there is a subscriber before calling the
+        /// subscribers with the new event.
+        /// </summary>
+        private void PublishBinaryBackupEnsembleWrite(long count)
+        {
+            if (BinaryBackupEnsembleWriteEvent != null)
+            {
+                BinaryBackupEnsembleWriteEvent(count);
             }
         }
 

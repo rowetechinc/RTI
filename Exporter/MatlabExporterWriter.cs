@@ -99,8 +99,8 @@ namespace RTI
         /// Each ensemble will have its own file.  So the filename will contain the subsystem and 
         /// ensemble number.
         /// </summary>
-        /// <param name="ensemble"></param>
-        /// <param name="isMultipleFile"></param>
+        /// <param name="ensemble">Ensemble to encode to matlab.</param>
+        /// <param name="isMultipleFile">Set flag if you want individual files per ensemble or combine it all into one file.</param>
         public void  Write(DataSet.Ensemble ensemble, bool isMultipleFile = false)
         {
             if (ensemble != null)

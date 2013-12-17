@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 03/14/2013      RC          2.19       Initial coding
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 11/21/2013      RC          2.21.0     Added send and receive methods to match the ADCP serial ports commands.
  * 
  */
 
@@ -46,6 +47,7 @@ namespace RTI
     using System.Net.NetworkInformation;
     using System.Diagnostics;
     using System.IO;
+    using System.Threading;
 
     /// <summary>
     /// Send commands and receive data from the ADCP using
@@ -61,14 +63,33 @@ namespace RTI
         private const int MAX_DOWNLOAD_RETRY = 100;
 
         /// <summary>
+        /// Time to wait to see if a command
+        /// was sent.  If a timeout occurs
+        /// it means a command did not get
+        /// a response from the ADCP for sending
+        /// a command.  Value in milliseconds.
+        /// </summary>
+        private const int TIMEOUT = 2000; 
+
+        /// <summary>
         /// Number to indicate a bad packet was received.
         /// </summary>
         private const int BAD_PACKET = -123;
 
         /// <summary>
-        /// Options for the ethernet connection.
+        /// Default period to wait before checking for data to read.
+        /// 
+        /// 4Hz
         /// </summary>
-        private AdcpEthernetOptions _options;
+        protected const int DEFAULT_SERIAL_INTERVAL = 250;
+
+        /// <summary>
+        /// A wait state used to wait between sending a command and
+        /// expecting a result back in the buffer.  Since the data is
+        /// not read continuously from the serial port, use must wait a
+        /// period of time between sending a command and expecting a result.
+        /// </summary>
+        public const int WAIT_STATE = DEFAULT_SERIAL_INTERVAL;    // Time to wait between sending a message and getting a response
 
         /// <summary>
         /// Binarywriter to write the download data
@@ -89,6 +110,11 @@ namespace RTI
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Options for the ethernet connection.
+        /// </summary>
+        public AdcpEthernetOptions Options { get; set; }
 
         /// <summary>
         /// Buffer to hold all the data received from the ethernet port.
@@ -121,7 +147,7 @@ namespace RTI
         /// <param name="options">Ethernet options.</param>
         public AdcpEthernet(AdcpEthernetOptions options)
         {
-            _options = options;
+            Options = options;
             _downloadFileName = "";
             _cancelDownload = false;
         }
@@ -154,6 +180,45 @@ namespace RTI
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Send the commands to the ADCP to start pinging.
+        /// To start pinging, send the command START.  This
+        /// will also set the date and time to the system
+        /// based off the computers current date and time.
+        /// If any command cannot be sent, set the flag and
+        /// return that a command could not be set.
+        /// </summary>
+        /// <param name="UseLocal">Use the local time to set the ADCP time.  FALSE will set the GMT time.</param>
+        /// <returns>TRUE = All commands sent. FALSE = 1 or more commands could not be sent.</returns>
+        public bool StartPinging(bool UseLocal = true)
+        {
+            bool timeResult = false;
+            bool pingResult = false;
+
+            // Try to send the command to set the time, if it fails try again
+            // The user can choose to set local or UTC time
+            if (UseLocal)
+            {
+                // Local
+                timeResult = SetLocalSystemDateTime();
+            }
+            else
+            {
+                // UTC time
+                timeResult = SetUtcSystemDateTime();
+            }
+
+            // Try to send the command, if it fails try again
+            pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
+            if (!pingResult)
+            {
+                pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
+            }
+
+            // Return if either failed
+            return timeResult & pingResult;
         }
 
         /// <summary>
@@ -223,7 +288,155 @@ namespace RTI
 
         #endregion
 
+        #region IsOpen
+
+        /// <summary>
+        /// Test to see if the ADCP is connected on the ethernet port.
+        /// Send a BREAK to the ADCP.  If we get no response,
+        /// then the ADCP is not connected.
+        /// </summary>
+        /// <returns>True = Ethernet Port Open / False = Ethernet Port is NOT open.</returns>
+        public bool IsOpen()
+        {
+            // Create any array, this buffer will be resized by response
+            byte[] buffer = new byte[100];
+
+            // Send a soft BREAK
+            // If no response comes back, then the ADCP is not connected
+            if (SendData(Commands.AdcpCommands.CMD_BREAK, ref buffer, true) > 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
+
         #region Send/Receive Data
+
+        /// <summary>
+        /// Send a soft break to the ADCP.
+        /// </summary>
+        public void SendBreak()
+        {
+            // Create any array, this buffer will be resized by response
+            byte[] buffer = new byte[100];
+            
+            // Send a soft break
+            SendDataGetReply(Commands.AdcpCommands.CMD_BREAK, false);
+        }
+
+        /// <summary>
+        /// Send the given buffer of data to the ADCP.
+        /// 
+        /// This will write the data in the buffer at the given
+        /// offset with the given length to the serial port.
+        /// 
+        /// This will not add the carrage return to the
+        /// end of the data.
+        /// </summary>
+        /// <param name="buffer">Buffer of data to write.</param>
+        /// <param name="offset">Location in the buffer to write.</param>
+        /// <param name="count">Number of bytes to write.</param>
+        public void SendData(byte[] buffer, int offset, int count)
+        {
+            // Convert the byte array to a string
+            string data = MathHelper.ByteArrayToString(buffer, count, offset);
+
+            // This buffer will get recreated in the response
+            byte[] reply = new byte[100];
+
+            // Send the data to ethernet port
+            SendData(data, ref reply);
+
+            Thread.Sleep(WAIT_STATE);
+
+            // Read the buffer for a reply
+            ReadData(ref reply);
+        }
+
+        /// <summary>
+        /// Send a command to the serial port.
+        /// This will add the carrage return to
+        /// the end of the string.
+        /// </summary>
+        /// <param name="data">Data to write.</param>
+        public void SendData(string data)
+        {
+            //// This buffer will get recreated in the response
+            //byte[] buffer = new byte[100];
+            //SendData(data, ref buffer);
+
+            //Thread.Sleep(WAIT_STATE);
+
+            //// Read the buffer for a reply
+            //byte[] reply = new byte[100];
+            //ReadData(ref reply);
+
+            // Send data and wait for the reply
+            SendDataWaitReply(data);
+        }
+
+        /// <summary>
+        /// Send data through the serial port and wait for a response
+        /// back from the serial port.  If the response was the same
+        /// as the message sent, then return true.
+        /// 
+        /// </summary>
+        /// <param name="data">Data to send through the serial port.</param>
+        /// <param name="timeout">Timeout to wait in milliseconds.  Default = 1 sec.</param>
+        /// <return>Flag if was successful sending the command.</return>
+        public bool SendDataWaitReply(string data, int timeout = 1000)
+        {
+            // This buffer will get recreated in the response
+            byte[] reply = new byte[100];
+
+            // Send the data to ethernet port
+            // Publish the results by setting flag to true
+            SendData(data, ref reply, true, timeout);
+
+            Thread.Sleep(WAIT_STATE);
+
+            // Read the buffer for a reply
+            if (ReadData(ref reply) > 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Send data to the serial port.  Then wait for a response.  Get the
+        /// response back from the serial port from the data sent.  The
+        /// wait time is based on how long the data sent needs to be processed 
+        /// on the other end before it sends a response back.  The waitTime is in
+        /// milliseconds.  The default value for waitTime is RTI.AdcpSerialPort.WAIT_STATE.
+        /// 
+        /// sendBreak is used to send a BREAK before the command is sent.  This is useful to 
+        /// wake the system up before sending the command or to get the BREAK result.
+        /// </summary>
+        /// <param name="data">Data to send to the serial port.</param>
+        /// <param name="sendBreak">Flag to send a BREAK or not.</param>
+        /// <param name="waitTime">Time to wait for a response in milliseconds.  DEFAULT=RTI.AdcpSerialPort.WAIT_STATE</param>
+        /// <returns>Data sent back from the serial port after the data was sent.</returns>
+        public string SendDataGetReply(string data, bool sendBreak = false, int waitTime = RTI.AdcpSerialPort.WAIT_STATE)
+        {
+            // This buffer will get recreated in the response
+            byte[] reply = new byte[100];
+
+            // Send the data to ethernet port
+            // Publish the results by setting flag to true
+            SendData(data, ref reply, true);
+
+            Thread.Sleep(WAIT_STATE);
+
+            // Read the buffer for a reply
+            ReadData(ref reply);
+
+            return Encoding.ASCII.GetString(reply);
+        }
 
         /// <summary>
         /// Send data to the ADCP through the ethernet.  
@@ -233,6 +446,9 @@ namespace RTI
         /// a reply.  If the response is received, the payload is removed from the
         /// reply and published to all subscribers.  It will then return the number of bytes
         /// read back in the reply.
+        /// 
+        /// The reply is the not response from the command but the reply that the command was received.
+        /// You will need to still send a ReadData() to get the response of the command.
         /// </summary>
         /// <param name="cmd">Command to send to the ADCP.</param>
         /// <param name="replyBuffer">Reply Buffer.  This is the data from the reponse.</param>
@@ -241,7 +457,6 @@ namespace RTI
         /// <returns>Number of bytes read back from the ADCP.</returns>
         public int SendData(string cmd, ref byte[] replyBuffer, bool showResults = false, int timeout = 2000)
         {
-
             int i;
             int result = 0;
 
@@ -277,29 +492,29 @@ namespace RTI
                 {
                     // Send the command to the address and get a response back
                     // This will wait for the timeout to get a response
-                    PingReply reply = pingSender.Send(_options.IpAddr, timeout, buffer, options);
+                    PingReply reply = pingSender.Send(Options.IpAddr, timeout, buffer, options);
 
                     // Verify the reply
                     if (reply.Status == IPStatus.Success)
                     {
-                        if (showResults)
-                        {
-                            // Form the reply response
-                            ReceiveBufferString += string.Format("\r\n");
-                            ReceiveBufferString += string.Format("* Status:         {0}\n", reply.Status.ToString());
-                            ReceiveBufferString += string.Format("* Address:        {0}\n", reply.Address.ToString());
-                            ReceiveBufferString += string.Format("* RoundTrip time: {0}\n", reply.RoundtripTime.ToString());
-                            ReceiveBufferString += string.Format("* Time to live:   {0}\n", reply.Options.Ttl.ToString());
-                            ReceiveBufferString += string.Format("* Don't fragment: {0}\n", reply.Options.DontFragment.ToString());
-                            ReceiveBufferString += string.Format("* Buffer size:    {0}\n", reply.Buffer.Length.ToString());
-                            ReceiveBufferString += string.Format("\r\n");
-                        }
+                        //if (showResults)
+                        //{
+                        //    // Form the reply response
+                        //    ReceiveBufferString += string.Format("\r\n");
+                        //    ReceiveBufferString += string.Format("* Status:         {0}\n", reply.Status.ToString());
+                        //    ReceiveBufferString += string.Format("* Address:        {0}\n", reply.Address.ToString());
+                        //    ReceiveBufferString += string.Format("* RoundTrip time: {0}\n", reply.RoundtripTime.ToString());
+                        //    ReceiveBufferString += string.Format("* Time to live:   {0}\n", reply.Options.Ttl.ToString());
+                        //    ReceiveBufferString += string.Format("* Don't fragment: {0}\n", reply.Options.DontFragment.ToString());
+                        //    ReceiveBufferString += string.Format("* Buffer size:    {0}\n", reply.Buffer.Length.ToString());
+                        //    ReceiveBufferString += string.Format("\r\n");
+                        //}
 
                         // Check if the IP for the reply matched the one sent
-                        if (reply.Buffer[0] == Convert.ToByte(_options.IpAddrA) &&
-                            reply.Buffer[1] == Convert.ToByte(_options.IpAddrB) &&
-                            reply.Buffer[2] == Convert.ToByte(_options.IpAddrC) &&
-                            reply.Buffer[3] == Convert.ToByte(_options.IpAddrD))
+                        if (reply.Buffer[0] == Convert.ToByte(Options.IpAddrA) &&
+                            reply.Buffer[1] == Convert.ToByte(Options.IpAddrB) &&
+                            reply.Buffer[2] == Convert.ToByte(Options.IpAddrC) &&
+                            reply.Buffer[3] == Convert.ToByte(Options.IpAddrD))
                         {
                             // Get the number of bytes in the reply
                             int bytes = GetReplyBytes(reply);
@@ -315,9 +530,6 @@ namespace RTI
                                 replyBuffer[j] = reply.Buffer[i];
                             }
 
-                            // Publish the raw data
-                            PublishRawEthernetData(replyBuffer);
-
                             // Display the results
                             if (showResults && result > 0)
                             {
@@ -331,6 +543,11 @@ namespace RTI
                                 // Publish the data
                                 PublishEthernetData(strBuffer);
                             }
+
+                            // Publish the raw data
+                            // Put this after ReceiveBufferString is set to ensure
+                            // that the update is published for the ReceiveBufferString also
+                            PublishRawEthernetData(replyBuffer);
                         }
                         else
                         {
@@ -367,6 +584,10 @@ namespace RTI
         /// This will read data in from the ethernet buffer on the ADCP.
         /// By sending no command, the ADCP will send back whatever is in the
         /// ethernet buffer.
+        /// 
+        /// This will continue to read until nothing is left to read.  It will then
+        /// return all the data read.
+        /// 
         /// </summary>
         /// <param name="replyBuffer">Reply Buffer.  This is the data from the reponse.</param>
         /// <param name="showResults">Display the results of the read to the read buffer.</param>
@@ -374,7 +595,28 @@ namespace RTI
         /// <returns>Return the number of bytes read.</returns>
         public int ReadData(ref byte[] replyBuffer, bool showResults = false, int timeout = 2000)
         {
-            return SendData("", ref replyBuffer, showResults, timeout);
+            List<byte[]> list = new List<byte[]>();
+            int bufferSize = 0;
+
+            byte[] buffer = new byte[1024];                                 // Create an empty buffer
+            int count = SendData("", ref buffer, true, timeout);            // Send blank command to read the data
+            while ( count > 0)                                              // Continue reading until nothing is left
+            {
+                bufferSize += count;                                        // Increase the buffer size
+                list.Add(buffer);                                           // Store the buffer to the list
+                buffer = new byte[1024];                                    // Create a new buffer
+
+                count = SendData("", ref buffer, true, timeout);            // Send blank command to read the data
+            }
+
+            // Create a new buffer to hold all the responses
+            replyBuffer = new byte[bufferSize];
+            foreach (var buff in list)
+            {
+                System.Buffer.BlockCopy(buff, 0, replyBuffer, 0, buff.Length);     // Combine all the buffers to one buffer
+            }   
+
+            return bufferSize;
         }
 
         /// <summary>
@@ -403,6 +645,64 @@ namespace RTI
             }
 
             return bytes;
+        }
+
+        /// <summary>
+        /// Send a list of commands.
+        /// </summary>
+        /// <param name="commands">List of commands.</param>
+        /// <returns>TRUE = All commands were sent successfully.</returns>
+        public bool SendCommands(List<string> commands)
+        {
+            bool result = true;
+            byte[] reply = new byte[100];
+
+            foreach (string cmd in commands)
+            {
+                if (cmd.CompareTo(RTI.Commands.AdcpCommands.CMD_START_PINGING) == 0)
+                {
+                    // Start pinging
+                    result &= StartPinging();
+                }
+                else if (cmd.CompareTo(RTI.Commands.AdcpCommands.CMD_STOP_PINGING) == 0)
+                {
+                    // Stop pinging
+                    result &= StopPinging();
+                }
+                else if (cmd.CompareTo(RTI.Commands.AdcpCommands.CMD_BREAK) == 0)
+                {
+                    // Send a break
+                    SendBreak();
+                }
+                else
+                {
+                    // Send the command within the buffer
+                    // Try sending the command.  If it fails try one more time
+                    bool sendResult = false;
+                    int currResult = SendData(cmd, ref reply, true);
+                    if (currResult < 0)
+                    {
+                        // Try again if failed first time
+                        if (SendData(cmd, ref reply, true) > 0)
+                        {
+                            sendResult = true;
+                        }
+                    }
+                    else
+                    {
+                        sendResult = true;
+                    }
+
+                    // Keep track if any were false
+                    // If any were false, this will stay false
+                    result &= sendResult;
+                }
+
+                // Write the line out
+                //Debug.WriteLine(cmd);
+            }
+
+            return result;
         }
 
         #endregion
@@ -641,12 +941,21 @@ namespace RTI
         /// <returns>String of the directory listing from the ADCP.</returns>
         private string DownloadDirectoryListing()
         {
-            // Send the command to get the directory listing
-            byte[] replyBuffer = null;
-            //SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DS_CANCEL), ref replyBuffer);           // Cancel any previous downloads
-            //SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DS_CANCEL), ref replyBuffer);           // Cancel any previous downloads
-            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DSDIR), ref replyBuffer);               // Get the diretory listing
+            // If the ADCP is pinging, make it stop
+            StopPinging();
 
+            // The D command will cancel any pending downloads
+            // Send it twice to first ignore the last packet sent, then
+            // stop the download process
+            byte[] replyBuffer = null;
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DS_CANCEL), ref replyBuffer);
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DS_CANCEL), ref replyBuffer);
+
+            // Send the command to clear the download buffer
+            ClearData(ref replyBuffer);
+
+            // Send the command to get the directory listing
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_DSDIR), ref replyBuffer);               // Get the diretory listing
 
             string buffer = "";
             if (replyBuffer != null)
@@ -683,6 +992,81 @@ namespace RTI
 
             // Return the content of the buffer
             return dirListing;
+        }
+
+        #endregion
+
+        #region STIME
+
+        /// <summary>
+        /// Set the system time to the ADCP.  This will use the time
+        /// currently set on the computer.  This includes
+        /// the time and date.
+        /// </summary>
+        /// <returns>TRUE = DateTime set.</returns>
+        public bool SetLocalSystemDateTime()
+        {
+            bool timeResult = false;
+
+            // Try to send the command, if it fails try again
+            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetLocalSystemTimeCommand(), TIMEOUT);
+            if (!timeResult)
+            {
+                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetLocalSystemTimeCommand(), TIMEOUT);
+            }
+
+            // Allow some time for the ADCP to set the time
+            // Wait about 5 seconds
+            System.Threading.Thread.Sleep(RTI.SerialConnection.WAIT_STATE * 20);
+
+            return timeResult;
+        }
+
+        /// <summary>
+        /// Set the UTC time to the ADCP.  This will use the time
+        /// currently set on the computer, then convert it to UTC time.  This includes
+        /// the time and date.
+        /// </summary>
+        /// <returns>TRUE = DateTime set.</returns>
+        public bool SetUtcSystemDateTime()
+        {
+            bool timeResult = false;
+
+            // Try to send the command, if it fails try again
+            timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetGmtSystemTimeCommand(), TIMEOUT);
+            if (!timeResult)
+            {
+                timeResult = SendDataWaitReply(RTI.Commands.AdcpCommands.GetGmtSystemTimeCommand(), TIMEOUT);
+            }
+
+            // Allow some time for the ADCP to set the time
+            // Wait about 5 seconds
+            System.Threading.Thread.Sleep(RTI.SerialConnection.WAIT_STATE * 20);
+
+            return timeResult;
+        }
+
+        /// <summary>
+        /// Get the Date and Time from the ADCP.
+        /// It will be unknown if this time is UTC
+        /// or Local.  So DateTime.Kind will be unspecified.
+        /// </summary>
+        /// <returns>DateTime from the ADCP.</returns>
+        public DateTime GetAdcpDateTime()
+        {
+            // Now get the time and verify it is within 1 second of the previous time
+            // Clear buffer
+            ReceiveBufferString = "";
+
+            // Send STIME to get the time
+            SendData(string.Format("{0}", RTI.Commands.AdcpCommands.CMD_STIME));
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
+            // Get the current date and time
+            DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
+
+            return adcpDt;
         }
 
         #endregion

@@ -49,6 +49,9 @@
  * 07/26/2013      RC          2.19.3     In SubsystemConfiguration constructor, i give the CEPO index now.
  * 09/25/2013      RC          2.20.1     Added SerialOptions to keep track of the serial connection for this project.
  * 09/30/2013      RC          2.20.2     Fixed bug in AddConfig() when setting the Configuration Index and the CEPO index.
+ * 10/09/2013      RC          2.21.0     Changed SerialOptions to AdcpSerialOptions.  Added Gps1/2SerialOptions and Nmea1/2SerialOptions.
+ * 10/30/2013      RC          2.21.0     Added GetCepoDescString() to get a string for the CEPO command.
+ * 11/22/2013      RC          2.21.0     Added EthernetOptions() to store the Ethernet options.
  * 
  */
 
@@ -119,9 +122,39 @@ namespace RTI
         public DeploymentOptions DeploymentOptions { get; set; }
 
         /// <summary>
+        /// Hardware options.
+        /// </summary>
+        public EngConf HardwareOptions { get; set; }
+
+        /// <summary>
         /// Serial connection options for the ADCP.
         /// </summary>
-        public AdcpSerialPort.AdcpSerialOptions SerialOptions { get; set; }
+        public AdcpSerialPort.AdcpSerialOptions AdcpSerialOptions { get; set; }
+
+        /// <summary>
+        /// Serial connection options for the GPS 1.
+        /// </summary>
+        public SerialOptions Gps1SerialOptions { get; set; }
+
+        /// <summary>
+        /// Serial connection options for the GPS 2.
+        /// </summary>
+        public SerialOptions Gps2SerialOptions { get; set; }
+
+        /// <summary>
+        /// Serial connection options for the NMEA 1.
+        /// </summary>
+        public SerialOptions Nmea1SerialOptions { get; set; }
+
+        /// <summary>
+        /// Serial connection options for the NMEA 2.
+        /// </summary>
+        public SerialOptions Nmea2SerialOptions { get; set; }
+
+        /// <summary>
+        /// ADCP Ethernet options.
+        /// </summary>
+        public AdcpEthernetOptions EthernetOptions { get; set; }
 
         #endregion
 
@@ -135,7 +168,13 @@ namespace RTI
             Commands = new AdcpCommands();
             _serialNumber = new SerialNumber();
             DeploymentOptions = new DeploymentOptions();
-            SerialOptions = new AdcpSerialPort.AdcpSerialOptions();
+            AdcpSerialOptions = new AdcpSerialPort.AdcpSerialOptions();
+            Gps1SerialOptions = new SerialOptions();
+            Gps2SerialOptions = new SerialOptions();
+            Nmea1SerialOptions = new SerialOptions();
+            Nmea2SerialOptions = new SerialOptions();
+            HardwareOptions = new EngConf();
+            EthernetOptions = new AdcpEthernetOptions();
         }
 
         /// <summary>
@@ -149,7 +188,13 @@ namespace RTI
             _serialNumber = serial; 
             SetCepo(_serialNumber.SubsystemsString(), _serialNumber);       // Must go after Commands is created
             DeploymentOptions = new DeploymentOptions();
-            SerialOptions = new AdcpSerialPort.AdcpSerialOptions();
+            AdcpSerialOptions = new AdcpSerialPort.AdcpSerialOptions();
+            Gps1SerialOptions = new SerialOptions();
+            Gps2SerialOptions = new SerialOptions();
+            Nmea1SerialOptions = new SerialOptions();
+            Nmea2SerialOptions = new SerialOptions();
+            HardwareOptions = new EngConf();
+            EthernetOptions = new AdcpEthernetOptions();
         }
 
         #region Methods
@@ -179,6 +224,30 @@ namespace RTI
 
             // Return the dictionary
             return SubsystemConfigDict;
+        }
+
+        /// <summary>
+        /// Create a descriptive string of all the subsystem configurations
+        ///  in the ADCP.  This will go through the dictionary and get every
+        ///  description and append it to the string.
+        /// </summary>
+        /// <returns>String of all the subsystem config descriptions.</returns>
+        public string GetCepoDescString()
+        {
+            string desc = "";
+            foreach (AdcpSubsystemConfig config in SubsystemConfigDict.Values)
+            {
+                desc += config.SubsystemConfig.DescString();
+                desc += ", ";
+            }
+
+            // Remove the last comma
+            if (desc.Length > 1)
+            {
+                desc = desc.Substring(0, desc.Length-2);
+            }
+
+            return desc;
         }
 
         /// <summary>
@@ -347,12 +416,12 @@ namespace RTI
 
             // Check if the given Subsystems in the CEPO string exist
             // in the serial number
-            Dictionary<byte, Subsystem> dict = serial.SubSystemsDict;
+            List<Subsystem> list = serial.SubSystemsList;
             for (int cepoIndex = 0; cepoIndex < cepo.Length; cepoIndex++)
             {
                 bool test = false;
 
-                foreach(Subsystem ss in dict.Values)
+                foreach(Subsystem ss in list)
                 {
                     // If the CEPO value matched a subsystem code
                     // Then it was a valid value

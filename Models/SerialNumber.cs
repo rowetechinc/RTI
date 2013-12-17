@@ -54,6 +54,7 @@
  * 12/27/2012      RC          2.17       Replaced Subsystem.Empty with Subsystem.IsEmpty().
  * 01/23/2013      RC          2.17       Changed IsEmpty() to only check if a Subsystem is set for the serial number.
  * 05/06/2013      RC          2.19       Added SerialNumberDescString and GetSerialNumberDescString().
+ * 10/04/2013      RC          2.21.0     Changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().
  *
  */
 
@@ -253,17 +254,17 @@ namespace RTI
         /// Dictionary of all subsystems.  This Dictionary is based off
         /// the subsystems given in the serial number.
         /// </summary>
-        private Dictionary<byte, Subsystem> _subsystemsDict;
+        private List<Subsystem> _subsystemsList;
         /// <summary>
         /// Dictionary of all subsystems.  This Dictionary is based off
         /// the subsystems given in the serial number.
         /// </summary>
-        public Dictionary<byte, Subsystem> SubSystemsDict 
+        public List<Subsystem> SubSystemsList 
         {
-            get { return _subsystemsDict; } 
+            get { return _subsystemsList; } 
             set
             {
-                _subsystemsDict = value;
+                _subsystemsList = value;
 
                 // Update the Subsystem string
                 UpdateSubsystemString();
@@ -323,7 +324,7 @@ namespace RTI
             Spare = "";
             BaseHardware = "";
             SubSystems = "";
-            SubSystemsDict = new Dictionary<byte, Subsystem>();
+            SubSystemsList = new List<Subsystem>();
         }
 
         /// <summary>
@@ -360,13 +361,17 @@ namespace RTI
         public void AddSubsystem(Subsystem ss)
         {
             // Ensure we have not exceeded the maximum allowed subsystems
-            if (SubSystemsDict.Count < SUBSYSTEM_NUM_BYTES)
+            if (SubSystemsList.Count < SUBSYSTEM_NUM_BYTES)
             {
-                // Add the subsystem to the dictionary
-                _subsystemsDict.Add(Convert.ToByte(_subsystemsDict.Count), ss);
+                // Ensure the subsystem has not already been added to the list
+                if (!_subsystemsList.Contains(ss))
+                {
+                    // Add the subsystem to the dictionary
+                    _subsystemsList.Add(ss);
 
-                // Update the Subsystem string
-                UpdateSubsystemString();
+                    // Update the Subsystem string
+                    UpdateSubsystemString();
+                }
             }
         }
 
@@ -381,7 +386,7 @@ namespace RTI
 
             // Get a list of all the subsystems
             // But do not include the subsystem given
-            foreach (Subsystem subsys in SubSystemsDict.Values)
+            foreach (Subsystem subsys in SubSystemsList)
             {
                 if (ss != subsys)
                 {
@@ -390,13 +395,13 @@ namespace RTI
             }
 
             // Create a new dictionary
-            _subsystemsDict = new Dictionary<byte, Subsystem>();
+            _subsystemsList = new List<Subsystem>();
 
             // Add back all the subsystems
             foreach (Subsystem subsys in list)
             {
                 // Update the new index for the subsystem 
-                subsys.Index = (ushort)_subsystemsDict.Count;
+                subsys.Index = (ushort)_subsystemsList.Count;
 
                 // Add the new subsystem
                 AddSubsystem(subsys);
@@ -414,7 +419,7 @@ namespace RTI
         /// <returns>TRUE = The serial number is empty.</returns>
         public bool IsEmpty()
         {
-            if (SubSystemsDict.Count == 0)
+            if (SubSystemsList.Count == 0)
             {
                 return true;
             }
@@ -434,7 +439,7 @@ namespace RTI
         /// <returns>Subsystem if found, if not found, return empty Subsystem.</returns>
         public Subsystem GetSubsystem(byte code)
         {
-            foreach (Subsystem ss in SubSystemsDict.Values)
+            foreach (Subsystem ss in SubSystemsList)
             {
                 if (ss.Code == code)
                 {
@@ -536,7 +541,7 @@ namespace RTI
             catch (Exception)
             {
                 SubSystems = "";
-                SubSystemsDict = new Dictionary<byte, Subsystem>();
+                SubSystemsList = new List<Subsystem>();
             }
         }
 
@@ -548,7 +553,7 @@ namespace RTI
         {
             // Decode the subsystem string into a list
             // of subsystems
-            SubSystemsDict = GetSubsystemList(subsystem);
+            SubSystemsList = GetSubsystemList(subsystem);
         }
 
         /// <summary>
@@ -558,7 +563,7 @@ namespace RTI
         private void UpdateSubsystemString()
         {
             string ssStr = "";
-            foreach (Subsystem ss in SubSystemsDict.Values)
+            foreach (Subsystem ss in SubSystemsList)
             {
                 ssStr += ss.CodeToString();
             }
@@ -597,13 +602,13 @@ namespace RTI
         }
 
         /// <summary>
-        /// Create a Dictionary of all the subsystems.
+        /// Create a list of all the subsystems.
         /// </summary>
         /// <returns>List of all the subsystems.</returns>
-        private Dictionary<byte, Subsystem> GetSubsystemList(string subsystems)
+        private List<Subsystem> GetSubsystemList(string subsystems)
         {
             //List<Subsystem> list = new List<Subsystem>();
-            Dictionary<byte, Subsystem> ssDict = new Dictionary<byte,Subsystem>();
+            List<Subsystem> ssList = new List<Subsystem>();
 
             // Get each character from the subsystem string
             // If the character is not an empty subsystem,
@@ -615,11 +620,11 @@ namespace RTI
                 {
                     //list.Add(new Subsystem(ss, (UInt16)x));
                     //list.AddLast(new Subsystem(Convert.ToUInt16(x), ss));
-                    ssDict.Add(Convert.ToByte(x), new Subsystem(ss, (UInt16)x));
+                    ssList.Add(new Subsystem(ss, (UInt16)x));
                 }
             }
 
-            return ssDict;
+            return ssList;
         }
 
         #endregion
@@ -647,7 +652,7 @@ namespace RTI
                 Spare = "";
                 BaseHardware = "";
                 SubSystems = "";
-                SubSystemsDict = new Dictionary<byte, Subsystem>();
+                SubSystemsList = new List<Subsystem>();
             }
         }
 
@@ -739,7 +744,7 @@ namespace RTI
             StringBuilder sb = new StringBuilder();
 
             // Set the subsystems
-            foreach (Subsystem ss in SubSystemsDict.Values)
+            foreach (Subsystem ss in SubSystemsList)
             {
                 sb.Append(string.Format("{0}: {1}", ss.Index, ss.DescString()));
                 sb.Append("; ");

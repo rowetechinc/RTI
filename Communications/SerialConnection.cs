@@ -535,7 +535,7 @@ namespace RTI
 
                 // Wait for the state to change
                 // and leave on a bit of time
-                System.Threading.Thread.Sleep(WAIT_STATE);
+                System.Threading.Thread.Sleep(WAIT_STATE*4);
 
                 // Change state back
                 _serialPort.BreakState = false;
@@ -789,6 +789,12 @@ namespace RTI
                 return true;
             }
 
+            // Ensure the connection is available
+            if (!IsAvailable())
+            {
+                return false;
+            }
+
             // Assume good result
             bool result = true;
 
@@ -862,6 +868,12 @@ namespace RTI
         /// <returns>Data sent back from the serial port after the data was sent.</returns>
         public string SendDataGetReply(string data, bool sendBreak = false, int waitTime = RTI.AdcpSerialPort.WAIT_STATE)
         {
+            // Ensure the connection is available
+            if (!IsAvailable())
+            {
+                return "";
+            }
+
             // Clear buffer
             ReceiveBufferString = "";
 
@@ -916,7 +928,7 @@ namespace RTI
 
         #region Events
 
-        #region Send Serial Data
+        #region Receive Serial Data
 
         /// <summary>
         /// Event To subscribe to.  This gives the paramater

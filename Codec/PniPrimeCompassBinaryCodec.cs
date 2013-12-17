@@ -55,6 +55,8 @@
  * 11/13/2012      RC           2.16      Updated the pitch and roll values to use.
  * 06/28/2013      RC           2.19      Replaced Shutdown() with IDisposable.
  * 07/31/2013      RC           2.19.3    Renamed Parameter and Configuration to PniParamater and PniConfiguration.  Added more responses and decoded them.
+ * 11/20/2013      RC           2.21.0    Added MagTiltCalibrationPosition() and made MagCalibrationPosition() a simpler output of just heading.
+ * 12/05/2013      RC           2.21.0    Added Pitch to MagCalibrationPosition().
  * 
  */
 
@@ -2716,7 +2718,7 @@ namespace RTI
         /// </summary>
         /// <param name="sample">Position Sample.</param>
         /// <returns>String of next position for each sample given.</returns>
-        public static string MagCalibrationPosition(UInt32 sample)
+        public static string MagTiltCalibrationPosition(UInt32 sample)
         {
             switch (sample)
             {
@@ -2744,6 +2746,48 @@ namespace RTI
                     return "Hdg:  240°\nPitch: -50°\nRoll:   20°";
                 case 11:
                     return "Hdg:  330°\nPitch: -50°\nRoll:   -20°";
+                default:
+                    return "-";
+            }
+        }
+
+        /// <summary>
+        /// Give the calibration positions for
+        /// the next sample taken.  This is just a simple
+        /// output of the heading values and only pitch.
+        /// Hdg:   XXX
+        /// Pitch: XXX
+        /// </summary>
+        /// <param name="sample">Position Sample.</param>
+        /// <returns>String of next position for each sample given.</returns>
+        public static string MagCalibrationPosition(UInt32 sample)
+        {
+            switch (sample)
+            {
+                case 0:
+                    return "Hdg:    0°";
+                case 1:
+                    return "Hdg:   90°";
+                case 2:
+                    return "Hdg:  180°";
+                case 3:
+                    return "Hdg:  270°";
+                case 4:
+                    return "Hdg:   30°\nPitch: 20°";
+                case 5:
+                    return "Hdg:  120°\nPitch: 20°";
+                case 6:
+                    return "Hdg:  210°\nPitch: 20°";
+                case 7:
+                    return "Hdg:  300°\nPitch: 20°";
+                case 8:
+                    return "Hdg:   60°\nPitch: -20°";
+                case 9:
+                    return "Hdg:  150°\nPitch: -20°";
+                case 10:
+                    return "Hdg:  240°\nPitch: -20°";
+                case 11:
+                    return "Hdg:  330°\nPitch: -20°";
                 default:
                     return "-";
             }

@@ -57,10 +57,10 @@ namespace RTI
 
             // Test the serial number
             Assert.AreEqual(serialStr, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, serialNum.ToString()));
-            Assert.AreEqual(1, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsDict.Count));
+            Assert.AreEqual(1, serialNum.SubSystemsList.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsList.Count));
             
             Subsystem ss = new Subsystem("3", 0);
-            Assert.AreEqual(ss, serialNum.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serialNum.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             Assert.AreEqual(1, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 1, serialNum.SystemSerialNumber));
         }
@@ -77,13 +77,13 @@ namespace RTI
 
             // Test the serial number
             Assert.AreEqual(serialStr, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, serialNum.ToString()));
-            Assert.AreEqual(2, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 2 {0}", serialNum.SubSystemsDict.Count));
+            Assert.AreEqual(2, serialNum.SubSystemsList.Count, string.Format("Number of SubSystems did not match 2 {0}", serialNum.SubSystemsList.Count));
 
             Subsystem ss = new Subsystem("3", 0);
-            Assert.AreEqual(ss, serialNum.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serialNum.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             Subsystem ss1 = new Subsystem("4", 1);
-            Assert.AreEqual(ss1, serialNum.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serialNum.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss1, serialNum.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serialNum.SubSystemsList[1].ToString()));
 
             Assert.AreEqual(1, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 1, serialNum.SystemSerialNumber));
         }
@@ -100,15 +100,15 @@ namespace RTI
 
             // Test the serial number
             Assert.AreEqual(serialStr, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, serialNum.ToString()));
-            Assert.AreEqual(1, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsDict.Count));
+            Assert.AreEqual(1, serialNum.SubSystemsList.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsList.Count));
 
             // Upper case K
             Subsystem ss = new Subsystem("K", 0);
-            Assert.AreEqual(ss, serialNum.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serialNum.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             // Lower case k
             Subsystem ss1 = new Subsystem("k", 0);
-            Assert.AreNotEqual(ss1, serialNum.SubSystemsDict[0], string.Format("Subsystems should not match {0}  {1}", ss1.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreNotEqual(ss1, serialNum.SubSystemsList[0], string.Format("Subsystems should not match {0}  {1}", ss1.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             Assert.AreEqual(1, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 1, serialNum.SystemSerialNumber));
         }
@@ -125,24 +125,24 @@ namespace RTI
 
             // Test the serial number
             Assert.AreEqual(serialStr, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, serialNum.ToString()));
-            Assert.AreEqual(4, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 4 {0}", serialNum.SubSystemsDict.Count));
+            Assert.AreEqual(4, serialNum.SubSystemsList.Count, string.Format("Number of SubSystems did not match 4 {0}", serialNum.SubSystemsList.Count));
 
             // Upper case K
             Subsystem ss = new Subsystem("K", 0);
-            Assert.AreEqual(ss, serialNum.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serialNum.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             // Lower case K
             Subsystem ssNot = new Subsystem("k", 0);
-            Assert.AreNotEqual(ssNot, serialNum.SubSystemsDict[0], string.Format("Subsystems should not match {0}  {1}", ssNot.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreNotEqual(ssNot, serialNum.SubSystemsList[0], string.Format("Subsystems should not match {0}  {1}", ssNot.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             Subsystem ss1 = new Subsystem("B", 1);
-            Assert.AreEqual(ss1, serialNum.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serialNum.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss1, serialNum.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serialNum.SubSystemsList[1].ToString()));
 
             Subsystem ss2 = new Subsystem("X", 2);
-            Assert.AreEqual(ss2, serialNum.SubSystemsDict[2], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serialNum.SubSystemsDict[2].ToString()));
+            Assert.AreEqual(ss2, serialNum.SubSystemsList[2], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serialNum.SubSystemsList[2].ToString()));
 
             Subsystem ss3 = new Subsystem("V", 3);
-            Assert.AreEqual(ss3, serialNum.SubSystemsDict[3], string.Format("Subsystems do not match {0}  {1}", ss3.ToString(), serialNum.SubSystemsDict[3].ToString()));
+            Assert.AreEqual(ss3, serialNum.SubSystemsList[3], string.Format("Subsystems do not match {0}  {1}", ss3.ToString(), serialNum.SubSystemsList[3].ToString()));
 
             Assert.AreEqual(1, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 1, serialNum.SystemSerialNumber));
         }
@@ -159,7 +159,7 @@ namespace RTI
 
             // Test the serial number
             Assert.AreEqual(new SerialNumber().SerialNumberString, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", new SerialNumber().SerialNumberString, serialNum.ToString()));
-            Assert.AreEqual(0, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 0 {0}", serialNum.SubSystemsDict.Count));
+            Assert.AreEqual(0, serialNum.SubSystemsList.Count, string.Format("Number of SubSystems did not match 0 {0}", serialNum.SubSystemsList.Count));
 
             Assert.AreEqual(0, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 0, serialNum.SystemSerialNumber));
         }
@@ -181,10 +181,10 @@ namespace RTI
 
             // Test the serial number
             Assert.AreEqual(serialStr, serialNum.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, serialNum.ToString()));
-            Assert.AreEqual(1, serialNum.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsDict.Count));
+            Assert.AreEqual(1, serialNum.SubSystemsList.Count, string.Format("Number of SubSystems did not match 1 {0}", serialNum.SubSystemsList.Count));
 
             Subsystem ss = new Subsystem("3", 0);
-            Assert.AreEqual(ss, serialNum.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serialNum.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serialNum.SubSystemsList[0].ToString()));
 
             Assert.AreEqual(1, serialNum.SystemSerialNumber, string.Format("Serial numbers do not match {0}  {1}", 1, serialNum.SystemSerialNumber));
 
@@ -301,15 +301,15 @@ namespace RTI
             serial.SubSystems = "340000000000000";
 
             Assert.AreEqual("340000000000000", serial.SubSystems, "Subsystem String is incorrect.");
-            Assert.AreEqual(2, serial.SubSystemsDict.Count, "Subsystem Dict Count is incorrect.");
+            Assert.AreEqual(2, serial.SubSystemsList.Count, "Subsystem Dict Count is incorrect.");
 
             // Subsystem type 3
             Subsystem ss = new Subsystem("3", 0);
-            Assert.AreEqual(ss, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 4
             Subsystem ss1 = new Subsystem("4", 1);
-            Assert.AreEqual(ss1, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss1, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsList[1].ToString()));
         }
 
         /// <summary>
@@ -325,11 +325,11 @@ namespace RTI
             serial.SubSystems = "34000000000000099";
 
             Assert.AreEqual("300000000000000", serial.SubSystems, "Subsystem String is incorrect.");
-            Assert.AreEqual(1, serial.SubSystemsDict.Count, "Subsystem Dict Count is incorrect.");
+            Assert.AreEqual(1, serial.SubSystemsList.Count, "Subsystem Dict Count is incorrect.");
 
             // Subsystem type 3
             Subsystem ss = new Subsystem("3", 0);
-            Assert.AreEqual(ss, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsList[0].ToString()));
         }
 
         /// <summary>
@@ -345,67 +345,67 @@ namespace RTI
             serial.SubSystems = "123456789ABCDEf";
 
             Assert.AreEqual("123456789ABCDEf", serial.SubSystems, "Subsystem String is incorrect.");
-            Assert.AreEqual(15, serial.SubSystemsDict.Count, "Subsystem Dict Count is incorrect.");
+            Assert.AreEqual(15, serial.SubSystemsList.Count, "Subsystem Dict Count is incorrect.");
 
             // Subsystem type 1
             Subsystem ss = new Subsystem("1", 0);
-            Assert.AreEqual(ss, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 2
             Subsystem ss1 = new Subsystem("2", 1);
-            Assert.AreEqual(ss1, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss1, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsList[1].ToString()));
 
             // Subsystem type 3
             Subsystem ss2 = new Subsystem("3", 2);
-            Assert.AreEqual(ss2, serial.SubSystemsDict[2], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsDict[2].ToString()));
+            Assert.AreEqual(ss2, serial.SubSystemsList[2], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsList[2].ToString()));
 
             // Subsystem type 4
             Subsystem ss3 = new Subsystem("4", 3);
-            Assert.AreEqual(ss3, serial.SubSystemsDict[3], string.Format("Subsystems do not match {0}  {1}", ss3.ToString(), serial.SubSystemsDict[3].ToString()));
+            Assert.AreEqual(ss3, serial.SubSystemsList[3], string.Format("Subsystems do not match {0}  {1}", ss3.ToString(), serial.SubSystemsList[3].ToString()));
 
             // Subsystem type 5
             Subsystem ss4 = new Subsystem("5", 4);
-            Assert.AreEqual(ss4, serial.SubSystemsDict[4], string.Format("Subsystems do not match {0}  {1}", ss4.ToString(), serial.SubSystemsDict[4].ToString()));
+            Assert.AreEqual(ss4, serial.SubSystemsList[4], string.Format("Subsystems do not match {0}  {1}", ss4.ToString(), serial.SubSystemsList[4].ToString()));
 
             // Subsystem type 6
             Subsystem ss5 = new Subsystem("6", 5);
-            Assert.AreEqual(ss5, serial.SubSystemsDict[5], string.Format("Subsystems do not match {0}  {1}", ss5.ToString(), serial.SubSystemsDict[5].ToString()));
+            Assert.AreEqual(ss5, serial.SubSystemsList[5], string.Format("Subsystems do not match {0}  {1}", ss5.ToString(), serial.SubSystemsList[5].ToString()));
 
             // Subsystem type 7
             Subsystem ss6 = new Subsystem("7", 6);
-            Assert.AreEqual(ss6, serial.SubSystemsDict[6], string.Format("Subsystems do not match {0}  {1}", ss6.ToString(), serial.SubSystemsDict[6].ToString()));
+            Assert.AreEqual(ss6, serial.SubSystemsList[6], string.Format("Subsystems do not match {0}  {1}", ss6.ToString(), serial.SubSystemsList[6].ToString()));
 
             // Subsystem type 8
             Subsystem ss7 = new Subsystem("8", 7);
-            Assert.AreEqual(ss7, serial.SubSystemsDict[7], string.Format("Subsystems do not match {0}  {1}", ss7.ToString(), serial.SubSystemsDict[7].ToString()));
+            Assert.AreEqual(ss7, serial.SubSystemsList[7], string.Format("Subsystems do not match {0}  {1}", ss7.ToString(), serial.SubSystemsList[7].ToString()));
 
             // Subsystem type 9
             Subsystem ss8 = new Subsystem("9", 8);
-            Assert.AreEqual(ss8, serial.SubSystemsDict[8], string.Format("Subsystems do not match {0}  {1}", ss8.ToString(), serial.SubSystemsDict[8].ToString()));
+            Assert.AreEqual(ss8, serial.SubSystemsList[8], string.Format("Subsystems do not match {0}  {1}", ss8.ToString(), serial.SubSystemsList[8].ToString()));
 
             // Subsystem type A
             Subsystem ss9 = new Subsystem("A", 9);
-            Assert.AreEqual(ss9, serial.SubSystemsDict[9], string.Format("Subsystems do not match {0}  {1}", ss9.ToString(), serial.SubSystemsDict[9].ToString()));
+            Assert.AreEqual(ss9, serial.SubSystemsList[9], string.Format("Subsystems do not match {0}  {1}", ss9.ToString(), serial.SubSystemsList[9].ToString()));
 
             // Subsystem type B
             Subsystem ssB = new Subsystem("B", 10);
-            Assert.AreEqual(ssB, serial.SubSystemsDict[10], string.Format("Subsystems do not match {0}  {1}", ssB.ToString(), serial.SubSystemsDict[10].ToString()));
+            Assert.AreEqual(ssB, serial.SubSystemsList[10], string.Format("Subsystems do not match {0}  {1}", ssB.ToString(), serial.SubSystemsList[10].ToString()));
 
             // Subsystem type C
             Subsystem ssC = new Subsystem("C", 11);
-            Assert.AreEqual(ssC, serial.SubSystemsDict[11], string.Format("Subsystems do not match {0}  {1}", ssC.ToString(), serial.SubSystemsDict[11].ToString()));
+            Assert.AreEqual(ssC, serial.SubSystemsList[11], string.Format("Subsystems do not match {0}  {1}", ssC.ToString(), serial.SubSystemsList[11].ToString()));
 
             // Subsystem type D
             Subsystem ssD = new Subsystem("D", 12);
-            Assert.AreEqual(ssD, serial.SubSystemsDict[12], string.Format("Subsystems do not match {0}  {1}", ssD.ToString(), serial.SubSystemsDict[12].ToString()));
+            Assert.AreEqual(ssD, serial.SubSystemsList[12], string.Format("Subsystems do not match {0}  {1}", ssD.ToString(), serial.SubSystemsList[12].ToString()));
 
             // Subsystem type E
             Subsystem ssE = new Subsystem("E", 13);
-            Assert.AreEqual(ssE, serial.SubSystemsDict[13], string.Format("Subsystems do not match {0}  {1}", ssE.ToString(), serial.SubSystemsDict[13].ToString()));
+            Assert.AreEqual(ssE, serial.SubSystemsList[13], string.Format("Subsystems do not match {0}  {1}", ssE.ToString(), serial.SubSystemsList[13].ToString()));
 
             // Subsystem type f
             Subsystem ssf = new Subsystem("f", 14);
-            Assert.AreEqual(ssf, serial.SubSystemsDict[14], string.Format("Subsystems do not match {0}  {1}", ssf.ToString(), serial.SubSystemsDict[14].ToString()));
+            Assert.AreEqual(ssf, serial.SubSystemsList[14], string.Format("Subsystems do not match {0}  {1}", ssf.ToString(), serial.SubSystemsList[14].ToString()));
 
         }
 
@@ -481,20 +481,20 @@ namespace RTI
             Subsystem ss = new Subsystem("3", 0);
             Subsystem ss1 = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2, 1);
 
-            Dictionary<byte, Subsystem> dict = new Dictionary<byte, Subsystem>();
-            dict.Add(0, ss);
-            dict.Add(1, ss1);
+            List<Subsystem> list = new List<Subsystem>();
+            list.Add(ss);
+            list.Add(ss1);
 
-            serial.SubSystemsDict = dict;
+            serial.SubSystemsList = list;
 
             Assert.AreEqual("320000000000000", serial.SubSystems, "Subsystem String is incorrect.");
-            Assert.AreEqual(2, serial.SubSystemsDict.Count, "Subsystem Dict Count is incorrect.");
+            Assert.AreEqual(2, serial.SubSystemsList.Count, "Subsystem Dict Count is incorrect.");
 
             // Subsystem type 3
-            Assert.AreEqual(ss, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 2
-            Assert.AreEqual(ss1, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss1, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsList[1].ToString()));
         }
 
         #endregion
@@ -514,17 +514,17 @@ namespace RTI
             Subsystem ss1 = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2, 1);
             serial.AddSubsystem(ss1);
 
-            Assert.AreEqual(2, serial.SubSystemsDict.Count, "Dictionary count is incorrect.");
+            Assert.AreEqual(2, serial.SubSystemsList.Count, "Dictionary count is incorrect.");
 
             Assert.AreEqual("320000000000000", serial.SubSystems, "Subsystem String is incorrect.");
-            Assert.AreEqual(2, serial.SubSystemsDict.Count, "Subsystem Dict Count is incorrect.");
+            Assert.AreEqual(2, serial.SubSystemsList.Count, "Subsystem Dict Count is incorrect.");
 
             // Subsystem type 3
             Subsystem ss = new Subsystem("3", 0);
-            Assert.AreEqual(ss, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 2
-            Assert.AreEqual(ss1, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss1, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss1.ToString(), serial.SubSystemsList[1].ToString()));
         }
 
         #endregion
@@ -545,15 +545,15 @@ namespace RTI
 
             serial.RemoveSubsystem(ss);
 
-            Assert.AreEqual(3, serial.SubSystemsDict.Count, "Subsystem count is incorrect.");
+            Assert.AreEqual(3, serial.SubSystemsList.Count, "Subsystem count is incorrect.");
 
             // Subsystem type 3
             Subsystem ss0 = new Subsystem("3", 0);
-            Assert.AreEqual(ss0, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss0.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss0, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss0.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 2
             Subsystem ss2 = new Subsystem("5", 1);
-            Assert.AreEqual(ss2, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss2, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsList[1].ToString()));
         }
 
         /// <summary>
@@ -570,15 +570,15 @@ namespace RTI
 
             serial.RemoveSubsystem(ss);
 
-            Assert.AreEqual(4, serial.SubSystemsDict.Count, "Subsystem count is incorrect.");
+            Assert.AreEqual(4, serial.SubSystemsList.Count, "Subsystem count is incorrect.");
 
             // Subsystem type 3
             Subsystem ss0 = new Subsystem("3", 0);
-            Assert.AreEqual(ss0, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss0.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss0, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss0.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 2
             Subsystem ss2 = new Subsystem("4", 1);
-            Assert.AreEqual(ss2, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss2, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsList[1].ToString()));
         }
 
         /// <summary>
@@ -595,15 +595,15 @@ namespace RTI
 
             serial.RemoveSubsystem(ss);
 
-            Assert.AreEqual(3, serial.SubSystemsDict.Count, "Subsystem count is incorrect.");
+            Assert.AreEqual(3, serial.SubSystemsList.Count, "Subsystem count is incorrect.");
 
             // Subsystem type 3
             Subsystem ss0 = new Subsystem("3", 0);
-            Assert.AreEqual(ss0, serial.SubSystemsDict[0], string.Format("Subsystems do not match {0}  {1}", ss0.ToString(), serial.SubSystemsDict[0].ToString()));
+            Assert.AreEqual(ss0, serial.SubSystemsList[0], string.Format("Subsystems do not match {0}  {1}", ss0.ToString(), serial.SubSystemsList[0].ToString()));
 
             // Subsystem type 2
             Subsystem ss2 = new Subsystem("5", 1);
-            Assert.AreEqual(ss2, serial.SubSystemsDict[1], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsDict[1].ToString()));
+            Assert.AreEqual(ss2, serial.SubSystemsList[1], string.Format("Subsystems do not match {0}  {1}", ss2.ToString(), serial.SubSystemsList[1].ToString()));
         }
 
 

@@ -149,7 +149,7 @@ namespace RTI
             // Test the serial number
             Assert.AreEqual(serialNum, adcpData.EnsembleData.SysSerialNumber, string.Format("Serial numbers did not match"));
             Assert.AreEqual(serialStr, adcpData.EnsembleData.SysSerialNumber.ToString(), string.Format("Serial number strings did not match {0}  {1}", serialStr, adcpData.EnsembleData.SysSerialNumber.ToString()));
-            Assert.AreEqual(1, adcpData.EnsembleData.SysSerialNumber.SubSystemsDict.Count, string.Format("Number of SubSystems did not match 1 {0}", adcpData.EnsembleData.SysSerialNumber.SubSystemsDict.Count));
+            Assert.AreEqual(1, adcpData.EnsembleData.SysSerialNumber.SubSystemsList.Count, string.Format("Number of SubSystems did not match 1 {0}", adcpData.EnsembleData.SysSerialNumber.SubSystemsList.Count));
         }
 
         /// <summary>
@@ -481,7 +481,7 @@ namespace RTI
             Assert.AreEqual(new SerialNumber("01300000000000000000000000000001"), decoded.SysSerialNumber, "SysSerialNumber is incorrect.");
             Assert.AreEqual(1, decoded.SysSerialNumber.SystemSerialNumber, "Serial number is incorrect.");
             Assert.AreEqual("300000000000000", decoded.SysSerialNumber.SubSystems, "Subsystems are incorrect.");
-            Assert.AreEqual(1, decoded.SysSerialNumber.SubSystemsDict.Count, "Subsystem count is incorrect.");
+            Assert.AreEqual(1, decoded.SysSerialNumber.SubSystemsList.Count, "Subsystem count is incorrect.");
             Assert.AreEqual(new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3), decoded.SysFirmware, "SysFirmware is incorrect.");
             Assert.AreEqual(0, decoded.SysFirmware.FirmwareMajor, "Firmware Major is incorrect.");
             Assert.AreEqual(2, decoded.SysFirmware.FirmwareMinor, "Firmware Minor is incorrect.");

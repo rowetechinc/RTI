@@ -96,7 +96,7 @@ using System.Text;
 
             // Get the first subsystem (Only subsystem)
             SerialNumber serialNum = new SerialNumber("01400000000000000000000000000015");
-            Subsystem ss = serialNum.SubSystemsDict[0];
+            Subsystem ss = serialNum.SubSystemsList[0];
             AdcpSubsystemCommands asc = new AdcpSubsystemCommands(new SubsystemConfiguration(ss, 0, 0));
 
             // Water Profile Defaults
@@ -1613,7 +1613,7 @@ using System.Text;
 
             Assert.AreEqual(1, brkStmt.SerialNum.SystemSerialNumber, "Serial Number is incorrect");
             Assert.AreEqual("01460000000000000000000000000001", brkStmt.SerialNum.ToString(), "Serial Number String is Incorrect");
-            Assert.AreEqual(2, brkStmt.SerialNum.SubSystemsDict.Count, "Subsystem count is incorrect");
+            Assert.AreEqual(2, brkStmt.SerialNum.SubSystemsList.Count, "Subsystem count is incorrect");
             Assert.AreEqual(0, brkStmt.FirmwareVersion.FirmwareMajor, string.Format("Firmware Major is incorrect", 0, brkStmt.FirmwareVersion.FirmwareMajor));
             Assert.AreEqual(2, brkStmt.FirmwareVersion.FirmwareMinor, string.Format("Firmware Minor is incorrect", 2, brkStmt.FirmwareVersion.FirmwareMinor));
             Assert.AreEqual(5, brkStmt.FirmwareVersion.FirmwareRevision, string.Format("Firmware Revision is incorrect", 5, brkStmt.FirmwareVersion.FirmwareRevision));

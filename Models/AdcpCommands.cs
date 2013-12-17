@@ -97,6 +97,7 @@
  * 09/18/2013      RC          2.20.1     Added DEFAULT_SAN_DIEGO_DECLINATION for CHO command.
  *                                         Added CHO command to GetDeploymentCommandList().
  * 09/23/2013      RC          2.20.1     Added DecodeSPOS().
+ * 11/15/2013      RC          2.21.0     Added TimeZone property to know how to set STIME.
  * 
  */
 
@@ -331,6 +332,20 @@ namespace RTI
             }
 
             /// <summary>
+            /// Set the time value based off the DateTime given.
+            /// This will convert the DateTime into a TimeValue.
+            /// The Year, Month and Day will be ignored.
+            /// </summary>
+            /// <param name="dt">DateTime to use.</param>
+            public TimeValue(DateTime dt)
+            {
+                Hour = Convert.ToUInt16(dt.Hour);
+                Minute = Convert.ToUInt16(dt.Minute);
+                Second = Convert.ToUInt16(dt.Second);
+                HunSec = (ushort)Math.Round(dt.Millisecond * 0.1);
+            }
+
+            /// <summary>
             /// Return the string version of this class.
             /// </summary>
             /// <returns>String version of this class.  HH:MM:SS.hh</returns>
@@ -432,6 +447,16 @@ namespace RTI
             public double ToSecondsD()
             {
                 return (3600 * Hour) + (60 * Minute) + Second + (HunSec / 100.0);
+            }
+
+            /// <summary>
+            /// Return a Date and Time based off the current values.
+            /// The Date will be the current date..
+            /// </summary>
+            /// <returns></returns>
+            public DateTime ToDateTime()
+            {
+                return new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, Hour, Minute, Second);
             }
         }
 
@@ -2545,6 +2570,16 @@ namespace RTI
 
             #endregion
 
+            #region STIME
+
+            /// <summary>
+            /// Set the time zone for the STIME command.
+            /// This will usually be the local time or GMT time.
+            /// </summary>
+            public AdcpTimeZone TimeZone { get; set; }
+
+            #endregion
+
             #endregion // Properties
 
             /// <summary>
@@ -2610,6 +2645,9 @@ namespace RTI
                 C232B = DEFAULT_C232B;
                 C485B = DEFAULT_C485B;
                 C422B = DEFAULT_C422B;
+
+                // STIME
+                TimeZone = AdcpTimeZone.LOCAL;
             }
 
             /// <summary>
@@ -2643,7 +2681,7 @@ namespace RTI
             /// decimal numbers.
             /// </summary>
             /// <returns>List of all the commands and there value.</returns>
-            public List<string> GetCommandList(AdcpTimeZone tz = AdcpTimeZone.LOCAL)
+            public List<string> GetCommandList()
             {
                 List<string> list = new List<string>();
                 list.Add(CEPO_CmdStr());                                // CEPO     THIS WILL SET DEFAULTS SO IT MUST BE SET FIRST
@@ -2666,7 +2704,7 @@ namespace RTI
                 list.Add(C485B_CmdStr());                               // C485B
                 list.Add(C422B_CmdStr());                               // C422B
 
-                if (tz == AdcpTimeZone.LOCAL)
+                if (TimeZone == AdcpTimeZone.LOCAL)
                 {
                     list.Add(LocalTime_CmdStr());                       // Local Time         SET THE TIME LAST, IT TAKES THE LONGEST TO SET
                 }
@@ -2683,9 +2721,8 @@ namespace RTI
             /// Create a list of all the deployment commands and there value.
             /// Add all the commands to the list and there value.
             /// </summary>
-            /// <param name="tz">Timezone to use.</param>
             /// <returns>List of all the commands and there value.</returns>
-            public List<string> GetDeploymentCommandList(AdcpTimeZone tz = AdcpTimeZone.LOCAL)
+            public List<string> GetDeploymentCommandList()
             {
                 List<string> list = new List<string>();
 
@@ -2699,7 +2736,7 @@ namespace RTI
                 list.Add(CETFP_CmdStr());                           // CETFP
                 list.Add(CERECORD_CmdStr());                        // CERECORD
 
-                if (tz == AdcpTimeZone.LOCAL)
+                if (TimeZone == AdcpTimeZone.LOCAL)
                 {
                     list.Add(LocalTime_CmdStr());                   // Local Time         SET THE TIME LAST, IT TAKES THE LONGEST TO SET
                 }
@@ -2711,6 +2748,47 @@ namespace RTI
                 return list;
             }
 
+
+            ///// <summary>
+            ///// This will be a string representation
+            ///// of the object.  It will also be 
+            ///// used to pass to the ADCP for all the 
+            ///// commands.
+            ///// 
+            ///// Put all the values in United States English format.
+            ///// Other formats can use a comma instead of a decimal point for
+            ///// decimal numbers.
+            ///// </summary>
+            ///// <returns>All the commands as a string.</returns>
+            //public override string ToString()
+            //{
+            //    StringBuilder sb = new StringBuilder();
+
+            //    sb.AppendLine(Mode_ToString());                     // Mode
+            //    sb.AppendLine(LocalTime_CmdStr());                  // DateTime
+            //    sb.AppendLine(CEI_CmdStr());                        // CEI
+            //    sb.AppendLine(CETFP_CmdStr());                      // CETFP
+            //    sb.AppendLine(CERECORD_CmdStr());                   // CERECORD
+            //    sb.AppendLine(CEOUTPUT_CmdStr());                   // CEOUTPUT
+            //    sb.AppendLine(CEPO_CmdStr());                       // CEPO
+            //    sb.AppendLine(SPOS_CmdStr());                       // SPOS
+
+            //    sb.AppendLine(CWS_CmdStr());                        // CWS
+            //    sb.AppendLine(CWT_CmdStr());                        // CWT
+            //    sb.AppendLine(CTD_CmdStr());                        // CTD
+            //    sb.AppendLine(CWSS_CmdStr());                       // CWSS
+            //    sb.AppendLine(CHS_CmdStr());                        // CHS
+            //    sb.AppendLine(CHO_CmdStr());                        // CHO
+            //    sb.AppendLine(CVSF_CmdStr());                       // CVSF
+                
+            //    sb.AppendLine(C232B_CmdStr());                      // C232B
+            //    sb.AppendLine(C485B_CmdStr());                      // C485B
+            //    sb.AppendLine(C422B_CmdStr());                      // C422B
+
+            //    // Add the subsystem commands
+
+            //    return sb.ToString();
+            //}
 
             /// <summary>
             /// This will be a string representation
@@ -2728,49 +2806,8 @@ namespace RTI
                 StringBuilder sb = new StringBuilder();
 
                 sb.AppendLine(Mode_ToString());                     // Mode
-                sb.AppendLine(LocalTime_CmdStr());                  // DateTime
-                sb.AppendLine(CEI_CmdStr());                        // CEI
-                sb.AppendLine(CETFP_CmdStr());                      // CETFP
-                sb.AppendLine(CERECORD_CmdStr());                   // CERECORD
-                sb.AppendLine(CEOUTPUT_CmdStr());                   // CEOUTPUT
-                sb.AppendLine(CEPO_CmdStr());                       // CEPO
-                sb.AppendLine(SPOS_CmdStr());                       // SPOS
 
-                sb.AppendLine(CWS_CmdStr());                        // CWS
-                sb.AppendLine(CWT_CmdStr());                        // CWT
-                sb.AppendLine(CTD_CmdStr());                        // CTD
-                sb.AppendLine(CWSS_CmdStr());                       // CWSS
-                sb.AppendLine(CHS_CmdStr());                        // CHS
-                sb.AppendLine(CHO_CmdStr());                        // CHO
-                sb.AppendLine(CVSF_CmdStr());                       // CVSF
-                
-                sb.AppendLine(C232B_CmdStr());                      // C232B
-                sb.AppendLine(C485B_CmdStr());                      // C485B
-                sb.AppendLine(C422B_CmdStr());                      // C422B
-
-                // Add the subsystem commands
-
-                return sb.ToString();
-            }
-
-            /// <summary>
-            /// This will be a string representation
-            /// of the object.  It will also be 
-            /// used to pass to the ADCP for all the 
-            /// commands.
-            /// 
-            /// Put all the values in United States English format.
-            /// Other formats can use a comma instead of a decimal point for
-            /// decimal numbers.
-            /// </summary>
-            /// <returns>All the commands as a string.</returns>
-            public string ToString(AdcpTimeZone tz = AdcpTimeZone.LOCAL)
-            {
-                StringBuilder sb = new StringBuilder();
-
-                sb.AppendLine(Mode_ToString());                     // Mode
-
-                if (tz == AdcpTimeZone.LOCAL)
+                if (TimeZone == AdcpTimeZone.LOCAL)
                 {
                     sb.AppendLine(LocalTime_CmdStr());             // Local DateTime
                 }
@@ -2778,7 +2815,8 @@ namespace RTI
                 {
                     sb.AppendLine(GmtTime_CmdStr());               // Gmt DateTime
                 }
-                
+
+                sb.AppendLine(Mode_ToString());                     // Mode
                 sb.AppendLine(CEI_CmdStr());                        // CEI
                 sb.AppendLine(CETFP_CmdStr());                      // CETFP
                 sb.AppendLine(CERECORD_CmdStr());                   // CERECORD
@@ -2797,8 +2835,6 @@ namespace RTI
                 sb.AppendLine(C232B_CmdStr());                      // C232B
                 sb.AppendLine(C485B_CmdStr());                      // C485B
                 sb.AppendLine(C422B_CmdStr());                      // C422B
-
-                // Add the subsystem commands
 
                 return sb.ToString();
             }

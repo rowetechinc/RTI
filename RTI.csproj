@@ -137,6 +137,7 @@
     <Compile Include="Models\DataSet\NmeaDataSet.cs" />
     <Compile Include="Models\IPredictor.cs" />
     <Compile Include="Models\MaintenceLog.cs" />
+    <Compile Include="Models\ProjectOptions.cs" />
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />
     <Compile Include="Models\Subsystem.cs" />

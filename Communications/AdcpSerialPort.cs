@@ -2231,7 +2231,7 @@ namespace RTI
                 }
 
                 // Write the line out
-                Debug.WriteLine(cmd);
+                //Debug.WriteLine(cmd);
             }
 
             return result;
@@ -3149,7 +3149,7 @@ namespace RTI
             //string breakResult = _adcpSerialPort.SendDataGetReply("", true, RTI.AdcpSerialPort.WAIT_STATE * 3);
             SendBreak();
             // Wait for an output
-            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE*5);
 
             // Get the buffer output
             string breakResult = ReceiveBufferString;
@@ -3160,7 +3160,14 @@ namespace RTI
 
             // Send a command for CSHOW to the ADCP
             // Decode the CSHOW command
-            string result = SendDataGetReply(RTI.Commands.AdcpCommands.CMD_CSHOW);
+            //string result = SendDataGetReply(RTI.Commands.AdcpCommands.CMD_CSHOW);
+            string result = "";
+            ReceiveBufferString = "";
+            bool sndReply = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_CSHOW);
+            if (sndReply)
+            {
+                result = ReceiveBufferString;
+            }
 
             // Decode CSHOW for all the settings
             AdcpConfiguration adcpConfig = AdcpCommands.DecodeCSHOW(result, breakStmt.SerialNum);
@@ -3172,7 +3179,7 @@ namespace RTI
             adcpSerialOptions.SerialOptions = SerialOptions;
 
             // Set the ADCP serial options to the configuraiton
-            adcpConfig.SerialOptions = adcpSerialOptions;
+            adcpConfig.AdcpSerialOptions = adcpSerialOptions;
 
             return adcpConfig;
         }
@@ -3258,6 +3265,20 @@ namespace RTI
         {
             // Store the directory listing
             _dirListingString += data;
+        }
+
+        #endregion
+
+        #region Hardware Configuration
+
+        /// <summary>
+        /// Get the Hardware configuration from the ADCP.
+        /// </summary>
+        /// <returns>Hardware configuration.</returns>
+        public RTI.Commands.EngConf GetHardwareConfiguration()
+        {
+            string buffer = SendDataGetReply(RTI.Commands.AdcpCommands.CMD_ENGCONF);    // Send command to get ENGCONF
+            return RTI.Commands.AdcpCommands.DecodeENGCONF(buffer);
         }
 
         #endregion

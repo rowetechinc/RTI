@@ -54,6 +54,7 @@
  * 03/08/2013      RC          2.18       For each method call, created a new one with the SQLiteConnection to prevent opening and closing connection for each call.
  *                                         Added RunQueryOnProjectDbObj() to return an object instead of an int.
  * 08/09/2013      RC          2.19.4     Added COL_CMD_APP_CONFIGURATION.
+ * 10/28/2013      RC          2.21.0     Added COL_CMD_PROJECT_OPTIONS.
  * 
  */
 
@@ -236,6 +237,13 @@ namespace RTI
         /// (TEXT)
         /// </summary>
         public const string COL_CMD_ADCP_CONFIGURATION = "AdcpConfiguration";
+
+        /// <summary>
+        /// Command and Options Table:
+        /// Project Options.
+        /// (TEXT)
+        /// </summary>
+        public const string COL_CMD_PROJECT_OPTIONS = "ProjectOptions";
 
         /// <summary>
         /// Comands and Options Table:

@@ -1,5 +1,27 @@
 RTI Changelog
 
+RTI-2.21.0
+ - Changed the version number.
+ - In SerialNumber, changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().
+ - In DeploymentOptions, added DeploymentMode.
+ - In AdcpConfiguration, changed SerialOptions to AdcpSerialOptions.  Added Gps1/2SerialOptions and Nmea1/2SerialOptions.
+ - In Project, added EnableBackupBinaryWriter and _binaryWriterBackup to have a backup binary writer.
+ - In AdcpBinaryWriter, made MaxFileSize a public property.
+ - In AdcpBinaryWriter, changed contructor to take individual name, folder and serial number to a project will not be needed.
+ - In DeploymentOptions, added InternalMemoryCardUsed and InternalMemoryCardTotal.
+ - In DbCommon, added COL_CMD_PROJECT_OPTIONS.
+ - In AdcpDatabaseWriter, read and write the Project options to the project db file.
+ - In AdcpCommands, added TimeZone property to know how to set STIME.
+ - In MathHelper, added TimeSpanPrettyFormat() to give the time span as a string with plurization.
+ - In PniPrimeCompassBinaryCodec, added MagTiltCalibrationPosition() and made MagCalibrationPosition() a simpler output of just heading.
+ - In AdcpEthernet, added send and receive methods to match the ADCP serial ports commands.
+ - In AdcpConfiguration, added EthernetOptions() to store the Ethernet options.
+ - In PniPrimeCompassBinaryCodec, added Pitch to MagCalibrationPosition().
+ - In MathHelper, added seconds to TimeSpanPrettyFormat().
+ - In Project, added GetLastEnsemble().
+ - In AdcpDatabaseReader, added GetLastEnsemble().
+ - In Project, added Position column and change rev to D3.
+
 RTI-2.20.0
  - Changed the version number.
  - In AdcpBinaryCodec, added buffer lock to AddIncomingData().

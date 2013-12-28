@@ -25,6 +25,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 01/04/2013      RC          2.17       Initial coding
+ * 12/27/2013      RC          2.21.1     Updated test to show the error codes.
  * 
  * 
  */
@@ -95,7 +96,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_WT_3_BEAM_SOLUTION + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0001 " + Status.STR_WT_3_BEAM_SOLUTION + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_BT_3_BEAM_SOLUTION + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0002 " + Status.STR_BT_3_BEAM_SOLUTION + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -145,7 +146,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_BT_HOLD + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0004 " + Status.STR_BT_HOLD + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -170,7 +171,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_BT_SEARCHING + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0008 " + Status.STR_BT_SEARCHING + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -195,7 +196,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_HDG_SENSOR_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0100 " + Status.STR_HDG_SENSOR_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -220,7 +221,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_PRESSURE_SENSOR_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0200 " + Status.STR_PRESSURE_SENSOR_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -245,7 +246,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_PWR_DOWN_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0400 " + Status.STR_PWR_DOWN_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -270,7 +271,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_NONVOLATILE_STORAGE_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x0800 " + Status.STR_NONVOLATILE_STORAGE_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -295,7 +296,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_RTC_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x1000 " + Status.STR_RTC_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -320,7 +321,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(true, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_TEMP_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x2000 " + Status.STR_TEMP_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -345,7 +346,7 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_RCVR_DATA_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x4000 " + Status.STR_RCVR_DATA_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -370,7 +371,7 @@ namespace RTI
             Assert.AreEqual(true, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_RCVR_TIMEOUT_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x8000 " + Status.STR_RCVR_TIMEOUT_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
         /// <summary>
@@ -395,7 +396,7 @@ namespace RTI
             Assert.AreEqual(true, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
 
-            Assert.AreEqual(Status.STR_WT_3_BEAM_SOLUTION + " " + Status.STR_PWR_DOWN_ERR + " " + Status.STR_RCVR_TIMEOUT_ERR + " ", status.ToString(), "ToString is incorrect.");
+            Assert.AreEqual("0x8401 " + Status.STR_WT_3_BEAM_SOLUTION + " " + Status.STR_PWR_DOWN_ERR + " " + Status.STR_RCVR_TIMEOUT_ERR + " ", status.ToString(), "ToString is incorrect.");
         }
 
     }

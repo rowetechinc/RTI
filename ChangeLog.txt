@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-2.21.1
+ - Changed the version number.
+ - In Status, give the hex value error code with the error string and updated the error codes.
+
 RTI-2.21.0
  - Changed the version number.
  - In SerialNumber, changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().

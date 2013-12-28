@@ -39,6 +39,8 @@
  * 12/20/2012      RC          2.17       Added the new errors from ADCP User Guide Rev H.
  * 01/04/2013      RC          2.17       Added equal, == and != to the object.
  *                                         Fixed bug with ERR_RCVR_DATA code.  Was 0x400 should have been 0x4000.
+ * 12/27/2013      RC          2.21.1     Give the hex value error code with the error string.
+ *                                         Updated the error codes.
  * 
  */
 
@@ -50,50 +52,58 @@ namespace RTI
     /// ---------------------------
     /// Final value is a logical OR of each status bit.
     /// 
-    /// Good Status                             = 0x0000
+    /// Good Status                                         = 0x0000
     /// 
-    /// Water Track 3 Beam Solution (DVL only)  = 0x0001
+    /// Water Track 3 Beam Solution (NMEA output only)      = 0x0001
     ///    Indicates the Water Track velocity output contains
     ///    a 3 beam solution
     ///    
-    /// Bottom Track 3 Beam Solution            = 0x0002
+    /// Bottom Track 3 Beam Solution (NMEA output only)     = 0x0002
     ///    Indicates the Bottom Track velocity output contains
     ///    a 3 beam solution
     ///    
-    /// Bottom Track Hold (not searching yet)   = 0x0004
+    /// Bottom Track Hold (not searching yet)               = 0x0004
     ///    Indicates Bottom Track did not detect the bottom but
     ///    is still using the last good detection as an estimate
     ///    of the bottom location
     ///    
-    /// Bottom Track Searching                  = 0x0008
+    /// Bottom Track Searching                              = 0x0008
     ///    Indicates Bottom Track is actively changing the ping
     ///    settings to attempt bottom detection
     ///    
-    /// Heading Sensor Error                    = 0x0100
+    /// Bottom Track Proof                                  = 0x0010
+    ///    Indicates Bottom Track is waiting for the next
+    ///    valid Bottom Track ping before allowing
+    ///    velocity to be output.
+    ///    
+    /// Heading Sensor Error                                = 0x0100
     ///    Heading Sensor Error.
     ///    
-    /// Pressure Ensor Error                    = 0x0200
+    /// Pressure Sensor Error                                = 0x0200
     ///    Pressure Ensor Error.
     /// 
-    /// Power Down Failure                      = 0x0400
+    /// Power Down Failure                                  = 0x0400
     ///    System power did not shut off between ensembles
     /// 
-    /// Non Volatile Data Error                 = 0x0800
+    /// Non Volatile Data Error                             = 0x0800
     ///    Non volatile memory storage checksum failed
     /// 
-    /// Real Time Clock (RTC) Error             = 0x1000
-    ///    The RTC did not respond or the time data value contains
-    ///    illegal values i.e. month = 13
+    /// Real Time Clock (RTC) Error                         = 0x1000
+    ///    The RTC did not respond or the time data 
+    ///    value contains illegal values i.e. month = 13
     ///    
-    /// Temperature Error                       = 0x2000
-    ///    The temperature sensor ADC did not respond or the temperature
-    ///    value was out of range (-30 to 70 C).
+    /// Temperature Sensor Error                            = 0x2000
+    ///    The temperature sensor ADC did not respond 
+    ///    or the temperature value was out of 
+    ///    range (-30 to 70 C).
     ///    
-    /// Receiver Data Error                     = 0x4000
-    ///    The receiver did not output the expected amount of data
+    /// Receiver Data Error                                 = 0x4000
+    ///    The receiver did not output the expected 
+    ///    amount of data
     /// 
-    /// Receiver Timeout                        = 0x8000
-    ///    The receiver hardware did not respond to the ping request
+    /// Receiver Timeout                                    = 0x8000
+    ///    The receiver hardware did not respond to 
+    ///    the ping request
     /// 
     /// </summary>
     public class Status
@@ -135,6 +145,26 @@ namespace RTI
         /// ping settings to attempt bottom detection.
         /// </summary>
         public const int BT_SEARCHING = 0x0008;
+
+        /// <summary>
+        /// Bottom Track LR STATUS value.
+        /// </summary>
+        public const int BT_LR = 0x0010;
+
+        /// <summary>
+        /// Over temperature STATUS value.
+        /// </summary>
+        public const int OVERTEMP = 0x0020;
+
+        /// <summary>
+        /// Bottom Track PROOF STATUS value.
+        /// </summary>
+        public const int BT_PROOF = 0x0020;
+
+        /// <summary>
+        /// Bottom Track LOWGAIN STATUS value.
+        /// </summary>
+        public const int BT_LOWGAIN = 0x0080;
 
         /// <summary>
         /// Heading sensor error.
@@ -213,6 +243,26 @@ namespace RTI
         /// Bottom Track Searching string.
         /// </summary>
         public static readonly string STR_BT_SEARCHING = "Searching";
+
+        /// <summary>
+        /// Bottom Track LR string.
+        /// </summary>
+        public static readonly string STR_BT_LR = "BT LR";
+
+        /// <summary>
+        /// Over Temperature string.
+        /// </summary>
+        public static readonly string STR_OVERTEMP = "Over Temperature";
+
+        /// <summary>
+        /// Bottom Track Proof string.
+        /// </summary>
+        public static readonly string STR_BT_PROOF = "Proof";
+
+        /// <summary>
+        /// Bottom Track Low Gain string.
+        /// </summary>
+        public static readonly string STR_BT_LOWGAIN = "BT Low Gain";
 
         /// <summary>
         /// Heading Sensor Error string.
@@ -320,6 +370,46 @@ namespace RTI
 
         /// <summary>
         /// Check whether status bit set for 
+        /// Bottom Track LR.
+        /// </summary>
+        /// <returns>TRUE = Bottom Track LR.</returns>
+        public bool IsBottomTrackLR()
+        {
+            return (Value & BT_LR) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for 
+        /// Over temperature.
+        /// </summary>
+        /// <returns>TRUE = Over Temperature.</returns>
+        public bool IsOverTemperature()
+        {
+            return (Value & OVERTEMP) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for 
+        /// Bottom Track Proof.
+        /// </summary>
+        /// <returns>TRUE = Bottom Track Proof.</returns>
+        public bool IsBottomTrackProof()
+        {
+            return (Value & BT_PROOF) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for 
+        /// Bottom Track Low Gain.
+        /// </summary>
+        /// <returns>TRUE = Bottom Track Low Gain.</returns>
+        public bool IsBottomTrackLowGain()
+        {
+            return (Value & BT_LOWGAIN) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for 
         /// Heading Sensor Error.
         /// </summary>
         /// <returns>TRUE = Heading Sensor Error.</returns>
@@ -413,7 +503,7 @@ namespace RTI
             }
             else
             { 
-                string result = "";
+                string result = "0x" + Value.ToString("X4") + " ";
 
                 // Check for all warnings.
                 if (IsWaterTrack3BeamSolution())
@@ -431,6 +521,22 @@ namespace RTI
                 if (IsBottomTrackSearching())
                 {
                     result += STR_BT_SEARCHING + " ";
+                }
+                if (IsBottomTrackLR())
+                {
+                    result += STR_BT_LR + " ";
+                }
+                if (IsOverTemperature())
+                {
+                    result += STR_OVERTEMP + " ";
+                }
+                if (IsBottomTrackProof())
+                {
+                    result += STR_BT_PROOF + " ";
+                }
+                if (IsBottomTrackLowGain())
+                {
+                    result += STR_BT_LOWGAIN + " ";
                 }
                 if (IsHeadingSensorError())
                 {

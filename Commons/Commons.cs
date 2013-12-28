@@ -171,6 +171,64 @@ namespace RTI
 
             #endregion
 
+            #region Ceramic Diameter
+
+            /// <summary>
+            /// Ceramic Diameter for 300kHz 3".
+            /// 3" = 0.0762m.
+            /// </summary>
+            public const float CERAMIC_DIA_300_3 = 0.0762f;
+
+            /// <summary>
+            /// Ceramic Diameter for 300kHz 5".
+            /// 5" = 0.127m.
+            /// </summary>
+            public const float CERAMIC_DIA_300_5 = 0.127f;
+
+            /// <summary>
+            /// Ceramic Diameter for 600kHz 2".
+            /// 2" = 0.0508m.
+            /// </summary>
+            public const float CERAMIC_DIA_600_2 = 0.0508f;
+
+            /// <summary>
+            /// Ceramic Diameter for 600kHz 3".
+            /// 3" = 0.0762m.
+            /// </summary>
+            public const float CERAMIC_DIA_600_3 = 0.0762f;
+
+            /// <summary>
+            /// Ceramic Diameter for 1200kHz 1.3".
+            /// 1.3" = 0.03302m.
+            /// </summary>
+            public const float CERAMIC_DIA_1200_1_3 = 0.03302f;
+
+            /// <summary>
+            /// Ceramic Diameter for 1200kHz 2".
+            /// 2" = 0.0508m.
+            /// </summary>
+            public const float CERAMIC_DIA_1200_2 = 0.0508f;
+
+            /// <summary>
+            /// Ceramic Diameter for 150kHz 6".
+            /// 6" = 0.152m.
+            /// </summary>
+            public const float CERAMIC_DIA_150_6 = 0.152f;
+
+            /// <summary>
+            /// Ceramic Diameter for 75kHz 10".
+            /// 10" = 0.254m.
+            /// </summary>
+            public const float CERAMIC_DIA_75_10 = 0.254f;
+
+            /// <summary>
+            /// Ceramic Diameter for 38kHz 24".
+            /// 24" = 0.610m.
+            /// </summary>
+            public const float CERAMIC_DIA_38_24 = 0.610f;
+
+            #endregion
+
             #region Enums
 
             /// <summary>

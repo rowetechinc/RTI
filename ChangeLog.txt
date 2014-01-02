@@ -1,5 +1,15 @@
 RTI Changelog
 
+RTI-2.21.2
+ - Changed the version number.
+ - Create ProfileEngineeringDataSet.
+ - In Ensemble, added ProfileEngineeringDataSet.
+ - In Ensemble, added BottomTrackEngineeringDataSet.
+ - In AdcpBinaryCodec, added ProfileEngineeringData and BottomTrackEngineeringData to parser.
+ - In AdcpDatabaseWriter, added ProfileEngineeringDataSet and BottomTrackEngineeringDataSet to the project db file.
+ - In DbCommon, added COL_PROFILEENGINEERING_DS and COL_BOTTOMTRACKENGINEERING_DS.
+ - In Project, added ProfileEngineeringDS and BottomTrackEngineeringDS columns to CreateProjectTables().  Bump rev to D4.
+
 RTI-2.21.1
  - Changed the version number.
  - In Status, give the hex value error code with the error string and updated the error codes.

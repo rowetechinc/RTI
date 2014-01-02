@@ -67,6 +67,7 @@
  * 02/25/2013      RC          2.18       Removed Orientation from all the datasets.  Replaced with SubsystemConfiguration.
  * 03/12/2013      RC          2.18       Improved the Ensemble.Clone() by using JSON to clone.       
  * 10/02/2013      RC          2.20.2     Added EncodeMatlab() to get just the ensemble as Matlab datasets with the RTI header or checksum.
+ * 12/31/2013      RC          2.21.2     Added ProfileEngineeringDataSet and BottomTrackEngineeringDataSet.
  *       
  * 
  */
@@ -150,6 +151,17 @@ namespace RTI
             /// NMEA ID for binary format.
             /// </summary>
             public const string NmeaID = "E000011\0";
+
+            /// <summary>
+            /// Profile Engineering ID for binary format.
+            /// </summary>
+            public const string ProfileEngineeringID = "E000012\0";
+
+
+            /// <summary>
+            /// Bottom Track Engineering ID for binary format.
+            /// </summary>
+            public const string BottomTrackEngineeringID = "E000013\0"; 
 
             /// <summary>
             /// PRTI02 ID for DVL mode format.
@@ -435,6 +447,16 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISNMEAAVAIL = "IsNmeaAvail";
 
+            /// <summary>
+            /// String for IsProfileEngineeringAvail.
+            /// </summary>
+            public const string JSON_STR_ISPROFILEENGINEERINGAVAIL = "IsProfileEngineeringAvail";
+
+            /// <summary>
+            /// String for IsBottomTrackEngineeringAvail.
+            /// </summary>
+            public const string JSON_STR_ISBOTTOMTRACKENGINEERINGAVAIL = "IsBottomTrackEngineeringAvail";
+
             #endregion
 
             #region DataSets
@@ -504,6 +526,16 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_NMEADATA = "NmeaData";
 
+            /// <summary>
+            /// String for ProfileEngineeringData.
+            /// </summary>
+            public const string JSON_STR_PROFILEENGINEERINGDATA = "ProfileEngineeringData";
+
+            /// <summary>
+            /// String for BottomTrackEngineeringData.
+            /// </summary>
+            public const string JSON_STR_BOTTOMTRACKENGINEERINGDATA = "BottomTrackEngineeringData";
+
             #endregion
 
             #endregion
@@ -515,69 +547,79 @@ namespace RTI
             #region Data Set Available Properties
 
             /// <summary>
-            /// Set if the Beam velocity data set is available for this data set
+            /// Set if the Beam velocity data set is available for this ensemble.
             /// </summary>
             public bool IsBeamVelocityAvail { get; set; }
 
             /// <summary>
-            /// Set if the InstrumentVelocity velocity data set is available for this data set
+            /// Set if the InstrumentVelocity velocity data set is available for this ensemble.
             /// </summary>
             public bool IsInstrumentVelocityAvail { get; set; }
 
             /// <summary>
-            /// Set if the EarthVelocity velocity data set is available for this data set
+            /// Set if the EarthVelocity velocity data set is available for this ensemble.
             /// </summary>
             public bool IsEarthVelocityAvail { get; set; }
 
             /// <summary>
-            /// Set if the Amplitude data set is available for this data set
+            /// Set if the Amplitude data set is available for this ensemble.
             /// </summary>
             public bool IsAmplitudeAvail { get; set; }
 
             /// <summary>
-            /// Set if the Correlation data set is available for this data set
+            /// Set if the Correlation data set is available for this ensemble.
             /// </summary>
             public bool IsCorrelationAvail { get; set; }
 
             /// <summary>
-            /// Set if the Good Beam data set is available for this data set
+            /// Set if the Good Beam data set is available for this ensemble.
             /// </summary>
             public bool IsGoodBeamAvail { get; set; }
 
             /// <summary>
-            /// Set if the Good EarthVelocity data set is available for this data set
+            /// Set if the Good EarthVelocity data set is available for this ensemble.
             /// </summary>
             public bool IsGoodEarthAvail { get; set; }
 
             /// <summary>
-            /// Set if the Ensemble data set is available for this data set
+            /// Set if the Ensemble data set is available for this ensemble.
             /// </summary>
             public bool IsEnsembleAvail { get; set; }
 
             /// <summary>
-            /// Set if the Ancillary data set is available for this data set
+            /// Set if the Ancillary data set is available for this ensemble.
             /// </summary>
             public bool IsAncillaryAvail { get; set; }
 
             /// <summary>
-            /// Set if the Bottom Track data set is available for this data set
+            /// Set if the Bottom Track data set is available for this ensemble.
             /// </summary>
             public bool IsBottomTrackAvail { get; set; }
 
             /// <summary>
-            /// Set if the Earth Water Mass data set is available for this data set
+            /// Set if the Earth Water Mass data set is available for this ensemble.
             /// </summary>
             public bool IsEarthWaterMassAvail { get; set; }
 
             /// <summary>
-            /// Set if the Insturment Water Mass data set is available for this data set
+            /// Set if the Insturment Water Mass data set is available for this ensemble.
             /// </summary>
             public bool IsInstrumentWaterMassAvail { get; set; }
 
             /// <summary>
-            /// Set if the NMEA data set is available for this data set
+            /// Set if the NMEA data set is available for this ensemble.
             /// </summary>
             public bool IsNmeaAvail { get; set; }
+
+            /// <summary>
+            /// Set if the Profile Engineering data set is available for this ensemble.
+            /// </summary>
+            public bool IsProfileEngineeringAvail { get; set; }
+
+            /// <summary>
+            /// Set if the Bottom Track Engineering data set is available for this ensemble.
+            /// </summary>
+            public bool IsBottomTrackEngineeringAvail { get; set; }
 
             #endregion
 
@@ -648,6 +690,16 @@ namespace RTI
             /// </summary>
             public NmeaDataSet NmeaData { get; set; }
 
+            /// <summary>
+            /// Profile Engineering data set.
+            /// </summary>
+            public ProfileEngineeringDataSet ProfileEngineeringData { get; set; }
+
+            /// <summary>
+            /// Bottom Track Engineering data set.
+            /// </summary>
+            public BottomTrackEngineeringDataSet BottomTrackEngineeringData { get; set; }
+
             #endregion
 
             #endregion
@@ -676,6 +728,8 @@ namespace RTI
                 IsEarthWaterMassAvail = false;
                 IsInstrumentWaterMassAvail = false;
                 IsNmeaAvail = false;
+                IsProfileEngineeringAvail = false;
+                IsBottomTrackEngineeringAvail = false;
             }
 
             /// <summary>
@@ -706,6 +760,8 @@ namespace RTI
             /// <param name="IsEarthWaterMassAvail">Flag if Earth Water Mass Velocity DataSet Is Available.</param>
             /// <param name="IsInstrumentWaterMassAvail">Flag if Instrument Water Mass Velocity DataSet Is Available.</param>
             /// <param name="IsNmeaAvail">Flag if Nmea DataSet Is Available.</param>
+            /// <param name="IsProfileEngineeringAvail">Flag if Profile Engineering is avaialble.</param>
+            /// <param name="IsBottomTrackEngineeringAvail">Flag if Bottom Track Engineering is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -719,14 +775,16 @@ namespace RTI
             /// <param name="EarthWaterMassData">Earth Water Mass Velocity DataSet.</param>
             /// <param name="InstrumentWaterMassData">Instrument Water Mass Velocity DataSet.</param>
             /// <param name="NmeaData">Nmea DataSet.</param>
+            /// <param name="ProfileEngineeringData">Profile Engineering DataSet.</param>
+            /// <param name="BottomTrackEngineeringData">Bottom Track Engineering Dataset.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
-                            bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail,
+                            bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
-                            InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData)
+                            InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData)
             {
                 // Initialize all ranges
                 this.IsBeamVelocityAvail = IsBeamVelocityAvail;
@@ -742,6 +800,8 @@ namespace RTI
                 this.IsEarthWaterMassAvail = IsEarthWaterMassAvail;
                 this.IsInstrumentWaterMassAvail = IsInstrumentWaterMassAvail;
                 this.IsNmeaAvail = IsNmeaAvail;
+                this.IsProfileEngineeringAvail = IsProfileEngineeringAvail;
+                this.IsBottomTrackEngineeringAvail = IsBottomTrackEngineeringAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -756,6 +816,8 @@ namespace RTI
                 this.EarthWaterMassData = EarthWaterMassData;
                 this.InstrumentWaterMassData = InstrumentWaterMassData;
                 this.NmeaData = NmeaData;
+                this.ProfileEngineeringData = ProfileEngineeringData;
+                this.BottomTrackEngineeringData = BottomTrackEngineeringData;
             }
 
             #region Beam Velocity Data Set
@@ -1331,6 +1393,80 @@ namespace RTI
 
             #endregion
 
+            #region Profile Engineering Data Set
+
+            /// <summary>
+            /// Add the Profile Engineering data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddProfileEngineeringData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsProfileEngineeringAvail = true;
+                ProfileEngineeringData = new ProfileEngineeringDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Profile Engineering data set to the ensemble.
+            /// This will add the Profile Engineering data and decode the byte array
+            /// for all the Profile Engineering data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="profileEngData">Byte array containing Profile Engineering data</param>
+            public void AddProfileEngineeringData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] profileEngData)
+            {
+                IsProfileEngineeringAvail = true;
+                ProfileEngineeringData = new ProfileEngineeringDataSet(valueType, numBins, numBeams, imag, nameLength, name, profileEngData);
+            }
+
+            #endregion
+
+            #region Bottom Track Engineering Data Set
+
+            /// <summary>
+            /// Add the Bottom Track Engineering data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddBottomTrackEngineeringData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsBottomTrackEngineeringAvail = true;
+                BottomTrackEngineeringData = new BottomTrackEngineeringDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Bottom Track Engineering data set to the ensemble.
+            /// This will add the Bottom Track Engineering data and decode the byte array
+            /// for all the Bottom Track Engineering data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="btEngData">Byte array containing Bottom Track Engineering data</param>
+            public void AddBottomTrackEngineeringData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] btEngData)
+            {
+                IsBottomTrackEngineeringAvail = true;
+                BottomTrackEngineeringData = new BottomTrackEngineeringDataSet(valueType, numBins, numBeams, imag, nameLength, name, btEngData);
+            }
+
+            #endregion
+
             #region Clone
 
             /// <summary>
@@ -1476,6 +1612,14 @@ namespace RTI
                 if (IsInstrumentWaterMassAvail)
                 {
                     s += InstrumentWaterMassData.ToString();
+                }
+                if (IsProfileEngineeringAvail)
+                {
+                    s += ProfileEngineeringData.ToString();
+                }
+                if (IsBottomTrackEngineeringAvail)
+                {
+                    s += BottomTrackEngineeringData.ToString();
                 }
 
                 return s;
@@ -1847,6 +1991,22 @@ namespace RTI
                     size += nmeaDataSet.Length;
                 }
 
+                // Profile Engineering dataset
+                if (IsProfileEngineeringAvail)
+                {
+                    byte[] profileEngDataSet = ProfileEngineeringData.Encode();
+                    datasetList.Add(profileEngDataSet);
+                    size += profileEngDataSet.Length;
+                }
+
+                // Bottom Track Engineering dataset
+                if (IsBottomTrackEngineeringAvail)
+                {
+                    byte[] btEngDataSet = BottomTrackEngineeringData.Encode();
+                    datasetList.Add(btEngDataSet);
+                    size += btEngDataSet.Length;
+                }
+
                 return CombineDataSets(size, datasetList);
             }
 
@@ -1981,6 +2141,14 @@ namespace RTI
                 // IsNmeaAvail
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEAAVAIL);
                 writer.WriteValue(ensemble.IsNmeaAvail);
+
+                // IsProfileEngineeringAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISPROFILEENGINEERINGAVAIL);
+                writer.WriteValue(ensemble.IsProfileEngineeringAvail);
+
+                // IsBottomTrackEngineeringAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISBOTTOMTRACKENGINEERINGAVAIL);
+                writer.WriteValue(ensemble.IsBottomTrackEngineeringAvail);
 
                 #endregion
 
@@ -2123,6 +2291,28 @@ namespace RTI
                 if (ensemble.IsNmeaAvail)
                 {
                     writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // ProfileEngineeringData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_PROFILEENGINEERINGDATA);
+                if (ensemble.IsProfileEngineeringAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ProfileEngineeringData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // BottomTrackEngineeringData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_BOTTOMTRACKENGINEERINGDATA);
+                if (ensemble.IsBottomTrackEngineeringAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackEngineeringData));
                 }
                 else
                 {

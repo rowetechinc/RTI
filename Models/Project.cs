@@ -67,6 +67,7 @@
  * 10/09/2013      RC          2.21.0     Added EnableBackupBinaryWriter and _binaryWriterBackup to have a backup binary writer.
  * 12/09/2013      RC          2.21.0     Added GetLastEnsemble().
  * 12/16/2013      RC          2.21.0     Added Position column and change rev to D3.
+ * 12/31/2013      RC          2.21.2     Added ProfileEngineeringDS and BottomTrackEngineeringDS columns to CreateProjectTables().  Bump rev to D4.
  */
 
 using System;
@@ -106,8 +107,9 @@ namespace RTI
         /// Revision D made all the columns JSON data.
         /// Revision D2 added AppConfiguration column.
         /// Revision D3 added Position column.
+        /// Revision D4 added ProfileEngineeringDS and BottomTrackEngineeringDS column.
         /// </summary>
-        public const string REV = "D3";
+        public const string REV = "D4";
 
         /// <summary>
         /// ID for project if no project 
@@ -597,7 +599,7 @@ namespace RTI
                 //"PRAGMA main.synchronous=NORMAL",
                 //"PRAGMA main.journal_mode=WAL",
                 //"PRAGMA main.cache_size=5000",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT)",
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT)",
                 "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, ProjectOptions TEXT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
                 string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, \"{4}\");", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", REV),   // Put at least 1 entry so an insert does not have to be done later
             };

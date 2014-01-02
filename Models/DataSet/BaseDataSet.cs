@@ -582,6 +582,144 @@ namespace RTI
 
             #endregion
 
+            #region Profile Engineering
+
+            /// <summary>
+            /// String for PrePingVel.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGVEL = "PrePingVel";
+
+            /// <summary>
+            /// String for PrePingCor.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGCOR = "PrePingCor";
+
+            /// <summary>
+            /// String for PrePingAmp.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGAMP = "PrePingAmp";
+
+            /// <summary>
+            /// String for SamplesPerSecond.
+            /// </summary>
+            public const string JSON_STR_PE_SAMPLESPERSECOND = "SamplesPerSecond";
+
+            /// <summary>
+            /// String for SystemFreqHz.
+            /// </summary>
+            public const string JSON_STR_PE_SYSTEMFREQHZ = "SystemFreqHz";
+
+            /// <summary>
+            /// String for LagSamples.
+            /// </summary>
+            public const string JSON_STR_PE_LAGSAMPLES = "LagSamples";
+
+            /// <summary>
+            /// String for CPCE.
+            /// </summary>
+            public const string JSON_STR_PE_CPCE = "CPCE";
+
+            /// <summary>
+            /// String for NCE.
+            /// </summary>
+            public const string JSON_STR_PE_NCE = "NCE";
+
+            /// <summary>
+            /// String for RepeatN.
+            /// </summary>
+            public const string JSON_STR_PE_REPEATN = "RepeatN";
+
+            /// <summary>
+            /// String for PrePingGap.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGGAP = "PrePingGap";
+
+            /// <summary>
+            /// String for PrePingNCE.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGNCE = "PrePingNCE";
+
+            /// <summary>
+            /// String for PrePingRepeatN.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGREPEATN = "PrePingRepeatN";
+
+            /// <summary>
+            /// String for PrePingLagSamples.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGLAGSAMPLES = "PrePingLagSamples";
+
+            /// <summary>
+            /// String for TRHighGain.
+            /// </summary>
+            public const string JSON_STR_PE_PREPINGTRHIGHGAIN = "TRHighGain";
+
+            #endregion
+
+            #region Bottom Track Engineering
+
+            /// <summary>
+            /// String for SamplesPerSecond.
+            /// </summary>
+            public const string JSON_STR_BTE_SAMPLESPERSECOND = "SamplesPerSecond";
+
+            /// <summary>
+            /// String for SystemFreqHz.
+            /// </summary>
+            public const string JSON_STR_BTE_SYSTEMFREQHZ = "SystemFreqHz";
+
+            /// <summary>
+            /// String for LagSamples.
+            /// </summary>
+            public const string JSON_STR_BTE_LAGSAMPLES = "LagSamples";
+
+            /// <summary>
+            /// String for CPCE.
+            /// </summary>
+            public const string JSON_STR_BTE_CPCE = "CPCE";
+
+            /// <summary>
+            /// String for NCE.
+            /// </summary>
+            public const string JSON_STR_BTE_NCE = "NCE";
+
+            /// <summary>
+            /// String for RepeatN.
+            /// </summary>
+            public const string JSON_STR_BTE_REPEATN = "RepeatN";
+
+            /// <summary>
+            /// String for AmbHz.
+            /// </summary>
+            public const string JSON_STR_BTE_AMBHZ = "AmbHz";
+
+            /// <summary>
+            /// String for AmbVel.
+            /// </summary>
+            public const string JSON_STR_BTE_AMBVEL = "AmbVel";
+
+            /// <summary>
+            /// String for AmbAmp.
+            /// </summary>
+            public const string JSON_STR_BTE_AMBAMP = "AmbAmp";
+
+            /// <summary>
+            /// String for AmbCor.
+            /// </summary>
+            public const string JSON_STR_BTE_AMBCOR = "AmbCor";
+
+            /// <summary>
+            /// String for AmbSNR.
+            /// </summary>
+            public const string JSON_STR_BTE_AMBSNR = "AmbSNR";
+
+            /// <summary>
+            /// String for LagUsed.
+            /// </summary>
+            public const string JSON_STR_BTE_LAGUSED = "LagUsed";
+
+            #endregion
+
             #endregion
 
             #endregion

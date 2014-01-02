@@ -55,6 +55,7 @@
  *                                         Added RunQueryOnProjectDbObj() to return an object instead of an int.
  * 08/09/2013      RC          2.19.4     Added COL_CMD_APP_CONFIGURATION.
  * 10/28/2013      RC          2.21.0     Added COL_CMD_PROJECT_OPTIONS.
+ * 12/31/2013      RC          2.21.2     Added COL_PROFILEENGINEERING_DS and COL_BOTTOMTRACKENGINEERING_DS.
  * 
  */
 
@@ -226,6 +227,20 @@ namespace RTI
         /// TEXT
         /// </summary>
         public const string COL_INSTRUMENTWATERMASS_DS = "InstrumentWaterMassDS";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Profile Engineering DataSet
+        /// TEXT
+        /// </summary>
+        public const string COL_PROFILEENGINEERING_DS = "ProfileEngineeringDS";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Bottom Track Engineering DataSet
+        /// TEXT
+        /// </summary>
+        public const string COL_BOTTOMTRACKENGINEERING_DS = "BottomTrackEngineeringDS";
 
         #endregion
 

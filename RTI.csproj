@@ -117,6 +117,7 @@
     <Compile Include="Models\AdcpConfiguration.cs" />
     <Compile Include="Models\AdcpSubsystemCommands.cs" />
     <Compile Include="Models\AdcpSubsystemConfig.cs" />
+    <Compile Include="Models\DataSet\BottomTrackEngineeringDataSet.cs" />
     <Compile Include="Models\DataSet\Ensemble.cs" />
     <Compile Include="Models\DataSet\AmplitudeDataSet.cs" />
     <Compile Include="Models\DataSet\AncillaryDataSet.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Models\DataSet\EarthVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\EarthWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\EnsembleDataSet.cs" />
+    <Compile Include="Models\DataSet\ProfileEngineeringDataSet.cs" />
     <Compile Include="Models\DecodeCSHOW.cs" />
     <Compile Include="Models\DeploymentOptions.cs" />
     <Compile Include="Models\Firmware.cs" />

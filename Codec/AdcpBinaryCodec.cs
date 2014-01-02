@@ -57,6 +57,7 @@
  * 03/20/2013      RC          2.19       If VerifyEnsembleNumberAndSize() fails in DecodingIncomingData(), i remove a byte from the buffer and try again.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 09/12/2013      RC          2.20.0     Added buffer lock to AddIncomingData().
+ * 12/31/2013      RC          2.21.2     Added ProfileEngineeringData and BottomTrackEngineeringData to parser.
  * 
  */
 
@@ -534,6 +535,30 @@ namespace RTI
                     // Add the data
                     adcpData.AddNmeaData(type, numElements, elementMultiplier, imag, nameLen, name, nmeaData);
                     //Debug.WriteLine(adcpData.NmeaData.ToString());
+                }
+                else if (Ensemble.ProfileEngineeringID.Equals(name, StringComparison.Ordinal))
+                {
+                    // Create a sub array of just this data set data
+                    byte[] peData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+
+                    // Add the data
+                    adcpData.AddProfileEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, peData);
+                    //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                    // Advance the packet pointer
+                    packetPointer += dataSetSize;
+                }
+                else if (Ensemble.BottomTrackEngineeringID.Equals(name, StringComparison.Ordinal))
+                {
+                    // Create a sub array of just this data set data
+                    byte[] bteData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+
+                    // Add the data
+                    adcpData.AddBottomTrackEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, bteData);
+                    //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                    // Advance the packet pointer
+                    packetPointer += dataSetSize;
                 }
                 else
                 {

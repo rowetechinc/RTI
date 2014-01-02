@@ -69,6 +69,7 @@
  * 08/09/2013      RC          2.19.4     Added AppConfiguration.
  * 08/19/2013      RC          2.19.4     Put PublishEnsembleWrite() in AddIncomingData() to know when an ensemble is received to write.
  * 10/28/2013      RC          2.21.0     Read and write the Project options to the project db file.
+ * 12/31/2013      RC          2.21.2     Added ProfileEngineeringDataSet and BottomTrackEngineeringDataSet to the project db file.
  * 
  */
 
@@ -731,7 +732,9 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_GOODEARTH_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_NMEA_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_EARTHWATERMASS_DS));
-                    builder.Append(string.Format("{0}", DbCommon.COL_INSTRUMENTWATERMASS_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_INSTRUMENTWATERMASS_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_PROFILEENGINEERING_DS));
+                    builder.Append(string.Format("{0}", DbCommon.COL_BOTTOMTRACKENGINEERING_DS));
 
                     builder.Append(") ");
                     builder.Append("VALUES(");
@@ -749,7 +752,9 @@ namespace RTI
                     builder.Append("@goodEarthDS, ");
                     builder.Append("@nmeaDS, ");
                     builder.Append("@earthWaterMassDS, ");
-                    builder.Append("@instrumentWaterMassDS ");
+                    builder.Append("@instrumentWaterMassDS, ");
+                    builder.Append("@profileEngineeringDS, ");
+                    builder.Append("@bottomTrackEngineeringDS ");
                     builder.Append("); ");
                     builder.Append("SELECT last_insert_rowid();");
 
@@ -888,6 +893,26 @@ namespace RTI
                     else
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@instrumentWaterMassDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Profile Engineering
+                    if (ensemble.IsProfileEngineeringAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@profileEngineeringDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ProfileEngineeringData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@profileEngineeringDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Bottom Track Engineering
+                    if (ensemble.IsBottomTrackEngineeringAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@bottomTrackEngineeringDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackEngineeringData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@bottomTrackEngineeringDS", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
                     // Run the query and get the result for the last row

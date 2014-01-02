@@ -30,7 +30,7 @@
  * 
  * HISTORY
  * -----------------------------------------------------------------
- * Date            Initials    Comments
+ * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 09/30/2011      RC                     Initial coding
  * 10/04/2011      RC                     Added decoding a DataTable
@@ -74,7 +74,7 @@ namespace RTI
     namespace DataSet
     {
         /// <summary>
-        /// Data set containing all the Ancillary data.
+        /// Data set containing all the Bottom Track data.
         /// </summary>
         [JsonConverter(typeof(BottomTrackDataSetSerializer))]
         public class BottomTrackDataSet : BaseDataSet
@@ -689,10 +689,10 @@ namespace RTI
 
             /// <summary>
             /// Move pass the Base data of the Bottom Track.  Then based
-            /// off the xAxis, move to the correct location.
+            /// off the data, move to the correct location.
             /// </summary>
-            /// <param name="index">PlaybackIndex of the order of the data.</param>
-            /// <returns>PlaybackIndex for the given xAxis.  Start of the data</returns>
+            /// <param name="index">Index of the order of the data.</param>
+            /// <returns>kIndex for the given data.  Start of the data</returns>
             private int GenerateIndex(int index)
             {
                 return GetBaseDataSize(NameLength) + (index * Ensemble.BYTES_IN_FLOAT);

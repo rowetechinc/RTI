@@ -58,6 +58,7 @@
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 09/12/2013      RC          2.20.0     Added buffer lock to AddIncomingData().
  * 12/31/2013      RC          2.21.2     Added ProfileEngineeringData and BottomTrackEngineeringData to parser.
+ * 01/09/2014      RC          2.21.3     Added SystemSetupData to parser.
  * 
  */
 
@@ -186,7 +187,7 @@ namespace RTI
 
         /// <summary>
         /// Store the latest NMEA data to a buffer.
-        /// As new Datasets are record, the buffer will
+        /// As new ensembles are record, the buffer will
         /// be flushed.
         /// </summary>
         /// <param name="nmeaData">String of NMEA data.  Can be multiple lines.</param>
@@ -372,9 +373,9 @@ namespace RTI
         /// Add the data to a AdcpDataSet variable and 
         /// return the filled variable when complete.
         /// </summary>
-        /// <param name="ensemble">Byte array containing data from an ADCP.</param>
+        /// <param name="binaryEnsemble">Byte array containing data from an ADCP.</param>
         /// <returns>Object holding decoded ADCP data.</returns>
-        private Ensemble DecodeAdcpData(byte[] ensemble)
+        private Ensemble DecodeAdcpData(byte[] binaryEnsemble)
         {
             // Keep track where in the packet
             // we are currently decoding
@@ -387,16 +388,16 @@ namespace RTI
             string name = "";
             int dataSetSize = 0;
 
-            Ensemble adcpData = new Ensemble();
+            Ensemble ensemble = new Ensemble();
 
             for (int i = 0; i < DataSet.Ensemble.MAX_NUM_DATA_SETS; i++)
             {
-                type = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 0));
-                numElements = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 1));
-                elementMultiplier = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 2));
-                imag = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 3));
-                nameLen = MathHelper.ByteArrayToInt32(ensemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 4));
-                name = MathHelper.ByteArrayToString(ensemble, 8, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 5));
+                type = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 0));
+                numElements = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 1));
+                elementMultiplier = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 2));
+                imag = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 3));
+                nameLen = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 4));
+                name = MathHelper.ByteArrayToString(binaryEnsemble, 8, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 5));
 
                 // Get the size of this data set
                 dataSetSize = BaseDataSet.GetDataSetSize(type, nameLen, numElements, elementMultiplier);
@@ -404,10 +405,10 @@ namespace RTI
                 if (Ensemble.BeamVelocityID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] velData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] velData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddBeamVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                    ensemble.AddBeamVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
                     //Debug.WriteLine(adcpData.BeamVelocityData.ToString());
 
                     // Advance the packet pointer
@@ -416,10 +417,10 @@ namespace RTI
                 else if (Ensemble.InstrumentVelocityID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] velData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] velData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddInstrumentVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                    ensemble.AddInstrumentVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
                     //Debug.WriteLine(adcpData.InstrVelocityData.ToString());
 
                     // Advance the packet pointer
@@ -428,10 +429,10 @@ namespace RTI
                 else if (Ensemble.EarthVelocityID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] velData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] velData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddEarthVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                    ensemble.AddEarthVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
                     //Debug.WriteLine(adcpData.EarthVelocityData.ToString());
 
                     // Advance the packet pointer
@@ -440,10 +441,10 @@ namespace RTI
                 else if (Ensemble.AmplitudeID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] ampData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] ampData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddAmplitudeData(type, numElements, elementMultiplier, imag, nameLen, name, ampData);
+                    ensemble.AddAmplitudeData(type, numElements, elementMultiplier, imag, nameLen, name, ampData);
                     //Debug.WriteLine(adcpData.AmplitudeData.ToString());
 
                     // Advance the packet pointer
@@ -452,10 +453,10 @@ namespace RTI
                 else if (Ensemble.CorrelationID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] corrData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] corrData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddCorrelationData(type, numElements, elementMultiplier, imag, nameLen, name, corrData);
+                    ensemble.AddCorrelationData(type, numElements, elementMultiplier, imag, nameLen, name, corrData);
                     //Debug.WriteLine(adcpData.CorrelationData.ToString());
 
                     // Advance the packet pointer
@@ -464,10 +465,10 @@ namespace RTI
                 else if (Ensemble.GoodBeamID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] goodBeamData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] goodBeamData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddGoodBeamData(type, numElements, elementMultiplier, imag, nameLen, name, goodBeamData);
+                    ensemble.AddGoodBeamData(type, numElements, elementMultiplier, imag, nameLen, name, goodBeamData);
                     //Debug.WriteLine(adcpData.GoodBeamData.ToString());
 
                     // Advance the packet pointer
@@ -476,10 +477,10 @@ namespace RTI
                 else if (Ensemble.GoodEarthID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] goodEarthData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] goodEarthData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddGoodEarthData(type, numElements, elementMultiplier, imag, nameLen, name, goodEarthData);
+                    ensemble.AddGoodEarthData(type, numElements, elementMultiplier, imag, nameLen, name, goodEarthData);
                     //Debug.WriteLine(adcpData.GoodEarthData.ToString());
 
                     // Advance the packet pointer
@@ -488,10 +489,10 @@ namespace RTI
                 else if (Ensemble.EnsembleDataID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] ensembleData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] ensembleData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddEnsembleData(type, numElements, elementMultiplier, imag, nameLen, name, ensembleData);
+                    ensemble.AddEnsembleData(type, numElements, elementMultiplier, imag, nameLen, name, ensembleData);
                     //Debug.WriteLine(adcpData.EnsembleData.ToString());
 
                     // Advance the packet pointer
@@ -500,10 +501,10 @@ namespace RTI
                 else if (Ensemble.AncillaryID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] ancillaryData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] ancillaryData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddAncillaryData(type, numElements, elementMultiplier, imag, nameLen, name, ancillaryData);
+                    ensemble.AddAncillaryData(type, numElements, elementMultiplier, imag, nameLen, name, ancillaryData);
                     //Debug.WriteLine(adcpData.AncillaryData.ToString());
 
                     // Advance the packet pointer
@@ -512,10 +513,10 @@ namespace RTI
                 else if (Ensemble.BottomTrackID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] bottomTrackData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] bottomTrackData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddBottomTrackData(type, numElements, elementMultiplier, imag, nameLen, name, bottomTrackData);
+                    ensemble.AddBottomTrackData(type, numElements, elementMultiplier, imag, nameLen, name, bottomTrackData);
                     //Debug.WriteLine(adcpData.BottomTrackData.ToString());
 
                     // Advance the packet pointer
@@ -529,20 +530,20 @@ namespace RTI
                     // Scan through the data set and store all the data
                     for(int x = 0; x < dataSetSize; x++)
                     {
-                        nmeaData[x] = ensemble[packetPointer++];
+                        nmeaData[x] = binaryEnsemble[packetPointer++];
                     }
 
                     // Add the data
-                    adcpData.AddNmeaData(type, numElements, elementMultiplier, imag, nameLen, name, nmeaData);
+                    ensemble.AddNmeaData(type, numElements, elementMultiplier, imag, nameLen, name, nmeaData);
                     //Debug.WriteLine(adcpData.NmeaData.ToString());
                 }
                 else if (Ensemble.ProfileEngineeringID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] peData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] peData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddProfileEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, peData);
+                    ensemble.AddProfileEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, peData);
                     //Debug.WriteLine(adcpData.BottomTrackData.ToString());
 
                     // Advance the packet pointer
@@ -551,10 +552,22 @@ namespace RTI
                 else if (Ensemble.BottomTrackEngineeringID.Equals(name, StringComparison.Ordinal))
                 {
                     // Create a sub array of just this data set data
-                    byte[] bteData = MathHelper.SubArray<byte>(ensemble, packetPointer, dataSetSize);
+                    byte[] bteData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
 
                     // Add the data
-                    adcpData.AddBottomTrackEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, bteData);
+                    ensemble.AddBottomTrackEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, bteData);
+                    //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                    // Advance the packet pointer
+                    packetPointer += dataSetSize;
+                }
+                else if (Ensemble.SystemSetupID.Equals(name, StringComparison.Ordinal))
+                {
+                    // Create a sub array of just this data set data
+                    byte[] ssData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                    // Add the data
+                    ensemble.AddSystemSetupData(type, numElements, elementMultiplier, imag, nameLen, name, ssData);
                     //Debug.WriteLine(adcpData.BottomTrackData.ToString());
 
                     // Advance the packet pointer
@@ -566,7 +579,9 @@ namespace RTI
                     packetPointer += dataSetSize;
                 }
 
-                if (packetPointer+4 >= ensemble.Length)
+
+
+                if (packetPointer+4 >= binaryEnsemble.Length)
                     break;
             }
 
@@ -575,20 +590,23 @@ namespace RTI
             if (_nmeaBuffer.Count > 0)
             {
                 // Create a NMEA dataset
-                MergeNmeaDataSet(ref adcpData);
+                MergeNmeaDataSet(ref ensemble);
 
                 // Add the NMEA binary data to binary data
-                MergeNmeaBinary(ref ensemble, adcpData.NmeaData);
+                if (ensemble.IsNmeaAvail)
+                {
+                    MergeNmeaBinary(ref binaryEnsemble, ensemble.NmeaData);
+                }
             }
             
             // Send an event that data was processed
             // in this format
             if (ProcessDataEvent != null)
             {
-                ProcessDataEvent(ensemble, adcpData);
+                ProcessDataEvent(binaryEnsemble, ensemble);
             }
 
-            return adcpData;
+            return ensemble;
         }
 
         /// <summary>
@@ -603,15 +621,22 @@ namespace RTI
             // the item from the buffer at the same time.
             StringBuilder nmeaData = new StringBuilder();
 
+            // Copy the buffer so it can be unlocked
+            LinkedList<string> bufferCopy;
             lock (_nmeaBufferLock)
             {
-                for (int x = 0; x < _nmeaBuffer.Count; x++)
-                {
-                    nmeaData.Append(_nmeaBuffer.First.Value);
+                // Copy the buffer then clear it
+                bufferCopy = new LinkedList<string>(_nmeaBuffer);
+                _nmeaBuffer.Clear();
+            }
 
-                    // Remove the data
-                    _nmeaBuffer.RemoveFirst();
-                }
+            // Create a string of all the buffered data
+            for (int x = 0; x < bufferCopy.Count; x++)
+            {
+                nmeaData.Append(bufferCopy.First.Value);
+
+                // Remove the data
+                bufferCopy.RemoveFirst();
             }
 
             // Check if NMEA data already exsit, if it does, combine the data

@@ -44,6 +44,7 @@
  * 01/17/2013      RC          2.17       Added DEBUG_MAJOR_VER for a debug firmware flag.
  * 02/21/2013      RC          2.18       In GetSubsystemCode() and GetSubsystem(), check if the serial number given is a DVL serial number.  If so, handle differently.
  * 02/26/2013      RC          2.18       Maded SubsystemCode public so it can be decoded for JSON.
+ * 02/19/2014      RC          2.21.3     In ToString(), display the SubSystemCode as a char.
  *
  */
 
@@ -319,7 +320,7 @@ namespace RTI
         /// <returns>String of the version number.</returns>
         public override string ToString()
         {
-            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, SubsystemCode.ToString());
+            return string.Format("{0}.{1}.{2} - {3}", FirmwareMajor, FirmwareMinor, FirmwareRevision, Convert.ToChar(SubsystemCode));
         }
 
 

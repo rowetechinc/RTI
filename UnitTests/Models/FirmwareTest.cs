@@ -187,7 +187,7 @@ namespace RTI
         [Test]
         public void TestToString()
         {
-            Firmware fw = new Firmware(0x3, 1, 2, 3);
+            Firmware fw = new Firmware( Convert.ToByte('3'), 1, 2, 3);
             Assert.AreEqual("1.2.3 - 3", fw.ToString(), "ToString is incorrect.");
         }
 

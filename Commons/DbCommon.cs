@@ -56,6 +56,9 @@
  * 08/09/2013      RC          2.19.4     Added COL_CMD_APP_CONFIGURATION.
  * 10/28/2013      RC          2.21.0     Added COL_CMD_PROJECT_OPTIONS.
  * 12/31/2013      RC          2.21.2     Added COL_PROFILEENGINEERING_DS and COL_BOTTOMTRACKENGINEERING_DS.
+ * 01/09/2014      RC          2.21.3     Added COL_SYSTEMSETUP_DS.
+ * 02/07/2014      RC          2.21.3     Added COL_ADCPGPS.
+ * 02/13/2014      RC          2.21.3     Added COL_ENS_POSITION.
  * 
  */
 
@@ -133,6 +136,13 @@ namespace RTI
         /// (INTEGER NOT NULL)
         /// </summary>
         public const string COL_ENS_DATETIME = "DateTime";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Position.
+        /// TEXT
+        /// </summary>
+        public const string COL_ENS_POSITION = "Position";
 
 
         #region DataSet Columns
@@ -241,6 +251,48 @@ namespace RTI
         /// TEXT
         /// </summary>
         public const string COL_BOTTOMTRACKENGINEERING_DS = "BottomTrackEngineeringDS";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// System Setup DataSet
+        /// TEXT
+        /// </summary>
+        public const string COL_SYSTEMSETUP_DS = "SystemSetupDS";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// GPS 1.
+        /// TEXT
+        /// </summary>
+        public const string COL_ADCPGPS = "AdcpGpsData";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// GPS 1.
+        /// TEXT
+        /// </summary>
+        public const string COL_GPS1 = "Gps1Data";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// GPS 2.
+        /// TEXT
+        /// </summary>
+        public const string COL_GPS2 = "Gps2Data";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// NMEA 1.
+        /// TEXT
+        /// </summary>
+        public const string COL_NMEA1 = "Nmea1Data";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// NMEA 2.
+        /// TEXT
+        /// </summary>
+        public const string COL_NMEA2 = "Nmea2Data";
 
         #endregion
 

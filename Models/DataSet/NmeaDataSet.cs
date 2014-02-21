@@ -43,6 +43,7 @@
  * 02/20/2013      RC          2.18       Added an empty constructor.  Made the properties' Setter public for JSON coding.
  * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
  * 10/03/2013      RC          2.20.2     Fixed bug in constructor where the data type was not set correctly.  It is a byte type.
+ * 02/11/2014      RC          2.21.3     Added GPHDT.
  *       
  * 
  */
@@ -151,6 +152,13 @@ namespace RTI
             [JsonIgnore]
             public GpgsaSentence GPGSA { get; set; }
 
+            /// <summary>
+            /// Last GPS GPHDT message received in this dataset.
+            /// GPS Heading.
+            /// </summary>
+            [JsonIgnore]
+            public GphdtSentence GPHDT { get; set; }
+
             #endregion
 
             /// <summary>
@@ -173,6 +181,7 @@ namespace RTI
                 GPGLL = null;
                 GPGSV = null;
                 GPGSA = null;
+                GPHDT = null;
 
                 // Initialized list
                 NmeaStrings = new List<string>();
@@ -200,6 +209,7 @@ namespace RTI
                 GPGLL = null;
                 GPGSV = null;
                 GPGSA = null;
+                GPHDT = null;
 
                 // Initialized list
                 NmeaStrings = new List<string>();
@@ -224,6 +234,7 @@ namespace RTI
                 GPGLL = null;
                 GPGSV = null;
                 GPGSA = null;
+                GPHDT = null;
 
                 // Initialized list
                 NmeaStrings = new List<string>();
@@ -260,6 +271,7 @@ namespace RTI
                 GPGLL = null;
                 GPGSV = null;
                 GPGSA = null;
+                GPHDT = null;
 
                 // Initialized list
                 if (NmeaStrings != null)
@@ -343,6 +355,16 @@ namespace RTI
             public bool IsGpgsaAvail()
             {
                 return GPGSA != null;
+            }
+
+            /// <summary>
+            /// Return whether the GPHDT
+            /// message is set.
+            /// </summary>
+            /// <returns>TRUE = GPHDT message exist.</returns>
+            public bool IsGphdtAvail()
+            {
+                return GPHDT != null;
             }
 
             /// <summary>
@@ -611,6 +633,11 @@ namespace RTI
                 {
                     // Yes.  Convert it using the fast pre-parseed constructor
                     GPGSA = new GpgsaSentence(sentence.Sentence);
+                }
+                if (sentence.CommandWord.EndsWith("HDT", StringComparison.Ordinal))
+                {
+                    // Yes.  Convert it using the fast pre-parseed constructor
+                    GPHDT = new GphdtSentence(sentence.Sentence);
                 }
             }
 

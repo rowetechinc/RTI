@@ -79,6 +79,18 @@ namespace RTI
     /// Represents an NMEA sentence which contains
     /// </summary>
     /// <remarks></remarks>
+    public interface IBtVelocityQSentence
+    {
+        /// <summary>
+        /// Bottom Track Velocity Q in mm/s.
+        /// </summary>
+        Speed BottomTrackVelQ { get; }
+    }
+
+    /// <summary>
+    /// Represents an NMEA sentence which contains
+    /// </summary>
+    /// <remarks></remarks>
     public interface IBtVelocityEastSentence
     {
         /// <summary>
@@ -163,6 +175,18 @@ namespace RTI
     /// Represents an NMEA sentence which contains
     /// </summary>
     /// <remarks></remarks>
+    public interface IWmVelocityQSentence
+    {
+        /// <summary>
+        /// Water Mass Velocity Q in mm/s.
+        /// </summary>
+        Speed WaterMassVelQ { get; }
+    }
+
+    /// <summary>
+    /// Represents an NMEA sentence which contains
+    /// </summary>
+    /// <remarks></remarks>
     public interface IWmVelocityEastSentence
     {
         /// <summary>
@@ -214,8 +238,20 @@ namespace RTI
     public interface IStatusSentence
     {
         /// <summary>
-        /// Water Mass Depth  mm.
+        /// ADCP Status
         /// </summary>
         RTI.Status SystemStatus { get; }
+    }
+
+    /// <summary>
+    /// Represents an NMEA sentence which contains
+    /// </summary>
+    /// <remarks></remarks>
+    public interface ISubsystemConfigurationSentence
+    {
+        /// <summary>
+        /// Subsystem Configuration
+        /// </summary>
+        RTI.SubsystemConfiguration SubsystemConfig { get; }
     }
 }

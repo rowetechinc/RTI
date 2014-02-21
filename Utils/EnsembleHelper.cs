@@ -411,6 +411,7 @@ namespace RTI
                                             0.0f,                                                   // Water Mass East Velocity in m/s.
                                             0.0f,                                                   // Water Mass North Velocity in m/s.
                                             0.0f,                                                   // Water Mass Vertical Velocity in m/s.
+                                            0.0f,                                                   // Water Mass Error Velocity in m/s.
                                             0.0f);                                                  // Depth layer of the Water Mass measurement in meters.
         }
 

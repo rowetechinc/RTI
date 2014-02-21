@@ -32,11 +32,7 @@
  * -----------------------------------------------------------------
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 11/22/2011      RC                     Initial coding.
- * 01/19/2012      RC          1.14       Added Encode().
- * 02/21/2013      RC          2.18       Added comments.
- * 01/31/2014      RC          2.21.3     Fixed parsing the status value from hex to int in OnSentenceChanged().
- * 02/06/2014      RC          2.21.3     Added Subsystem Configuration.
+ * 02/06/2014      RC          2.21.3     Initial coding.
  * 02/18/2014      RC          2.21.3     Set the SubsystemConfig number as the same as the CEPO index in OnSentenceChanged(). 
  * 02/21/2014      RC          2.21.3     Fixed constructor to take subsystem CEPO index.
  * 
@@ -50,18 +46,19 @@ namespace RTI
     /// <summary>
     /// A NMEA styte message received from the ADCP in 
     /// DVL Mode.  Data consist of Bottom Track and Water Track data.
-    /// Data in Instrument transform.
+    /// Data in Instrument transform.  This sentences differs from 
+    /// PRTI01 because it includes the Q (error) velocity.
     /// </summary>
-    public sealed class Prti01Sentence : NmeaSentence, IStartTimeSentence, ISampleNumberSentence, ITemperatureSentence, 
-                                                        IBtVelocityXSentence, IBtVelocityYSentence, IBtVelocityZSentence,
+    public sealed class Prti03Sentence : NmeaSentence, IStartTimeSentence, ISampleNumberSentence, ITemperatureSentence, 
+                                                        IBtVelocityXSentence, IBtVelocityYSentence, IBtVelocityZSentence, IBtVelocityQSentence,
                                                         IBtDepthSentence, 
-                                                        IWmVelocityXSentence, IWmVelocityYSentence, IWmVelocityZSentence,
-                                                        IWmDepthSentence, IStatusSentence, ISubsystemConfigurationSentence
+                                                        IWmVelocityXSentence, IWmVelocityYSentence, IWmVelocityZSentence, IWmVelocityQSentence,
+                                                        IWmDepthSentence, IStatusSentence, ISubsystemConfigurationSentence 
     {
         /// <summary>
-        /// Command word for PRTI01.
+        /// Command word for PRTI03.
         /// </summary>
-        public const string CMD_WORD_PRTI01 = "PRTI01";
+        public const string CMD_WORD_PRTI03 = "PRTI03";
 
         #region Properties
         
@@ -154,6 +151,22 @@ namespace RTI
         }
 
         /// <summary>
+        /// Bottom Track Q velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        private Speed _btVelocityQ;
+        /// <summary>
+        /// Bottom Track Q velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed BottomTrackVelQ
+        {
+            get { return _btVelocityQ; }
+        }
+
+        /// <summary>
         /// Depth below transducer in mm.  
         /// (Range to the bottom in front of the transducer, 
         /// 0 = no detection)
@@ -218,6 +231,22 @@ namespace RTI
         }
 
         /// <summary>
+        /// Water Mass Q velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        private Speed _wmVelocityQ;
+        /// <summary>
+        /// Water Mass Q velocity component mm/s.
+        /// (Instrument Coordinate system)
+        /// (-99999 indicates no valid velocity)
+        /// </summary>
+        public Speed WaterMassVelQ
+        {
+            get { return _wmVelocityQ; }
+        }
+
+        /// <summary>
         /// Depth of water mass measurement in mm.
         /// (Position of the bin in front of the transducer)
         /// </summary>
@@ -266,7 +295,7 @@ namespace RTI
         /// </summary>
         /// <param name="sentence">The sentence.</param>
         /// <remarks></remarks>
-        public Prti01Sentence(string sentence)
+        public Prti03Sentence(string sentence)
             : base(sentence)
         {
             // If the sentence is valid, parse the data
@@ -284,7 +313,7 @@ namespace RTI
         /// <param name="words">The words.</param>
         /// <param name="validChecksum">The valid checksum.</param>
         /// <remarks></remarks>
-        internal Prti01Sentence(string sentence, string commandWord, string[] words, string validChecksum)
+        internal Prti03Sentence(string sentence, string commandWord, string[] words, string validChecksum)
             : base(sentence, commandWord, words, validChecksum)
         { }
 
@@ -297,18 +326,20 @@ namespace RTI
         /// <param name="btVelX">Bottom Track Velocity X.</param>
         /// <param name="btVelY">Bottom Track Velocity Y.</param>
         /// <param name="btVelZ">Bottom Track Velocity Z.</param>
+        /// <param name="btVelQ">Bottom Track Velocity Q.</param>
         /// <param name="depth">Depth.</param>
         /// <param name="wmVelX">Water Mass Velocity X.</param>
         /// <param name="wmVelY">Water Mass Velocity Y.</param>
         /// <param name="wmVelZ">Water Mass Velocity Z.</param>
+        /// <param name="wmVelQ">Water Mass Velocity Q.</param>
         /// <param name="wmDepth">Water Mass Depth.</param>
         /// <param name="status">Status.</param>
         /// <param name="subsystem">Subsystem.</param>
         /// <param name="cepoIndex">CEPO Index.</param>
-        public Prti01Sentence(string time, string sampleNum, string temp,
-                                string btVelX, string btVelY, string btVelZ,
+        public Prti03Sentence(string time, string sampleNum, string temp,
+                                string btVelX, string btVelY, string btVelZ, string btVelQ,
                                 string depth,
-                                string wmVelX, string wmVelY, string wmVelZ,
+                                string wmVelX, string wmVelY, string wmVelZ, string wmVelQ,
                                 string wmDepth, string status, string subsystem, string cepoIndex)
         {
             // Use a string builder to create the sentence text
@@ -318,7 +349,7 @@ namespace RTI
 
             // Append the command word
             builder.Append("$");
-            builder.Append(CMD_WORD_PRTI01);
+            builder.Append(CMD_WORD_PRTI03);
 
             #endregion Append the command word
 
@@ -359,6 +390,8 @@ namespace RTI
             builder.Append(btVelY);
             builder.Append(',');
             builder.Append(btVelZ);
+            builder.Append(',');
+            builder.Append(btVelQ);
 
             #endregion
 
@@ -381,6 +414,8 @@ namespace RTI
             builder.Append(wmVelY);
             builder.Append(',');
             builder.Append(wmVelZ);
+            builder.Append(',');
+            builder.Append(wmVelQ);
 
             #endregion
 
@@ -431,7 +466,6 @@ namespace RTI
         }
 
         #endregion
-
 
         /// <summary>
         /// Called when [sentence changed].
@@ -542,12 +576,30 @@ namespace RTI
 
             #endregion
 
+            #region Bottom Track Q Velocity
+
+            // Do we have enough data to process the Bottom Track Z Velocity?
+            if (wordCount >= 7 && words[6].Length != 0)
+            {
+                _btVelocityQ = new Speed(
+                                        // Parse the numeric portion
+                                        int.Parse(words[6], NmeaCultureInfo),
+                                        // Use mm/s
+                                        SpeedUnit.MillimetersPerSecond);
+            }
+            else
+            {
+                _btVelocityQ = Speed.Empty;
+            }
+
+            #endregion
+
             #region Depth
 
             // Do we have enough data to process the Depth?
-            if (wordCount >= 7 && words[6].Length != 0)
+            if (wordCount >= 8 && words[7].Length != 0)
             {
-                _depth = new Distance(int.Parse(words[6], NmeaCultureInfo), DistanceUnit.Millimeters);
+                _depth = new Distance(int.Parse(words[7], NmeaCultureInfo), DistanceUnit.Millimeters);
             }
             else
             {
@@ -560,11 +612,11 @@ namespace RTI
             #region Water Mass X Velocity
 
             // Do we have enough data to process the Water Mass X Velocity?
-            if (wordCount >= 8 && words[7].Length != 0)
+            if (wordCount >= 9 && words[8].Length != 0)
             {
                 _wmVelocityX = new Speed(
                                         // Parse the numeric portion
-                                        int.Parse(words[7], NmeaCultureInfo),
+                                        int.Parse(words[8], NmeaCultureInfo),
                                         // Use mm/s
                                         SpeedUnit.MillimetersPerSecond);
             }
@@ -578,11 +630,11 @@ namespace RTI
             #region Water Mass Y Velocity
 
             // Do we have enough data to process the Water Mass Y Velocity?
-            if (wordCount >= 9 && words[8].Length != 0)
+            if (wordCount >= 10 && words[9].Length != 0)
             {
                 _wmVelocityY = new Speed(
                                         // Parse the numeric portion
-                                        int.Parse(words[8], NmeaCultureInfo),
+                                        int.Parse(words[9], NmeaCultureInfo),
                                         // Use mm/s
                                         SpeedUnit.MillimetersPerSecond);
             }
@@ -596,11 +648,29 @@ namespace RTI
             #region Water Mass Z Velocity
 
             // Do we have enough data to process the Water Mass Z Velocity?
-            if (wordCount >= 10 && words[9].Length != 0)
+            if (wordCount >= 11 && words[10].Length != 0)
             {
                 _wmVelocityZ = new Speed(
                                         // Parse the numeric portion
-                                        int.Parse(words[9], NmeaCultureInfo),
+                                        int.Parse(words[10], NmeaCultureInfo),
+                                        // Use mm/s
+                                        SpeedUnit.MillimetersPerSecond);
+            }
+            else
+            {
+                _wmVelocityZ = Speed.Empty;
+            }
+
+            #endregion
+
+            #region Water Mass Q Velocity
+
+            // Do we have enough data to process the Water Mass Q Velocity?
+            if (wordCount >= 12 && words[11].Length != 0)
+            {
+                _wmVelocityZ = new Speed(
+                                        // Parse the numeric portion
+                                        int.Parse(words[11], NmeaCultureInfo),
                                         // Use mm/s
                                         SpeedUnit.MillimetersPerSecond);
             }
@@ -614,9 +684,9 @@ namespace RTI
             #region Water Mass Depth
 
             // Do we have enough data to process the Depth?
-            if (wordCount >= 11 && words[10].Length != 0)
+            if (wordCount >= 13 && words[12].Length != 0)
             {
-                _wmDepth = new Distance(int.Parse(words[10], NmeaCultureInfo), DistanceUnit.Millimeters);
+                _wmDepth = new Distance(int.Parse(words[12], NmeaCultureInfo), DistanceUnit.Millimeters);
             }
             else
             {
@@ -629,10 +699,10 @@ namespace RTI
             #region Status
 
             // Do we have enough data to process the Status?
-            if (wordCount >= 12 && words[11].Length != 0)
+            if (wordCount >= 14 && words[13].Length != 0)
             {
                 // Convert the hex string to an int
-                int status = Convert.ToInt32(words[11], 16);
+                int status = Convert.ToInt32(words[13], 16);
 
                 _status = new Status(status);
             }
@@ -647,12 +717,12 @@ namespace RTI
             #region Subsystem Configuration
 
             // Do we have enough data to process the Subsystem Configuration?
-            if (wordCount >= 14 && words[12].Length != 0 && words[13].Length != 0)
+            if (wordCount >= 16 && words[14].Length != 0 && words[15].Length != 0)
             {
                 byte ssConfig = 0;
-                byte.TryParse(words[13], out ssConfig);         // Subsystem configuration index in CEPO
+                byte.TryParse(words[15], out ssConfig);         // Subsystem configuration index in CEPO
 
-                _SubsystemConfig = new SubsystemConfiguration(new Subsystem(words[12], 0), ssConfig, ssConfig);
+                _SubsystemConfig = new SubsystemConfiguration(new Subsystem(words[14], 0), ssConfig, ssConfig);
             }
             else
             {
@@ -679,7 +749,7 @@ namespace RTI
 
             // Append the command word
             builder.Append("$");
-            builder.Append(CMD_WORD_PRTI01);
+            builder.Append(CMD_WORD_PRTI03);
 
             #endregion Append the command word
 
@@ -720,6 +790,8 @@ namespace RTI
             builder.Append(_btVelocityY.ToMillimetersPerSecond().Value);
             builder.Append(',');
             builder.Append(_btVelocityZ.ToMillimetersPerSecond().Value);
+            builder.Append(',');
+            builder.Append(_btVelocityQ.ToMillimetersPerSecond().Value);
 
             #endregion
 
@@ -742,6 +814,8 @@ namespace RTI
             builder.Append(_wmVelocityY.ToMillimetersPerSecond().Value);
             builder.Append(',');
             builder.Append(_wmVelocityZ.ToMillimetersPerSecond().Value);
+            builder.Append(',');
+            builder.Append(_wmVelocityQ.ToMillimetersPerSecond().Value);
 
             #endregion
 

@@ -1161,7 +1161,7 @@ namespace RTI
         /// </summary>
         public class AdcpCommands
         {
-            #region Varialbles
+            #region Variables
 
             #region Salinity
 

@@ -22,7 +22,9 @@
 // | Shade1974 (Ted Dunsford) | 10/22/2010 | Added file headers reviewed formatting with resharper.
 // | Rico  (Rico Castelo)     | 12/08/2011 | Added OnSentenceChanged() to constructor that takes a NmeaSentence.
 // | Rico  (Rico Castelo)     | 12/09/2011 | Fixed bug where wrong indexes were used for speed values.
+// | Rico  (Rico Castelo)     | 01/31/2014 | Put all parsing in a try block or used TryParse.
 // ********************************************************************************************************
+using System;
 namespace DotSpatial.Positioning
 {
     /// <summary>
@@ -120,7 +122,16 @@ namespace DotSpatial.Positioning
             #region Bearing
 
             if (wordCount >= 1 && words[0].Length != 0)
-                _bearing = Azimuth.Parse(words[0], NmeaCultureInfo);
+            {
+                try
+                {
+                    _bearing = Azimuth.Parse(words[0], NmeaCultureInfo);
+                }
+                catch (Exception)
+                {
+                    _bearing = Azimuth.Invalid;
+                }
+            }
             else
                 _bearing = Azimuth.Invalid;
 
@@ -129,7 +140,16 @@ namespace DotSpatial.Positioning
             #region Magnetic Variation
 
             if (wordCount >= 3 && words[2].Length != 0)
-                _magneticVariation = new Longitude(double.Parse(words[2], NmeaCultureInfo) - _bearing.DecimalDegrees);
+            {
+                try
+                {
+                    _magneticVariation = new Longitude(double.Parse(words[2], NmeaCultureInfo) - _bearing.DecimalDegrees);
+                }
+                catch (Exception)
+                {
+                    _magneticVariation = Longitude.Invalid;
+                }
+            }
             else
                 _magneticVariation = Longitude.Invalid;
 
@@ -143,19 +163,33 @@ namespace DotSpatial.Positioning
 
             if (wordCount > 5 && words[4].Length != 0)
             {
-                _speed = new Speed(
-                    // Parse the numeric portion
-                    double.Parse(words[4], NmeaCultureInfo),
-                    // Use knots
-                    SpeedUnit.Knots);
+                try
+                {
+                    _speed = new Speed(
+                        // Parse the numeric portion
+                        double.Parse(words[4], NmeaCultureInfo),
+                        // Use knots
+                        SpeedUnit.Knots);
+                }
+                catch (Exception)
+                {
+                    _speed = Speed.Invalid;
+                }
             }
             else if (wordCount > 7 && words[6].Length != 0)
             {
-                _speed = new Speed(
-                    // Parse the numeric portion
-                    double.Parse(words[6], NmeaCultureInfo),
-                    // Use knots
-                    SpeedUnit.KilometersPerHour);
+                try
+                {
+                    _speed = new Speed(
+                        // Parse the numeric portion
+                        double.Parse(words[6], NmeaCultureInfo),
+                        // Use knots
+                        SpeedUnit.KilometersPerHour);
+                }
+                catch (Exception)
+                {
+                    _speed = Speed.Invalid;
+                }
             }
             else
             {

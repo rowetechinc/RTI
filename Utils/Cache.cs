@@ -36,6 +36,7 @@
  * 12/19/2011      RC          1.10       Check if node exist before adding.
  * 01/27/2012      RC          1.14       Added a clear method, to clear the cache.
  * 05/29/2012      RC          2.11       Added GetFirst().
+ * 01/20/2014      RC          2.21.3     Changed dictionary to ConcurrentDictionary.
  * 
  */
 
@@ -43,6 +44,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 
 namespace RTI
@@ -72,7 +74,7 @@ namespace RTI
         /// Dictionary to store the object based off a key.  This is
         /// used to retrieve the data quickly.
         /// </summary>
-        private readonly Dictionary<TKey, TValue> _cachedNodesDictionary = new Dictionary<TKey, TValue>();
+        private readonly ConcurrentDictionary<TKey, TValue> _cachedNodesDictionary = new ConcurrentDictionary<TKey, TValue>();
 
         /// <summary>
         /// List used to determine which nodes needs to be evicted
@@ -113,7 +115,7 @@ namespace RTI
             }
 
             // Add to the dictionary
-            _cachedNodesDictionary.Add(key, value);
+            _cachedNodesDictionary.GetOrAdd(key, value);
 
             // Add to the list
             _keyList.Add(key);
@@ -192,7 +194,8 @@ namespace RTI
         private void Remove( )
         {
             // Remove the item from the dictionary
-            _cachedNodesDictionary.Remove(_keyList[0]);
+            TValue value = null;
+            _cachedNodesDictionary.TryRemove(_keyList[0], out value);
 
             // Remove the item from the list
             _keyList.RemoveAt(0);

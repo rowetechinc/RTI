@@ -177,6 +177,19 @@ namespace DotSpatial.Positioning
     }
 
     /// <summary>
+    /// Represents an NMEA sentence which contains the direction of travel.
+    /// </summary>
+    /// <remarks></remarks>
+    public interface IHeadingAzSentence
+    {
+        /// <summary>
+        /// the Heading
+        /// </summary>
+        /// <remarks></remarks>
+        Azimuth Heading { get; }
+    }
+
+    /// <summary>
     /// Represents an NMEA sentence which contains whether a fix is currently acquired.
     /// </summary>
     /// <remarks></remarks>
@@ -327,5 +340,41 @@ namespace DotSpatial.Positioning
         /// Temperature in Celsius.
         /// </summary>
         int Temperature { get; }
+    }
+
+    /// <summary>
+    /// Represents an NMEA sentence which contains Heading.
+    /// </summary>
+    /// <remarks></remarks>
+    public interface IHeadingSentence
+    {
+        /// <summary>
+        /// Heading in degrees.
+        /// </summary>
+        float Heading { get; }
+    }
+
+    /// <summary>
+    /// Represents an NMEA sentence which contains Pitch.
+    /// </summary>
+    /// <remarks></remarks>
+    public interface IPitchSentence
+    {
+        /// <summary>
+        /// Pitch in degrees.
+        /// </summary>
+        float Pitch { get; }
+    }
+
+    /// <summary>
+    /// Represents an NMEA sentence which contains Roll.
+    /// </summary>
+    /// <remarks></remarks>
+    public interface IRollSentence
+    {
+        /// <summary>
+        /// Roll in degrees.
+        /// </summary>
+        float Roll { get; }
     }
 }

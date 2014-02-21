@@ -46,6 +46,8 @@
  *                                         Added _prevBuffer to prevent StackOverflowException.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 08/02/2013      RC          2.19.4     Have ProcessDataEventHandler match AdcpBinaryCodec and give both binary and ensemble.  Removed BinaryRecordEvent.
+ * 02/06/2014      RC          2.21.3     Added ability to decode PRIT03 sentence.
+ * 02/13/2014      RC          2.21.3     Pass all the DVL data to as binary data to be recorded in SendData().
  * 
  */
 
@@ -135,9 +137,34 @@ namespace RTI
         private Prti01Sentence _prti01;
 
         /// <summary>
+        /// Temporary variable to store a 
+        /// PRTI30 Sentence so it can be
+        /// combined with a PRTI02 Sentence, PRTI01 and PRTI31.
+        /// </summary>
+        private Prti30Sentence _prti30;
+
+        /// <summary>
+        /// Temporary variable to store a 
+        /// PRTI31 Sentence so it can be
+        /// combined with a PRTI02 Sentence, PRTI01 and PRTI30.
+        /// </summary>
+        private Prti31Sentence _prti31;
+
+        /// <summary>
         /// A buffer to store the current NMEA data.
         /// </summary>
         private LinkedList<string> _nmeaBuffer;
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Use the Bottom Track Heading, Pitch and Roll Value.
+        /// If set to false, it will use the Water Track Heading, Pitch
+        /// and Roll value.
+        /// </summary>
+        public bool IsUseBtHpr { get; set; }
 
         #endregion
 
@@ -150,6 +177,9 @@ namespace RTI
             // Initialize values
             //_adcpData = null;
             _prti01 = null;
+
+            // Default to use BT Heading, Pitch and Roll
+            IsUseBtHpr = true;
 
             _nmeaBuffer = new LinkedList<string>();
         }
@@ -216,20 +246,27 @@ namespace RTI
         /// send the data and set to null.
         /// </summary>
         /// <param name="adcpData">Data to be recorded.</param>
-        private void SendData(DataSet.Ensemble adcpData)
+        /// <param name="adcpMsg">ADCP message as a byte array.</param>
+        private void SendData(DataSet.Ensemble adcpData, byte[] adcpMsg)
         {
             // Send any remaining data
             if (adcpData != null)
             {
-                // Add NMEA to dataset and
-                // Record NMEA data if it exist
-                byte[] binaryData = GetNmeaData(ref adcpData);
+                // Byte array of the binary data
+                // Add the ADCP message
+                List<byte> byteList = new List<byte>(adcpMsg);
+
+                // Get all the GPS NMEA strings
+                // Add them to the ensemble
+                // and add it to the list
+                byte[] nmeaBA = GetNmeaData(ref adcpData);
+                byteList.AddRange(nmeaBA);
 
                 // Send an event that data was processed
                 // in this format
                 if (ProcessDataEvent != null)
                 {
-                    ProcessDataEvent(binaryData, adcpData);
+                    ProcessDataEvent(byteList.ToArray(), adcpData);
                 }
             }
         }
@@ -245,7 +282,7 @@ namespace RTI
             DataSet.Ensemble adcpData = CreateDataSet(sentence);
 
             // Send the data set
-            SendData(adcpData);
+            SendData(adcpData, sentence.ToByteArray());
         }
 
         /// <summary>
@@ -259,7 +296,21 @@ namespace RTI
             DataSet.Ensemble adcpData = CreateDataSet(sentence);
 
             // Send the data set
-            SendData(adcpData);
+            SendData(adcpData, sentence.ToByteArray());
+        }
+
+        /// <summary>
+        /// Create the data set using PRTI03.
+        /// Then send the dataset.
+        /// </summary>
+        /// <param name="sentence">PRTI03 Sentence.</param>
+        private void SendData(Prti03Sentence sentence)
+        {
+            // Create the dataset
+            DataSet.Ensemble adcpData = CreateDataSet(sentence);
+
+            // Send the data set
+            SendData(adcpData, sentence.ToByteArray());
         }
 
         /// <summary>
@@ -268,14 +319,53 @@ namespace RTI
         /// </summary>
         /// <param name="prti01">PRTI01 Sentence.</param>
         /// <param name="prti02">PRTI02 Sentence.</param>
-        private void SendData(Prti01Sentence prti01, Prti02Sentence prti02)
+        /// <param name="prti30">PRTI30 Sentence.</param>
+        /// <param name="prti31">PRTI31 Sentence.</param>
+        private void SendData(Prti01Sentence prti01, Prti02Sentence prti02, Prti30Sentence prti30 = null, Prti31Sentence prti31 = null)
         {
             // Create the dataset
             DataSet.Ensemble adcpData = CreateDataSet(prti01);
             adcpData.AddAdditionalBottomTrackData(prti02);
 
+            if (IsUseBtHpr)
+            {
+                if (prti30 != null)
+                {
+                    adcpData.AddAdditionalAncillaryData(prti30);
+                    adcpData.AddAdditionalBottomTrackData(prti30);
+                }
+            }
+            else
+            {
+                if (prti31 != null)
+                {
+                    adcpData.AddAdditionalAncillaryData(prti31);
+                    adcpData.AddAdditionalBottomTrackData(prti31);
+                }
+            }
+
+            // Combine all the messages and convert to a byte array
+            string adcpMesg = "";
+            if (prti01 != null)
+            {
+                adcpMesg += prti01.ToString();
+            }
+            if (prti02 != null)
+            {
+                adcpMesg += prti02.ToString();
+            }
+            if (prti30 != null)
+            {
+                adcpMesg += prti30.ToString();
+            }
+            if (prti31 != null)
+            {
+                adcpMesg += prti31.ToString();
+            }
+            byte[] adcpMesgBA = Encoding.ASCII.GetBytes(adcpMesg);
+
             // Send the data set
-            SendData(adcpData);
+            SendData(adcpData, adcpMesgBA);
         }
 
         #endregion
@@ -426,13 +516,32 @@ namespace RTI
                 // If they do not match, send PRTI02
                 if (_prti01 != null && _prti01.SampleNumber == prti02.SampleNumber)
                 {
-                    SendData(_prti01, prti02);
+                    SendData(_prti01, prti02, _prti30, _prti31);
                     _prti01 = null;
                 }
                 else
                 {
                     SendData(prti02);
                 }
+            }
+            // Check for PRTI03
+            else if (sentence.CommandWord.EndsWith(RTI.Prti03Sentence.CMD_WORD_PRTI03, StringComparison.Ordinal))
+            {
+                // Store the sentence to be combined with PRTI02
+                Prti03Sentence prti03 = new Prti03Sentence(sentence.Sentence, sentence.CommandWord, sentence.Words, sentence.ExistingChecksum);
+                SendData(prti03);
+            }
+            // Check for PRTI30
+            else if (sentence.CommandWord.EndsWith(RTI.Prti30Sentence.CMD_WORD_PRTI30, StringComparison.Ordinal))
+            {
+                // Store the sentence to be combined with PRTI01 and PRTI02
+                _prti30 = new Prti30Sentence(sentence.Sentence, sentence.CommandWord, sentence.Words, sentence.ExistingChecksum);
+            }
+            // Check for PRTI31
+            else if (sentence.CommandWord.EndsWith(RTI.Prti31Sentence.CMD_WORD_PRTI31, StringComparison.Ordinal))
+            {
+                // Store the sentence to be combined with PRTI01 and PRTI02
+                _prti31 = new Prti31Sentence(sentence.Sentence, sentence.CommandWord, sentence.Words, sentence.ExistingChecksum);
             }
             else
             {
@@ -471,7 +580,7 @@ namespace RTI
         }
 
         /// <summary>
-        /// Create a dataset.  Set the bottom track instrument velocity and water mass velocity.
+        /// Create a dataset.  Set the bottom track Earth velocity and water mass velocity.
         /// </summary>
         /// <param name="sentence">Sentence containing DVL data.</param>
         /// <returns>Dataset with values set.</returns>
@@ -490,6 +599,30 @@ namespace RTI
 
             // Add Water Mass data
             adcpData.AddEarthWaterMassData(sentence);
+
+            return adcpData;
+        }
+
+        /// <summary>
+        /// Create a dataset.  Set the bottom track instrument velocity and water mass velocity.
+        /// </summary>
+        /// <param name="sentence">Sentence containing DVL data.</param>
+        /// <returns>Dataset with values set.</returns>
+        private DataSet.Ensemble CreateDataSet(Prti03Sentence sentence)
+        {
+            DataSet.Ensemble adcpData = new DataSet.Ensemble();
+
+            // Add the Ensemble number to EnsembleDataSet
+            adcpData.AddEnsembleData(sentence);
+
+            // Add the Temp to AncillaryDataSet
+            adcpData.AddAncillaryData(sentence);
+
+            // Add Bottom Track data
+            adcpData.AddBottomTrackData(sentence);
+
+            // Add Water Mass data
+            adcpData.AddInstrumentWaterMassData(sentence);
 
             return adcpData;
         }

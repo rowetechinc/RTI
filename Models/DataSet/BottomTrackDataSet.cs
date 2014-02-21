@@ -59,6 +59,7 @@
  * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
  * 08/13/2013      RC          2.19.4     Fixed a bug with the GetAverageRange() using ElementMulitplier instead of Range.Length.
  * 08/16/2013      RC          2.19.4     Added IsBeamVelocityGood.  A good way to check for 3 beam solutions or any bad values.
+ * 01/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 
  */
 
@@ -371,8 +372,23 @@ namespace RTI
             /// Create a Bottom Track data set.  Includes all the information
             /// about the current Bottom Track data.
             /// </summary>
-            /// <param name="sentence"></param>
+            /// <param name="sentence">NMEA sentence.</param>
             public BottomTrackDataSet(Prti02Sentence sentence) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
+            {
+                // Initialize arrays
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
+
+                // Decode the information
+                DecodeBottomTrackData(sentence);
+            }
+
+            /// <summary>
+            /// Create a Bottom Track data set.  Includes all the information
+            /// about the current Bottom Track data.
+            /// </summary>
+            /// <param name="sentence">NMEA sentence.</param>
+            public BottomTrackDataSet(Prti03Sentence sentence) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.BottomTrackID)
             {
                 // Initialize arrays
@@ -475,6 +491,30 @@ namespace RTI
             {
                 // Decode the information
                 DecodeBottomTrackData(sentence);
+            }
+
+            /// <summary>
+            /// This will add additional Bottom Track data from the
+            /// Prti30Sentence.
+            /// </summary>
+            /// <param name="sentence">Additional data to add to the dataset.</param>
+            public void AddAdditionalBottomTrackData(Prti30Sentence sentence)
+            {
+                Heading = sentence.Heading;
+                Pitch = sentence.Pitch;
+                Roll = sentence.Roll;
+            }
+
+            /// <summary>
+            /// This will add additional Bottom Track data from the
+            /// Prti31Sentence.
+            /// </summary>
+            /// <param name="sentence">Additional data to add to the dataset.</param>
+            public void AddAdditionalBottomTrackData(Prti31Sentence sentence)
+            {
+                Heading = sentence.Heading;
+                Pitch = sentence.Pitch;
+                Roll = sentence.Roll;
             }
 
             /// <summary>
@@ -752,6 +792,81 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // Set all 4 values to the same range, then average range will also report the correct value
+                Range[0] = Convert.ToSingle(sentence.BottomTrackDepth.ToMeters().Value);
+                Range[1] = Convert.ToSingle(sentence.BottomTrackDepth.ToMeters().Value);
+                Range[2] = Convert.ToSingle(sentence.BottomTrackDepth.ToMeters().Value);
+                Range[3] = Convert.ToSingle(sentence.BottomTrackDepth.ToMeters().Value);
+
+                // Set the status value
+                Status = new Status(sentence.SystemStatus.Value);
+
+                // Set the water temp
+                WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);   // Sentence stores temp at 1/100 degree Celcius.
+
+                // First ping time
+                FirstPingTime = Convert.ToInt32(sentence.StartTime / 100);      // Sentence stores the time in hundredths of a second
+            }
+
+            /// <summary>
+            /// Prti03Sentence contains bottom track velocity in Instrument form. It also
+            /// contains the Error velocity, depth and status.
+            /// </summary>
+            /// <param name="sentence">DVL sentence containing data.</param>
+            private void DecodeBottomTrackData(Prti03Sentence sentence)
+            {
+                // Set the instrument velocity X in m/s
+                // If the velocity is bad, set bad velocity
+                if (sentence.BottomTrackVelX.Value != DotSpatial.Positioning.Speed.BadDVL.Value)
+                {
+                    InstrumentVelocity[0] = Convert.ToSingle(sentence.BottomTrackVelX.ToMetersPerSecond().Value);
+                }
+                else
+                {
+                    // Set Bad velocity
+                    InstrumentVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                    EarthVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // Set the instrument velocity Y in m/s
+                // If the velocity is bad, set bad velocity
+                if (sentence.BottomTrackVelY.Value != DotSpatial.Positioning.Speed.BadDVL.Value)
+                {
+                    InstrumentVelocity[1] = Convert.ToSingle(sentence.BottomTrackVelY.ToMetersPerSecond().Value);
+                }
+                else
+                {
+                    // Set Bad velocity
+                    InstrumentVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                    EarthVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // Set the instrument velocity Z in m/s
+                // If the velocity is bad, set bad velocity
+                if (sentence.BottomTrackVelZ.Value != DotSpatial.Positioning.Speed.BadDVL.Value)
+                {
+                    InstrumentVelocity[2] = Convert.ToSingle(sentence.BottomTrackVelZ.ToMetersPerSecond().Value);
+                }
+                else
+                {
+                    // Set Bad velocity
+                    InstrumentVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                    EarthVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // Set the instrument velocity Q in m/s
+                // If the velocity is bad, set bad velocity
+                if (sentence.BottomTrackVelQ.Value != DotSpatial.Positioning.Speed.BadDVL.Value)
+                {
+                    InstrumentVelocity[3] = Convert.ToSingle(sentence.BottomTrackVelQ.ToMetersPerSecond().Value);
+                }
+                else
+                {
+                    // Set Bad velocity
+                    InstrumentVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                    EarthVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set all 4 values to the same range, then average range will also report the correct value

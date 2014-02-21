@@ -70,6 +70,12 @@
  * 08/19/2013      RC          2.19.4     Put PublishEnsembleWrite() in AddIncomingData() to know when an ensemble is received to write.
  * 10/28/2013      RC          2.21.0     Read and write the Project options to the project db file.
  * 12/31/2013      RC          2.21.2     Added ProfileEngineeringDataSet and BottomTrackEngineeringDataSet to the project db file.
+ * 01/09/2014      RC          2.21.3     Added SystemSetupDataSet to the project db file.
+ * 01/30/2014      RC          2.21.3     Added GPS1, GPS2, NMEA1 and NMEA2 column to the project db file.
+ * 02/07/2014      RC          2.21.3     Added AdcpGps Column to the project to store the GPS data within the ADCP.
+ * 02/10/2014      RC          2.21.3     Removed the EnsembleNmea object and put the NMEA data in the ensemble.
+ * 02/13/2014      RC          2.21.3     Write the position if the GPGGA message is given.
+ * 02/20/2014      RC          2.21.3     Fixed bug in WriteEnsembleDataToDatabase() where if GPS data was not present, the @position value was not set.
  * 
  */
 
@@ -85,6 +91,7 @@ using System.Text;
 using RTI.Commands;
 using System.Data;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace RTI
 {
@@ -116,7 +123,7 @@ namespace RTI
         /// Queue to hold all incoming data until written
         /// to the database file.
         /// </summary>
-        private Queue _datasetQueue;
+        private ConcurrentQueue<DataSet.Ensemble> _datasetQueue;
 
         /// <summary>
         /// Thread to process the data.
@@ -229,7 +236,7 @@ namespace RTI
             //IsRecording = true;
 
             // Create a queue to hold incoming data
-            _datasetQueue = new Queue();
+            _datasetQueue = new ConcurrentQueue<DataSet.Ensemble>();
 
             // Commands and options flags and locks
             _isAdcpConfigurationNeedUpdate = false;
@@ -255,6 +262,9 @@ namespace RTI
         /// <param name="adcpData">Data to write.</param>
         public void AddIncomingData(DataSet.Ensemble adcpData)
         {
+            // Create an object to store all the data
+            //EnsembleNmeaData data = new EnsembleNmeaData(adcpData, adcpGpsData, gps1Data, gps2Data, nmea1Data, nmea2Data);
+
             // Set the latest data
             _datasetQueue.Enqueue(adcpData);
 
@@ -527,33 +537,36 @@ namespace RTI
                             {
                                 // Write all data to the database
                                 //for (int x = 0; x < count; x++)
-                                while (_datasetQueue.Count > 0)
+                                while (!_datasetQueue.IsEmpty)
                                 {
                                     // Remove dataset from the queue and write to the database
-                                    DataSet.Ensemble ensemble = (DataSet.Ensemble)_datasetQueue.Dequeue();
-                                    WriteEnsembleData(ensemble, cnn);
-
-                                    // Set the serial number if it has not been set already to the project
-                                    if (_selectedProject.SerialNumber.IsEmpty())
+                                    DataSet.Ensemble ensemble = null;
+                                    if (_datasetQueue.TryDequeue(out ensemble))
                                     {
-                                        _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
-                                    }
+                                        WriteEnsembleData(ensemble, cnn);
 
-                                    // Add the ADCP Configuration to the project
-                                    // Check if the configuration has already been added to the project.
-                                    // If it has not been added to the project add it now.
-                                    // Later it will be written to the project.
-                                    // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
-                                    if (ensemble.IsEnsembleAvail)
-                                    {
-                                        SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
-                                        if (ssConfig != null)
+                                        // Set the serial number if it has not been set already to the project
+                                        if (_selectedProject.SerialNumber.IsEmpty())
                                         {
-                                            Subsystem ss = ensemble.EnsembleData.GetSubSystem();
-                                            CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
-                                            if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                            _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
+                                        }
+
+                                        // Add the ADCP Configuration to the project
+                                        // Check if the configuration has already been added to the project.
+                                        // If it has not been added to the project add it now.
+                                        // Later it will be written to the project.
+                                        // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
+                                        if (ensemble.IsEnsembleAvail)
+                                        {
+                                            SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
+                                            if (ssConfig != null)
                                             {
-                                                _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                                Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                                CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
+                                                if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                                {
+                                                    _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                                }
                                             }
                                         }
                                     }
@@ -679,14 +692,14 @@ namespace RTI
         /// dataset and then write the data to the 
         /// database using a single transaction.
         /// </summary>
-        /// <param name="dataset">Ensemble containing data to write.</param>
+        /// <param name="data">Data to write.</param>
         /// <param name="cnn">Connection to the database.</param>
-        private void WriteEnsembleData(DataSet.Ensemble dataset, SQLiteConnection cnn)
+        private void WriteEnsembleData(DataSet.Ensemble data, SQLiteConnection cnn)
         {
             // Check if the project is set
-            if (_selectedProject != null && dataset != null)
+            if (_selectedProject != null && data != null)
             {
-                int ensId = WriteEnsembleDataToDatabase(dataset, cnn);       // Write data
+                int ensId = WriteEnsembleDataToDatabase(data, cnn);       // Write data
 
                 // Publish the Ensemble ID that was written to the database
                 // This ID is also the last count of the number of ensembles in the database
@@ -699,9 +712,9 @@ namespace RTI
         #region Write Ensembles to Database
 
         /// <summary>
-        /// Write the Ensemble dataset to the project database.
+        /// Write the Ensemble to the project database.
         /// </summary>
-        /// <param name="ensemble">Dataset to write to the database.</param>
+        /// <param name="ensemble">Data to write to the database.</param>
         /// <param name="cnn">Connection to the database.</param>
         /// <returns>Returns the ID for the row where data was added.</returns>
         private int WriteEnsembleDataToDatabase(DataSet.Ensemble ensemble, SQLiteConnection cnn)
@@ -720,6 +733,7 @@ namespace RTI
                     builder.Append("INSERT INTO tblEnsemble(");
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_ENS_NUM));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_DATETIME));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ENS_POSITION));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENSEMBLE_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_ANCILLARY_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_AMPLITUDE_DS));
@@ -734,12 +748,19 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_EARTHWATERMASS_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_INSTRUMENTWATERMASS_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_PROFILEENGINEERING_DS));
-                    builder.Append(string.Format("{0}", DbCommon.COL_BOTTOMTRACKENGINEERING_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_BOTTOMTRACKENGINEERING_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_SYSTEMSETUP_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ADCPGPS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_GPS1));
+                    builder.Append(string.Format("{0},", DbCommon.COL_GPS2));
+                    builder.Append(string.Format("{0},", DbCommon.COL_NMEA1));
+                    builder.Append(string.Format("{0}", DbCommon.COL_NMEA2));
 
                     builder.Append(") ");
                     builder.Append("VALUES(");
                     builder.Append("@ensNum, ");
                     builder.Append("@dateTime, ");
+                    builder.Append("@position, ");
                     builder.Append("@ensembleDS, ");
                     builder.Append("@ancillaryDS, ");
                     builder.Append("@amplitudeDS, ");
@@ -754,7 +775,13 @@ namespace RTI
                     builder.Append("@earthWaterMassDS, ");
                     builder.Append("@instrumentWaterMassDS, ");
                     builder.Append("@profileEngineeringDS, ");
-                    builder.Append("@bottomTrackEngineeringDS ");
+                    builder.Append("@bottomTrackEngineeringDS, ");
+                    builder.Append("@systemSetupDS, ");
+                    builder.Append("@adcpGps, ");
+                    builder.Append("@gps1, ");
+                    builder.Append("@gps2, ");
+                    builder.Append("@nmea1, ");
+                    builder.Append("@nmea2 ");
                     builder.Append("); ");
                     builder.Append("SELECT last_insert_rowid();");
 
@@ -869,10 +896,34 @@ namespace RTI
                     if (ensemble.IsNmeaAvail)
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@nmeaDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.NmeaData) });
+
+                        // Set the last position
+                        if (ensemble.NmeaData.IsGpggaAvail())
+                        {
+                            if (!double.IsNaN(ensemble.NmeaData.GPGGA.Position.Latitude.DecimalDegrees) && !double.IsNaN(ensemble.NmeaData.GPGGA.Position.Longitude.DecimalDegrees))
+                            {
+                                // Convert the position to a string
+                                string pos = "";
+                                pos += ensemble.NmeaData.GPGGA.Position.Latitude.DecimalDegrees.ToString();
+                                pos += ",";
+                                pos += ensemble.NmeaData.GPGGA.Position.Longitude.DecimalDegrees.ToString();
+
+                                cmd.Parameters.Add(new SQLiteParameter("@position", System.Data.DbType.String) { Value = pos });
+                            }
+                            else
+                            {
+                                cmd.Parameters.Add(new SQLiteParameter("@position", System.Data.DbType.String) { Value = DBNull.Value });
+                            }
+                        }
+                        else
+                        {
+                            cmd.Parameters.Add(new SQLiteParameter("@position", System.Data.DbType.String) { Value = DBNull.Value });
+                        }
                     }
                     else
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@nmeaDS", System.Data.DbType.String) { Value = DBNull.Value });
+                        cmd.Parameters.Add(new SQLiteParameter("@position", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
                     // Earth Water Mass Velocity
@@ -915,6 +966,66 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@bottomTrackEngineeringDS", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
+                    // System Setup
+                    if (ensemble.IsSystemSetupAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@systemSetupDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.SystemSetupData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@systemSetupDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // ADCP GPS
+                    if (ensemble.IsAdcpGpsDataAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@adcpGps", System.Data.DbType.String) { Value = ensemble.AdcpGpsData });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@adcpGps", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // GPS 1
+                    if (ensemble.IsGps1DataAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@gps1", System.Data.DbType.String) { Value = ensemble.Gps1Data });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@gps1", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // GPS 2
+                    if (ensemble.IsGps2DataAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@gps2", System.Data.DbType.String) { Value = ensemble.Gps2Data });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@gps2", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // NMEA 1
+                    if (ensemble.IsNmea1DataAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@nmea1", System.Data.DbType.String) { Value = ensemble.Nmea1Data });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@nmea1", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // NMEA 2
+                    if (ensemble.IsNmea2DataAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@nmea2", System.Data.DbType.String) { Value = ensemble.Nmea2Data });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@nmea2", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
                     // Run the query and get the result for the last row
                     object cmdExecuteScalar = cmd.ExecuteScalar();
                     ensId = Convert.ToInt32(cmdExecuteScalar);
@@ -951,7 +1062,7 @@ namespace RTI
             SQLiteConnection cnn = DbCommon.OpenProjectDB(_selectedProject);
 
             // Write the data
-            UpdateEnsembleToDatabaseGps(nmea, ensNum, cnn);
+            UpdateNmeaDataSetToDatabase(nmea, ensNum, cnn);
 
             // Close the connection
             cnn.Close();
@@ -964,7 +1075,7 @@ namespace RTI
         /// <param name="nmea">NMEA dataset.</param>
         /// <param name="ensNum">Ensemble number.</param>
         /// <param name="cnn">Database connection.</param>
-        private void UpdateEnsembleToDatabaseGps(DataSet.NmeaDataSet nmea, int ensNum, SQLiteConnection cnn)
+        private void UpdateNmeaDataSetToDatabase(DataSet.NmeaDataSet nmea, int ensNum, SQLiteConnection cnn)
         {
             try
             {

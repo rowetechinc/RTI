@@ -56,6 +56,7 @@
  * 09/06/2012      RC          2.15       Added System Frequency information.
  * 09/11/2012      RC          2.15       Made version number get retrieved from AssemblyInfo.cs.
  * 01/16/2013      RC          2.17       Added list for Transform types and Measurement standard types.
+ * 01/24/2014      RC          2.21.3     Added NMEA_FILE_EXT to file extensions.
  * 
  */
 using System;
@@ -124,6 +125,11 @@ namespace RTI
             /// entry.
             /// </summary>
             public const string AVG_ENSEMBLE_FILE_EXT = ".ENA";
+
+            /// <summary>
+            /// NMEA file extension.
+            /// </summary>
+            public const string NMEA_FILE_EXT = ".NMEA";
 
             #endregion
 

@@ -316,6 +316,11 @@ namespace RTI
         public static readonly SerialNumber DVL = new SerialNumber("01H00000000000000000000000999999");
 
         /// <summary>
+        /// DVL System Serial number.
+        /// </summary>
+        public static readonly int DVL_SYSTEM_SERIALNUMBER = 999999;
+
+        /// <summary>
         /// This constructor creates a blank serial number with nothing set.
         /// </summary>
         public SerialNumber()

@@ -48,6 +48,7 @@
  * 02/21/2013      RC          2.18       For PRTI messages, made LastPingTime the PRTI start time.
  * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
  * 02/26/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
+ * 02/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 
  */
 
@@ -215,6 +216,19 @@ namespace RTI
             }
 
             /// <summary>
+            /// Create a Ancillary data set.  Include all the information
+            /// about the current Ancillary data from the sentence.
+            /// This will set the temperature.
+            /// </summary>
+            /// <param name="sentence">Sentence containing data.</param>
+            public AncillaryDataSet(Prti03Sentence sentence) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID)
+            {
+                WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);     // Sentence stores temp at 1/100 degree Celcius.
+                LastPingTime = sentence.StartTime / 100;                        // Convert the Start Time for hundreds of seconds to seconds.
+            }
+
+            /// <summary>
             /// Create an Ancillary data set.  Intended for JSON  deserialize.  This method
             /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.AncillaryDataSet}(json) is
             /// called.
@@ -269,6 +283,32 @@ namespace RTI
                 this.Pressure = Pressure;
                 this.TransducerDepth = TransducerDepth;
                 this.SpeedOfSound = SpeedOfSound;
+            }
+
+            /// <summary>
+            /// Add additional data to the dataset.
+            /// This will add the heading, pitch and roll
+            /// from the NMEA sentence.
+            /// </summary>
+            /// <param name="sentence">Sentence containing data.</param>
+            public void AddAncillaryData(Prti30Sentence sentence)
+            {
+                Heading = sentence.Heading;
+                Pitch = sentence.Pitch;
+                Roll = sentence.Roll;
+            }
+
+            /// <summary>
+            /// Add additional data to the dataset.
+            /// This will add the heading, pitch and roll
+            /// from the NMEA sentence.
+            /// </summary>
+            /// <param name="sentence">Sentence containing data.</param>
+            public void AddAncillaryData(Prti31Sentence sentence)
+            {
+                Heading = sentence.Heading;
+                Pitch = sentence.Pitch;
+                Roll = sentence.Roll;
             }
 
             /// <summary>

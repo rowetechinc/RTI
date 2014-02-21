@@ -85,6 +85,7 @@
     <Compile Include="DotSpatial\Positioning\Angle.cs" />
     <Compile Include="DotSpatial\Positioning\Azimuth.cs" />
     <Compile Include="DotSpatial\Positioning\CartesianPoint.cs" />
+    <Compile Include="DotSpatial\Positioning\GphdtSentence.cs" />
     <Compile Include="DotSpatial\Positioning\DilutionOfPrecision.cs" />
     <Compile Include="DotSpatial\Positioning\Distance.cs" />
     <Compile Include="DotSpatial\Positioning\Elevation.cs" />
@@ -129,8 +130,12 @@
     <Compile Include="Models\DataSet\EarthWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\EnsembleDataSet.cs" />
     <Compile Include="Models\DataSet\ProfileEngineeringDataSet.cs" />
+    <Compile Include="Models\DataSet\SystemSetupDataSet.cs" />
     <Compile Include="Models\DecodeCSHOW.cs" />
-    <Compile Include="Models\DeploymentOptions.cs" />
+    <Compile Include="Models\Options\DeploymentOptions.cs" />
+    <Compile Include="Models\DVL\Prti31Sentence.cs" />
+    <Compile Include="Models\DVL\Prti30Sentence.cs" />
+    <Compile Include="Models\DVL\Prti03Sentence.cs" />
     <Compile Include="Models\Firmware.cs" />
     <Compile Include="Models\DataSet\GoodBeamDataSet.cs" />
     <Compile Include="Models\DataSet\GoodEarthDataSet.cs" />
@@ -139,7 +144,7 @@
     <Compile Include="Models\DataSet\NmeaDataSet.cs" />
     <Compile Include="Models\IPredictor.cs" />
     <Compile Include="Models\MaintenceLog.cs" />
-    <Compile Include="Models\ProjectOptions.cs" />
+    <Compile Include="Models\Options\ProjectOptions.cs" />
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />
     <Compile Include="Models\Subsystem.cs" />
@@ -152,6 +157,7 @@
     <Compile Include="Models\DVL\Prti01Sentence.cs" />
     <Compile Include="Models\DVL\Prti02Sentence.cs" />
     <Compile Include="Models\Project.cs" />
+    <Compile Include="Models\Options\VesselMountOptions.cs" />
     <Compile Include="Post Process\Average\AverageBase.cs" />
     <Compile Include="Post Process\Average\AverageCorrelation.cs" />
     <Compile Include="Post Process\Average\AverageManager.cs" />
@@ -164,6 +170,11 @@
     <Compile Include="Post Process\Screen\ScreenMarkBadBelowBottom.cs" />
     <Compile Include="Post Process\Screen\ScreenVelocity.cs" />
     <Compile Include="Post Process\Screen\ScreenVerticalVelocityThreshold.cs" />
+    <Compile Include="Post Process\VesselMount\VmTiltSource.cs" />
+    <Compile Include="Post Process\VesselMount\VmTiltOffset.cs" />
+    <Compile Include="Post Process\VesselMount\VmHeadingOffset.cs" />
+    <Compile Include="Post Process\VesselMount\VesselMountScreen.cs" />
+    <Compile Include="Post Process\VesselMount\VmHeadingSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

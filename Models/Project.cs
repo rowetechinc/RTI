@@ -68,6 +68,11 @@
  * 12/09/2013      RC          2.21.0     Added GetLastEnsemble().
  * 12/16/2013      RC          2.21.0     Added Position column and change rev to D3.
  * 12/31/2013      RC          2.21.2     Added ProfileEngineeringDS and BottomTrackEngineeringDS columns to CreateProjectTables().  Bump rev to D4.
+ * 01/09/2014      RC          2.21.3     Added SystemSetupDS column to CreateProjectTables().  Bump rev to D5.
+ * 01/24/2014      RC          2.21.3     Added Gps and NMEA writers.
+ * 01/29/2014      RC          2.21.3     Added GPS1, GPS2, NMEA1, NMEA2 columns to CreateProjectTables().  Bump rev to D6.
+ * 02/07/2014      RC          2.21.3     Added AdcpGps column to CreateProjectTables().  Bump rev to D7.
+ * 
  */
 
 using System;
@@ -108,8 +113,11 @@ namespace RTI
         /// Revision D2 added AppConfiguration column.
         /// Revision D3 added Position column.
         /// Revision D4 added ProfileEngineeringDS and BottomTrackEngineeringDS column.
+        /// Revision D5 added SystemSetupDS column.
+        /// Revision D6 added GPS1, GPS2, NMEA1, NMEA2 column.
+        /// Revision D7 added AdcpGps column.
         /// </summary>
-        public const string REV = "D4";
+        public const string REV = "D7";
 
         /// <summary>
         /// ID for project if no project 
@@ -118,15 +126,39 @@ namespace RTI
         public const int EmptyID = -1;
 
         /// <summary>
-        /// Binary writer to buffer writing the
+        /// Binary Ensemble writer to buffer writing the
         /// ADCP data to binary file.
         /// </summary>
-        private AdcpBinaryWriter _binaryWriter;
+        private AdcpBinaryWriter _ensembleWriter;
 
         /// <summary>
-        /// Backup binary writer.
+        /// Backup Ensemble binary writer.
         /// </summary>
-        private AdcpBinaryWriter _binaryWriterBackup;
+        private AdcpBinaryWriter _ensembleWriterBackup;
+
+        /// <summary>
+        /// Binary GPS 1 writer to buffer writing the
+        /// GPS data to binary file.
+        /// </summary>
+        private AdcpBinaryWriter _gps1Writer;
+
+        /// <summary>
+        /// Binary GPS 2 writer to buffer writing the
+        /// GPS data to binary file.
+        /// </summary>
+        private AdcpBinaryWriter _gps2Writer;
+
+        /// <summary>
+        /// Binary NMEA 1 writer to buffer writing the
+        /// NMEA data to binary file.
+        /// </summary>
+        private AdcpBinaryWriter _nmea1Writer;
+
+        /// <summary>
+        /// Binary NMEA 2 writer to buffer writing the
+        /// NMEA data to binary file.
+        /// </summary>
+        private AdcpBinaryWriter _nmea2Writer;
 
         /// <summary>
         /// ADCP database writer.  This will write
@@ -248,13 +280,35 @@ namespace RTI
 
                 // This will reset the file name with the new serial number
                 //_binaryWriter.SelectedProject = this;
-                if (_binaryWriter != null)
+                if (_ensembleWriter != null)
                 {
-                    _binaryWriter.ResetFileName();
+                    _ensembleWriter.SerialNumber = value.ToString();
+                    _ensembleWriter.ResetFileName();
                 }
-                if (_binaryWriterBackup != null)
+                if (_ensembleWriterBackup != null)
                 {
-                    _binaryWriterBackup.ResetFileName();
+                    _ensembleWriterBackup.SerialNumber = value.ToString();
+                    _ensembleWriterBackup.ResetFileName();
+                }
+                if (_gps1Writer != null)
+                {
+                    _gps1Writer.SerialNumber = value.ToString();
+                    _gps1Writer.ResetFileName();
+                }
+                if (_gps2Writer != null)
+                {
+                    _gps2Writer.SerialNumber = value.ToString();
+                    _gps2Writer.ResetFileName();
+                }
+                if (_nmea1Writer != null)
+                {
+                    _nmea1Writer.SerialNumber = value.ToString();
+                    _nmea1Writer.ResetFileName();
+                }
+                if (_nmea2Writer != null)
+                {
+                    _nmea2Writer.SerialNumber = value.ToString();
+                    _nmea2Writer.ResetFileName();
                 }
             }
         }
@@ -396,18 +450,38 @@ namespace RTI
         {
             // Unsubscribe
             _dbWriter.EnsembleWriteEvent -= _dbWriter_EnsembleWriteEvent;
-            _binaryWriter.EnsembleWriteEvent -= _binaryWriter_EnsembleWriteEvent;
+            _ensembleWriter.EnsembleWriteEvent -= _binaryWriter_EnsembleWriteEvent;
 
             _dbWriter.Dispose();
-            _binaryWriter.Dispose();
+            _ensembleWriter.Dispose();
             _dbReader.Dispose();
 
             // If the binary writer was enabled
             // shut it down also
-            if (_binaryWriterBackup != null)
+            if (_ensembleWriterBackup != null)
             {
-                _binaryWriterBackup.EnsembleWriteEvent -= _binaryWriterBackup_EnsembleWriteEvent;
-                _binaryWriterBackup.Dispose();
+                _ensembleWriterBackup.EnsembleWriteEvent -= _binaryWriterBackup_EnsembleWriteEvent;
+                _ensembleWriterBackup.Dispose();
+            }
+
+            if (_gps1Writer != null)
+            {
+                _gps1Writer.Dispose();
+            }
+
+            if (_gps2Writer != null)
+            {
+                _gps2Writer.Dispose();
+            }
+
+            if (_nmea1Writer != null)
+            {
+                _nmea1Writer.Dispose();
+            }
+
+            if (_nmea2Writer != null)
+            {
+                _nmea2Writer.Dispose();
             }
         }
 
@@ -428,13 +502,13 @@ namespace RTI
         private void Initialize()
         {
             // Create reader and writers
-            _binaryWriter = new AdcpBinaryWriter(this);
+            _ensembleWriter = new AdcpBinaryWriter(this);
             _dbWriter = new AdcpDatabaseWriter() { SelectedProject = this };
             _dbReader = new AdcpDatabaseReader();
 
             // Subscribe to the events of the writer
             _dbWriter.EnsembleWriteEvent += new AdcpDatabaseWriter.EnsembleWriteEventHandler(_dbWriter_EnsembleWriteEvent);
-            _binaryWriter.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriter_EnsembleWriteEvent);
+            _ensembleWriter.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriter_EnsembleWriteEvent);
 
             // Get the options from the db
             Options = GetProjectOptions();
@@ -446,14 +520,14 @@ namespace RTI
             }
 
             //SetMaxBinaryFileSize(Options.MaxFileSize);
-            if (_binaryWriter != null)
+            if (_ensembleWriter != null)
             {
-                _binaryWriter.MaxFileSize = Options.MaxFileSize;
+                _ensembleWriter.MaxFileSize = Options.MaxFileSize;
             }
 
-            if (_binaryWriterBackup != null)
+            if (_ensembleWriterBackup != null)
             {
-                _binaryWriterBackup.MaxFileSize = Options.MaxFileSize;
+                _ensembleWriterBackup.MaxFileSize = Options.MaxFileSize;
             }
 
 
@@ -599,7 +673,7 @@ namespace RTI
                 //"PRAGMA main.synchronous=NORMAL",
                 //"PRAGMA main.journal_mode=WAL",
                 //"PRAGMA main.cache_size=5000",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT)",
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT, SystemSetupDS TEXT, AdcpGpsData TEXT, Gps1Data TEXT, Gps2Data TEXT, Nmea1Data TEXT, Nmea2Data TEXT)",
                 "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, ProjectOptions TEXT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
                 string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, \"{4}\");", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", REV),   // Put at least 1 entry so an insert does not have to be done later
             };
@@ -1042,18 +1116,18 @@ namespace RTI
         /// </summary>
         /// <param name="data">Data to write.</param>
         /// <returns>TRUE = Data written to binary file.</returns>
-        public bool RecordBinary(byte[] data)
+        public bool RecordBinaryEnsemble(byte[] data)
         {
-            if (_binaryWriter != null)
+            if (_ensembleWriter != null)
             {
-                _binaryWriter.AddIncomingData(data);
+                _ensembleWriter.AddIncomingData(data);
             }
 
             // If the backup binary writer is enabled
             // also write to the backup
-            if (_binaryWriterBackup != null)
+            if (_ensembleWriterBackup != null)
             {
-                _binaryWriterBackup.AddIncomingData(data);
+                _ensembleWriterBackup.AddIncomingData(data);
             }
 
             return true;
@@ -1064,7 +1138,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Ensemble to record.</param>
         /// <returns>True if ensemble could be recorded.</returns>
-        public bool RecordDb(DataSet.Ensemble ensemble)
+        public bool RecordDbEnsemble(DataSet.Ensemble ensemble)
         {
             if (_dbWriter != null)
             {
@@ -1074,26 +1148,116 @@ namespace RTI
             return true;
         }
 
+        #endregion
+
+        #region Record GPS/NMEA Writers
+
         /// <summary>
-        /// Flush the writers.  This will flush
-        /// the binary and database writer.
+        /// Record the binary data to the project.
+        /// This will take the binary data and add it
+        /// to the projects buffer to written to the file.
         /// </summary>
-        public void Flush()
+        /// <param name="data">Data to write.</param>
+        /// <returns>TRUE = Data written to binary file.</returns>
+        public bool RecordGps1(byte[] data)
         {
-            if (_binaryWriter != null)
+            // Create the writer if it does not exist
+            if (_gps1Writer == null)
             {
-                _binaryWriter.Flush();
+                _gps1Writer = new AdcpBinaryWriter(this, Options.MaxFileSize, AdcpBinaryWriter.FileType.GPS1);
+                _gps1Writer.SerialNumber = SerialNumber.ToString();
+                _gps1Writer.ResetFileName();
             }
 
-            if (_binaryWriterBackup != null)
+            // Add the data to the writer
+            if (_gps1Writer != null)
             {
-                _binaryWriterBackup.Flush();
+                _gps1Writer.AddIncomingData(data);
+                return true;
             }
 
-            if (_dbWriter != null)
+            return false;
+        }
+
+        /// <summary>
+        /// Record the binary data to the project.
+        /// This will take the binary data and add it
+        /// to the projects buffer to written to the file.
+        /// </summary>
+        /// <param name="data">Data to write.</param>
+        /// <returns>TRUE = Data written to binary file.</returns>
+        public bool RecordGps2(byte[] data)
+        {
+            // Create the writer if it does not exist
+            if (_gps2Writer == null)
             {
-                _dbWriter.Flush();
+                _gps2Writer = new AdcpBinaryWriter(this, Options.MaxFileSize, AdcpBinaryWriter.FileType.GPS2);
+                _gps2Writer.SerialNumber = SerialNumber.ToString();
+                _gps2Writer.ResetFileName();
             }
+
+            // Add the data to the writer
+            if (_gps2Writer != null)
+            {
+                _gps2Writer.AddIncomingData(data);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Record the binary data to the project.
+        /// This will take the binary data and add it
+        /// to the projects buffer to written to the file.
+        /// </summary>
+        /// <param name="data">Data to write.</param>
+        /// <returns>TRUE = Data written to binary file.</returns>
+        public bool RecordNmea1(byte[] data)
+        {
+            // Create the writer if it does not exist
+            if (_nmea1Writer == null)
+            {
+                _nmea1Writer = new AdcpBinaryWriter(this, Options.MaxFileSize, AdcpBinaryWriter.FileType.NMEA1);
+                _nmea1Writer.SerialNumber = SerialNumber.ToString();
+                _nmea1Writer.ResetFileName();
+            }
+
+            // Add the data to the writer
+            if (_nmea1Writer != null)
+            {
+                _nmea1Writer.AddIncomingData(data);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Record the binary data to the project.
+        /// This will take the binary data and add it
+        /// to the projects buffer to written to the file.
+        /// </summary>
+        /// <param name="data">Data to write.</param>
+        /// <returns>TRUE = Data written to binary file.</returns>
+        public bool RecordNmea2(byte[] data)
+        {
+            // Create the writer if it does not exist
+            if (_nmea2Writer == null)
+            {
+                _nmea2Writer = new AdcpBinaryWriter(this, Options.MaxFileSize, AdcpBinaryWriter.FileType.NMEA2);
+                _nmea2Writer.SerialNumber = SerialNumber.ToString();
+                _nmea2Writer.ResetFileName();
+            }
+
+            // Add the data to the writer
+            if (_nmea2Writer != null)
+            {
+                _nmea2Writer.AddIncomingData(data);
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
@@ -1112,6 +1276,48 @@ namespace RTI
         }
 
         #endregion
+
+        /// <summary>
+        /// Flush the writers.  This will flush
+        /// the binary and database writer.
+        /// </summary>
+        public void Flush()
+        {
+            if (_ensembleWriter != null)
+            {
+                _ensembleWriter.Flush();
+            }
+
+            if (_ensembleWriterBackup != null)
+            {
+                _ensembleWriterBackup.Flush();
+            }
+
+            if (_dbWriter != null)
+            {
+                _dbWriter.Flush();
+            }
+
+            if (_gps1Writer != null)
+            {
+                _gps1Writer.Flush();
+            }
+
+            if (_gps2Writer != null)
+            {
+                _gps2Writer.Flush();
+            }
+
+            if (_nmea1Writer != null)
+            {
+                _nmea1Writer.Flush();
+            }
+
+            if (_nmea2Writer != null)
+            {
+                _nmea2Writer.Flush();
+            }
+        }
 
         #endregion
 
@@ -1132,14 +1338,34 @@ namespace RTI
         /// <param name="size">Maximum binary file size in bytes.</param>
         public void SetMaxBinaryFileSize(long size)
         {
-            if (_binaryWriter != null)
+            if (_ensembleWriter != null)
             {
-                _binaryWriter.MaxFileSize = size;
+                _ensembleWriter.MaxFileSize = size;
             }
 
-            if (_binaryWriterBackup != null)
+            if (_ensembleWriterBackup != null)
             {
-                _binaryWriterBackup.MaxFileSize = size;
+                _ensembleWriterBackup.MaxFileSize = size;
+            }
+
+            if (_gps1Writer != null)
+            {
+                _gps1Writer.MaxFileSize = size;
+            }
+
+            if (_gps2Writer != null)
+            {
+                _gps2Writer.MaxFileSize = size;
+            }
+
+            if (_nmea1Writer != null)
+            {
+                _nmea1Writer.MaxFileSize = size;
+            }
+
+            if (_nmea2Writer != null)
+            {
+                _nmea2Writer.MaxFileSize = size;
             }
 
             // Update the options
@@ -1156,8 +1382,8 @@ namespace RTI
         /// <param name="maxFileSize">Maximum file size.</param>
         public void CreateBackupWriter(string name, string folderPath, string serialNum, long maxFileSize)
         {
-            _binaryWriterBackup = new AdcpBinaryWriter(name, folderPath, serialNum, maxFileSize);
-            _binaryWriterBackup.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriterBackup_EnsembleWriteEvent);
+            _ensembleWriterBackup = new AdcpBinaryWriter(name, folderPath, serialNum, maxFileSize);
+            _ensembleWriterBackup.EnsembleWriteEvent += new AdcpBinaryWriter.EnsembleWriteEventHandler(_binaryWriterBackup_EnsembleWriteEvent);
 
             BackupProjectFolderPath = folderPath;
 
@@ -1175,10 +1401,10 @@ namespace RTI
         {
             // If the binary writer was enabled
             // shut it down also
-            if (_binaryWriterBackup != null)
+            if (_ensembleWriterBackup != null)
             {
-                _binaryWriterBackup.EnsembleWriteEvent -= _binaryWriterBackup_EnsembleWriteEvent;
-                _binaryWriterBackup.Dispose();
+                _ensembleWriterBackup.EnsembleWriteEvent -= _binaryWriterBackup_EnsembleWriteEvent;
+                _ensembleWriterBackup.Dispose();
 
                 BackupProjectFolderPath = null;
             }

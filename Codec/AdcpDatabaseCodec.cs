@@ -54,6 +54,9 @@
  * 03/08/2013      RC          2.18       For each method call, created a new one with the SQLiteConnection to prevent opening and closing connection for each call.
  *                                         Added GetProjectVersion() to get the project version.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
+ * 01/28/2014      RC          2.21.3     Read in ProfileEngineering, BottomTrackEngineering and SystemSetup datasets.
+ * 01/30/2014      RC          2.21.3     Read in GPS1, GPS2, NMEA1 and NMEA2 data.
+ * 01/31/2014      RC          2.21.3     Check if the column exist when parsing the data in ParseDataTables().
  * 
  */
 
@@ -227,94 +230,213 @@ namespace RTI
             try
             {
                 // Ensemble
-                ensemble.EnsembleData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EnsembleDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_ENSEMBLE_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ENSEMBLE_DS))
+                {
+                    ensemble.EnsembleData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EnsembleDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_ENSEMBLE_DS]));
+                }
                 if (ensemble.EnsembleData != null)
                 {
                     ensemble.IsEnsembleAvail = true;
                 }
 
                 // Amplitude
-                ensemble.AmplitudeData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.AmplitudeDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_AMPLITUDE_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_AMPLITUDE_DS))
+                {
+                    ensemble.AmplitudeData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.AmplitudeDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_AMPLITUDE_DS]));
+                }
                 if (ensemble.AmplitudeData != null)
                 {
                     ensemble.IsAmplitudeAvail = true;
                 }
 
                 // Correlation
-                ensemble.CorrelationData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.CorrelationDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_CORRELATION_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_CORRELATION_DS))
+                {
+                    ensemble.CorrelationData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.CorrelationDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_CORRELATION_DS]));
+                }
                 if (ensemble.CorrelationData != null)
                 {
                     ensemble.IsCorrelationAvail = true;
                 }
 
                 // Ancillary
-                ensemble.AncillaryData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.AncillaryDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_ANCILLARY_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ANCILLARY_DS))
+                {
+                    ensemble.AncillaryData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.AncillaryDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_ANCILLARY_DS]));
+                }
                 if (ensemble.AncillaryData != null)
                 {
                     ensemble.IsAncillaryAvail = true;
                 }
 
                 // Beam Velocity
-                ensemble.BeamVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BeamVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_BEAMVELOCITY_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_BEAMVELOCITY_DS))
+                {
+                    ensemble.BeamVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BeamVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_BEAMVELOCITY_DS]));
+                }
                 if (ensemble.BeamVelocityData != null)
                 {
                     ensemble.IsBeamVelocityAvail = true;
                 }
 
                 // Instrument Velocity
-                ensemble.InstrumentVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.InstrumentVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_INSTRUMENTVELOCITY_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_INSTRUMENTVELOCITY_DS))
+                {
+                    ensemble.InstrumentVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.InstrumentVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_INSTRUMENTVELOCITY_DS]));
+                }
                 if (ensemble.InstrumentVelocityData != null)
                 {
                     ensemble.IsInstrumentVelocityAvail = true;
                 }
 
                 // Earth Velocity
-                ensemble.EarthVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EarthVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_EARTHVELOCITY_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_EARTHVELOCITY_DS))
+                {
+                    ensemble.EarthVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EarthVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_EARTHVELOCITY_DS]));
+                }
                 if (ensemble.EarthVelocityData != null)
                 {
                     ensemble.IsEarthVelocityAvail = true;
                 }
 
                 // Good Beam
-                ensemble.GoodBeamData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.GoodBeamDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_GOODBEAM_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GOODBEAM_DS))
+                {
+                    ensemble.GoodBeamData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.GoodBeamDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_GOODBEAM_DS]));
+                }
                 if (ensemble.GoodBeamData != null)
                 {
                     ensemble.IsGoodBeamAvail = true;
                 }
 
                 // Good Earth
-                ensemble.GoodEarthData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.GoodEarthDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_GOODEARTH_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GOODEARTH_DS))
+                {
+                    ensemble.GoodEarthData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.GoodEarthDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_GOODEARTH_DS]));
+                }
                 if (ensemble.GoodEarthData != null)
                 {
                     ensemble.IsGoodEarthAvail = true;
                 }
 
                 // Bottom Track
-                ensemble.BottomTrackData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BottomTrackDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_BOTTOMTRACK_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_BOTTOMTRACK_DS))
+                {
+                    ensemble.BottomTrackData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BottomTrackDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_BOTTOMTRACK_DS]));
+                }
                 if (ensemble.BottomTrackData != null)
                 {
                     ensemble.IsBottomTrackAvail = true;
                 }
 
                 // NMEA
-                ensemble.NmeaData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.NmeaDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_NMEA_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_NMEA_DS))
+                {
+                    ensemble.NmeaData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.NmeaDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_NMEA_DS]));
+                }
                 if (ensemble.NmeaData != null)
                 {
                     ensemble.IsNmeaAvail = true;
                 }
 
                 // Earth Water Mass Velocity
-                ensemble.EarthWaterMassData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EarthWaterMassDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_EARTHWATERMASS_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_EARTHWATERMASS_DS))
+                {
+                    ensemble.EarthWaterMassData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EarthWaterMassDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_EARTHWATERMASS_DS]));
+                }
                 if (ensemble.EarthWaterMassData != null)
                 {
                     ensemble.IsEarthWaterMassAvail = true;
                 }
 
                 // Instrument Water Mass Velocity
-                ensemble.InstrumentWaterMassData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.InstrumentWaterMassDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_INSTRUMENTWATERMASS_DS]));
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_INSTRUMENTWATERMASS_DS))
+                {
+                    ensemble.InstrumentWaterMassData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.InstrumentWaterMassDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_INSTRUMENTWATERMASS_DS]));
+                }
                 if (ensemble.InstrumentWaterMassData != null)
                 {
                     ensemble.IsInstrumentWaterMassAvail = true;
+                }
+
+                // Profile Engineering
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_PROFILEENGINEERING_DS))
+                {
+                    ensemble.ProfileEngineeringData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.ProfileEngineeringDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_PROFILEENGINEERING_DS]));
+                }
+                if (ensemble.ProfileEngineeringData != null)
+                {
+                    ensemble.IsProfileEngineeringAvail = true;
+                }
+
+                // Bottom Track Engineering
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_BOTTOMTRACKENGINEERING_DS))
+                {
+                    ensemble.BottomTrackEngineeringData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.BottomTrackEngineeringDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_BOTTOMTRACKENGINEERING_DS]));
+                }
+                if (ensemble.BottomTrackEngineeringData != null)
+                {
+                    ensemble.IsBottomTrackEngineeringAvail = true;
+                }
+
+                // System Setup
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_SYSTEMSETUP_DS))
+                {
+                    ensemble.SystemSetupData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.SystemSetupDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_SYSTEMSETUP_DS]));
+                }
+                if (ensemble.SystemSetupData != null)
+                {
+                    ensemble.IsSystemSetupAvail = true;
+                }
+
+                // ADCP GPS
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ADCPGPS))
+                {
+                    ensemble.AdcpGpsData = Convert.ToString(ensembleDataRow[DbCommon.COL_ADCPGPS]);
+                }
+                if (!string.IsNullOrEmpty(ensemble.AdcpGpsData))
+                {
+                    ensemble.IsAdcpGpsDataAvail = true;
+                }
+
+                // GPS 1
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GPS1))
+                {
+                    ensemble.Gps1Data = Convert.ToString(ensembleDataRow[DbCommon.COL_GPS1]);
+                }
+                if (!string.IsNullOrEmpty(ensemble.Gps1Data))
+                {
+                    ensemble.IsGps1DataAvail = true;
+                }
+
+                // GPS 2
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GPS2))
+                {
+                    ensemble.Gps2Data = Convert.ToString(ensembleDataRow[DbCommon.COL_GPS2]);
+                }
+                if (!string.IsNullOrEmpty(ensemble.Gps2Data))
+                {
+                    ensemble.IsGps2DataAvail = true;
+                }
+
+                // NMEA 1
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_NMEA1))
+                {
+                    ensemble.Nmea1Data = Convert.ToString(ensembleDataRow[DbCommon.COL_NMEA1]);
+                }
+                if (!string.IsNullOrEmpty(ensemble.Nmea1Data))
+                {
+                    ensemble.IsNmea1DataAvail = true;
+                }
+
+                // NMEA 2
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_NMEA2))
+                {
+                    ensemble.Nmea2Data = Convert.ToString(ensembleDataRow[DbCommon.COL_NMEA2]);
+                }
+                if (!string.IsNullOrEmpty(ensemble.Nmea2Data))
+                {
+                    ensemble.IsNmea2DataAvail = true;
                 }
 
             }

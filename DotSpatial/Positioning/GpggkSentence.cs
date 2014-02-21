@@ -21,6 +21,7 @@
 // | Tidyup  (Ben Tombs)      | 10/21/2010 | Original copy submitted from modified GPS.Net 3.0
 // | Shade1974 (Ted Dunsford) | 10/22/2010 | Added file headers reviewed formatting with resharper.
 // | Rico  (Rico Castelo)     | 12/08/2011 | Added OnSentenceChanged() to constructor that takes a NmeaSentence.
+// | Rico  (Rico Castelo)     | 01/31/2014 | Put all parsing in a try block or used TryParse.
 // ********************************************************************************************************
 using System;
 
@@ -120,19 +121,36 @@ namespace DotSpatial.Positioning
                 #region Parse the UTC time
 
                 string utcTimeWord = words[0];
-                int utcHours = int.Parse(utcTimeWord.Substring(0, 2), NmeaCultureInfo);
-                int utcMinutes = int.Parse(utcTimeWord.Substring(2, 2), NmeaCultureInfo);
-                int utcSeconds = int.Parse(utcTimeWord.Substring(4, 2), NmeaCultureInfo);
-                int utcMilliseconds = Convert.ToInt32(float.Parse(utcTimeWord.Substring(6), NmeaCultureInfo) * 1000, NmeaCultureInfo);
+                int utcHours = 0;
+                int utcMinutes = 0;
+                int utcSeconds = 0;
+                int utcMilliseconds = 0;
+
+                int.TryParse(utcTimeWord.Substring(0, 2), out utcHours);
+                int.TryParse(utcTimeWord.Substring(2, 2), out utcMinutes);
+                int.TryParse(utcTimeWord.Substring(4, 2), out utcSeconds);
+
+                try
+                {
+                    utcMilliseconds = Convert.ToInt32(float.Parse(utcTimeWord.Substring(6), NmeaCultureInfo) * 1000, NmeaCultureInfo);
+                }
+                catch (Exception) { }
+
 
                 #endregion Parse the UTC time
 
                 #region Parse the UTC date
 
                 string utcDateWord = words[1];
-                int utcMonth = int.Parse(utcDateWord.Substring(0, 2), NmeaCultureInfo);
-                int utcDay = int.Parse(utcDateWord.Substring(2, 2), NmeaCultureInfo);
-                int utcYear = int.Parse(utcDateWord.Substring(4, 2), NmeaCultureInfo) + 2000;
+                int utcMonth = 0;
+                int utcDay = 0;
+                int utcYear = 0;
+
+                int.TryParse(utcDateWord.Substring(0, 2), out utcMonth);
+                int.TryParse(utcDateWord.Substring(2, 2), out utcDay);
+                int.TryParse(utcDateWord.Substring(4, 2), out utcYear);
+
+                utcYear += 2000;
 
                 #endregion Parse the UTC date
 
@@ -154,8 +172,12 @@ namespace DotSpatial.Positioning
                 #region Parse the latitude
 
                 string latitudeWord = words[2];
-                int latitudeHours = int.Parse(latitudeWord.Substring(0, 2), NmeaCultureInfo);
-                double latitudeDecimalMinutes = double.Parse(latitudeWord.Substring(2), NmeaCultureInfo);
+                int latitudeHours = 0;
+                double latitudeDecimalMinutes = 0.0;
+
+                int.TryParse(latitudeWord.Substring(0, 2), out latitudeHours);
+                double.TryParse(latitudeWord.Substring(2), out latitudeDecimalMinutes);
+
                 LatitudeHemisphere latitudeHemisphere =
                     words[3].Equals("N", StringComparison.OrdinalIgnoreCase) ? LatitudeHemisphere.North : LatitudeHemisphere.South;
 
@@ -164,8 +186,12 @@ namespace DotSpatial.Positioning
                 #region Parse the longitude
 
                 string longitudeWord = words[4];
-                int longitudeHours = int.Parse(longitudeWord.Substring(0, 3), NmeaCultureInfo);
-                double longitudeDecimalMinutes = double.Parse(longitudeWord.Substring(3), NmeaCultureInfo);
+                int longitudeHours = 0;
+                double longitudeDecimalMinutes = 0.0;
+
+                int.TryParse(longitudeWord.Substring(0, 3), out longitudeHours);
+                double.TryParse(longitudeWord.Substring(3), out longitudeDecimalMinutes);
+
                 LongitudeHemisphere longitudeHemisphere =
                     words[5].Equals("E", StringComparison.OrdinalIgnoreCase) ? LongitudeHemisphere.East : LongitudeHemisphere.West;
 
@@ -228,13 +254,31 @@ namespace DotSpatial.Positioning
 
             // Process the mean DOP
             if (wordCount > 9 && Words[9].Length != 0)
-                _meanDilutionOfPrecision = new DilutionOfPrecision(float.Parse(Words[9], NmeaCultureInfo));
+            {
+                try
+                {
+                    _meanDilutionOfPrecision = new DilutionOfPrecision(float.Parse(Words[9], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _meanDilutionOfPrecision = DilutionOfPrecision.Maximum;
+                }
+            }
             else
                 _meanDilutionOfPrecision = DilutionOfPrecision.Maximum;
 
             // Altitude above ellipsoid
             if (wordCount > 10 && Words[10].Length != 0)
-                _altitudeAboveEllipsoid = new Distance(double.Parse(Words[10], NmeaCultureInfo), DistanceUnit.Meters).ToLocalUnitType();
+            {
+                try
+                {
+                    _altitudeAboveEllipsoid = new Distance(double.Parse(Words[10], NmeaCultureInfo), DistanceUnit.Meters).ToLocalUnitType();
+                }
+                catch (Exception)
+                {
+                    _altitudeAboveEllipsoid = Distance.Empty;
+                }
+            }
             else
                 _altitudeAboveEllipsoid = Distance.Empty;
         }

@@ -21,6 +21,8 @@
 // | Tidyup  (Ben Tombs)      | 10/21/2010 | Original copy submitted from modified GPS.Net 3.0
 // | Shade1974 (Ted Dunsford) | 10/22/2010 | Added file headers reviewed formatting with resharper.
 // | Rico  (Rico Castelo)     | 12/08/2011 | Added OnSentenceChanged() to constructor that takes a NmeaSentence.
+// | Rico  (Rico Castelo)     | 01/31/2014 | Put all parsing in a try block or used TryParse.
+// | Rico  (Rico Castelo)     | 02/11/2014 | Fixed a bug when parsing the Latitude and longitude.
 // ********************************************************************************************************
 using System;
 using System.Text;
@@ -304,12 +306,27 @@ namespace DotSpatial.Positioning
                 #region UTC Time
 
                 string utcTimeWord = words[0];
-                int utcHours = int.Parse(utcTimeWord.Substring(0, 2), NmeaCultureInfo);
-                int utcMinutes = int.Parse(utcTimeWord.Substring(2, 2), NmeaCultureInfo);
-                int utcSeconds = int.Parse(utcTimeWord.Substring(4, 2), NmeaCultureInfo);
+                int utcHours = 0;
+                int utcMinutes = 0;
+                int utcSeconds = 0;
                 int utcMilliseconds = 0;
+
+                if (utcTimeWord.Length >= 6)
+                {
+                    int.TryParse(utcTimeWord.Substring(0, 2), out utcHours);
+                    int.TryParse(utcTimeWord.Substring(2, 2), out utcMinutes);
+                    int.TryParse(utcTimeWord.Substring(4, 2), out utcSeconds);
+                }
+
                 if (utcTimeWord.Length > 6)
-                    utcMilliseconds = Convert.ToInt32(float.Parse(utcTimeWord.Substring(6), NmeaCultureInfo) * 1000, NmeaCultureInfo);
+                {
+                    try
+                    {
+                        utcMilliseconds = Convert.ToInt32(float.Parse(utcTimeWord.Substring(6), NmeaCultureInfo) * 1000, NmeaCultureInfo);
+                    }
+                    catch (Exception) { }
+                }
+
 
                 // Build a TimeSpan for this value
                 _utcTime = new TimeSpan(0, utcHours, utcMinutes, utcSeconds, utcMilliseconds);
@@ -328,8 +345,14 @@ namespace DotSpatial.Positioning
                 #region Latitude
 
                 string latitudeWord = words[1];
-                int latitudeHours = int.Parse(latitudeWord.Substring(0, 2), NmeaCultureInfo);
-                double latitudeDecimalMinutes = double.Parse(latitudeWord.Substring(2), NmeaCultureInfo);
+                int latitudeHours = 0;
+                double latitudeDecimalMinutes = 0.0;
+                if (latitudeWord.Length > 3)
+                {
+                    int.TryParse(latitudeWord.Substring(0, 2), out latitudeHours);
+                    double.TryParse(latitudeWord.Substring(2), out latitudeDecimalMinutes);
+                }
+
                 LatitudeHemisphere latitudeHemisphere =
                     words[2].Equals("N", StringComparison.OrdinalIgnoreCase) ? LatitudeHemisphere.North : LatitudeHemisphere.South;
 
@@ -338,8 +361,14 @@ namespace DotSpatial.Positioning
                 #region Longitude
 
                 string longitudeWord = words[3];
-                int longitudeHours = int.Parse(longitudeWord.Substring(0, 3), NmeaCultureInfo);
-                double longitudeDecimalMinutes = double.Parse(longitudeWord.Substring(3), NmeaCultureInfo);
+                int longitudeHours = 0;
+                double longitudeDecimalMinutes = 0.0;
+                if (longitudeWord.Length > 4)
+                {
+                    int.TryParse(longitudeWord.Substring(0, 3), out longitudeHours);
+                    double.TryParse(longitudeWord.Substring(3), out longitudeDecimalMinutes);
+                }
+
                 LongitudeHemisphere longitudeHemisphere =
                     words[4].Equals("E", StringComparison.OrdinalIgnoreCase) ? LongitudeHemisphere.East : LongitudeHemisphere.West;
 
@@ -363,7 +392,10 @@ namespace DotSpatial.Positioning
             {
                 #region Fix Quality
 
-                switch (int.Parse(words[5], NmeaCultureInfo))
+                int fixQual = -1;
+                int.TryParse(words[5], out fixQual);
+
+                switch (fixQual)
                 {
                     case 0:
                         _fixQuality = FixQuality.NoFix;
@@ -408,7 +440,7 @@ namespace DotSpatial.Positioning
             // Number of satellites in view is skipped.  We'll work off of GPGSV data.
             if (wordCount >= 7 && words[6].Length != 0)
             {
-                _fixedSatelliteCount = int.Parse(words[6], NmeaCultureInfo);
+                int.TryParse(words[6], out _fixedSatelliteCount);
             }
 
             // Is there enough information to process horizontal dilution of precision?
@@ -416,8 +448,15 @@ namespace DotSpatial.Positioning
             {
                 #region Horizontal Dilution of Precision
 
-                _horizontalDilutionOfPrecision =
-                    new DilutionOfPrecision(float.Parse(words[7], NmeaCultureInfo));
+                try
+                {
+                    _horizontalDilutionOfPrecision =
+                        new DilutionOfPrecision(float.Parse(words[7], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _horizontalDilutionOfPrecision = DilutionOfPrecision.Invalid;
+                }
 
                 #endregion Horizontal Dilution of Precision
             }
@@ -432,8 +471,15 @@ namespace DotSpatial.Positioning
             {
                 #region Altitude
 
-                // Altitude is the 8th NMEA word
-                _altitude = new Distance(float.Parse(words[8], NmeaCultureInfo), DistanceUnit.Meters);
+                try
+                {
+                    // Altitude is the 8th NMEA word
+                    _altitude = new Distance(float.Parse(words[8], NmeaCultureInfo), DistanceUnit.Meters);
+                }
+                catch (Exception)
+                {
+                    _altitude = Distance.Invalid;
+                }
 
                 #endregion Altitude
             }
@@ -448,8 +494,15 @@ namespace DotSpatial.Positioning
             {
                 #region Geoidal Separation
 
-                // Parse the geoidal separation
-                _geoidalSeparation = new Distance(float.Parse(words[10], NmeaCultureInfo), DistanceUnit.Meters);
+                try
+                {
+                    // Parse the geoidal separation
+                    _geoidalSeparation = new Distance(float.Parse(words[10], NmeaCultureInfo), DistanceUnit.Meters);
+                }
+                catch (Exception)
+                {
+                    _geoidalSeparation = Distance.Invalid;
+                }
 
                 #endregion Geoidal Separation
             }
@@ -464,12 +517,22 @@ namespace DotSpatial.Positioning
             {
                 #region Differential GPS information
 
-                _differentialGpsAge = words[12].Length != 0 ? TimeSpan.FromSeconds(float.Parse(words[12], NmeaCultureInfo)) : TimeSpan.MinValue;
+                try
+                {
+                    _differentialGpsAge = words[12].Length != 0 ? TimeSpan.FromSeconds(float.Parse(words[12], NmeaCultureInfo)) : TimeSpan.MinValue;
+                }
+                catch (Exception) { }
 
                 if (words[13].Length != 0)
-                    _differentialGpsStationID = int.Parse(words[13], NmeaCultureInfo);
+                {
+                    if (!int.TryParse(words[13], out _differentialGpsStationID))
+                        _differentialGpsStationID = -1;
+                }
                 else
+                {
                     _differentialGpsStationID = -1;
+                }
+
 
                 #endregion Differential GPS information
             }

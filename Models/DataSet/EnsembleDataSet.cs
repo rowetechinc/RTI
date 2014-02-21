@@ -71,6 +71,7 @@
  * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
  * 07/26/2013      RC          2.19.3     Added SubsystemConfigurationIndex to SubsystemConfiguration.  Output for JSON.
  * 10/02/2013      RC          2.20.2     Fixed bug where i was not consistent in Encode() in setting the number of elements.
+ * 02/06/2013      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 
  */
 
@@ -359,7 +360,16 @@ namespace RTI
                 SysFirmware = new Firmware();
 
                 // Create Subsystem Configuration based off Firmware and Serialnumber
-                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                if (sentence.SubsystemConfig != null)
+                {
+                    SubsystemConfig = sentence.SubsystemConfig;
+                    SysFirmware.SubsystemCode = sentence.SubsystemConfig.SubSystem.Code;
+                }
+                else
+                {
+                    // Create Subsystem Configuration based off Firmware and Serialnumber
+                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                }
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -396,7 +406,62 @@ namespace RTI
                 SysFirmware = new Firmware();
 
                 // Create Subsystem Configuration based off Firmware and Serialnumber
-                SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                if (sentence.SubsystemConfig != null)
+                {
+                    SubsystemConfig = sentence.SubsystemConfig;
+                    SysFirmware.SubsystemCode = sentence.SubsystemConfig.SubSystem.Code;
+                }
+                else
+                {
+                    // Create Subsystem Configuration based off Firmware and Serialnumber
+                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                }
+
+                // Get the status from the sentence
+                Status = sentence.SystemStatus;
+
+                // No bin data
+                NumBins = 0;
+            }
+
+            /// <summary>
+            /// Create an Ensemble data set.  Include all the information
+            /// about the current ensemble from the sentence.  This will include
+            /// the ensemble number and status.
+            /// </summary>
+            /// <param name="sentence">Sentence containing data.</param>
+            public EnsembleDataSet(Prti03Sentence sentence) :
+                base(DataSet.Ensemble.DATATYPE_INT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.EnsembleDataID)
+            {
+                // Set the ensemble number
+                EnsembleNumber = sentence.SampleNumber;
+
+                // Set time to now
+                SetTime();
+
+                // Create UniqueId
+                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+
+                // Use default value for beams
+                NumBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM;
+
+                // Use the special serial number for a DVL
+                SysSerialNumber = SerialNumber.DVL;
+
+                // Create blank firmware
+                SysFirmware = new Firmware();
+
+                // Create Subsystem Configuration based off Firmware and Serialnumber
+                if (sentence.SubsystemConfig != null)
+                {
+                    SubsystemConfig = sentence.SubsystemConfig;
+                    SysFirmware.SubsystemCode = sentence.SubsystemConfig.SubSystem.Code;
+                }
+                else
+                {
+                    // Create Subsystem Configuration based off Firmware and Serialnumber
+                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                }
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
@@ -664,7 +729,7 @@ namespace RTI
             /// off the index, move to the correct location.
             /// </summary>
             /// <param name="index">PlaybackIndex of the order of the data.</param>
-            /// <returns>PlaybackIndex for the given xAxis.  Start of the data</returns>
+            /// <returns>PlaybackIndex for the given index.  Start of the data</returns>
             private int GenerateIndex(int index)
             {
                 return GetBaseDataSize(NameLength) + (index * Ensemble.BYTES_IN_INT32);

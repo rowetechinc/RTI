@@ -44,7 +44,9 @@
  * 02/20/2013      RC          2.18       Made all public properties' Setters public to convert to and from JSON.
  * 02/22/2013      RC          2.18       Added ToJsonBaseStub() to create a JSON stub for the base dataset properties.
  * 02/25/2013      RC          2.18       Removed Orientation.  Replaced with SubsystemConfiguration.
- * 07/26/2013      RC          2.19.3     Added CEPO index JSON string and renamed SubsystemConfigurationNumber to SubsystemConfigurationIndex.      
+ * 07/26/2013      RC          2.19.3     Added CEPO index JSON string and renamed SubsystemConfigurationNumber to SubsystemConfigurationIndex.  
+ * 01/09/2014      RC          2.21.3     Added SystemSetupDataSet.
+ * 02/06/2014      RC          2.21.3     Added Q value to Water Mass DataSet.
  * 
  */
 
@@ -576,6 +578,11 @@ namespace RTI
             public const string JSON_STR_VELZ = "VelocityZ";
 
             /// <summary>
+            /// String for Water Mass Velocity Q property.
+            /// </summary>
+            public const string JSON_STR_VELQ = "VelocityQ";
+
+            /// <summary>
             /// String for Water Mass Depth Layer property.
             /// </summary>
             public const string JSON_STR_WATERMASSDEPTHLAYER = "WaterMassDepthLayer";
@@ -717,6 +724,70 @@ namespace RTI
             /// String for LagUsed.
             /// </summary>
             public const string JSON_STR_BTE_LAGUSED = "LagUsed";
+
+            #endregion
+
+            #region System Setup
+
+            /// <summary>
+            /// String for BT SamplesPerSecond.
+            /// </summary>
+            public const string JSON_STR_SS_BT_SAMPLESPERSECOND = "BtSamplesPerSecond";
+
+            /// <summary>
+            /// String for BT SystemFreqHz.
+            /// </summary>
+            public const string JSON_STR_SS_BT_SYSTEMFREQHZ = "BtSystemFreqHz";
+
+            /// <summary>
+            /// String for BT CPCE.
+            /// </summary>
+            public const string JSON_STR_SS_BT_CPCE = "BtCPCE";
+
+            /// <summary>
+            /// String for BT NCE.
+            /// </summary>
+            public const string JSON_STR_SS_BT_NCE = "BtNCE";
+
+            /// <summary>
+            /// String for BT RepeatN.
+            /// </summary>
+            public const string JSON_STR_SS_BT_REPEATN = "BtRepeatN";
+
+            /// <summary>
+            /// String for WP SamplesPerSecond.
+            /// </summary>
+            public const string JSON_STR_SS_WP_SAMPLESPERSECOND = "WpSamplesPerSecond";
+
+            /// <summary>
+            /// String for WP SystemFreqHz.
+            /// </summary>
+            public const string JSON_STR_SS_WP_SYSTEMFREQHZ = "WpSystemFreqHz";
+
+            /// <summary>
+            /// String for WP CPCE.
+            /// </summary>
+            public const string JSON_STR_SS_WP_CPCE = "WpCPCE";
+
+            /// <summary>
+            /// String for WP NCE.
+            /// </summary>
+            public const string JSON_STR_SS_WP_NCE = "WpNCE";
+
+            /// <summary>
+            /// String for WP RepeatN.
+            /// </summary>
+            public const string JSON_STR_SS_WP_REPEATN = "WpRepeatN";
+
+            /// <summary>
+            /// String for WP LagSamples.
+            /// </summary>
+            public const string JSON_STR_SS_WP_LAGSAMPLES = "WpLagSamples";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_VOLTAGE = "Voltage";
 
             #endregion
 

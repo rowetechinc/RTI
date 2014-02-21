@@ -21,6 +21,7 @@
 // | Tidyup  (Ben Tombs)      | 10/21/2010 | Original copy submitted from modified GPS.Net 3.0
 // | Shade1974 (Ted Dunsford) | 10/22/2010 | Added file headers reviewed formatting with resharper.
 // | Rico  (Rico Castelo)     | 12/08/2011 | Added OnSentenceChanged() to constructor that takes a NmeaSentence.
+// | Rico  (Rico Castelo)     | 01/31/2014 | Put all parsing in a try block or used TryParse.
 // ********************************************************************************************************
 using System;
 using System.Collections.Generic;
@@ -196,16 +197,16 @@ namespace DotSpatial.Positioning
 
             // Get the total message count
             if (wordCount > 1 && words[1].Length != 0)
-                _totalMessageCount = int.Parse(words[0], NmeaCultureInfo);
+                int.TryParse(words[0], out _totalMessageCount);
 
             // Get the current message number
             if (wordCount > 2 && words[2].Length != 0)
-                _currentMessageNumber = int.Parse(words[1], NmeaCultureInfo);
+                int.TryParse(words[1], out _currentMessageNumber);
 
             // Get the total message count
             if (wordCount > 3 && words[3].Length != 0)
-                _satellitesInView = int.Parse(words[2], NmeaCultureInfo);
-
+                int.TryParse(words[2], out _satellitesInView);
+                
             // Make a new list of satellites
             _satellites = new List<Satellite>();
 
@@ -219,28 +220,51 @@ namespace DotSpatial.Positioning
                 // No.  Get the unique code for the satellite
                 if (words[currentWordIndex].Length == 0)
                     continue;
-
-                int pseudorandomNumber = int.Parse(words[currentWordIndex], NmeaCultureInfo);
+                
+                //int pseudorandomNumber = int.Parse(words[currentWordIndex], NmeaCultureInfo);
+                int pseudorandomNumber = 4;
+                int.TryParse(words[currentWordIndex], out pseudorandomNumber);
                 Elevation newElevation;
                 Azimuth newAzimuth;
                 SignalToNoiseRatio newSignalToNoiseRatio;
 
                 // Update the elevation
                 if (wordCount > currentWordIndex + 1 && words[currentWordIndex + 1].Length != 0)
-                    newElevation = Elevation.Parse(words[currentWordIndex + 1], NmeaCultureInfo);
+                    try
+                    {
+                        newElevation = Elevation.Parse(words[currentWordIndex + 1], NmeaCultureInfo);
+                    }
+                    catch (Exception)
+                    {
+                        newElevation = Elevation.Empty;
+                    }
                 else
                     newElevation = Elevation.Empty;
 
                 // Update the azimuth
                 if (wordCount > currentWordIndex + 2 && words[currentWordIndex + 2].Length != 0)
-                    newAzimuth = Azimuth.Parse(words[currentWordIndex + 2], NmeaCultureInfo);
+                    try
+                    {
+                        newAzimuth = Azimuth.Parse(words[currentWordIndex + 2], NmeaCultureInfo);
+                    }
+                    catch (Exception)
+                    {
+                        newAzimuth = Azimuth.Empty;
+                    }
                 else
                     newAzimuth = Azimuth.Empty;
 
                 // Update the signal strength
                 if (wordCount > currentWordIndex + 3 && words[currentWordIndex + 3].Length != 0)
                 {
-                    newSignalToNoiseRatio = SignalToNoiseRatio.Parse(words[currentWordIndex + 3], NmeaCultureInfo);
+                    try
+                    {
+                        newSignalToNoiseRatio = SignalToNoiseRatio.Parse(words[currentWordIndex + 3], NmeaCultureInfo);
+                    }
+                    catch (Exception)
+                    {
+                        newSignalToNoiseRatio = SignalToNoiseRatio.Empty;
+                    }
                 }
                 else
                 {

@@ -1,5 +1,50 @@
 RTI Changelog
 
+RTI-2.21.3
+ - Changed the version number.
+ - Added SystemSetupDataSet.
+ - In Ensemble, added SystemSetupDataSet.
+ - In AdcpBinaryCodec, added SystemSetupData to parser.
+ - In Project, added SystemSetupDS column to CreateProjectTables().  Bump rev to D5.
+ - In AdcpDatabaseWriter, added SystemSetupDataSet to project db file.
+ - In DbCommon, added COL_SYSTEMSETUP_DS.
+ - In Cache, changed dictionary to ConcurrentDictionary.
+ - In Commons, added NMEA_FILE_EXT to file extensions.
+ - In Project, added Gps and NMEA writers.
+ - In AdcpDatabaseCodec, read in ProfileEngineering, BottomTrackEngineering and SystemSetup datasets.
+ - In Project, added GPS1, GPS2, NMEA1, NMEA2 columns to CreateProjectTables().  Bump rev to D6.
+ - In AdcpDatabaseCodec, added GPS1, GPS2, NMEA1 and NMEA2 column to the project db file.
+ - In all the GPS sentences, put all parsing in a try block or used TryParse.
+ - In AdcpDatabaseCodec, read in GPS1, GPS2, NMEA1 and NMEA2 data.
+ - In AdcpDatabaseCodec, check if the column exist when parsing the data in ParseDataTables().
+ - In Prti01Sentence and Prti02Sentence, fixed parsing the status value from hex to int in OnSentenceChanged().
+ - In AdcpBinaryWriter, added filetype to know what type of binary file is being created.  This will set the file name and extension.
+ - In EnsembleDataSet, added constructor that takes a PRTI03 sentence.
+ - In AncillaryDataSet, added constructor that takes a PRTI03 sentence.
+ - In BottomTrackDataSet, added constructor that takes a PRTI03 sentence.
+ - In InstrumentWaterMassDataSet, added constructor that takes a PRTI03 sentence.  Added Q value.
+ - In BaseDataSet, added Q value to Water Mass DataSet.
+ - In Ensemble, added ability to decode PRIT03 sentence.
+ - In AdcpDvlCodec, added ability to decode PRIT03 sentence.
+ - In PRTI01Sentence and PRTI02Sentence, added Subsystem Configuration.
+ - Added PRTI03Sentence.
+ - Added PRTI30Sentence and PRTI31Sentence.
+ - In DbCommons, Added COL_ADCPGPS.
+ - In AdcpDatabaseWriter, added AdcpGps Column to the project to store the GPS data within the ADCP.
+ - In Project, added AdcpGps column to CreateProjectTables().  Bump rev to D7.
+ - In AdcpConfiguration, added VesselMountOptions to store vessel mount options.
+ - In AdcpDatabaseWriter, removed the EnsembleNmea object and put the NMEA data in the ensemble.
+ - In GpggaSentence, fixed a bug when parsing the Latitude and longitude.
+ - In NmeaDataSet, added GPHDT.
+ - Added VmHeadingSource.cs and VmHeadingOffset.cs.
+ - In AdcpDatabaseWriter, write the position if the GPGGA message is given.
+ - In DbCommons, Added COL_ENS_POSITION.
+ - In AdcpDvlCodec, pass all the DVL data to as binary data to be recorded in SendData().
+ - In PRTIXXXSentence, set the SubsystemConfig number as the same as the CEPO index in OnSentenceChanged(). 
+ - In Firmware, in ToString(), display the SubSystemCode as a char.
+ - In AdcpDatabaseCodec, fixed bug in WriteEnsembleDataToDatabase() where if GPS data was not present, the @position value was not set.
+ - In PRTIXXXSentence, fixed constructor to take subsystem CEPO index.
+
 RTI-2.21.2
  - Changed the version number.
  - Create ProfileEngineeringDataSet.

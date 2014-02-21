@@ -21,6 +21,7 @@
 // | Tidyup  (Ben Tombs)      | 10/21/2010 | Original copy submitted from modified GPS.Net 3.0
 // | Shade1974 (Ted Dunsford) | 10/22/2010 | Added file headers reviewed formatting with resharper.
 // | Rico  (Rico Castelo)     | 12/08/2011 | Added OnSentenceChanged() to constructor that takes a NmeaSentence.
+// | Rico  (Rico Castelo)     | 01/31/2014 | Put all parsing in a try block or used TryParse.
 // ********************************************************************************************************
 using System;
 using System.Text;
@@ -270,21 +271,36 @@ namespace DotSpatial.Positioning
                 #region Parse the UTC time
 
                 string utcTimeWord = words[0];
-                int utcHours = int.Parse(utcTimeWord.Substring(0, 2), NmeaCultureInfo);                 // AA
-                int utcMinutes = int.Parse(utcTimeWord.Substring(2, 2), NmeaCultureInfo);               // BB
-                int utcSeconds = int.Parse(utcTimeWord.Substring(4, 2), NmeaCultureInfo);               // CC
+                int utcHours = 0;                 // AA
+                int utcMinutes = 0;               // BB
+                int utcSeconds = 0;               // CC
                 int utcMilliseconds = 0;
-                if (utcTimeWord.Length > 6)
-                    utcMilliseconds = Convert.ToInt32(float.Parse(utcTimeWord.Substring(6), NmeaCultureInfo) * 1000, NmeaCultureInfo);    // DDDD
+
+                int.TryParse(utcTimeWord.Substring(0, 2), out utcHours);
+                int.TryParse(utcTimeWord.Substring(2, 2), out utcMinutes);
+                int.TryParse(utcTimeWord.Substring(4, 2), out utcSeconds);
+
+                try
+                {
+                    if (utcTimeWord.Length > 6)
+                        utcMilliseconds = Convert.ToInt32(float.Parse(utcTimeWord.Substring(6), NmeaCultureInfo) * 1000, NmeaCultureInfo);    // DDDD
+                }
+                catch (Exception) { }
 
                 #endregion Parse the UTC time
 
                 #region Parse the UTC date
 
                 string utcDateWord = words[8];
-                int utcDay = int.Parse(utcDateWord.Substring(0, 2), NmeaCultureInfo);
-                int utcMonth = int.Parse(utcDateWord.Substring(2, 2), NmeaCultureInfo);
-                int utcYear = int.Parse(utcDateWord.Substring(4, 2), NmeaCultureInfo) + 2000;
+                int utcDay = 0;
+                int utcMonth = 0;
+                int utcYear = 0;
+
+                int.TryParse(utcDateWord.Substring(0, 2), out utcDay);
+                int.TryParse(utcDateWord.Substring(2, 2), out utcMonth);
+                int.TryParse(utcDateWord.Substring(4, 2), out utcYear);
+
+                utcYear += 2000;
 
                 #endregion Parse the UTC date
 
@@ -306,8 +322,12 @@ namespace DotSpatial.Positioning
                 #region Parse the latitude
 
                 string latitudeWord = words[2];
-                int latitudeHours = int.Parse(latitudeWord.Substring(0, 2), NmeaCultureInfo);
-                double latitudeDecimalMinutes = double.Parse(latitudeWord.Substring(2), NmeaCultureInfo);
+                int latitudeHours = 0;
+                double latitudeDecimalMinutes = 0.0;
+
+                int.TryParse(latitudeWord.Substring(0, 2), out latitudeHours);
+                double.TryParse(latitudeWord.Substring(2), out latitudeDecimalMinutes);
+
                 LatitudeHemisphere latitudeHemisphere =
                     words[3].Equals("N", StringComparison.Ordinal) ? LatitudeHemisphere.North : LatitudeHemisphere.South;
 
@@ -316,8 +336,12 @@ namespace DotSpatial.Positioning
                 #region Parse the longitude
 
                 string longitudeWord = words[4];
-                int longitudeHours = int.Parse(longitudeWord.Substring(0, 3), NmeaCultureInfo);
-                double longitudeDecimalMinutes = double.Parse(longitudeWord.Substring(3), NmeaCultureInfo);
+                int longitudeHours = 0;
+                double longitudeDecimalMinutes = 0.0;
+
+                int.TryParse(longitudeWord.Substring(0, 3), out longitudeHours);
+                double.TryParse(longitudeWord.Substring(3), out longitudeDecimalMinutes);
+
                 LongitudeHemisphere longitudeHemisphere =
                     words[5].Equals("E", StringComparison.Ordinal) ? LongitudeHemisphere.East : LongitudeHemisphere.West;
 
@@ -341,8 +365,15 @@ namespace DotSpatial.Positioning
             {
                 #region Speed
 
-                // The speed is the sixth word, expressed in knots
-                _speed = new Speed(double.Parse(words[6], NmeaCultureInfo), SpeedUnit.Knots);
+                try
+                {
+                    // The speed is the sixth word, expressed in knots
+                    _speed = new Speed(double.Parse(words[6], NmeaCultureInfo), SpeedUnit.Knots);
+                }
+                catch (Exception)
+                {
+                    _speed = Speed.Invalid;
+                }
 
                 #endregion Speed
             }
@@ -357,8 +388,15 @@ namespace DotSpatial.Positioning
             {
                 #region Bearing
 
-                // The bearing is the seventh word
-                _bearing = new Azimuth(double.Parse(words[7], NmeaCultureInfo));
+                try
+                {
+                    // The bearing is the seventh word
+                    _bearing = new Azimuth(double.Parse(words[7], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _bearing = Azimuth.Invalid;
+                }
 
                 #endregion Bearing
             }
@@ -371,8 +409,15 @@ namespace DotSpatial.Positioning
             // Do we have enough info for magnetic variation?
             if (wordCount >= 10 && words[9].Length != 0)
             {
-                // Parse the value
-                _magneticVariation = new Longitude(double.Parse(words[9], NmeaCultureInfo));
+                try
+                {
+                    // Parse the value
+                    _magneticVariation = new Longitude(double.Parse(words[9], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _magneticVariation = Longitude.Invalid;
+                }
             }
             else
             {

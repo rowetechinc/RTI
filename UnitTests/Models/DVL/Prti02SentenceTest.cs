@@ -48,15 +48,15 @@ namespace RTI
         [Test]
         public void TestConstructorSentence()
         {
-            string nmea = "$PRTI02,379550,1,1468,-99999,-99999,-99999,0,,,,,0004*0A";
+            string nmea = "$PRTI02,379550,1,1468,-99999,-99999,-99999,0,,,,,0004,3,0*09";
 
             Prti02Sentence nm = new Prti02Sentence(nmea);
 
             Assert.AreEqual(true, nm.IsValid);
             Assert.AreEqual("$PRTI02", nm.CommandWord);
-            Assert.AreEqual("0A", nm.ExistingChecksum);
-            Assert.AreEqual("0A", nm.CorrectChecksum);
-            Assert.AreEqual(12, nm.Words.Length);
+            Assert.AreEqual("09", nm.ExistingChecksum);
+            Assert.AreEqual("09", nm.CorrectChecksum);
+            Assert.AreEqual(14, nm.Words.Length);
             Assert.AreEqual(nmea, nm.Sentence);
 
             Assert.AreEqual("379550", nm.Words[0]);
@@ -71,6 +71,8 @@ namespace RTI
             Assert.AreEqual("", nm.Words[9]);
             Assert.AreEqual("", nm.Words[10]);
             Assert.AreEqual("0004", nm.Words[11]);
+            Assert.AreEqual("3", nm.Words[12]);
+            Assert.AreEqual("0", nm.Words[13]);
 
             Assert.AreEqual(379550, nm.StartTime);
             Assert.AreEqual(1, nm.SampleNumber);
@@ -82,6 +84,8 @@ namespace RTI
             Assert.AreEqual(Speed.Empty, nm.WaterMassVelEast);
             Assert.AreEqual(Speed.Empty, nm.WaterMassVelNorth);
             Assert.AreEqual(Speed.Empty, nm.WaterMassVelUp);
+            Assert.AreEqual(new Subsystem("3", 0), nm.SubsystemConfig.SubSystem);
+            Assert.AreEqual(0, nm.SubsystemConfig.CepoIndex);
 
             Assert.AreEqual(false, nm.SystemStatus.IsBottomTrack3BeamSolution());
             Assert.AreEqual(true, nm.SystemStatus.IsBottomTrackHold());
@@ -97,21 +101,21 @@ namespace RTI
         [Test]
         public void TestConstructorArg()
         {
-            string nmea = "$PRTI02,379550,1,1468,-99999,-99999,-99999,0,,,,,0004*0A";
+            string nmea = "$PRTI02,379550,1,1468,-99999,-99999,-99999,0,,,,,0004,3,0*09";
 
             Prti02Sentence nm = new Prti02Sentence("379550", "1", "1468",
                                                         Speed.BadDVL.Value.ToString(), Speed.BadDVL.Value.ToString(), Speed.BadDVL.Value.ToString(),
                                                         new Distance(0, DistanceUnit.Millimeters).Value.ToString(),
                                                         "", "", "",
                                                         "",
-                                                        "0004");
+                                                        "0004", "3", "0");
 
             Assert.AreEqual(true, nm.IsValid);
             Assert.AreEqual(nmea, nm.Sentence);
             Assert.AreEqual("$PRTI02", nm.CommandWord);
-            Assert.AreEqual("0A", nm.CorrectChecksum);
-            Assert.AreEqual("0A", nm.ExistingChecksum);
-            Assert.AreEqual(12, nm.Words.Length);
+            Assert.AreEqual("09", nm.CorrectChecksum);
+            Assert.AreEqual("09", nm.ExistingChecksum);
+            Assert.AreEqual(14, nm.Words.Length);
 
             Assert.AreEqual("379550", nm.Words[0]);
             Assert.AreEqual("1", nm.Words[1]);
@@ -125,6 +129,8 @@ namespace RTI
             Assert.AreEqual("", nm.Words[9]);
             Assert.AreEqual("", nm.Words[10]);
             Assert.AreEqual("0004", nm.Words[11]);
+            Assert.AreEqual("3", nm.Words[12]);
+            Assert.AreEqual("0", nm.Words[13]);
 
             Assert.AreEqual(379550, nm.StartTime);
             Assert.AreEqual(1, nm.SampleNumber);

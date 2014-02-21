@@ -102,6 +102,11 @@ namespace RTI
     /// to the ADCP.  Then receive the data by overriding the ReceiveDataHandler
     /// method.  Pass the binary data from the serial port to the codec to be parsed
     /// and to the RecorderManager to be recorded to file.
+    /// 
+    /// The ADCP will receive a hard or soft BREAK to wake it up.  This BREAK will then allow the ADCP
+    /// to receive a command if it is pinging.  If the ADCP is currently outputing data, between each
+    /// block of data, the ADCP will wait 100ms to receive a BREAK or command.  Ensure your BREAK is large
+    /// enough that the ADCP can see the BREAK in the 100ms window.  
     /// </summary>
     public class AdcpSerialPort : SerialConnection
     {

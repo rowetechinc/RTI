@@ -35,6 +35,7 @@
  * 12/08/2011      RC          1.09       Initial coding
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
+ * 02/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.  Added Q value.
  * 
  */
 
@@ -60,7 +61,7 @@ namespace RTI
             /// <summary>
             /// Number of elements within this data set
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = 4;
+            public const int NUM_DATA_ELEMENTS = 5;
 
             #endregion
 
@@ -80,6 +81,11 @@ namespace RTI
             /// Water Mass Z velocity in meters per second.
             /// </summary>
             public float VelocityZ { get; set; }
+
+            /// <summary>
+            /// Water Mass Q velocity in meters per second.
+            /// </summary>
+            public float VelocityQ { get; set; }
 
             /// <summary>
             /// Depth layer the Water Mass Velocity was taken in meters.
@@ -104,6 +110,7 @@ namespace RTI
                 VelocityX = Ensemble.EMPTY_VELOCITY;
                 VelocityY = Ensemble.EMPTY_VELOCITY;
                 VelocityZ = Ensemble.EMPTY_VELOCITY;
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
                 WaterMassDepthLayer = 0;
             }
 
@@ -144,6 +151,23 @@ namespace RTI
                 VelocityX = Convert.ToSingle(sentence.WaterMassVelX.ToMetersPerSecond().Value);
                 VelocityY = Convert.ToSingle(sentence.WaterMassVelY.ToMetersPerSecond().Value);
                 VelocityZ = Convert.ToSingle(sentence.WaterMassVelZ.ToMetersPerSecond().Value);
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
+                WaterMassDepthLayer = Convert.ToSingle(sentence.WaterMassDepth.ToMeters().Value);
+            }
+
+            /// <summary>
+            /// Create an Insturment Water Mass Velocity data set.  Include all the information
+            /// to create the data set from the NMEA sentence.
+            /// </summary>
+            /// <param name="sentence">NMEA sentence containing the data.</param>
+            public InstrumentWaterMassDataSet(Prti03Sentence sentence) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.WaterMassInstrumentID)
+            {
+                // Initialize data
+                VelocityX = Convert.ToSingle(sentence.WaterMassVelX.ToMetersPerSecond().Value);
+                VelocityY = Convert.ToSingle(sentence.WaterMassVelY.ToMetersPerSecond().Value);
+                VelocityZ = Convert.ToSingle(sentence.WaterMassVelZ.ToMetersPerSecond().Value);
+                VelocityQ = Convert.ToSingle(sentence.WaterMassVelQ.ToMetersPerSecond().Value);
                 WaterMassDepthLayer = Convert.ToSingle(sentence.WaterMassDepth.ToMeters().Value);
             }
 
@@ -171,15 +195,17 @@ namespace RTI
             /// <param name="VelocityX">Water Mass X Velocity in m/s.</param>
             /// <param name="VelocityY">Water Mass Y Velocity in m/s.</param>
             /// <param name="VelocityZ">Water Mass Z Velocity in m/s.</param>
+            /// <param name="VelocityQ">Water Mass Q Velocity in m/s.</param>
             /// <param name="WaterMassDepthLayer">Depth layer of the Water Mass measurement in meters.</param>
             [JsonConstructor]
-            public InstrumentWaterMassDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name, float VelocityX, float VelocityY, float VelocityZ, float WaterMassDepthLayer) :
+            public InstrumentWaterMassDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name, float VelocityX, float VelocityY, float VelocityZ, float VelocityQ, float WaterMassDepthLayer) :
                 base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
                 // Initialize data
                 this.VelocityX = VelocityX;
                 this.VelocityY = VelocityY;
                 this.VelocityZ = VelocityZ;
+                this.VelocityQ = VelocityQ;
                 this.WaterMassDepthLayer = WaterMassDepthLayer;
             }
 
@@ -193,6 +219,7 @@ namespace RTI
                 builder.Append("X : " + VelocityX.ToString() + "\n");
                 builder.Append("Y : " + VelocityY.ToString() + "\n");
                 builder.Append("Z : " + VelocityZ.ToString() + "\n");
+                builder.Append("Q : " + VelocityQ.ToString() + "\n");
                 builder.Append("Depth Layer : " + WaterMassDepthLayer.ToString());
 
 
@@ -253,6 +280,10 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VELZ);
                 writer.WriteValue(data.VelocityZ);
 
+                // Velocity Q
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VELQ);
+                writer.WriteValue(data.VelocityQ);
+
                 // Water Mass Depth Layer
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WATERMASSDEPTHLAYER);
                 writer.WriteValue(data.WaterMassDepthLayer);
@@ -296,6 +327,9 @@ namespace RTI
 
                     // Velocity Z
                     data.VelocityZ = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_VELZ];
+
+                    // Velocity Q
+                    data.VelocityQ = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_VELQ];
 
                     // Water Mass Depth Layer
                     data.WaterMassDepthLayer = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_WATERMASSDEPTHLAYER];

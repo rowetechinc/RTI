@@ -55,6 +55,7 @@ namespace RTI
                 0.3f,
                 -0.2f,
                 0.4f,
+                0.2f,
                 0.1f);
 
             Assert.IsTrue(adcpData.IsInstrumentWaterMassAvail, "Instrument Water Mass not added to dataset");
@@ -62,6 +63,7 @@ namespace RTI
             Assert.AreEqual(adcpData.InstrumentWaterMassData.VelocityX, (new DotSpatial.Positioning.Speed(300, DotSpatial.Positioning.SpeedUnit.MillimetersPerSecond)).ToMetersPerSecond().Value, 0.00001, "Instrument Water Mass East not properly set.");
             Assert.AreEqual(adcpData.InstrumentWaterMassData.VelocityY, (new DotSpatial.Positioning.Speed(-200, DotSpatial.Positioning.SpeedUnit.MillimetersPerSecond)).ToMetersPerSecond().Value, 0.00001, "Instrument Water Mass North not properly set.");
             Assert.AreEqual(adcpData.InstrumentWaterMassData.VelocityZ, (new DotSpatial.Positioning.Speed(400, DotSpatial.Positioning.SpeedUnit.MillimetersPerSecond)).ToMetersPerSecond().Value, 0.00001, "Instrument Water Mass Vertical not properly set.");
+            Assert.AreEqual(adcpData.InstrumentWaterMassData.VelocityQ, (new DotSpatial.Positioning.Speed(200, DotSpatial.Positioning.SpeedUnit.MillimetersPerSecond)).ToMetersPerSecond().Value, 0.00001, "Instrument Water Mass Error not properly set.");
             Assert.AreEqual(adcpData.InstrumentWaterMassData.WaterMassDepthLayer, (new DotSpatial.Positioning.Distance(100, DotSpatial.Positioning.DistanceUnit.Millimeters)).ToMeters().Value, 0.00001, "Instrument Water Mass Depth Layer not properly set.");
         }
 

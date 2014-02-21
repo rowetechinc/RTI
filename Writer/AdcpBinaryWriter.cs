@@ -57,6 +57,7 @@
  * 08/19/2013      RC          2.19.4     Moved the PublishEnsembleWrite() to AddIncomingData() so that it will display updates everytime it receives data.
  * 10/10/2013      RC          2.21.0     Made MaxFileSize a public property.
  * 10/14/2013      RC          2.21.0     Changed contructor to take individual name, folder and serial number to a project will not be needed.
+ * 01/31/2014      RC          2.21.3     Added filetype to know what type of binary file is being created.  This will set the file name and extension.
  *       
  * 
  */
@@ -78,6 +79,43 @@ namespace RTI
     /// </summary>
     public class AdcpBinaryWriter: IDisposable
     {
+        #region Enum and Classes
+
+        /// <summary>
+        /// File type that will be written.
+        /// This will determine the file name and
+        /// the file extension.
+        /// </summary>
+        public enum FileType
+        {
+            /// <summary>
+            /// Writing ensembles.
+            /// </summary>
+            Ensemble,
+
+            /// <summary>
+            /// GPS 1 data.
+            /// </summary>
+            GPS1,
+
+            /// <summary>
+            /// GPS 2 data.
+            /// </summary>
+            GPS2,
+
+            /// <summary>
+            /// NMEA 1 data.
+            /// </summary>
+            NMEA1,
+
+            /// <summary>
+            /// NMEA 2 data.
+            /// </summary>
+            NMEA2,
+        }
+
+        #endregion
+
         #region Variables
 
         /// <summary>
@@ -122,6 +160,11 @@ namespace RTI
         /// Index to use to seperate file names.
         /// </summary>
         private int _fileNameIndex = 0;
+
+        /// <summary>
+        /// File type for this file.
+        /// </summary>
+        private FileType _fileType;
 
         /// <summary>
         /// Writer to write binary data to
@@ -234,12 +277,14 @@ namespace RTI
         /// <param name="projectFolderPath">Project folder path.</param>
         /// <param name="serialNum">Project serial number.</param>
         /// <param name="maxFileSize">Maximum file size for the binary file.</param>
-        public AdcpBinaryWriter(string projectName, string projectFolderPath, string serialNum, long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
+        /// <param name="fileType">File type to determine filename and extension.  Default is Ensemble.</param>
+        public AdcpBinaryWriter(string projectName, string projectFolderPath, string serialNum, long maxFileSize = DEFAULT_BINARY_FILE_SIZE, FileType fileType = FileType.Ensemble)
         {
             ProjectName = projectName;
             ProjectFolderPath = projectFolderPath;
             SerialNumber = serialNum;
             MaxFileSize = maxFileSize;
+            _fileType = fileType;
 
             // Write buffer
             _writeBuffer = new List<byte[]>();
@@ -253,12 +298,14 @@ namespace RTI
         /// </summary>
         /// <param name="project">Project.</param>
         /// <param name="maxFileSize">Maximum file size for the binary file.</param>
-        public AdcpBinaryWriter(Project project, long maxFileSize = DEFAULT_BINARY_FILE_SIZE)
+        /// <param name="fileType">File type to determine filename and extension.  Default is Ensemble.</param>
+        public AdcpBinaryWriter(Project project, long maxFileSize = DEFAULT_BINARY_FILE_SIZE, FileType fileType = FileType.Ensemble)
         {
             ProjectName = project.ProjectName;
             ProjectFolderPath = project.ProjectFolderPath;
             SerialNumber = project.SerialNumber.SerialNumberString;
             MaxFileSize = maxFileSize;
+            _fileType = fileType;
 
             // Write buffer
             _writeBuffer = new List<byte[]>();
@@ -334,6 +381,12 @@ namespace RTI
         {
             try
             {
+                // Ensure a filename has been set
+                if (string.IsNullOrEmpty(_fileName))
+                {
+                    ResetFileName();
+                }
+
                 // Verify the system is recording in Live mode
                 // And a project has been selected
                 //if (_selectedProject != null)
@@ -494,7 +547,20 @@ namespace RTI
         /// <returns>New file name with project name and index.</returns>
         private string GenerateFileName(int index)
         {
-            return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;
+            switch (_fileType)
+            {
+                case FileType.GPS1:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_GPS1" + Core.Commons.NMEA_FILE_EXT;
+                case FileType.GPS2:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_GPS2" + Core.Commons.NMEA_FILE_EXT;
+                case FileType.NMEA1:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_NMEA1" + Core.Commons.NMEA_FILE_EXT;
+                case FileType.NMEA2:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_NMEA2" + Core.Commons.NMEA_FILE_EXT;
+                case FileType.Ensemble:
+                default:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;
+            }
         }
 
         #endregion

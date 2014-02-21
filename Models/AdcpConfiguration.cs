@@ -52,6 +52,7 @@
  * 10/09/2013      RC          2.21.0     Changed SerialOptions to AdcpSerialOptions.  Added Gps1/2SerialOptions and Nmea1/2SerialOptions.
  * 10/30/2013      RC          2.21.0     Added GetCepoDescString() to get a string for the CEPO command.
  * 11/22/2013      RC          2.21.0     Added EthernetOptions() to store the Ethernet options.
+ * 02/10/2014      RC          2.21.3     Added VesselMountOptions to store vessel mount options.
  * 
  */
 
@@ -156,6 +157,11 @@ namespace RTI
         /// </summary>
         public AdcpEthernetOptions EthernetOptions { get; set; }
 
+        /// <summary>
+        /// Vessel Mount Options.
+        /// </summary>
+        public VesselMountOptions VesselMountOptions { get; set; }
+
         #endregion
 
         /// <summary>
@@ -175,6 +181,7 @@ namespace RTI
             Nmea2SerialOptions = new SerialOptions();
             HardwareOptions = new EngConf();
             EthernetOptions = new AdcpEthernetOptions();
+            VesselMountOptions = new VesselMountOptions();
         }
 
         /// <summary>
@@ -195,6 +202,7 @@ namespace RTI
             Nmea2SerialOptions = new SerialOptions();
             HardwareOptions = new EngConf();
             EthernetOptions = new AdcpEthernetOptions();
+            VesselMountOptions = new VesselMountOptions();
         }
 
         #region Methods

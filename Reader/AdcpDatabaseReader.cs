@@ -266,13 +266,15 @@ namespace RTI
             {
                 // Query for ensemble data
                 DataSet.Ensemble ensemble = _adcpDbCodec.QueryForDataSet(_cnn, project, index);
-                
-                // Create the velocity vectors for the ensemble
-                DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
+                // Get the NMEA data and add it to the ensemble based off project settings
 
                 // Disturbute the dataset to all subscribers
                 if (ensemble != null)
                 {
+                    // Create the velocity vectors for the ensemble
+                    DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
                     // Create a clone so the ensemble in the
                     //cache is not modified
                     return ensemble.Clone();

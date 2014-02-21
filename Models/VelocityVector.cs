@@ -113,7 +113,7 @@ namespace RTI
             /// <returns>VelocityVector created.</returns>
             public static bool CreateVelocityVector(ref DataSet.Ensemble ensemble)
             {
-                if (ensemble.IsEarthVelocityAvail)
+                if (ensemble != null && ensemble.IsEarthVelocityAvail)
                 {
                     // Create array to store all the vectors
                     ensemble.EarthVelocityData.IsVelocityVectorAvail = true;

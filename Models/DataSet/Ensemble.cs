@@ -68,6 +68,9 @@
  * 03/12/2013      RC          2.18       Improved the Ensemble.Clone() by using JSON to clone.       
  * 10/02/2013      RC          2.20.2     Added EncodeMatlab() to get just the ensemble as Matlab datasets with the RTI header or checksum.
  * 12/31/2013      RC          2.21.2     Added ProfileEngineeringDataSet and BottomTrackEngineeringDataSet.
+ * 01/09/2014      RC          2.21.3     Added SystemSetupDataSet.
+ * 02/06/2014      RC          2.21.3     Added ability to decode PRIT03 sentence.
+ * 02/10/2014      RC          2.21.3     Added AdcpGpsData, Gps1Data, Gps2Data, Nmea1Data and Nmea2Data.
  *       
  * 
  */
@@ -157,11 +160,15 @@ namespace RTI
             /// </summary>
             public const string ProfileEngineeringID = "E000012\0";
 
-
             /// <summary>
             /// Bottom Track Engineering ID for binary format.
             /// </summary>
-            public const string BottomTrackEngineeringID = "E000013\0"; 
+            public const string BottomTrackEngineeringID = "E000013\0";
+
+            /// <summary>
+            /// System Setup ID for binary format.
+            /// </summary>
+            public const string SystemSetupID = "E000014\0"; 
 
             /// <summary>
             /// PRTI02 ID for DVL mode format.
@@ -457,6 +464,36 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISBOTTOMTRACKENGINEERINGAVAIL = "IsBottomTrackEngineeringAvail";
 
+            /// <summary>
+            /// String for IsSystemSetupAvail.
+            /// </summary>
+            public const string JSON_STR_ISSYSTEMSETUPAVAIL = "IsSystemSetupAvail";
+
+            /// <summary>
+            /// String for IsAdcpGpsAvail.
+            /// </summary>
+            public const string JSON_STR_ISADCPGPSAVAIL = "IsAdcpGpsDataAvail";
+
+            /// <summary>
+            /// String for IsGps1Avail.
+            /// </summary>
+            public const string JSON_STR_ISGPS1AVAIL = "IsGps1DataAvail";
+
+            /// <summary>
+            /// String for IsGps2Avail.
+            /// </summary>
+            public const string JSON_STR_ISGPS2AVAIL = "IsGps2DataAvail";
+
+            /// <summary>
+            /// String for IsNmea1Avail.
+            /// </summary>
+            public const string JSON_STR_ISNMEA1AVAIL = "IsNmea1DataAvail";
+
+            /// <summary>
+            /// String for IsNmea2Avail.
+            /// </summary>
+            public const string JSON_STR_ISNMEA2AVAIL = "IsNmea2DataAvail";
+
             #endregion
 
             #region DataSets
@@ -535,6 +572,36 @@ namespace RTI
             /// String for BottomTrackEngineeringData.
             /// </summary>
             public const string JSON_STR_BOTTOMTRACKENGINEERINGDATA = "BottomTrackEngineeringData";
+
+            /// <summary>
+            /// String for SystemSetupData.
+            /// </summary>
+            public const string JSON_STR_SYSTEMSETUPDATA = "SystemSetupData";
+
+            /// <summary>
+            /// String for AdcpGpsData.
+            /// </summary>
+            public const string JSON_STR_ADCPGPSDATA = "AdcpGpsData";
+
+            /// <summary>
+            /// String for Gps1Data.
+            /// </summary>
+            public const string JSON_STR_GPS1DATA = "Gps1Data";
+
+            /// <summary>
+            /// String for Gps2Data.
+            /// </summary>
+            public const string JSON_STR_GPS2DATA = "Gps2Data";
+
+            /// <summary>
+            /// String for Nmea1Data.
+            /// </summary>
+            public const string JSON_STR_NMEA1DATA = "Nmea1Data";
+
+            /// <summary>
+            /// String for Nmea2Data.
+            /// </summary>
+            public const string JSON_STR_NMEA2DATA = "Nmea2Data";
 
             #endregion
 
@@ -621,6 +688,36 @@ namespace RTI
             /// </summary>
             public bool IsBottomTrackEngineeringAvail { get; set; }
 
+            /// <summary>
+            /// Set if the System Setup data set is available for this ensemble.
+            /// </summary>
+            public bool IsSystemSetupAvail { get; set; }
+
+            /// <summary>
+            /// Set if the ADCP GPS data set is available for this ensemble.
+            /// </summary>
+            public bool IsAdcpGpsDataAvail { get; set; }
+
+            /// <summary>
+            /// Set if the GPS 1 data set is available for this ensemble.
+            /// </summary>
+            public bool IsGps1DataAvail { get; set; }
+
+            /// <summary>
+            /// Set if the GPS 2 data set is available for this ensemble.
+            /// </summary>
+            public bool IsGps2DataAvail { get; set; }
+
+            /// <summary>
+            /// Set if the NMEA 1 data set is available for this ensemble.
+            /// </summary>
+            public bool IsNmea1DataAvail { get; set; }
+
+            /// <summary>
+            /// Set if the NMEA 2 data set is available for this ensemble.
+            /// </summary>
+            public bool IsNmea2DataAvail { get; set; }
+
             #endregion
 
             #region Data Sets Properties
@@ -700,6 +797,36 @@ namespace RTI
             /// </summary>
             public BottomTrackEngineeringDataSet BottomTrackEngineeringData { get; set; }
 
+            /// <summary>
+            /// System Setup data set.
+            /// </summary>
+            public SystemSetupDataSet SystemSetupData { get; set; }
+
+            /// <summary>
+            /// GPS data that came from the ADCP.
+            /// </summary>
+            public string AdcpGpsData { get; set; }
+
+            /// <summary>
+            /// GPS 1 data.
+            /// </summary>
+            public string Gps1Data { get; set; }
+
+            /// <summary>
+            /// GPS 2 data.
+            /// </summary>
+            public string Gps2Data { get; set; }
+
+            /// <summary>
+            /// NMEA 1 data.
+            /// </summary>
+            public string Nmea1Data { get; set; }
+
+            /// <summary>
+            /// NMEA 2 data.
+            /// </summary>
+            public string Nmea2Data { get; set; }
+
             #endregion
 
             #endregion
@@ -730,6 +857,12 @@ namespace RTI
                 IsNmeaAvail = false;
                 IsProfileEngineeringAvail = false;
                 IsBottomTrackEngineeringAvail = false;
+                IsSystemSetupAvail = false;
+                IsAdcpGpsDataAvail = false;
+                IsGps1DataAvail = false;
+                IsGps2DataAvail = false;
+                IsNmea1DataAvail = false;
+                IsNmea2DataAvail = false;
             }
 
             /// <summary>
@@ -762,6 +895,12 @@ namespace RTI
             /// <param name="IsNmeaAvail">Flag if Nmea DataSet Is Available.</param>
             /// <param name="IsProfileEngineeringAvail">Flag if Profile Engineering is avaialble.</param>
             /// <param name="IsBottomTrackEngineeringAvail">Flag if Bottom Track Engineering is available.</param>
+            /// <param name="IsSystemSetupAvail">Flag if System Setup is available.</param>
+            /// <param name="IsAdcpGpsDataAvail">Flag if ADCP GPS data is available.</param>
+            /// <param name="IsGps1DataAvail">Flag if GPS 1 data is available.</param>
+            /// <param name="IsGps2DataAvail">Flag if GPS 2 data is available.</param>
+            /// <param name="IsNmea1DataAvail">Flag if NMEA 1 data is available.</param>
+            /// <param name="IsNmea2DataAvail">Flag if NMEA 2 data is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -777,14 +916,24 @@ namespace RTI
             /// <param name="NmeaData">Nmea DataSet.</param>
             /// <param name="ProfileEngineeringData">Profile Engineering DataSet.</param>
             /// <param name="BottomTrackEngineeringData">Bottom Track Engineering Dataset.</param>
+            /// <param name="SystemSetupData">System Setup Dataset.</param>
+            /// <param name="AdcpGpsData">Adcp GPS data.</param>
+            /// <param name="Gps1Data">GPS 1 data.</param>
+            /// <param name="Gps2Data">GPS 2 data.</param>
+            /// <param name="Nmea1Data">NMEA 1 data.</param>
+            /// <param name="Nmea2Data">NMEA 2 data.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
                             bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
+                            bool IsSystemSetupAvail,
+                            bool IsAdcpGpsDataAvail, bool IsGps1DataAvail, bool IsGps2DataAvail, bool IsNmea1DataAvail, bool IsNmea2DataAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
-                            InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData)
+                            InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
+                            SystemSetupDataSet SystemSetupData,
+                            string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
             {
                 // Initialize all ranges
                 this.IsBeamVelocityAvail = IsBeamVelocityAvail;
@@ -802,6 +951,12 @@ namespace RTI
                 this.IsNmeaAvail = IsNmeaAvail;
                 this.IsProfileEngineeringAvail = IsProfileEngineeringAvail;
                 this.IsBottomTrackEngineeringAvail = IsBottomTrackEngineeringAvail;
+                this.IsSystemSetupAvail = IsSystemSetupAvail;
+                this.IsAdcpGpsDataAvail = IsAdcpGpsDataAvail;
+                this.IsGps1DataAvail = IsGps1DataAvail;
+                this.IsGps2DataAvail = IsGps2DataAvail;
+                this.IsNmea1DataAvail = IsNmea1DataAvail;
+                this.IsNmea2DataAvail = IsNmea2DataAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -818,6 +973,12 @@ namespace RTI
                 this.NmeaData = NmeaData;
                 this.ProfileEngineeringData = ProfileEngineeringData;
                 this.BottomTrackEngineeringData = BottomTrackEngineeringData;
+                this.SystemSetupData = SystemSetupData;
+                this.AdcpGpsData = AdcpGpsData;
+                this.Gps1Data = Gps1Data;
+                this.Gps2Data = Gps2Data;
+                this.Nmea1Data = Nmea2Data;
+                this.Nmea2Data = Nmea2Data;
             }
 
             #region Beam Velocity Data Set
@@ -1137,6 +1298,17 @@ namespace RTI
                 EnsembleData = new EnsembleDataSet(sent);
             }
 
+            /// <summary>
+            /// Add the Ensemble number and time based off the 
+            /// Prti03Sentence given.
+            /// </summary>
+            /// <param name="sent">Sentence containing data.</param>
+            public void AddEnsembleData(Prti03Sentence sent)
+            {
+                IsEnsembleAvail = true;
+                EnsembleData = new EnsembleDataSet(sent);
+            }
+
             #endregion
 
             #region Ancillary Data Set
@@ -1196,6 +1368,43 @@ namespace RTI
             {
                 IsAncillaryAvail = true;
                 AncillaryData = new AncillaryDataSet(sent);
+            }
+
+            /// <summary>
+            /// Add the temperature based off the 
+            /// Prti03Sentence given.
+            /// </summary>
+            /// <param name="sent">Sentence containing data.</param>
+            public void AddAncillaryData(Prti03Sentence sent)
+            {
+                IsAncillaryAvail = true;
+                AncillaryData = new AncillaryDataSet(sent);
+            }
+
+            /// <summary>
+            /// Add the additional Heading, Pitch and Roll data
+            /// to the Ancillary data.
+            /// </summary>
+            /// <param name="sent">Sentence containing the data.</param>
+            public void AddAdditionalAncillaryData(Prti30Sentence sent)
+            {
+                if (IsAncillaryAvail)
+                {
+                    AncillaryData.AddAncillaryData(sent);
+                }
+            }
+
+            /// <summary>
+            /// Add the additional Heading, Pitch and Roll data
+            /// to the Ancillary data.
+            /// </summary>
+            /// <param name="sent">Sentence containing the data.</param>
+            public void AddAdditionalAncillaryData(Prti31Sentence sent)
+            {
+                if (IsAncillaryAvail)
+                {
+                    AncillaryData.AddAncillaryData(sent);
+                }
             }
 
             #endregion
@@ -1261,11 +1470,49 @@ namespace RTI
             }
 
             /// <summary>
+            /// Add the Bottom Track data set to the data.
+            /// This will add the Bottom Track data and decode the Prti03Sentence
+            /// for all the Bottom Track data;
+            /// </summary>
+            /// <param name="sentence">DVL message containing Bottom Track data.</param>
+            public void AddBottomTrackData(Prti03Sentence sentence)
+            {
+                IsBottomTrackAvail = true;
+                BottomTrackData = new BottomTrackDataSet(sentence);
+            }
+
+            /// <summary>
             /// Take existing Bottom Track data and add additional 
             /// Bottom Track data from the Prti02Sentence.
             /// </summary>
             /// <param name="sentence">Sentence containing additional Bottom Track data.</param>
             public void AddAdditionalBottomTrackData(Prti02Sentence sentence)
+            {
+                if (IsBottomTrackAvail)
+                {
+                    BottomTrackData.AddAdditionalBottomTrackData(sentence);
+                }
+            }
+
+            /// <summary>
+            /// Take existing Bottom Track data and add additional 
+            /// Bottom Track data from the Prti30Sentence.
+            /// </summary>
+            /// <param name="sentence">Sentence containing additional Bottom Track data.</param>
+            public void AddAdditionalBottomTrackData(Prti30Sentence sentence)
+            {
+                if (IsBottomTrackAvail)
+                {
+                    BottomTrackData.AddAdditionalBottomTrackData(sentence);
+                }
+            }
+
+            /// <summary>
+            /// Take existing Bottom Track data and add additional 
+            /// Bottom Track data from the Prti31Sentence.
+            /// </summary>
+            /// <param name="sentence">Sentence containing additional Bottom Track data.</param>
+            public void AddAdditionalBottomTrackData(Prti31Sentence sentence)
             {
                 if (IsBottomTrackAvail)
                 {
@@ -1323,11 +1570,12 @@ namespace RTI
             /// <param name="x">X Velocity.</param>
             /// <param name="y">Y Velocity.</param>
             /// <param name="z">Z Velocity.</param>
+            /// <param name="q">Q Velocity.</param>
             /// <param name="depthLayer">Water Mass Depth Layer.</param>
-            public void AddInstrumentWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float x, float y, float z, float depthLayer)
+            public void AddInstrumentWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float x, float y, float z, float q, float depthLayer)
             {
                 IsInstrumentWaterMassAvail = true;
-                InstrumentWaterMassData = new InstrumentWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, x, y, z, depthLayer);
+                InstrumentWaterMassData = new InstrumentWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, x, y, z, q, depthLayer);
             }
 
             /// <summary>
@@ -1336,6 +1584,17 @@ namespace RTI
             /// </summary>
             /// <param name="sent">Sentence containing data.</param>
             public void AddInstrumentWaterMassData(Prti01Sentence sent)
+            {
+                IsInstrumentWaterMassAvail = true;
+                InstrumentWaterMassData = new InstrumentWaterMassDataSet(sent);
+            }
+
+            /// <summary>
+            /// Add the Instrument Water Mass Velocity data based off the 
+            /// Prti03Sentence given.
+            /// </summary>
+            /// <param name="sent">Sentence containing data.</param>
+            public void AddInstrumentWaterMassData(Prti03Sentence sent)
             {
                 IsInstrumentWaterMassAvail = true;
                 InstrumentWaterMassData = new InstrumentWaterMassDataSet(sent);
@@ -1463,6 +1722,97 @@ namespace RTI
             {
                 IsBottomTrackEngineeringAvail = true;
                 BottomTrackEngineeringData = new BottomTrackEngineeringDataSet(valueType, numBins, numBeams, imag, nameLength, name, btEngData);
+            }
+
+            #endregion
+
+            #region System Setup Data Set
+
+            /// <summary>
+            /// Add the System Setup data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddSystemSetupData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsSystemSetupAvail = true;
+                SystemSetupData = new SystemSetupDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the System Setup data set to the ensemble.
+            /// This will add the System Setup data and decode the byte array
+            /// for all the Bottom Track Engineering data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="ssData">Byte array containing System Setup data</param>
+            public void AddSystemSetupData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ssData)
+            {
+                IsSystemSetupAvail = true;
+                SystemSetupData = new SystemSetupDataSet(valueType, numBins, numBeams, imag, nameLength, name, ssData);
+            }
+
+            #endregion
+
+            #region Vessel Mount Data
+
+            /// <summary>
+            /// Added the NMEA strings to the ensemble.
+            /// </summary>
+            /// <param name="data">ADCP GPS data.</param>
+            public void AddAdcpGpsData(string data)
+            {
+                IsAdcpGpsDataAvail = true;
+                AdcpGpsData = data;
+            }
+
+            /// <summary>
+            /// Added the GPS 1 NMEA strings to the ensemble.
+            /// </summary>
+            /// <param name="data">GPS 1 data.</param>
+            public void AddGps1Data(string data)
+            {
+                IsGps1DataAvail = true;
+                Gps1Data = data;
+            }
+
+            /// <summary>
+            /// Added the GPS 2 NMEA strings to the ensemble.
+            /// </summary>
+            /// <param name="data">GPS 2 data.</param>
+            public void AddGps2Data(string data)
+            {
+                IsGps2DataAvail = true;
+                Gps2Data = data;
+            }
+
+            /// <summary>
+            /// Added the NMEA 1 NMEA strings to the ensemble.
+            /// </summary>
+            /// <param name="data">NMEA 1 data.</param>
+            public void AddNmea1Data(string data)
+            {
+                IsNmea1DataAvail = true;
+                Nmea1Data = data;
+            }
+
+            /// <summary>
+            /// Added the NMEA 2 NMEA strings to the ensemble.
+            /// </summary>
+            /// <param name="data">NMEA 2 data.</param>
+            public void AddNmea2Data(string data)
+            {
+                IsNmea2DataAvail = true;
+                Nmea2Data = data;
             }
 
             #endregion
@@ -1620,6 +1970,10 @@ namespace RTI
                 if (IsBottomTrackEngineeringAvail)
                 {
                     s += BottomTrackEngineeringData.ToString();
+                }
+                if (IsSystemSetupAvail)
+                {
+                    s += SystemSetupData.ToString();
                 }
 
                 return s;
@@ -2007,6 +2361,14 @@ namespace RTI
                     size += btEngDataSet.Length;
                 }
 
+                // System Setup dataset
+                if (IsSystemSetupAvail)
+                {
+                    byte[] ssDataSet = SystemSetupData.Encode();
+                    datasetList.Add(ssDataSet);
+                    size += ssDataSet.Length;
+                }
+
                 return CombineDataSets(size, datasetList);
             }
 
@@ -2088,7 +2450,7 @@ namespace RTI
                 writer.Formatting = Formatting.None;            // Make the text not indented, so not as human readable.  This will save disk space
                 writer.WriteStartObject();                      // Start the JSON object
 
-                #region Available
+                #region Is Available
 
                 // IsBeamVelocityAvail
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISBEAMVELOCITYAVAIL);
@@ -2149,6 +2511,31 @@ namespace RTI
                 // IsBottomTrackEngineeringAvail
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISBOTTOMTRACKENGINEERINGAVAIL);
                 writer.WriteValue(ensemble.IsBottomTrackEngineeringAvail);
+
+                // IsSystemSetupAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISSYSTEMSETUPAVAIL);
+                writer.WriteValue(ensemble.IsSystemSetupAvail);
+
+                // IsAdcpGpsDataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISADCPGPSAVAIL);
+                writer.WriteValue(ensemble.IsAdcpGpsDataAvail);
+
+                // IsGps1DataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISGPS1AVAIL);
+                writer.WriteValue(ensemble.IsGps1DataAvail);
+
+                // IsGps2DataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISGPS2AVAIL);
+                writer.WriteValue(ensemble.IsGps2DataAvail);
+
+                // IsNmea1DataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEA1AVAIL);
+                writer.WriteValue(ensemble.IsNmea1DataAvail);
+
+
+                // IsNmea2DataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEA2AVAIL);
+                writer.WriteValue(ensemble.IsNmea2DataAvail);
 
                 #endregion
 
@@ -2313,6 +2700,72 @@ namespace RTI
                 if (ensemble.IsBottomTrackEngineeringAvail)
                 {
                     writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.BottomTrackEngineeringData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // SystemSetupData
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_SYSTEMSETUPDATA);
+                if (ensemble.IsSystemSetupAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.SystemSetupData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // ADCP GPS data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ADCPGPSDATA);
+                if (ensemble.IsAdcpGpsDataAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.AdcpGpsData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // GPS 1 data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_GPS1DATA);
+                if (ensemble.IsGps1DataAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Gps1Data));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // GPS 2 data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_GPS2DATA);
+                if (ensemble.IsGps2DataAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Gps2Data));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // NMEA 1 data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_NMEA1DATA);
+                if (ensemble.IsNmea1DataAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Nmea1Data));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // NMEA 2 data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_NMEA2DATA);
+                if (ensemble.IsNmea2DataAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Nmea2Data));
                 }
                 else
                 {

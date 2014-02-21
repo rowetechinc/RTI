@@ -35,11 +35,16 @@
  * 11/29/2011      RC                     Initial coding.
  * 01/19/2012      RC          1.14       Added Encode().
  * 02/21/2013      RC          2.18       Added comments.
+ * 01/31/2014      RC          2.21.3     Fixed parsing the status value from hex to int in OnSentenceChanged().
+ * 02/06/2014      RC          2.21.3     Added Subsystem Configuration.
+ * 02/18/2014      RC          2.21.3     Set the SubsystemConfig number as the same as the CEPO index in OnSentenceChanged(). 
+ * 02/21/2014      RC          2.21.3     Fixed constructor to take subsystem CEPO index.
  * 
  */
 
 using DotSpatial.Positioning;
 using System.Text;
+using System;
 namespace RTI
 {
 
@@ -52,7 +57,7 @@ namespace RTI
                                                         IBtVelocityEastSentence, IBtVelocityNorthSentence, IBtVelocityUpSentence,
                                                         IBtDepthSentence,
                                                         IWmVelocityEastSentence, IWmVelocityNorthSentence, IWmVelocityUpSentence,
-                                                        IWmDepthSentence, IStatusSentence
+                                                        IWmDepthSentence, IStatusSentence, ISubsystemConfigurationSentence
     {
         /// <summary>
         /// Command word for PRTI02.
@@ -241,6 +246,18 @@ namespace RTI
             get { return _status; }
         }
 
+        /// <summary>
+        /// Subsystem configuration the data belong to.
+        /// </summary>
+        private SubsystemConfiguration _SubsystemConfig;
+        /// <summary>
+        /// Subsystem configuration the data belong to.
+        /// </summary>
+        public SubsystemConfiguration SubsystemConfig
+        {
+            get { return _SubsystemConfig; }
+        }
+
         #endregion
 
         #region Constructors
@@ -287,11 +304,13 @@ namespace RTI
         /// <param name="wmVelUp">Water Mass Velocity Up.</param>
         /// <param name="wmDepth">Water Mass Depth.</param>
         /// <param name="status">Status.</param>
+        /// <param name="subsystem">Subsystem.</param>
+        /// <param name="cepoIndex">CEPO Index.</param>
         public Prti02Sentence(string time, string sampleNum, string temp,
                                 string btVelEast, string btVelNorth, string btVelUp,
                                 string depth,
                                 string wmVelEast, string wmVelNorth, string wmVelUp,
-                                string wmDepth, string status)
+                                string wmDepth, string status, string subsystem, string cepoIndex)
         {
             // Use a string builder to create the sentence text
             StringBuilder builder = new StringBuilder(128);
@@ -381,6 +400,24 @@ namespace RTI
             #region Append Status
 
             builder.Append(status);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Subsystem
+
+            builder.Append(subsystem);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append CEPO Index
+
+            builder.Append(cepoIndex);
 
             #endregion
 
@@ -594,12 +631,33 @@ namespace RTI
             // Do we have enough data to process the Status?
             if (wordCount >= 12 && words[11].Length != 0)
             {
-                _status = new Status(int.Parse(words[11]));
+                // Convert the hex string to an int
+                int status = Convert.ToInt32(words[11], 16);
+
+                _status = new Status(status);
             }
             else
             {
                 // Status not found
                 _status = new Status(0);
+            }
+
+            #endregion
+
+            #region Subsystem Configuration
+
+            // Do we have enough data to process the Subsystem Configuration?
+            if (wordCount >= 14 && words[12].Length != 0 && words[13].Length != 0)
+            {
+                byte ssConfig = 0;
+                byte.TryParse(words[13], out ssConfig);         // Subsystem configuration index in CEPO
+
+                _SubsystemConfig = new SubsystemConfiguration(new Subsystem(words[12], 0), ssConfig, ssConfig);
+            }
+            else
+            {
+                // Subsystem configuration not found
+                _SubsystemConfig = new SubsystemConfiguration();
             }
 
             #endregion
@@ -702,6 +760,17 @@ namespace RTI
             #region Append Status
 
             builder.Append(_status.Value);
+
+            #endregion
+
+            // Append a comma
+            builder.Append(',');
+
+            #region Append Subsystem Configuration
+
+            builder.Append(_SubsystemConfig.SubSystem.Code.ToString());
+            builder.Append(',');
+            builder.Append(_SubsystemConfig.CepoIndex.ToString());
 
             #endregion
 

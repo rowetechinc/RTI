@@ -21,9 +21,11 @@
 // | Tidyup  (Ben Tombs)      | 10/21/2010 | Original copy submitted from modified GPS.Net 3.0
 // | Shade1974 (Ted Dunsford) | 10/22/2010 | Added file headers reviewed formatting with resharper.
 // | Rico  (Rico Castelo)     | 12/08/2011 | Added OnSentenceChanged() to constructor that takes a NmeaSentence.
+// | Rico  (Rico Castelo)     | 01/31/2014 | Put all parsing in a try block or used TryParse.
 // ********************************************************************************************************
 using System.Collections.Generic;
 using System.Text;
+using System;
 
 namespace DotSpatial.Positioning
 {
@@ -306,10 +308,16 @@ namespace DotSpatial.Positioning
                     for (int index = 2; index < count; index++)
                         // Is the word empty?
                         if (words[index].Length != 0)
-                            // No.  Add a satellite
-                            _fixedSatellites.Add(
-                                // We'll only have an empty object for now
-                                new Satellite(int.Parse(words[index], NmeaCultureInfo)));
+                        {
+                            try
+                            {
+                                // No.  Add a satellite
+                                _fixedSatellites.Add(
+                                    // We'll only have an empty object for now
+                                    new Satellite(int.Parse(words[index], NmeaCultureInfo)));
+                            }
+                            catch (Exception) { }
+                        }
                 }
             }
             catch (System.Exception)
@@ -322,20 +330,41 @@ namespace DotSpatial.Positioning
             #region Dilution of Precision
 
             // Set overall dilution of precision
-            if (wordCount >= 15 && words[14].Length != 0)
-                _positionDop = new DilutionOfPrecision(float.Parse(words[14], NmeaCultureInfo));
+            if (wordCount >= 15 && words[14].Length > 1)
+                try
+                {
+                    _positionDop = new DilutionOfPrecision(float.Parse(words[14], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _positionDop = DilutionOfPrecision.Invalid;
+                }
             else
                 _positionDop = DilutionOfPrecision.Invalid;
 
             // Set horizontal dilution of precision
             if (wordCount >= 16 && words[15].Length != 0)
-                _horizontalDop = new DilutionOfPrecision(float.Parse(words[15], NmeaCultureInfo));
+                try
+                {
+                    _horizontalDop = new DilutionOfPrecision(float.Parse(words[15], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _horizontalDop = DilutionOfPrecision.Invalid;
+                }
             else
                 _horizontalDop = DilutionOfPrecision.Invalid;
 
             // Set vertical dilution of precision
             if (wordCount >= 17 && words[16].Length != 0)
-                _verticalDop = new DilutionOfPrecision(float.Parse(words[16], NmeaCultureInfo));
+                try
+                {
+                    _verticalDop = new DilutionOfPrecision(float.Parse(words[16], NmeaCultureInfo));
+                }
+                catch (Exception)
+                {
+                    _verticalDop = DilutionOfPrecision.Invalid;
+                }
             else
                 _verticalDop = DilutionOfPrecision.Invalid;
 

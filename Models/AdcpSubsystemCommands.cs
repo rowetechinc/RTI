@@ -394,7 +394,7 @@ namespace RTI
             /// <summary>
             /// Default Bottom Track Broadband Transmit Mode.
             /// </summary>
-            public const eCBTBB_Mode DEFAULT_CBTBB_MODE = eCBTBB_Mode.NARROWBAND_LONG_RANGE;
+            public const eCBTBB_Mode DEFAULT_CBTBB_MODE = eCBTBB_Mode.BROADBAND_CODED;
 
             /// <summary>
             /// Default Bottom Track Broadband Pulse To Pulse Lag in meters.

@@ -76,6 +76,7 @@
  * 02/10/2014      RC          2.21.3     Removed the EnsembleNmea object and put the NMEA data in the ensemble.
  * 02/13/2014      RC          2.21.3     Write the position if the GPGGA message is given.
  * 02/20/2014      RC          2.21.3     Fixed bug in WriteEnsembleDataToDatabase() where if GPS data was not present, the @position value was not set.
+ * 03/03/2014      RC          2.21.4     In ProcessDataThread(), check for a DVL serial number.
  * 
  */
 
@@ -551,6 +552,17 @@ namespace RTI
                                             _selectedProject.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
                                         }
 
+                                        // If the serial number is still a DVL serial number,
+                                        // Add the subsystem so it will change to a standard serial number.
+                                        if (_selectedProject.SerialNumber == SerialNumber.DVL)
+                                        {
+                                            // Remove the DVL Subsystem
+                                            _selectedProject.SerialNumber.RemoveSubsystem(new Subsystem(Subsystem.SUB_SPARE_H));
+
+                                            // Add the actual subsystem
+                                            _selectedProject.SerialNumber.AddSubsystem(ensemble.EnsembleData.SubsystemConfig.SubSystem);
+                                        }
+
                                         // Add the ADCP Configuration to the project
                                         // Check if the configuration has already been added to the project.
                                         // If it has not been added to the project add it now.
@@ -561,11 +573,13 @@ namespace RTI
                                             SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
                                             if (ssConfig != null)
                                             {
-                                                Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                                //Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                                Subsystem ss = ssConfig.SubSystem;
                                                 CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
                                                 if (!_selectedProject.Configuration.AdcpSubsystemConfigExist(ssConfig))
                                                 {
-                                                    _selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                                    //_selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                                    _selectedProject.Configuration.AddConfiguration(ss, out asConfig, ssConfig.CepoIndex);
                                                 }
                                             }
                                         }

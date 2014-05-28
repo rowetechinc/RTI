@@ -56,7 +56,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.BeamVelocityID);                   // Dataset ID
+                                            DataSet.Ensemble.BeamVelocityID);               // Dataset ID
 
             Assert.IsTrue(adcpData.IsBeamVelocityAvail, "IsBeamVelocityAvail is incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DATATYPE_FLOAT, adcpData.BeamVelocityData.ValueType, "DataType is incorrect.");
@@ -311,5 +311,42 @@ namespace RTI
             Debug.WriteLine("Complete");
 
         }
+
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Velocity data to RTI Beam Velocity data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0Velocity vel = new Pd0Velocity(30);
+
+            vel.Velocities[0, 0] = 123;
+            vel.Velocities[0, 1] = 456;
+            vel.Velocities[0, 2] = 789;
+            vel.Velocities[0, 3] = 147;
+            vel.Velocities[1, 0] = 258;
+            vel.Velocities[1, 1] = 369;
+            vel.Velocities[1, 2] = 741;
+            vel.Velocities[1, 3] = 852;
+
+            DataSet.BeamVelocityDataSet beam = new DataSet.BeamVelocityDataSet(30);
+            beam.DecodePd0Ensemble(vel);
+
+            // beam order 3,2,0,1; XYZ order 1,0,-2,3, ENU order 0,1,2,3
+
+            Assert.AreEqual(0.789f, beam.BeamVelocityData[0, 0], "Bin 0, Beam 0 Velocity is incorrect.");
+            Assert.AreEqual(0.147f, beam.BeamVelocityData[0, 1], "Bin 0, Beam 1 Velocity is incorrect.");
+            Assert.AreEqual(0.456f, beam.BeamVelocityData[0, 2], "Bin 0, Beam 2 Velocity is incorrect.");
+            Assert.AreEqual(0.123f, beam.BeamVelocityData[0, 3], "Bin 0, Beam 3 Velocity is incorrect.");
+            Assert.AreEqual(0.741f, beam.BeamVelocityData[1, 0], "Bin 1, Beam 0 Velocity is incorrect.");
+            Assert.AreEqual(0.852f, beam.BeamVelocityData[1, 1], "Bin 1, Beam 1 Velocity is incorrect.");
+            Assert.AreEqual(0.369f, beam.BeamVelocityData[1, 2], "Bin 1, Beam 2 Velocity is incorrect.");
+            Assert.AreEqual(0.258f, beam.BeamVelocityData[1, 3], "Bin 1, Beam 3 Velocity is incorrect.");
+        }
+
+        #endregion
+
     }
 }

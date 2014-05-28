@@ -143,7 +143,8 @@ namespace RTI
             /// FREQ_DIV/4 = 300kHz.
             /// FREQ_DIV/8 = 150kHz.
             /// </summary>
-            public const float FREQ_BASE = 1245125.0f;
+            //public const float FREQ_BASE = 1245125.0f;
+            public const float FREQ_BASE = 1152000.0f;
 
             /// <summary>
             /// Divsor to use with FREQ_DIV to get 1200khz frequency.

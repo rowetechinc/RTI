@@ -30,6 +30,7 @@
  * 03/29/2012      RC          2.07       Changed the Status to an object in ensemble.
  * 01/17/2013      RC          2.17       Added a test for default constructor.  Added a test for encode and decode.
  * 02/28/2013      RC          2.18       Added Test for JSON.
+ * 05/28/2014      RC          2.21.4     Updated PD0 decoding.
  * 
  */
 
@@ -788,6 +789,89 @@ namespace RTI
 
             Debug.WriteLine("Complete");
 
+        }
+
+        #endregion
+
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Bottom Track data to RTI Bottom Track data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0BottomTrack pd0Bt = new Pd0BottomTrack();
+            pd0Bt.BtPingsPerEnsemble = 5;
+
+            pd0Bt.BtRangeLsbBeam0 = 17424;
+            pd0Bt.BtRangeMsbBeam0 = 5;
+            pd0Bt.BtRangeLsbBeam1 = 58043;
+            pd0Bt.BtRangeMsbBeam1 = 1;
+            pd0Bt.BtRangeLsbBeam2 = 37918;
+            pd0Bt.BtRangeMsbBeam2 = 3;
+            pd0Bt.BtRangeLsbBeam3 = 17948;
+            pd0Bt.BtRangeMsbBeam3 = 5;
+
+            pd0Bt.BtAmplitudeBeam0 = 112;                       // RTI Beam 2
+            pd0Bt.BtAmplitudeBeam1 = 90;                        // RTI Beam 3
+            pd0Bt.BtAmplitudeBeam2 = 46;                        // RTI Beam 1
+            pd0Bt.BtAmplitudeBeam3 = 68;                        // RTI Beam 0
+
+            pd0Bt.BtCorrelationMagnitudeBeam0 = 143;            // RTI Beam 2
+            pd0Bt.BtCorrelationMagnitudeBeam1 = 115;            // RTI Beam 3
+            pd0Bt.BtCorrelationMagnitudeBeam2 = 59;             // RTI Beam 1
+            pd0Bt.BtCorrelationMagnitudeBeam3 = 87;             // RTI Beam 0
+
+            pd0Bt.BtPercentGoodBeam0 = 100;
+            pd0Bt.BtPercentGoodBeam1 = 100;
+            pd0Bt.BtPercentGoodBeam2 = 40;
+            pd0Bt.BtPercentGoodBeam3 = 100;
+
+            pd0Bt.BtRssiBeam0 = 112;
+            pd0Bt.BtRssiBeam1 = 90;
+            pd0Bt.BtRssiBeam2 = 46;
+            pd0Bt.BtRssiBeam3 = 68;
+
+            DataSet.BottomTrackDataSet bt = new DataSet.BottomTrackDataSet();
+            bt.DecodePd0Ensemble(pd0Bt, PD0.CoordinateTransforms.Coord_Earth, new Pd0VariableLeader());
+
+            Assert.AreEqual(bt.ActualPingCount, pd0Bt.BtPingsPerEnsemble, "Pings per Ensemble is incorrect.");
+            //Assert.AreEqual(0, bt.BtDelayBeforeReacquire, "Delay before reacquire is incorrect.");
+            //Assert.AreEqual(0, bt.BtCorrMagMin, "Correlation Magintude Min is incorrect.");
+            //Assert.AreEqual(0, bt.BtEvalAmpMin, "Evalation Amplitude Min is incorrect.");
+            //Assert.AreEqual(0, bt.BtPercentGoodMin, "Percent Good Min is incorrect.");
+            //Assert.AreEqual(0, bt.BtMode, "BT Mode is incorrect.");
+            //Assert.AreEqual(0, bt.BtErrVelMax, "Error Velocity Max is incorrect.");
+            //Assert.AreEqual(0, bt.Reserved13_16, "Reserved is incorrect.");
+
+            Assert.AreEqual(3456.23f, bt.Range[0], "Range 0 is incorrect.");
+            Assert.AreEqual(2345.23f, bt.Range[1], "Range 1 is incorrect.");
+            Assert.AreEqual(3450.99f, bt.Range[2], "Range 2 is incorrect.");
+            Assert.AreEqual(1235.78f, bt.Range[3], "Range 3 is incorrect.");
+
+            Assert.AreEqual(23f, bt.SNR[0], "SNR Beam 0 is incorrect.");
+            Assert.AreEqual(34f, bt.SNR[1], "SNR Beam 1 is incorrect.");
+            Assert.AreEqual(45f, bt.SNR[2], "SNR Beam 2 is incorrect.");
+            Assert.AreEqual(56f, bt.SNR[3], "SNR Beam 3 is incorrect.");
+
+            Assert.AreEqual(0.23f, bt.Correlation[0], 0.1f, "Correlation Beam 0 is incorrect.");
+            Assert.AreEqual(0.34f, bt.Correlation[1], 0.1f, "Correlation Beam 1 is incorrect.");
+            Assert.AreEqual(0.45f, bt.Correlation[2], 0.1f, "Correlation Beam 2 is incorrect.");
+            Assert.AreEqual(0.56f, bt.Correlation[3], 0.1f, "Correlation Beam 3 is incorrect.");
+
+            Assert.AreEqual(2, bt.EarthGood[0], "Percent Good Beam 0 is incorrect.");
+            Assert.AreEqual(5, bt.EarthGood[1], "Percent Good Beam 1 is incorrect.");
+            Assert.AreEqual(5, bt.EarthGood[2], "Percent Good Beam 2 is incorrect.");
+            Assert.AreEqual(5, bt.EarthGood[3], "Percent Good Beam 3 is incorrect.");
+
+            Assert.AreEqual(23f, bt.Amplitude[0], "Amplitude Beam 0 is incorrect.");
+            Assert.AreEqual(34f, bt.Amplitude[1], "Amplitude Beam 1 is incorrect.");
+            Assert.AreEqual(45f, bt.Amplitude[2], "Amplitude Beam 2 is incorrect.");
+            Assert.AreEqual(56f, bt.Amplitude[3], "Amplitude Beam 3 is incorrect.");
+
+            //Assert.AreEqual(1, bt.BtGain, "Gain is incorrect.");
+            //Assert.AreEqual(0, bt.Reserved82_85, "Reserved 82-85 is incorrect.");
         }
 
         #endregion

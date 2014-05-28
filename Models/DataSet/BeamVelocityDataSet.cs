@@ -46,6 +46,8 @@
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
+ * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
+ * 05/07/2014      RC          2.21.4     Fixed bug in DecodePd0Ensemble() looking for bad velocity.
  * 
  */
 
@@ -87,6 +89,23 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             public BeamVelocityDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Initialize data
+                BeamVelocityData = new float[NumElements, ElementsMultiplier];
+            }
+
+            /// <summary>
+            /// Create a Beam Velocity data set.
+            /// </summary>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
+            public BeamVelocityDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT,                   // Type of data stored (Float or Int)
+                        numBins,                                        // Number of bins
+                        numBeams,                                       // Number of beams
+                        DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                        DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                        DataSet.Ensemble.BeamVelocityID)                // Dataset ID
             {
                 // Initialize data
                 BeamVelocityData = new float[NumElements, ElementsMultiplier];
@@ -218,6 +237,60 @@ namespace RTI
 
                 return s;
             }
+
+            #region PD0 Ensemble
+
+            /// <summary>
+            /// Convert the Pd0 Velocity data type to the RTI Beam Velocity data set.
+            /// </summary>
+            /// <param name="vel">PD0 Velocity.</param>
+            public void DecodePd0Ensemble(Pd0Velocity vel)
+            {
+                if (vel.Velocities != null)
+                {
+                    BeamVelocityData = new float[vel.Velocities.GetLength(0), vel.Velocities.GetLength(1)];
+
+                    for (int bin = 0; bin < vel.Velocities.GetLength(0); bin++)
+                    {
+                        for (int beam = 0; beam < vel.Velocities.GetLength(1); beam++)
+                        {
+                            // PD0 beam order 3,2,0,1; PD0 XYZ order 1,0,-2,3, PD0 ENU order 0,1,2,3
+                            int newBeam = 0;
+                            switch (beam)
+                            {
+                                case 3:
+                                    newBeam = 0;
+                                    break;
+                                case 2:
+                                    newBeam = 1;
+                                    break;
+                                case 0:
+                                    newBeam = 2;
+                                    break;
+                                case 1:
+                                    newBeam = 3;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            // Check for bad velocity
+                            if (vel.Velocities[bin, newBeam] != PD0.BAD_VELOCITY)
+                            {
+                                BeamVelocityData[bin, beam] = vel.Velocities[bin, newBeam] / 1000.0f;   // m/s to mm/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BeamVelocityData[bin, beam] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
         }
 
         /// <summary>

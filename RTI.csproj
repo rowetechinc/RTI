@@ -71,6 +71,7 @@
     <Compile Include="Codec\AdcpDvlCodec.cs" />
     <Compile Include="Codec\ICodec.cs" />
     <Compile Include="Codec\ImportGpsText.cs" />
+    <Compile Include="Codec\Pd0Codec.cs" />
     <Compile Include="Codec\PniPrimeCompassBinaryCodec.cs" />
     <Compile Include="Commons\Commons.cs" />
     <Compile Include="Commons\DbCommon.cs" />
@@ -112,6 +113,8 @@
     <Compile Include="DotSpatial\Positioning\SignalToNoiseRatio.cs" />
     <Compile Include="DotSpatial\Positioning\Speed.cs" />
     <Compile Include="Exporter\CsvExporterWriter.cs" />
+    <Compile Include="Exporter\Pd0ExporterWriter.cs" />
+    <Compile Include="Models\Options\ExportOptions.cs" />
     <Compile Include="Exporter\IExporterWriter.cs" />
     <Compile Include="Exporter\MatlabExporterWriter.cs" />
     <Compile Include="Models\AdcpCommands.cs" />
@@ -145,6 +148,17 @@
     <Compile Include="Models\IPredictor.cs" />
     <Compile Include="Models\MaintenceLog.cs" />
     <Compile Include="Models\Options\ProjectOptions.cs" />
+    <Compile Include="Models\PD0\Pd0PercentGood.cs" />
+    <Compile Include="Models\PD0\Pd0EchoIntensity.cs" />
+    <Compile Include="Models\PD0\PD0.cs" />
+    <Compile Include="Models\PD0\Pd0BottomTrack.cs" />
+    <Compile Include="Models\PD0\Pd0Correlation.cs" />
+    <Compile Include="Models\PD0\Pd0DataType.cs" />
+    <Compile Include="Models\PD0\Pd0FixedLeader.cs" />
+    <Compile Include="Models\PD0\Pd0Header.cs" />
+    <Compile Include="Models\PD0\Pd0ID.cs" />
+    <Compile Include="Models\PD0\Pd0VariableLeader.cs" />
+    <Compile Include="Models\PD0\Pd0Velocity.cs" />
     <Compile Include="Models\SerialNumber.cs" />
     <Compile Include="Models\Status.cs" />
     <Compile Include="Models\Subsystem.cs" />

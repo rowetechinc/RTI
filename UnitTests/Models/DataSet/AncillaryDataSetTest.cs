@@ -28,6 +28,7 @@
  * 11/29/2011      RC                     Added Prti02Sentence Constructor.
  * 02/25/2012      RC          2.18       Added JSON test.
  * 02/28/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
+ * 05/28/2014      RC          2.21.4     Updated PD0 decoding.
  * 
  * 
  */
@@ -340,6 +341,40 @@ namespace RTI
             Debug.WriteLine("Complete");
 
         }
+
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Echo Intensity data to RTI Amplitude data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0FixedLeader fl = new Pd0FixedLeader();
+            Pd0VariableLeader vl = new Pd0VariableLeader();
+
+            fl.DepthCellLength = 23 * 100;
+            vl.Heading = 223.3f;
+            vl.Pitch = 123.45f;
+            vl.Roll = 445.69f;
+            vl.Temperature = 78.9f;
+            vl.Pressure = 11;
+            vl.DepthOfTransducer = 23 * 10;
+
+            DataSet.AncillaryDataSet anc = new DataSet.AncillaryDataSet(30);
+            anc.DecodePd0Ensemble(fl, vl);
+
+            Assert.AreEqual(23, anc.BinSize, "Bin size is incorrect.");
+            Assert.AreEqual(223.3f, anc.Heading, "Heading is incorrect.");
+            Assert.AreEqual(123.45f, anc.Pitch, "Pitch is incorrect.");
+            Assert.AreEqual(445.69f, anc.Roll, "Roll is incorrect.");
+            Assert.AreEqual(78.9f, anc.WaterTemp, "Water Temp is incorrect.");
+            Assert.AreEqual(110000, anc.Pressure, "Pressure is incorrect.");
+            Assert.AreEqual(23, anc.TransducerDepth, "Transducer Depth is incorrect.");
+        }
+
+        #endregion
+
     }
 
 }

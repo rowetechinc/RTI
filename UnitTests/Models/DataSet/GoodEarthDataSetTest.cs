@@ -240,5 +240,40 @@ namespace RTI
             Debug.WriteLine("Complete");
 
         }
+
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Percent Good data to RTI Good Earth data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0PercentGood pg = new Pd0PercentGood(30);
+
+            pg.PercentGood[0, 0] = 100;
+            pg.PercentGood[0, 1] = 100;
+            pg.PercentGood[0, 2] = 50;
+            pg.PercentGood[0, 3] = 100;
+            pg.PercentGood[1, 0] = 100;
+            pg.PercentGood[1, 1] = 100;
+            pg.PercentGood[1, 2] = 100;
+            pg.PercentGood[1, 3] = 50;
+
+            DataSet.GoodEarthDataSet goodEarth = new DataSet.GoodEarthDataSet(30);
+            goodEarth.DecodePd0Ensemble(pg, 2);
+
+            Assert.AreEqual(1, goodEarth.GoodEarthData[0, 0], "Good Earth Bin 0, Beam 0 is incorrect.");
+            Assert.AreEqual(2, goodEarth.GoodEarthData[0, 1], "Good Earth Bin 0, Beam 1 is incorrect.");
+            Assert.AreEqual(2, goodEarth.GoodEarthData[0, 2], "Good Earth Bin 0, Beam 2 is incorrect.");
+            Assert.AreEqual(2, goodEarth.GoodEarthData[0, 3], "Good Earth Bin 0, Beam 3 is incorrect.");
+            Assert.AreEqual(2, goodEarth.GoodEarthData[1, 0], "Good Earthd Bin 1, Beam 0 is incorrect.");
+            Assert.AreEqual(1, goodEarth.GoodEarthData[1, 1], "Good Earth Bin 1, Beam 1 is incorrect.");
+            Assert.AreEqual(2, goodEarth.GoodEarthData[1, 2], "Good Earth Bin 1, Beam 2 is incorrect.");
+            Assert.AreEqual(2, goodEarth.GoodEarthData[1, 3], "Good Earth Bin 1, Beam 3 is incorrect.");
+        }
+
+        #endregion
+
     }
 }

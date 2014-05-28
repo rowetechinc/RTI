@@ -71,7 +71,7 @@
  * 01/09/2014      RC          2.21.3     Added SystemSetupDataSet.
  * 02/06/2014      RC          2.21.3     Added ability to decode PRIT03 sentence.
  * 02/10/2014      RC          2.21.3     Added AdcpGpsData, Gps1Data, Gps2Data, Nmea1Data and Nmea2Data.
- *       
+ * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().      
  * 
  */
 
@@ -864,6 +864,18 @@ namespace RTI
                 IsNmea1DataAvail = false;
                 IsNmea2DataAvail = false;
             }
+
+            /// <summary>
+            /// Constructor
+            /// 
+            /// Initialize all ranges.
+            /// </summary>
+            /// <param name="pd0">PD0 Ensemble.</param>
+            public Ensemble(PD0 pd0)
+            {
+                DecodePd0Ensemble(pd0);
+            }
+
 
             /// <summary>
             /// Create an Ensemble data set.  Intended for JSON  deserialize.  This method
@@ -2406,8 +2418,119 @@ namespace RTI
             }
 
             #endregion
-        }
 
+            #region PD0 Ensemble
+
+            #region Decode
+
+            /// <summary>
+            /// Decode the PD0 Ensemble to a RTI ensemble.
+            /// </summary>
+            /// <param name="ensemble">PD0 Ensemble.</param>
+            public void DecodePd0Ensemble(PD0 ensemble)
+            {
+                // Add Ensemble Data Set
+                this.IsEnsembleAvail = true;
+                this.EnsembleData = new EnsembleDataSet(ensemble.FixedLeader.NumberOfCells);
+                this.EnsembleData.DecodePd0Ensemble(ensemble.FixedLeader, ensemble.VariableLeader);
+
+                // Add Ancillary Data Set
+                this.IsAncillaryAvail = true;
+                this.AncillaryData = new AncillaryDataSet(ensemble.FixedLeader.NumberOfCells);
+                this.AncillaryData.DecodePd0Ensemble(ensemble.FixedLeader, ensemble.VariableLeader);
+
+                // Add Bottom Track Data Set
+                if (ensemble.IsBottomTrackExist)
+                {
+                    this.IsBottomTrackAvail = true;
+                    this.BottomTrackData = new BottomTrackDataSet();
+                    this.BottomTrackData.DecodePd0Ensemble(ensemble.BottomTrack, ensemble.FixedLeader.GetCoordinateTransform(), ensemble.VariableLeader);
+                }
+
+                // Add Velocity Data Set
+                if (ensemble.IsVelocityExist)
+                {
+                    switch (ensemble.FixedLeader.GetCoordinateTransform())
+                    {
+                        case PD0.CoordinateTransforms.Coord_Beam:
+                            this.IsBeamVelocityAvail = true;
+                            this.BeamVelocityData = new BeamVelocityDataSet(ensemble.FixedLeader.NumberOfCells);
+                            this.BeamVelocityData.DecodePd0Ensemble(ensemble.Velocity);
+
+                            // Add Good Beam Data Set
+                            if (ensemble.IsPercentGoodExist)
+                            {
+                                this.IsGoodBeamAvail = true;
+                                this.GoodBeamData = new GoodBeamDataSet(ensemble.FixedLeader.NumberOfCells);
+                                this.GoodBeamData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
+                            }
+                            break;
+                        case PD0.CoordinateTransforms.Coord_Earth:
+                            this.IsEarthVelocityAvail = true;
+                            this.EarthVelocityData = new EarthVelocityDataSet(ensemble.FixedLeader.NumberOfCells);
+                            this.EarthVelocityData.DecodePd0Ensemble(ensemble.Velocity);
+
+                            // Add Good Earth Data Set
+                            if (ensemble.IsPercentGoodExist)
+                            {
+                                this.IsGoodEarthAvail = true;
+                                this.GoodEarthData = new GoodEarthDataSet(ensemble.FixedLeader.NumberOfCells);
+                                this.GoodEarthData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
+                            }
+                            break;
+                        case PD0.CoordinateTransforms.Coord_Instrument:
+                            this.IsInstrumentVelocityAvail = true;
+                            this.InstrumentVelocityData = new InstrumentVelocityDataSet(ensemble.FixedLeader.NumberOfCells);
+                            this.InstrumentVelocityData.DecodePd0Ensemble(ensemble.Velocity);
+                            
+                            // Add Good Beam Data Set
+                            if (ensemble.IsPercentGoodExist)
+                            {
+                                this.IsGoodBeamAvail = true;
+                                this.GoodBeamData = new GoodBeamDataSet(ensemble.FixedLeader.NumberOfCells);
+                                this.GoodBeamData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
+                            }
+                            break;
+                    }
+                }
+
+                // Add Correlation Data Set
+                if (ensemble.IsCorrelationExist)
+                {
+                    this.IsCorrelationAvail = true;
+                    this.CorrelationData = new CorrelationDataSet(ensemble.FixedLeader.NumberOfCells);
+                    this.CorrelationData.DecodePd0Ensemble(ensemble.Correlation, ensemble.FixedLeader.NumCodeRepeats);
+                }
+
+                // Add Amplitude Data Set
+                if (ensemble.IsEchoIntensityExist)
+                {
+                    this.IsAmplitudeAvail = true;
+                    this.AmplitudeData = new AmplitudeDataSet(ensemble.FixedLeader.NumberOfCells);
+                    this.AmplitudeData.DecodePd0Ensemble(ensemble.EchoIntensity);
+                }
+            }
+
+            #endregion
+
+            #region Encode
+
+            /// <summary>
+            /// Encode this ensemble to a PD0 ensemble.  Then return the byte array for 
+            /// the ensemble.
+            /// </summary>
+            /// <param name="xform">Coordinate Transform.</param>
+            /// <returns>Byte array for the ensemble in PD0 format.</returns>
+            public byte[] EncodePd0Ensemble(PD0.CoordinateTransforms xform)
+            {
+                return new PD0(this, xform).Encode();
+            }
+
+            #endregion
+
+            #endregion
+
+        }
 
         /// <summary>
         /// Convert this object to a JSON object.

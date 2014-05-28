@@ -39,6 +39,7 @@
  * 10/17/2012      RC          2.15       Added Max values for the CWPAP commands.
  * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
  * 09/17/2013      RC          2.20.0     Updated test to 2.20.0 with latest broadband modes.
+ * 05/28/2014      RC          2.21.4     Updated TestCBTBB_GetModeDefault() with latest default BB.
  *
  */
 
@@ -2015,8 +2016,8 @@ namespace RTI
 
             string type = ssc.GetCBTBB_Mode();
 
-            Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.NARROWBAND_LONG_RANGE, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
-            Assert.AreEqual(AdcpSubsystemCommands.BT_BB_MODE_NARROWBAND, type, "CBTBB_Mode Get is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.eCBTBB_Mode.BROADBAND_CODED, ssc.CBTBB_Mode, "CBTBB_Mode is incorrect.");
+            Assert.AreEqual(AdcpSubsystemCommands.BT_BB_MODE_BROADBAND_CODED, type, "CBTBB_Mode Get is incorrect.");
         }
 
         /// <summary>

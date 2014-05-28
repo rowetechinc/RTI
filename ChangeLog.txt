@@ -1,5 +1,40 @@
 RTI Changelog
 
+RTI-2.21.4
+ - Changed the version number.
+ - In AdcpConfiguration, in AddConfiguration() checkc for a DVL serial number.
+ - In AdcpDatabaseWriter, in ProcessDataThread(), check for a DVL serial number.
+ - Added PD0.cs.
+ - Added Pd0FixedLeader.cs.
+ - Added Pd0Header.cs.
+ - In AdcpEthernet, sped up the download process.
+ - Added Pd0VariableLeader.cs.
+ - In AmplitudeDataSet, added a simpler constructor and added DecodePd0Ensemble().
+ - In CorrelationDataSet, added a simpler constructor and added DecodePd0Ensemble().
+ - In BeamVelocityDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In InstrumentVelocityDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In EarthVelocityDataSet, added a simpler constructor and added DecodePd0Ensemble().
+ - In GoodEarthDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In GoodBeamDataSet, added a simper constructor.
+ - In Ensemble, BottomTrackDataSet, EnsembleDataSet and AncillaryDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In PD0, added constructor that data binary data.
+ - Added Pd0Codec.
+ - In Pd0ID, added unknown data type.  Added GetType().  Added Default IDs.
+ - In AdcpBinaryWriter, changed _writeBuffer from a list to ConcurrentQueue.
+ - In BottomTrackDataSet, in GetVelocityMagnitude() check for 4 beams.
+ - In Pd0EchoIntensity, fixed code to handle vertical beams.
+ - In Pd0Correlation, fixed code to handle vertical beams.
+ - In Pd0BottomTrack, fixed code to handle vertical beams.
+ - In Pd0PercentGood, fixed code to handle vertical beams.
+ - In Pd0Velocity, fixed code to handle vertical beams.
+ - Updated CsvExporter to select which datasets to export to the CSV file.
+ - Updated Pd0Exporter to select which datasets to export to the PD0 file.
+ - In Transform, added Correlation and SNR threshold.
+ - In InstrumentVelocityDataSet, fixed bug in DecodePd0Ensemble() looking for bad velocity.
+ - In BeamVelocityDataSet, fixed bug in DecodePd0Ensemble() looking for bad velocity.
+ - In CorrelationDataSet, in DecodePd0Ensemble(), changed the conversion to match WH correlation values.
+ - In AdcpSubsystemConfig, removed the IPredictor.
+
 RTI-2.21.3
  - Changed the version number.
  - Added SystemSetupDataSet.

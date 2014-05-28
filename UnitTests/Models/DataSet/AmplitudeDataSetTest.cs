@@ -55,7 +55,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.CorrelationID);               // Dataset ID
+                                            DataSet.Ensemble.AmplitudeID);                  // Dataset ID
 
             Assert.IsTrue(adcpData.IsAmplitudeAvail, "IsAmplitude is incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DATATYPE_FLOAT, adcpData.AmplitudeData.ValueType, "DataType is incorrect.");
@@ -63,7 +63,7 @@ namespace RTI
             Assert.AreEqual(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, adcpData.AmplitudeData.ElementsMultiplier, "Element Multiplies are incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DEFAULT_IMAG, adcpData.AmplitudeData.Imag, "Imag is incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DEFAULT_NAME_LENGTH, adcpData.AmplitudeData.NameLength, "Name length is incorrect.");
-            Assert.AreEqual(DataSet.Ensemble.CorrelationID, adcpData.AmplitudeData.Name, "Name is incorrect.");
+            Assert.AreEqual(DataSet.Ensemble.AmplitudeID, adcpData.AmplitudeData.Name, "Name is incorrect.");
 
             Assert.AreEqual(adcpData.AmplitudeData.AmplitudeData.GetLength(0), 30, "Amplitude Array Dimension 1 is incorrect.");
             Assert.AreEqual(adcpData.AmplitudeData.AmplitudeData.GetLength(1), DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, "Amplitude Array Dimension 2 is incorrect.");
@@ -240,5 +240,41 @@ namespace RTI
             Debug.WriteLine("Complete");
 
         }
+
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Echo Intensity data to RTI Amplitude data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0EchoIntensity pd0Ei = new Pd0EchoIntensity(30);
+
+            pd0Ei.EchoIntensity[0, 0] = 68;
+            pd0Ei.EchoIntensity[0, 1] = 46;
+            pd0Ei.EchoIntensity[0, 2] = 90;
+            pd0Ei.EchoIntensity[0, 3] = 112;
+            pd0Ei.EchoIntensity[1, 0] = 134;
+            pd0Ei.EchoIntensity[1, 1] = 156;
+            pd0Ei.EchoIntensity[1, 2] = 178;
+            pd0Ei.EchoIntensity[1, 3] = 182;
+
+
+            DataSet.AmplitudeDataSet amp = new DataSet.AmplitudeDataSet(30);
+
+            amp.DecodePd0Ensemble(pd0Ei);
+
+            Assert.AreEqual(45f, amp.AmplitudeData[0, 0], "Amplitude Bin 0, Beam 0 is incorrect.");
+            Assert.AreEqual(56f, amp.AmplitudeData[0, 1], "Amplitude Bin 0, Beam 1 is incorrect.");
+            Assert.AreEqual(23f, amp.AmplitudeData[0, 2], "Amplitude Bin 0, Beam 2 is incorrect.");
+            Assert.AreEqual(34f, amp.AmplitudeData[0, 3], "Amplitude Bin 0, Beam 3 is incorrect.");
+            Assert.AreEqual(89f, amp.AmplitudeData[1, 0], "Amplitude Bin 1, Beam 0 is incorrect.");
+            Assert.AreEqual(91f, amp.AmplitudeData[1, 1], "Amplitude Bin 1, Beam 1 is incorrect.");
+            Assert.AreEqual(78f, amp.AmplitudeData[1, 2], "Amplitude Bin 1, Beam 2 is incorrect.");
+            Assert.AreEqual(67f, amp.AmplitudeData[1, 3], "Amplitude Bin 1, Beam 3 is incorrect.");
+        }
+
+        #endregion
     }
 }

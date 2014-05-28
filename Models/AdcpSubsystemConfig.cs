@@ -40,6 +40,7 @@
  *                                         Added a note about the subsystem code being EMPTY.
  * 12/28/2012      RC          2.17       Moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
  * 05/30/2013      RC          2.19       Take SubsystemConfiguration in the constructor and remove CepoIndex.  CepoIndex is in SubsystemConfiguration.  Added Display.
+ * 05/23/2014      RC          2.21.4     Removed the IPredictor.
  * 
  * 
  */
@@ -71,13 +72,6 @@ namespace RTI
         /// Subsystem commands associated with this configuration.
         /// </summary>
         public AdcpSubsystemCommands Commands { get; set; }
-
-        /// <summary>
-        /// Interface a user can setup to give predictions
-        /// on the ADCP usage.
-        /// </summary>
-        [JsonIgnore]
-        public IPredictor Predictor { get; set; }
 
         /// <summary>
         /// Used to display in a list.

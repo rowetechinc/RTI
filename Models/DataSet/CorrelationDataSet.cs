@@ -45,6 +45,8 @@
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
+ * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
+ * 05/07/2014      RC          2.21.4     In DecodePd0Ensemble(), changed the conversion to match WH correlation values.
  * 
  */
 
@@ -85,6 +87,23 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             public CorrelationDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Initialize data
+                CorrelationData = new float[NumElements, ElementsMultiplier];
+            }
+
+            /// <summary>
+            /// Create an Correlation data set.
+            /// </summary>
+            /// <param name="numBins">Number of Bin.</param>
+            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
+            public CorrelationDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT,                   // Type of data stored (Float or Int)
+                        numBins,                                        // Number of bins
+                        numBeams,                                       // Number of beams
+                        DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                        DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                        DataSet.Ensemble.CorrelationID)                 // Dataset ID
             {
                 // Initialize data
                 CorrelationData = new float[NumElements, ElementsMultiplier];
@@ -216,6 +235,57 @@ namespace RTI
 
                 return s;
             }
+
+            #region PD0 Ensemble
+
+            /// <summary>
+            /// Convert the Pd0 Correlation data type to the RTI Correlation data set.
+            /// </summary>
+            /// <param name="corr">PD0 Correlation.</param>
+            /// <param name="numRepeats">Number of code repeats from the fixed leader.</param>
+            public void DecodePd0Ensemble(Pd0Correlation corr, int numRepeats)
+            {
+                if (corr.Correlation != null)
+                {
+                    CorrelationData = new float[corr.Correlation.GetLength(0), corr.Correlation.GetLength(1)];
+
+                    // PD0 is 0.5 dB per count
+
+                    for (int bin = 0; bin < corr.Correlation.GetLength(0); bin++)
+                    {
+                        for (int beam = 0; beam < corr.Correlation.GetLength(1); beam++)
+                        {
+                            // PD0 beam order 3,2,0,1
+                            int newBeam = 0;
+                            switch (beam)
+                            {
+                                case 3:
+                                    newBeam = 0;
+                                    break;
+                                case 2:
+                                    newBeam = 1;
+                                    break;
+                                case 0:
+                                    newBeam = 2;
+                                    break;
+                                case 1:
+                                    newBeam = 3;
+                                    break;
+                            }
+
+                            //CorrelationData[bin, beam] = corr.Correlation[bin, newBeam] / 255.0f;
+
+                            // Constant used in WH to normalize the value based off the number of repeats
+                            // Then normalize the value to 128 being the max
+                            float n = ((numRepeats - 1.0f) / numRepeats);
+                            CorrelationData[bin, beam] = (corr.Correlation[bin, newBeam] / 128.0f) * n ;
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
         }
 
         /// <summary>

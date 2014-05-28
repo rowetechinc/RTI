@@ -72,6 +72,7 @@
  * 07/26/2013      RC          2.19.3     Added SubsystemConfigurationIndex to SubsystemConfiguration.  Output for JSON.
  * 10/02/2013      RC          2.20.2     Fixed bug where i was not consistent in Encode() in setting the number of elements.
  * 02/06/2013      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
+ * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 
  */
 
@@ -283,6 +284,48 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             public EnsembleDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Set the ensemble number to the default ensemble number
+                EnsembleNumber = DEFAULT_ENS_NUM;
+
+                // Set time to the current time
+                SetTime();
+
+                // Create UniqueId
+                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+
+                // Set the number of beams
+                NumBeams = numBeams;
+
+                // Set the number of bins
+                NumBins = numBins;
+
+                // Use a blank serial number
+                SysSerialNumber = new SerialNumber();
+
+                // Create blank firmware
+                SysFirmware = new Firmware();
+
+                // Create Blank Subsystem configuration
+                SubsystemConfig = new SubsystemConfiguration();
+
+                // Create a blank status
+                Status = new Status(0);
+            }
+
+            /// <summary>
+            /// Create a Ensemble data set.  This will create a blank dataset.  The user must fill in the data for all
+            /// the important values.
+            /// </summary>
+            /// <param name="numBins">Number of Bins.</param>
+            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
+            public EnsembleDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+                base(DataSet.Ensemble.DATATYPE_INT,                         // Type of data stored (Float or Int)
+                            numBeams,                                       // Number of bins
+                            numBins,                                        // Number of beams
+                            DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                            DataSet.Ensemble.EnsembleDataID)                // Dataset ID
             {
                 // Set the ensemble number to the default ensemble number
                 EnsembleNumber = DEFAULT_ENS_NUM;
@@ -825,6 +868,70 @@ namespace RTI
 
                 return s;
             }
+
+            #region PD0 Ensemble
+
+            /// <summary>
+            /// Convert the PD0 Fixed Leader and Variable Leader data type to the RTI Ensemble data set.
+            /// </summary>
+            /// <param name="fl">PD0 Fixed Leader.</param>
+            /// <param name="vl">PD0 Variable Leader.</param>
+            public void DecodePd0Ensemble(Pd0FixedLeader fl, Pd0VariableLeader vl)
+            {
+                //this.UniqueId = UniqueId;
+                this.EnsembleNumber = vl.GetEnsembleNumber();
+                this.NumBins = fl.NumberOfCells;
+                this.NumBeams = fl.NumberOfBeams;
+                this.DesiredPingCount = fl.PingsPerEnsemble;
+                this.ActualPingCount = fl.PingsPerEnsemble;
+                this.SysSerialNumber = new SerialNumber(fl.CpuBoardSerialNumber);
+
+                // Get the Subsystem
+                Subsystem ss = new Subsystem();
+                switch(fl.GetSystemFrequency())
+                {
+                    case Pd0FixedLeader.SystemFrequency.Freq_75kHz:
+                        ss = new Subsystem(Subsystem.SUB_75KHZ_4BEAM_30DEG_ARRAY_L);
+                        break;
+                    case Pd0FixedLeader.SystemFrequency.Freq_150kHz:
+                        ss = new Subsystem(Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K);
+                        break;
+                    case Pd0FixedLeader.SystemFrequency.Freq_300kHz:
+                        ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4);
+                        break;
+                    case Pd0FixedLeader.SystemFrequency.Freq_600kHz:
+                        ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3);
+                        break;
+                    case Pd0FixedLeader.SystemFrequency.Freq_1200kHz:
+                        ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2);
+                        break;
+                    case Pd0FixedLeader.SystemFrequency.Freq_2400kHz:
+                        ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_1);
+                        break;
+                }
+
+                // Add the subsystem found
+                this.SysSerialNumber.AddSubsystem(ss);
+
+                this.SysFirmware = new Firmware(ss.Code, 0, fl.CpuFirmwareVersion, fl.CpuFirmwareRevision);
+                this.SubsystemConfig = new SubsystemConfiguration(ss, 0, 0);
+                this.Status = new Status(vl.BitResult);
+                this.Year = vl.RtcYear + 2000;
+                this.Month = vl.RtcMonth;
+                this.Day = vl.RtcDay;
+                this.Hour = vl.RtcHour;
+                this.Minute = vl.RtcMinute;
+                this.Second = vl.RtcSecond;
+                this.HSec = vl.RtcHundredths;
+
+                // Set the time and date
+                ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec / 10);
+
+                // Create UniqueId
+                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+            }
+
+            #endregion
         }
 
         /// <summary>

@@ -60,6 +60,8 @@
  * 08/13/2013      RC          2.19.4     Fixed a bug with the GetAverageRange() using ElementMulitplier instead of Range.Length.
  * 08/16/2013      RC          2.19.4     Added IsBeamVelocityGood.  A good way to check for 3 beam solutions or any bad values.
  * 01/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
+ * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
+ * 04/15/2014      RC          2.21.4     In GetVelocityMagnitude() check for 4 beams.
  * 
  */
 
@@ -327,6 +329,22 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             public BottomTrackDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+                // Initialize arrays
+                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
+            }
+
+            /// <summary>
+            /// Create a Bottom Track data set.  This will create an empty dataset.
+            /// </summary>
+            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
+            public BottomTrackDataSet(int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT,                   // Type of data stored (Float or Int)
+                        NUM_DATA_ELEMENTS,                              // Number of data elements
+                        1,                                              // Multiplier
+                        DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                        DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                        DataSet.Ensemble.BottomTrackID)                 // Dataset ID
             {
                 // Initialize arrays
                 Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
@@ -957,14 +975,27 @@ namespace RTI
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
             public bool IsBeamVelocityGood()
             {
-                if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    BeamVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                // Ensure at least a 4 beam system
+                if (NumBeams >= DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
                 {
+                    if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        BeamVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
 
-                    return false;
+                        return false;
+                    }
                 }
+                // Vertical beam
+                else
+                {
+                    if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+                }
+
 
                 return true;
             }
@@ -978,18 +1009,30 @@ namespace RTI
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
             public bool IsEarthVelocityGood(bool allow3BeamSolution = true)
             {
-                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
-                if (EarthVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                // Ensure at least a 4 beam system
+                if (NumBeams >= DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
                 {
-                    return false;
+                    // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                    if (EarthVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                    {
+                        return false;
+                    }
+
+                    if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+
+                        return false;
+                    }
                 }
-
-                if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                // If a vertical beam
+                else
                 {
-
-                    return false;
+                    if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -1004,18 +1047,29 @@ namespace RTI
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
             public bool IsInstrumentVelocityGood(bool allow3BeamSolution = true)
             {
-                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
-                if (InstrumentVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                // Ensure at least a 4 beam system
+                if (NumBeams >= DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
                 {
-                    return false;
-                }
+                    // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                    if (InstrumentVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                    {
+                        return false;
+                    }
 
-                if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
-                
+                    if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+                }
+                else
                 {
-                    return false;
+                    // Vertical beam only
+                    if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -1056,16 +1110,23 @@ namespace RTI
             /// <returns>Magnitude of Velocity.  If any velocities were bad, return 0.</returns>
             public double GetVelocityMagnitude()
             {
-                // Ensure the velocities are good
-                if ((EarthVelocity[0] != Ensemble.BAD_VELOCITY) &&
-                    (EarthVelocity[1] != Ensemble.BAD_VELOCITY) &&
-                    (EarthVelocity[2] != Ensemble.BAD_VELOCITY))
+                if (EarthVelocity.Length >= 3)
                 {
-                    return Math.Sqrt((EarthVelocity[0] * EarthVelocity[0]) + (EarthVelocity[1] * EarthVelocity[1]) + (EarthVelocity[2] * EarthVelocity[2]));
+                    // Ensure the velocities are good
+                    if ((EarthVelocity[0] != Ensemble.BAD_VELOCITY) &&
+                        (EarthVelocity[1] != Ensemble.BAD_VELOCITY) &&
+                        (EarthVelocity[2] != Ensemble.BAD_VELOCITY))
+                    {
+                        return Math.Sqrt((EarthVelocity[0] * EarthVelocity[0]) + (EarthVelocity[1] * EarthVelocity[1]) + (EarthVelocity[2] * EarthVelocity[2]));
+                    }
+                    else
+                    {
+                        return 0.0;
+                    }
                 }
                 else
                 {
-                    return 0;
+                    return 0.0;
                 }
             }
 
@@ -1148,6 +1209,369 @@ namespace RTI
 
                 return s;
             }
+
+            #region PD0 Ensemble
+
+            /// <summary>
+            /// Convert the PD0 Bottom Track data type to the RTI Bottom Track data set.
+            /// </summary>
+            /// <param name="bt">PD0 Bottom Track.</param>
+            /// <param name="xform">Coordinate Transform.</param>
+            /// <param name="vl">Variable Leader.</param>
+            public void DecodePd0Ensemble(Pd0BottomTrack bt, PD0.CoordinateTransforms xform, Pd0VariableLeader vl)
+            {
+                // Get the time to seconds
+                TimeSpan ts = new TimeSpan((int)vl.RtcY2kDay, (int)vl.RtcY2kHour, (int)vl.RtcY2kMinute, (int)vl.RtcY2kSecond);
+
+                FirstPingTime = (float)ts.TotalSeconds;
+                LastPingTime = FirstPingTime;
+                Heading = vl.Heading;
+                Pitch = vl.Pitch;
+                Roll = vl.Roll;
+                WaterTemp = vl.Temperature;
+                SystemTemp = 0.0f;
+                Salinity = vl.Salinity;
+                Pressure = vl.Pressure / 0.0001f;
+                TransducerDepth = vl.DepthOfTransducer / 10.0f;
+                SpeedOfSound = 0.0f;
+                Status = new Status(0);
+                NumBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM;
+                ActualPingCount = bt.BtPingsPerEnsemble;
+
+                #region Range
+
+                // Range
+                Range[0] = bt.GetRangeBeam3() / 100.0f;
+                Range[1] = bt.GetRangeBeam2() / 100.0f;
+                Range[2] = bt.GetRangeBeam0() / 100.0f;
+                Range[3] = bt.GetRangeBeam1() / 100.0f;
+
+                #endregion
+
+                #region SNR
+
+                // SNR
+                // PD0 Beam 2, RTI Beam 0
+                if (bt.BtAmplitudeBeam2 < PD0.BAD_AMPLITUDE)
+                {
+                    SNR[0] = bt.BtAmplitudeBeam2 / 2.0f;
+                }
+                else
+                {
+                    SNR[0] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 3, RTI Beam 1
+                if (bt.BtAmplitudeBeam3 < PD0.BAD_AMPLITUDE)
+                {
+                    SNR[1] = bt.BtAmplitudeBeam3 / 2.0f;
+                }
+                else
+                {
+                    SNR[1] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 1, RTI Beam 2
+                if (bt.BtAmplitudeBeam1 < PD0.BAD_AMPLITUDE)
+                {
+                    SNR[2] = bt.BtAmplitudeBeam1 / 2.0f;
+                }
+                else
+                {
+                    SNR[2] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 0, RTI Beam 3
+                if (bt.BtAmplitudeBeam0 < PD0.BAD_AMPLITUDE)
+                {
+                    SNR[3] = bt.BtAmplitudeBeam0 / 2.0f;
+                }
+                else
+                {
+                    SNR[3] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                #endregion
+
+                #region Amplitude
+
+                // Amplitude
+                // PD0 Beam 2, RTI Beam 0
+                if (bt.BtRssiBeam2 < PD0.BAD_AMPLITUDE)
+                {
+                    Amplitude[0] = bt.BtRssiBeam2 / 2.0f;
+                }
+                else
+                {
+                    Amplitude[0] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 3, RTI Beam 1
+                if (bt.BtRssiBeam3 < PD0.BAD_AMPLITUDE)
+                {
+                    Amplitude[1] = bt.BtRssiBeam3 / 2.0f;
+                }
+                else
+                {
+                    Amplitude[1] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 1, RTI Beam 2
+                if (bt.BtRssiBeam1 < PD0.BAD_AMPLITUDE)
+                {
+                    Amplitude[2] = bt.BtRssiBeam1 / 2.0f;
+                }
+                else
+                {
+                    Amplitude[2] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 0, RTI Beam 3
+                if (bt.BtRssiBeam0 < PD0.BAD_AMPLITUDE)
+                {
+                    Amplitude[3] = bt.BtRssiBeam0 / 2.0f;
+                }
+                else
+                {
+                    Amplitude[3] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                #endregion
+
+                #region Correlation
+
+                // Correlation
+                // PD0 Beam 2, RTI Beam 0
+                if (bt.BtCorrelationMagnitudeBeam2 < PD0.BAD_CORRELATION)
+                {
+                    Correlation[0] = bt.BtCorrelationMagnitudeBeam2 / 255.0f;
+                }
+                else
+                {
+                    Correlation[0] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 3, RTI Beam 1
+                if (bt.BtCorrelationMagnitudeBeam3 < PD0.BAD_CORRELATION)
+                {
+                    Correlation[1] = bt.BtCorrelationMagnitudeBeam3 / 255.0f;
+                }
+                else
+                {
+                    Correlation[1] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 1, RTI Beam 2
+                if (bt.BtCorrelationMagnitudeBeam1 < PD0.BAD_CORRELATION)
+                {
+                    Correlation[2] = bt.BtCorrelationMagnitudeBeam1 / 255.0f;
+                }
+                else
+                {
+                    Correlation[2] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 0, RTI Beam 3
+                if (bt.BtCorrelationMagnitudeBeam0 < PD0.BAD_CORRELATION)
+                {
+                    Correlation[3] = bt.BtCorrelationMagnitudeBeam0 / 255.0f;
+                }
+                else
+                {
+                    Correlation[3] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                #endregion
+
+                #region Velocity
+
+
+                // Velocity
+                switch(xform)
+                {
+                    // Beam Coordinate Transform
+                    case PD0.CoordinateTransforms.Coord_Beam:
+                        
+                        // PD0 Beam 2, RTI Beam 0
+                        if(bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
+                        {
+                            BeamVelocity[0] = bt.BtVelocityBeam2 / 1000.0f;
+                        }
+                        else
+                        {
+                            BeamVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // PD0 Beam 3, RTI Beam 1
+                        if(bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
+                        {
+                            BeamVelocity[1] = bt.BtVelocityBeam3 / 1000.0f;
+                        }
+                        else
+                        {
+                            BeamVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // PD0 Beam 1, RTI Beam 2
+                        if(bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                        {
+                            BeamVelocity[2] = bt.BtVelocityBeam1 / 1000.0f;
+                        }
+                        else
+                        {
+                            BeamVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // PD0 Beam 0, RTI Beam 3
+                        if(bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                        {
+                            BeamVelocity[3] = bt.BtVelocityBeam0 / 1000.0f;
+                        }
+                        else
+                        {
+                            BeamVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        break;
+
+                    // Instrument Coordinate Transform
+                    case PD0.CoordinateTransforms.Coord_Instrument:
+
+                        // PD0 Beam 1, RTI Beam 0
+                        if(bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                        {
+                            InstrumentVelocity[0] = bt.BtVelocityBeam1 / 1000.0f;
+                        }
+                        else
+                        {
+                            InstrumentVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // PD0 Beam 0, RTI Beam 1
+                        if(bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                        {
+                            InstrumentVelocity[1] = bt.BtVelocityBeam0 / 1000.0f;
+                        }
+                        else
+                        {
+                            InstrumentVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+                        
+                        // PD0 Beam -2, RTI Beam 2
+                        if(bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
+                        {
+                            InstrumentVelocity[2] = (bt.BtVelocityBeam2 * -1) / 1000.0f;
+                        }
+                        else
+                        {
+                            InstrumentVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // PD0 Beam 3, RTI Beam 3
+                        if(bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
+                        {
+                            InstrumentVelocity[3] = bt.BtVelocityBeam3 / 1000.0f;
+                        }
+                        else
+                        {
+                            InstrumentVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+                        break;
+
+                    // Earth Coordinate Transform
+                    case PD0.CoordinateTransforms.Coord_Earth:
+
+                        // Beam 0
+                        if(bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                        {
+                            EarthVelocity[0] = bt.BtVelocityBeam0 / 1000.0f;
+                        }
+                        else
+                        {
+                            EarthVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // Beam 1
+                        if(bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                        {
+                            EarthVelocity[1] = bt.BtVelocityBeam1 / 1000.0f;
+                        }
+                        else
+                        {
+                            EarthVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // Beam 2
+                        if(bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
+                        {
+                            EarthVelocity[2] = bt.BtVelocityBeam2 / 1000.0f;
+                        }
+                        else
+                        {
+                            EarthVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+
+                        // Beam 3
+                        if(bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
+                        {
+                            EarthVelocity[3] = bt.BtVelocityBeam3 / 1000.0f;
+                        }
+                        else
+                        {
+                            EarthVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+                        break;
+                }
+
+                #endregion
+
+                #region Good Earth
+
+                // PD0 Beam 2, RTI Beam 0
+                if (bt.BtPercentGoodBeam2 != PD0.BAD_PERCENT_GOOD)
+                {
+                    EarthGood[0] = (bt.BtPercentGoodBeam2 / 100.0f) * bt.BtPingsPerEnsemble;
+                }
+                else
+                {
+                    EarthGood[0] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 3, RTI Beam 1
+                if (bt.BtPercentGoodBeam3 != PD0.BAD_PERCENT_GOOD)
+                {
+                    EarthGood[1] = (bt.BtPercentGoodBeam3 / 100.0f) * bt.BtPingsPerEnsemble;
+                }
+                else
+                {
+                    EarthGood[1] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 1, RTI Beam 2
+                if (bt.BtPercentGoodBeam1 != PD0.BAD_PERCENT_GOOD)
+                {
+                    EarthGood[2] = (bt.BtPercentGoodBeam1 / 100.0f) * bt.BtPingsPerEnsemble;
+                }
+                else
+                {
+                    EarthGood[2] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // PD0 Beam 0, RTI Beam 3
+                if (bt.BtPercentGoodBeam0 != PD0.BAD_PERCENT_GOOD)
+                {
+                    EarthGood[3] = (bt.BtPercentGoodBeam0 / 100.0f) * bt.BtPingsPerEnsemble;
+                }
+                else
+                {
+                    EarthGood[3] = DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                #endregion
+
+            }
+
+            #endregion
         }
 
         /// <summary>

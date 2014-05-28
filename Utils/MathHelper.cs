@@ -49,6 +49,8 @@
  * 07/31/2013      RC          2.19.3     Added BoolToTrueFalseStr() and BoolToOnOffStr().
  * 11/18/2013      RC          2.21.0     Added TimeSpanPrettyFormat() to give the time span as a string with plurization.
  * 12/05/2013      RC          2.21.0     Added seconds to TimeSpanPrettyFormat().
+ * 02/24/2014      RC          2.21.4     Added MsbLsb().
+ * 
  * 
  */
 
@@ -65,6 +67,8 @@ namespace RTI
     /// </summary>
     public class MathHelper
     {
+        #region Variables
+
         /// <summary>
         /// Value to convert megabytes to bytes.
         /// </summary>
@@ -80,7 +84,9 @@ namespace RTI
         /// </summary>
         public const double HUNSEC_TO_MILLISEC = 10.0;
 
+        #endregion
 
+        #region Standard Deviation
 
         /// <summary>
         /// Calculate the population standard deviation for the 4 values given.
@@ -213,6 +219,9 @@ namespace RTI
             return Math.Sqrt(variance);
         }
 
+        #endregion
+
+        #region Vectors
 
         /// <summary>
         /// Calculate the Magnitude given the North, East and Vertical velocity.
@@ -247,6 +256,8 @@ namespace RTI
         {
             return Math.PI * angle / 180.0;
         }
+
+        #endregion
 
         #region Byte Array Math
 
@@ -817,6 +828,8 @@ namespace RTI
 
         #endregion
 
+        #region Double
+
         /// <summary>
         /// Parse a string to a double.
         /// Convert the value from other locale types.
@@ -833,6 +846,8 @@ namespace RTI
                 return result;
             return double.NaN;
         }
+
+        #endregion
 
         #region Percent Error
 
@@ -976,6 +991,256 @@ namespace RTI
         public static string TimeSpanPrettyFormat(DateTime dt1, DateTime dt2)
         {
             return TimeSpanPrettyFormat(dt1 - dt2);
+        }
+
+        #endregion
+
+        #region MSB LSB
+
+        /// <summary>
+        /// Get the Most Significant Bit and Least Significant Bit for the given value.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        public static void LsbMsb(int value, out byte lsb, out byte msb)
+        {
+            lsb = (byte)(value & 0xFFu);
+            msb = (byte)((value >> 8) & 0xFFu);
+        }
+
+        /// <summary>
+        /// Get the Most Significant Bit and Least Significant Bit for the given value.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        public static void LsbMsbShort(short value, out byte lsb, out byte msb)
+        {
+            lsb = (byte)(value & 0xFFu);
+            msb = (byte)(value >> 8);
+        }
+
+        /// <summary>
+        /// Get the Most Significant Bit and Least Significant Bit for the given value.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        public static void LsbMsbUShort(ushort value, out byte lsb, out byte msb)
+        {
+            lsb = (byte)(value & 0xFFu);
+            msb = (byte)(value >> 8);
+        }
+
+        /// <summary>
+        /// Get the Most Significant Bit and Least Significant Bit for the given value.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        public static void LsbMsb(double value, out byte lsb, out byte msb)
+        {
+            lsb = 0;
+            msb = 0;
+            byte[] data = BitConverter.GetBytes(value);
+            if (data.Length > 2)
+            {
+                lsb = data[6];
+                msb = data[7];
+            }
+        }
+
+        /// <summary>
+        /// Get the Most Significant Bit and Least Significant Bit for the given value.
+        /// </summary>
+        /// <param name="value">Value to convert.</param>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        public static void LsbMsb(float value, out byte lsb, out byte msb)
+        {
+            lsb = 0;
+            msb = 0;
+            byte[] data = BitConverter.GetBytes(value);
+            if (data.Length > 2)
+            {
+                lsb = data[6];
+                msb = data[7];
+            }
+        }
+
+        /// <summary>
+        /// Convert the LSB and MSB to an integer.
+        /// </summary>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        /// <returns>Integer from the LSB and MSB.</returns>
+        public static int LsbMsbInt(byte lsb, byte msb)
+        {
+            return (msb << 8) + lsb;
+        }
+
+        /// <summary>
+        /// Convert the LSB and MSB to an integer.
+        /// </summary>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        /// <returns>Integer from the LSB and MSB.</returns>
+        public static uint LsbMsbUInt(byte lsb, byte msb)
+        {
+            return (uint)((msb << 8) + lsb);
+        }
+
+        /// <summary>
+        /// Convert the LSB and MSB to an short.
+        /// </summary>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        /// <returns>Integer from the LSB and MSB.</returns>
+        public static short LsbMsbShort(byte lsb, byte msb)
+        {
+            return (short)((msb << 8) + lsb);
+        }
+
+        /// <summary>
+        /// Convert the LSB and MSB to an short.
+        /// </summary>
+        /// <param name="lsb">Least Significant Bit.</param>
+        /// <param name="msb">Most Significant Bit.</param>
+        /// <returns>Integer from the LSB and MSB.</returns>
+        public static ushort LsbMsbUShort(byte lsb, byte msb)
+        {
+            return (ushort)((msb << 8) + lsb);
+        }
+
+        /// <summary>
+        /// Convert the LSB and MSB to an uint.
+        /// </summary>
+        /// <param name="data">Data to get the bytes.</param>
+        /// <param name="offset">Location in the data to start.</param>
+        /// <returns>Unsigned Integer from the LSB and MSB.</returns>
+        public static uint LsbMsbUInt(byte[] data, int offset)
+        {
+            //return (uint)(  (data[offset + 3] << 24) +
+            //                (data[offset + 2] << 16) +
+            //                (data[offset + 1] << 8) +
+            //                (data[offset]));
+            return BitConverter.ToUInt32(data, offset);
+        }
+
+        #endregion
+
+        #region Bits
+
+        /// <summary>
+        /// Zero the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to zero.</returns>
+        public static int ZeroBitInt(int value, int position)
+        {
+            return value & ~(1 << position);
+        }
+
+        /// <summary>
+        /// Zero the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to zero.</returns>
+        public static short ZeroBitShort(short value, int position)
+        {
+            return (short)(value & ~(1 << position));
+        }
+
+        /// <summary>
+        /// Zero the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to zero.</returns>
+        public static ushort ZeroBitUShort(ushort value, int position)
+        {
+            return (ushort)(value & ~(1 << position));
+        }
+
+        /// <summary>
+        /// Zero the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to zero.</returns>
+        public static byte ZeroBitByte(byte value, byte position)
+        {
+            return (byte)(value & ~(1 << position));
+        }
+
+        /// <summary>
+        /// Set the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to one.</returns>
+        public static int SetBitInt(int value, int position)
+        {
+            return value |= 1 << position;
+        }
+
+        /// <summary>
+        /// Set the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to one.</returns>
+        public static short SetBitShort(short value, int position)
+        {
+            return value |= (short)(1 << position);
+        }
+
+        /// <summary>
+        /// Set the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to one.</returns>
+        public static ushort SetBitUShort(ushort value, int position)
+        {
+            return value |= (ushort)(1 << position);
+        }
+
+        /// <summary>
+        /// Set the bit in the given value.
+        /// </summary>
+        /// <param name="value">Value that contains the bit.</param>
+        /// <param name="position">Position of the bit in the value.</param>
+        /// <returns>New value with the bit set to one.</returns>
+        public static byte SetBitByte(byte value, int position)
+        {
+            return value |= (byte)(1 << position);
+        }
+
+
+        /// <summary>
+        /// Check if the bit in the given position is set for the given value.
+        /// </summary>
+        /// <param name="value">Value to check.</param>
+        /// <param name="position">Position within the value.</param>
+        /// <returns>TRUE = Bit is 1 / False = Bit is 0</returns>
+        public static bool IsBitSet(byte value, int position)
+        {
+            return (value & (1 << position)) != 0;
+        }
+
+        /// <summary>
+        /// Check if the bit in the given position is set for the given value.
+        /// </summary>
+        /// <param name="value">Value to check.</param>
+        /// <param name="position">Position within the value.</param>
+        /// <returns>TRUE = Bit is 1 / False = Bit is 0</returns>
+        public static bool IsBitSet(int value, int position)
+        {
+            return (value & (1 << position)) != 0;
         }
 
         #endregion

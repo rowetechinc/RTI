@@ -32,7 +32,7 @@
  * -----------------------------------------------------------------
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 10/02/2013      RC          2.20.2           Initial coding
+ * 10/02/2013      RC          2.20.2     Initial coding
  * 
  * 
  * 
@@ -48,7 +48,8 @@ namespace RTI
     using System.IO;
 
     /// <summary>
-    /// TODO: Update summary.
+    /// Export the data to Matlab format.
+    /// This will strip the RTI header from each dataset.
     /// </summary>
     public class MatlabExporterWriter : IExporterWriter
     {
@@ -65,6 +66,11 @@ namespace RTI
         /// </summary>
         private string _filePath;
 
+        /// <summary>
+        /// Export options.
+        /// </summary>
+        private ExportOptions _options;
+
         #endregion
 
         /// <summary>
@@ -78,6 +84,7 @@ namespace RTI
             string DEFAULT_FOLDER_PATH = string.Format(@"{0}\RTI", myDoc);
 
             _filePath = DEFAULT_FOLDER_PATH;
+            _options = new ExportOptions();
         }
 
         
@@ -88,11 +95,13 @@ namespace RTI
         /// </summary>
         /// <param name="filePath">File path to the write to.</param>
         /// <param name="fileName">Sub-Filename to use to for each file.</param>
-        public void  Open(string filePath, string fileName)
+        /// <param name="options">Export options.</param>
+        public void  Open(string filePath, string fileName, ExportOptions options)
         {
  	        //Set the file path and name
             _filePath = filePath;
             _fileName = fileName;
+            _options = options;
         }
 
         /// <summary>
@@ -101,7 +110,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Ensemble to encode to matlab.</param>
         /// <param name="isMultipleFile">Set flag if you want individual files per ensemble or combine it all into one file.</param>
-        public void  Write(DataSet.Ensemble ensemble, bool isMultipleFile = false)
+        public void Write(DataSet.Ensemble ensemble, bool isMultipleFile = false)
         {
             if (ensemble != null)
             {
@@ -141,9 +150,10 @@ namespace RTI
         /// <summary>
         /// Do nothing
         /// </summary>
-        public void  Close()
+        /// <returns>Return the options.</returns>
+        public ExportOptions Close()
         {
- 	        
+            return _options;
         }
     }
 }

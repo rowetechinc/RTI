@@ -85,6 +85,7 @@ namespace RTI
 
             /// <summary>
             /// Bottom Track Repeat N.
+            /// Number of Repeated Codes.
             /// </summary>
             public float BtRepeatN { get; set; }
 
@@ -100,21 +101,25 @@ namespace RTI
 
             /// <summary>
             /// Water Profile CPCE.
+            /// Cycles per Code Element.
             /// </summary>
             public float WpCPCE { get; set; }
 
             /// <summary>
-            /// Water Profile Number of coded elements..
+            /// Water Profile Number of coded elements.
+            /// Number of code elements in code.
             /// </summary>
             public float WpNCE { get; set; }
 
             /// <summary>
             /// Water Profile Repeat N.
+            /// Number of repeated codes.
             /// </summary>
             public float WpRepeatN { get; set; }
 
             /// <summary>
-            /// Water Profile LagSamples
+            /// Water Profile Lag Samples.
+            /// Samples in lag.
             /// </summary>
             public float WpLagSamples { get; set; }
 

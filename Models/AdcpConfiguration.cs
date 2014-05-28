@@ -53,6 +53,7 @@
  * 10/30/2013      RC          2.21.0     Added GetCepoDescString() to get a string for the CEPO command.
  * 11/22/2013      RC          2.21.0     Added EthernetOptions() to store the Ethernet options.
  * 02/10/2014      RC          2.21.3     Added VesselMountOptions to store vessel mount options.
+ * 03/03/2014      RC          2.21.4     In AddConfiguration() check for a DVL serial number.
  * 
  */
 
@@ -62,6 +63,7 @@ namespace RTI
     using System.Collections.Generic;
     using RTI.Commands;
     using System.Collections;
+    using System.Text;
 
 
     /// <summary>
@@ -273,8 +275,9 @@ namespace RTI
                 return false;
             }
 
+            string str = ssConfig.DescString();
             //return SubsystemConfigDict.ContainsKey(AdcpSubsystemConfig.GetString(ssConfig));
-            return SubsystemConfigDict.ContainsKey(ssConfig.DescString());
+            return SubsystemConfigDict.ContainsKey(str);
         }
 
         /// <summary>
@@ -396,7 +399,128 @@ namespace RTI
                 return true;
             }
 
+            // If the data is DVL data, add the config
+            if (SerialNumber == SerialNumber.DVL)
+            {
+                // Set the CEPO
+                //CEPO = cepo;
+                Commands.CEPO = cepo;
+
+                // Get the CEPO index
+                // The index will be the last character in the CEPO command
+                // Subtract 1 because it is 0 based
+                int cepoIndex = Commands.CEPO.Length - 1;
+
+                // Add the configuration to the dictionary
+                // Set the AdcpSubsystemConfig to give to the user
+                asConfig = AddConfig(ss, cepoIndex);
+
+                return true;
+            }
+
             return false;
+        }
+
+        /// <summary>
+        /// Add a configuration.  This will take a Subsystem as a parameter.
+        /// It will then create a new configuration for the given Subsystem.
+        /// It will update the CEPO command and it will add the new Configuration
+        /// to the dictionary.
+        /// This will add a specific configuration but only update the CEPO command
+        /// if the 
+        /// </summary>
+        /// <param name="ss">Subsystem for the configuration.</param>
+        /// <param name="asConfig">Return the AdcpSubsystemConfig created.</param>
+        /// <param name="cepoIndex">The CEPO Index to use.</param>
+        /// <returns>TRUE = Configuration Added. / FALSE = Configuration could not be added.</returns>
+        public bool AddConfiguration(Subsystem ss, out AdcpSubsystemConfig asConfig, int cepoIndex)
+        {
+            // Initialize the AdcpSubsystemConfig to null
+            asConfig = null;
+
+            // Generate a new CEPO
+            //string cepo = CEPO + Convert.ToChar(ss.Code);
+            //string cepo = Commands.CEPO + Convert.ToChar(ss.Code);
+            string cepo = AddConfigToCepo(ss.Code, cepoIndex);
+
+            // Validate the new CEPO
+            // If it pass, then add the new configuration to the dictionary
+            if (ValidateCEPO(cepo, SerialNumber))
+            {
+                // Set the CEPO
+                //CEPO = cepo;
+                Commands.CEPO = cepo;
+
+                // Get the CEPO index
+                // The index will be the last character in the CEPO command
+                // Subtract 1 because it is 0 based
+                //int cepoIndex = Commands.CEPO.Length - 1;
+
+                // Add the configuration to the dictionary
+                // Set the AdcpSubsystemConfig to give to the user
+                asConfig = AddConfig(ss, cepoIndex);
+
+                return true;
+            }
+
+            // If the data is DVL data, add the config
+            if (SerialNumber == SerialNumber.DVL)
+            {
+                // Set the CEPO
+                //CEPO = cepo;
+                Commands.CEPO = cepo;
+
+                // Get the CEPO index
+                // The index will be the last character in the CEPO command
+                // Subtract 1 because it is 0 based
+                //int cepoIndex = Commands.CEPO.Length - 1;
+
+                // Add the configuration to the dictionary
+                // Set the AdcpSubsystemConfig to give to the user
+                asConfig = AddConfig(ss, cepoIndex);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determine how to set the subsystem code within the
+        /// CEPO command.  If the CEPO index has already been set,
+        /// then replace it.  If the CEPO index does not contain
+        /// the code index yet, then add the new code in the proper
+        /// index.
+        /// </summary>
+        /// <param name="code">Subsystem code to add or replace.</param>
+        /// <param name="cepoIndex">Index with the CEPO command to set the code.</param>
+        /// <returns>New CEPO command.</returns>
+        private string AddConfigToCepo(byte code, int cepoIndex)
+        {
+            // Create a builder to modify the CEPO command
+            StringBuilder sb = new StringBuilder(Commands.CEPO);
+
+            // Get the size
+            int size = Commands.CEPO.Length;
+            
+            // Replace the cepo value at the index
+            if (cepoIndex < size)
+            {
+                sb[cepoIndex] = Convert.ToChar(code);
+            }
+            // A new cepo value so add it to the correct index
+            // It may need to back fill the CEPO value with a value
+            else
+            {
+                // Add the new cepo index
+                for (int x = 0; x < (cepoIndex - size) + 1; x++)
+                {
+                    sb.Append(Convert.ToChar(code));
+                }
+
+            }
+
+            return sb.ToString();
         }
 
         #endregion

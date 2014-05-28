@@ -206,6 +206,41 @@ namespace RTI
 
         }
 
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 ensemble to RTI ensemble.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            PD0 pd0 = new PD0();
+            pd0.FixedLeader.SetCoordinateTransform(PD0.CoordinateTransforms.Coord_Earth);
+            pd0.AddDataType(new Pd0Correlation(30));
+            pd0.AddDataType(new Pd0BottomTrack());
+            pd0.AddDataType(new Pd0EchoIntensity(30));
+            pd0.AddDataType(new Pd0PercentGood(30));
+            pd0.AddDataType(new Pd0Velocity(30));
+
+            DataSet.Ensemble ens = new DataSet.Ensemble(pd0);
+
+            Assert.IsTrue(ens.IsCorrelationAvail, "IsCorrelationAvail is incorrect.");
+            Assert.IsTrue(ens.IsBottomTrackAvail, "IsBottomTrackAvail is incorrect.");
+            Assert.IsTrue(ens.IsAmplitudeAvail, "IsAmplitudeAvail is incorrect.");
+            Assert.IsTrue(ens.IsGoodEarthAvail, "IsGoodEarthAvail is incorrect.");
+            Assert.IsFalse(ens.IsGoodBeamAvail, "IsGoodBeamAvail is incorrect.");
+            Assert.IsFalse(ens.IsBeamVelocityAvail, "IsBeamVelocityAvail is incorrect.");
+            Assert.IsTrue(ens.IsEarthVelocityAvail, "IsEarthVelocityAvail is incorrect.");
+            Assert.IsFalse(ens.IsInstrumentVelocityAvail, "IsInstrumentVelocityAvail is incorrect.");
+            Assert.IsFalse(ens.IsInstrumentWaterMassAvail, "IsInstrumentWaterMassAvail is incorrect.");
+            Assert.IsFalse(ens.IsNmeaAvail, "IsNmeaAvail is incorrect.");
+            Assert.IsFalse(ens.IsProfileEngineeringAvail, "IsProfileEngineeringAvail is incorrect.");
+            Assert.IsFalse(ens.IsBottomTrackEngineeringAvail, "IsBottomTrackEngineeringAvail is incorrect.");
+            Assert.IsFalse(ens.IsSystemSetupAvail, "IsSystemSetupAvail is incorrect.");
+        }
+
+        #endregion
+
     }
 
 }

@@ -292,5 +292,41 @@ namespace RTI
 
         }
 
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Correlation data to RTI Correlation data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0Correlation pd0Corr = new Pd0Correlation(30);
+
+            pd0Corr.Correlation[0, 0] = 87;
+            pd0Corr.Correlation[0, 1] = 59;
+            pd0Corr.Correlation[0, 2] = 143;
+            pd0Corr.Correlation[0, 3] = 115;
+            pd0Corr.Correlation[1, 0] = 199;
+            pd0Corr.Correlation[1, 1] = 171;
+            pd0Corr.Correlation[1, 2] = 232;
+            pd0Corr.Correlation[1, 3] = 227;
+
+
+            DataSet.CorrelationDataSet corr = new DataSet.CorrelationDataSet(30);
+
+            corr.DecodePd0Ensemble(pd0Corr, 2);
+
+            Assert.AreEqual(0.56f, corr.CorrelationData[0, 0], 0.1f, "Correlation Bin 0, Beam 0 is incorrect.");
+            Assert.AreEqual(0.45f, corr.CorrelationData[0, 1], 0.1f, "Correlation Bin 0, Beam 1 is incorrect.");
+            Assert.AreEqual(0.23f, corr.CorrelationData[0, 2], 0.1f, "Correlation Bin 0, Beam 2 is incorrect.");
+            Assert.AreEqual(0.34f, corr.CorrelationData[0, 3], 0.1f, "Correlation Bin 0, Beam 3 is incorrect.");
+            Assert.AreEqual(0.91f, corr.CorrelationData[1, 0], 0.1f, "Correlation Bin 1, Beam 0 is incorrect.");
+            Assert.AreEqual(0.89f, corr.CorrelationData[1, 1], 0.1f, "Correlation Bin 1, Beam 1 is incorrect.");
+            Assert.AreEqual(0.67f, corr.CorrelationData[1, 2], 0.1f, "Correlation Bin 1, Beam 2 is incorrect.");
+            Assert.AreEqual(0.78f, corr.CorrelationData[1, 3], 0.1f, "Correlation Bin 1, Beam 3 is incorrect.");
+        }
+
+        #endregion
+
     }
 }

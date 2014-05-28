@@ -46,6 +46,7 @@
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
+ * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 
  */
 
@@ -77,7 +78,7 @@ namespace RTI
             #endregion
 
             /// <summary>
-            /// Create an Good EarthVelocity data set.
+            /// Create an Good Earth data set.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
             /// <param name="numBins">Number of Bin</param>
@@ -93,7 +94,24 @@ namespace RTI
             }
 
             /// <summary>
-            /// Create an Good EarthVelocity data set.  Include all the information to
+            /// Create an Good Earth data set.
+            /// </summary>
+            /// <param name="numBins">Number of Bin.</param>
+            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
+            public GoodEarthDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+                base(DataSet.Ensemble.DATATYPE_INT,                       // Type of data stored (Float or Int)
+                            numBins,                                        // Number of bins
+                            numBeams,                                       // Number of beams
+                            DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                            DataSet.Ensemble.GoodEarthID)                   // Dataset ID
+            {
+                // Initialize data
+                GoodEarthData = new int[NumElements, ElementsMultiplier];
+            }
+
+            /// <summary>
+            /// Create an Good Earth data set.  Include all the information to
             /// create the data set.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
@@ -200,7 +218,7 @@ namespace RTI
             }
 
             /// <summary>
-            /// Override the ToString to return all the Good EarthVelocity data as a string.
+            /// Override the ToString to return all the Good Earth data as a string.
             /// </summary>
             /// <returns></returns>
             public override string ToString()
@@ -218,6 +236,51 @@ namespace RTI
 
                 return s;
             }
+
+            #region PD0 Ensemble
+
+            /// <summary>
+            /// Convert the Pd0 Percent Good data type to the RTI Good Earth data set.
+            /// </summary>
+            /// <param name="pg">PD0 Percent Good.</param>
+            /// <param name="pingsPerEnsemble">Pings Per Ensemble.</param>
+            public void DecodePd0Ensemble(Pd0PercentGood pg, int pingsPerEnsemble)
+            {
+                if (pg.PercentGood != null)
+                {
+                    GoodEarthData = new int[pg.PercentGood.GetLength(0), pg.PercentGood.GetLength(1)];
+
+                    // PD0 is 0.5 dB per count
+
+                    for (int bin = 0; bin < pg.PercentGood.GetLength(0); bin++)
+                    {
+                        for (int beam = 0; beam < pg.PercentGood.GetLength(1); beam++)
+                        {
+                            // PD0 beam order 3,2,0,1
+                            int newBeam = 0;
+                            switch (beam)
+                            {
+                                case 3:
+                                    newBeam = 0;
+                                    break;
+                                case 2:
+                                    newBeam = 1;
+                                    break;
+                                case 0:
+                                    newBeam = 2;
+                                    break;
+                                case 1:
+                                    newBeam = 3;
+                                    break;
+                            }
+
+                            GoodEarthData[bin, beam] = (int)Math.Round((pg.PercentGood[bin, newBeam] / 100.0f) * pingsPerEnsemble);
+                        }
+                    }
+                }
+            }
+
+            #endregion
         }
 
         /// <summary>

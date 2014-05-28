@@ -72,6 +72,15 @@
     <Compile Include="Models\DecodeCSHOWTest.cs" />
     <Compile Include="Models\DeploymentOptionsTest.cs" />
     <Compile Include="Models\FirmwareTest.cs" />
+    <Compile Include="Models\PD0\Pd0HeaderTest.cs" />
+    <Compile Include="Models\PD0\Pd0PercentGoodTest.cs" />
+    <Compile Include="Models\PD0\Pd0EchoIntensityTest.cs" />
+    <Compile Include="Models\PD0\Pd0BottomTrackTest.cs" />
+    <Compile Include="Models\PD0\Pd0CorrelationTest.cs" />
+    <Compile Include="Models\PD0\Pd0FixedLeaderTest.cs" />
+    <Compile Include="Models\PD0\Pd0Test.cs" />
+    <Compile Include="Models\PD0\Pd0VariableLeaderTest.cs" />
+    <Compile Include="Models\PD0\Pd0VelocityTest.cs" />
     <Compile Include="Models\SerialNumberTest.cs" />
     <Compile Include="Models\DVL\Prti01SentenceTest.cs" />
     <Compile Include="Models\DVL\Prti02SentenceTest.cs" />

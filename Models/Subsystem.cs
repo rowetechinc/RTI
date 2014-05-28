@@ -68,6 +68,77 @@ namespace RTI
     [JsonConverter(typeof(SubsystemSerializer))]
     public class Subsystem
     {
+        #region Enums
+
+        /// <summary>
+        /// System frequency types.
+        /// </summary>
+        public enum SystemFrequency
+        {
+            /// <summary>
+            /// 38 kHz.
+            /// </summary>
+            Freq_38kHz,
+
+            /// <summary>
+            /// 75 kHz.
+            /// </summary>
+            Freq_75kHz,
+
+            /// <summary>
+            /// 150 kHz.
+            /// </summary>
+            Freq_150kHz,
+
+            /// <summary>
+            /// 300 kHz.
+            /// </summary>
+            Freq_300kHz,
+
+            /// <summary>
+            /// 600 kHz.
+            /// </summary>
+            Freq_600kHz,
+
+            /// <summary>
+            /// 1200 kHz.
+            /// </summary>
+            Freq_1200kHz,
+
+            /// <summary>
+            /// 2000 kHz.
+            /// </summary>
+            Freq_2000kHz
+        }
+
+        /// <summary>
+        /// Beam angle types.
+        /// </summary>
+        public enum BeamAngles
+        {
+            /// <summary>
+            /// 15 Degrees Beam Angle.
+            /// </summary>
+            BeamAngle_15_Degree,
+
+            /// <summary>
+            /// 20 Degrees Beam Angle.
+            /// </summary>
+            BeamAngle_20_Degree,
+
+            /// <summary>
+            /// 30 Degrees Beam Angle.
+            /// </summary>
+            BeamAngle_30_Degree,
+
+            /// <summary>
+            /// Other Beam Angle.
+            /// </summary>
+            BeamAngle_Other
+        }
+
+        #endregion
+
         #region Variables
 
         /// <summary>
@@ -609,6 +680,102 @@ namespace RTI
                     return "Spare";
                 default:
                     return EMPTY;
+            }
+        }
+
+        /// <summary>
+        /// Get the system frequency.
+        /// </summary>
+        /// <returns>System frequency.</returns>
+        public SystemFrequency GetSystemFrequency()
+        {
+            return Subsystem.GetSystemFrequency(Code);
+        }
+
+        /// <summary>
+        /// Get the system configuration based off the code given.
+        /// </summary>
+        /// <param name="code">Subsystem code.</param>
+        /// <returns>System frequency.</returns>
+        public static SystemFrequency GetSystemFrequency(byte code)
+        {
+            switch (code)
+            {
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_1:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_2:
+                    return SystemFrequency.Freq_1200kHz;
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_3:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_4:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_5:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6:
+                    return SystemFrequency.Freq_1200kHz;
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_2MHZ_VERT_PISTON_9:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_1_2MHZ_VERT_PISTON_A:
+                    return SystemFrequency.Freq_1200kHz;
+                case SUB_600KHZ_VERT_PISTON_B:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_VERT_PISTON_C:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_VERT_PISTON_D:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_VERT_PISTON_E:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_VERT_PISTON_F:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_VERT_PISTON_G:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_600KHZ_4BEAM_30DEG_ARRAY_I:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_30DEG_ARRAY_J:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_4BEAM_30DEG_ARRAY_K:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_4BEAM_30DEG_ARRAY_L:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_4BEAM_30DEG_ARRAY_M:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_4BEAM_30DEG_ARRAY_N:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_600KHZ_4BEAM_15DEG_ARRAY_O:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_15DEG_ARRAY_P:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_4BEAM_15DEG_ARRAY_Q:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_4BEAM_15DEG_ARRAY_R:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_4BEAM_15DEG_ARRAY_S:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_4BEAM_15DEG_ARRAY_T:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_600KHZ_1BEAM_0DEG_ARRAY_U:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_1BEAM_0DEG_ARRAY_V:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_1BEAM_0DEG_ARRAY_W:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_1BEAM_0DEG_ARRAY_X:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_1BEAM_0DEG_ARRAY_Z:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_SPARE_0:
+                case SUB_SPARE_H:
+                case SUB_SPARE_a:
+                case SUB_SPARE_b:
+                case EMPTY_CODE:
+                default:
+                    return SystemFrequency.Freq_300kHz;
             }
         }
 

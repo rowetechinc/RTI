@@ -31,6 +31,7 @@
  * 02/20/2013      RC          2.18       Updated test with latest changes to setting the time for PRTI sentences.
  * 02/25/2012      RC          2.18       Added JSON test.
  * 09/11/2013      RC          2.19.5     Updated test to 2.19.5
+ * 05/28/2014      RC          2.21.4     Updated PD0 decoding.
  * 
  */
 
@@ -547,6 +548,57 @@ namespace RTI
             Debug.WriteLine("Complete");
 
         }
+
+        #region PD0 Decode
+
+        /// <summary>
+        /// Test decoding PD0 Echo Intensity data to RTI Amplitude data.
+        /// </summary>
+        [Test]
+        public void DecodePd0Test()
+        {
+            Pd0FixedLeader fl = new Pd0FixedLeader();
+            Pd0VariableLeader vl = new Pd0VariableLeader();
+
+            vl.EnsembleNumber = 345;
+            fl.NumberOfCells = 30;
+            fl.NumberOfBeams = 4;
+            fl.PingsPerEnsemble = 5;
+            fl.CpuBoardSerialNumber = "01000000000000000000000000000001";
+            fl.CpuFirmwareVersion = 3;
+            fl.CpuFirmwareRevision = 27;
+            fl.SetSystemFrequency(Pd0FixedLeader.SystemFrequency.Freq_300kHz);
+            vl.RtcYear = 14;
+            vl.RtcMonth = 3;
+            vl.RtcDay = 2;
+            vl.RtcHour = 4;
+            vl.RtcMinute = 3;
+            vl.RtcSecond = 2;
+            vl.RtcHundredths = 3;
+
+            DataSet.EnsembleDataSet ens = new DataSet.EnsembleDataSet(30);
+            ens.DecodePd0Ensemble(fl, vl);
+
+            Assert.AreEqual(345, ens.EnsembleNumber, "Ensemble Number is incorrect.");
+            Assert.AreEqual(30, ens.NumBins, "Number of bins is incorrect.");
+            Assert.AreEqual(4, ens.NumBeams, "Number of beams is incorrect.");
+            Assert.AreEqual(5, ens.DesiredPingCount, "Desired Ping count is incorrect.");
+            Assert.AreEqual(5, ens.ActualPingCount, "Actual ping count is incorrect.");
+            Assert.AreEqual("01400000000000000000000000000001", ens.SysSerialNumber.ToString(), "Serial number is incorrect.");
+            Assert.AreEqual(0, ens.SysFirmware.FirmwareMajor, "Firmware major is incorrect.");
+            Assert.AreEqual(3, ens.SysFirmware.FirmwareMinor, "Firmware minor is incorrect.");
+            Assert.AreEqual(27, ens.SysFirmware.FirmwareRevision, "Firmware revision is incorrect.");
+            Assert.AreEqual(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4, ens.SubsystemConfig.SubSystem.Code, "Subsystem is incorrect.");
+            Assert.AreEqual(2014, ens.Year, "Year is incorrect.");
+            Assert.AreEqual(3, ens.Month, "Month is incorrect.");
+            Assert.AreEqual(2, ens.Day, "Days is incorrect.");
+            Assert.AreEqual(4, ens.Hour, "Hour is incorrect.");
+            Assert.AreEqual(3, ens.Minute, "Minute is incorrect.");
+            Assert.AreEqual(2, ens.Second, "Seconds is incorrect.");
+            Assert.AreEqual(3, ens.HSec, "HSec is incorrect.");
+        }
+
+        #endregion
 
 
     }

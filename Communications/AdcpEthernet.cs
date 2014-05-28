@@ -35,6 +35,7 @@
  * 03/14/2013      RC          2.19       Initial coding
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 11/21/2013      RC          2.21.0     Added send and receive methods to match the ADCP serial ports commands.
+ * 03/17/2014      RC          2.21.4     Sped up the download process.
  * 
  */
 
@@ -48,6 +49,8 @@ namespace RTI
     using System.Diagnostics;
     using System.IO;
     using System.Threading;
+using System.Collections.Concurrent;
+    using System.ComponentModel;
 
     /// <summary>
     /// Send commands and receive data from the ADCP using
@@ -107,6 +110,18 @@ namespace RTI
         /// </summary>
         private bool _cancelDownload;
 
+        /// <summary>
+        /// Queue the data up to be written to the file
+        /// async.
+        /// </summary>
+        private ConcurrentQueue<byte[]> _downloadWriterQueue;
+
+        /// <summary>
+        /// Flag to know if the writer is currently writing data
+        /// async.
+        /// </summary>
+        private bool _isWritingDownloadedData;
+
         #endregion
 
         #region Properties
@@ -150,6 +165,8 @@ namespace RTI
             Options = options;
             _downloadFileName = "";
             _cancelDownload = false;
+            _isWritingDownloadedData = false;
+            _downloadWriterQueue = new ConcurrentQueue<byte[]>();
         }
 
         /// <summary>
@@ -279,6 +296,9 @@ namespace RTI
         {
             if (_downloadDataBinWriter != null)
             {
+                // Wait for all the writing to complete before closing and disposing of the writer
+                while (_isWritingDownloadedData) { };
+
                 _downloadDataBinWriter.Flush();
                 _downloadDataBinWriter.Close();
                 _downloadDataBinWriter.Dispose();
@@ -595,28 +615,9 @@ namespace RTI
         /// <returns>Return the number of bytes read.</returns>
         public int ReadData(ref byte[] replyBuffer, bool showResults = false, int timeout = 2000)
         {
-            List<byte[]> list = new List<byte[]>();
-            int bufferSize = 0;
+            int count = SendData("", ref replyBuffer, true, timeout);            // Send blank command to read the data
 
-            byte[] buffer = new byte[1024];                                 // Create an empty buffer
-            int count = SendData("", ref buffer, true, timeout);            // Send blank command to read the data
-            while ( count > 0)                                              // Continue reading until nothing is left
-            {
-                bufferSize += count;                                        // Increase the buffer size
-                list.Add(buffer);                                           // Store the buffer to the list
-                buffer = new byte[1024];                                    // Create a new buffer
-
-                count = SendData("", ref buffer, true, timeout);            // Send blank command to read the data
-            }
-
-            // Create a new buffer to hold all the responses
-            replyBuffer = new byte[bufferSize];
-            foreach (var buff in list)
-            {
-                System.Buffer.BlockCopy(buff, 0, replyBuffer, 0, buff.Length);     // Combine all the buffers to one buffer
-            }   
-
-            return bufferSize;
+            return count;
         }
 
         /// <summary>
@@ -778,6 +779,8 @@ namespace RTI
             {
                 // Initialize the values
                 _cancelDownload = false;
+                _downloadWriterQueue = new ConcurrentQueue<byte[]>();
+                _isWritingDownloadedData = false;
 
                 // Initialize the ADCP buffer by clearing it
                 byte[] clearBuffer = null;
@@ -792,23 +795,33 @@ namespace RTI
                 SendData(cmd, ref replyBuffer);
 
                 // Pause to allow the buffer on the ADCP to be filled with the file
-                while (DownloadPacket(null, 250) < 0)
+                while (DownloadPacket(250) < 0)
                 {
                     System.Threading.Thread.Sleep(1000);
                 }
 
                 // If the data is being parsed,
                 // the raw data will also be written to a file
-                BinaryWriter writer = null;
                 if (!parseData)
                 {
                     // Create the BinaryWriter
                     string filePath = dirName + "\\" + fileName;
-                    writer = CreateBinaryWriter(filePath);
+                    _downloadDataBinWriter = CreateBinaryWriter(filePath);
                 }
-                
+
+                //Stopwatch sw = new Stopwatch();
+                //sw.Start();
+
                 // Download all the packets for the file
-                long totalBytes = DownloadPackets(writer);
+                long totalBytes = DownloadPackets();
+
+                //sw.Stop();
+
+                // MB to bytes
+                //double mb = totalBytes / MathHelper.MB_TO_BYTES;
+                //double time = mb / sw.Elapsed.TotalSeconds;
+
+                //Debug.WriteLine(string.Format("Total Seconds: {0}; Totals Bytes: {1}; MB/s: {2}", sw.Elapsed.TotalSeconds, totalBytes, time));
 
                 // Close the writer
                 CloseBinaryWriter();
@@ -842,12 +855,12 @@ namespace RTI
         /// Download is about 7mb/minute.
         /// 
         /// </summary>
-        /// <param name="writer">Write to write the data to the file.</param>
         /// <returns>Number of bytes read for the file.</returns>
-        private long DownloadPackets(BinaryWriter writer)
+        private long DownloadPackets()
         {
             int bytesRead = 0;
             long totalBytes = 0;
+            //int packets = 1;
 
             // Set the maximum number of retries per
             // file when downloading.
@@ -859,7 +872,7 @@ namespace RTI
             // downloading when the MAX_RETRY is meant.
             // This will happen either because no data
             // is available or a connection was lost.
-            bytesRead = DownloadPacket(writer);
+            bytesRead = DownloadPacket();
             do
             {
                 // If no bytes were read, we will retry
@@ -881,7 +894,7 @@ namespace RTI
                 totalBytes += bytesRead;
 
                 // Let the ADCP get the next packet ready
-                System.Threading.Thread.Sleep(1);
+                //System.Threading.Thread.Sleep(1);
 
                 // Get the first packet to determine
                 // if we can get data.  If this does 
@@ -889,12 +902,16 @@ namespace RTI
                 // connection or the file has no data.
                 // Continue downloading data until all
                 // the packets have been downloaded.
-                bytesRead = DownloadPacket(writer);
+                bytesRead = DownloadPacket();
+
+                //packets++;
 
                 // Publish number of bytes received
                 PublishDownloadProgressEvent((int)totalBytes);
             }
             while (retry > 0);
+
+            //Debug.WriteLine(string.Format("Packets: {0} Bytes: {1}", packets, totalBytes));
 
             return totalBytes;
         }
@@ -904,10 +921,9 @@ namespace RTI
         /// to get the buffer from the downloaded packet.  If the writer is null,
         /// do no write the data.
         /// </summary>
-        /// <param name="writer">Writer to write the data to file.  If the writer is null, do not write the data.</param>
         /// <param name="timeout">Timeout to wait for the packet in milliseconds.</param>
         /// <returns>Number of bytes read.</returns>
-        private int DownloadPacket(BinaryWriter writer, int timeout = 2000)
+        private int DownloadPacket(int timeout = 2000)
         {
             // Read a packet from the ADCP
             byte[] replyBuffer = null;
@@ -915,17 +931,20 @@ namespace RTI
 
             // Retry getting the packet if the packet
             // was not received properly.
-            while (bytes == BAD_PACKET)
+            int retry = 20;
+            while (bytes == BAD_PACKET || retry-- < 0)
             {
                 bytes = ResendData(ref replyBuffer, false, timeout);
             }
 
             // If a packet was read, and a writer exist,
             // write the packet to a file.
-            if (bytes > 0 && writer != null)
+            //if (bytes > 0 && writer != null)
+            if (bytes > 0)
             {
                 // Write the data to the file
-                writer.Write(replyBuffer, 0, bytes);
+                //writer.Write(replyBuffer, 0, bytes);
+                WriteData(replyBuffer, 0, bytes);
             }
 
             // Return the number of bytes read
@@ -960,12 +979,15 @@ namespace RTI
             string buffer = "";
             if (replyBuffer != null)
             {
+                int retry = 100;
+
                 // Convert the reply buffer to a string
                 buffer = Encoding.ASCII.GetString(replyBuffer);
 
                 // Check if we have received all the listing
                 // If not, continue to read in the data
-                while (buffer.IndexOf("Used Space:") <= 0)
+                // Or continue until retry is maxed out
+                while (buffer.IndexOf("Used Space:") <= 0 || retry-- > 0)
                 {
                     ReadData(ref replyBuffer);
 
@@ -992,6 +1014,56 @@ namespace RTI
 
             // Return the content of the buffer
             return dirListing;
+        }
+
+        /// <summary>
+        /// Buffer the data so it can written to the file asnyc.
+        /// </summary>
+        /// <param name="buffer">Buffer of data.</param>
+        /// <param name="index">Start location in the buffer.</param>
+        /// <param name="length">Length of the data in the buffer.</param>
+        public void WriteData(byte[] buffer, int index, int length)
+        {
+            // Copy the buffer
+            byte[] qBuffer = new byte[length];
+            Buffer.BlockCopy(buffer, index, qBuffer, 0, length);
+
+            // Add the data to the queue
+            _downloadWriterQueue.Enqueue(qBuffer);
+            
+            // Write the data if it has not started
+            if (!_isWritingDownloadedData)
+            {
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.DoWork += delegate(object s, DoWorkEventArgs args)
+                {
+                    WriteDownloadData();
+                };
+                worker.RunWorkerAsync();
+            }
+
+        }
+
+        /// <summary>
+        /// Write the queued data to the file.
+        /// </summary>
+        private void WriteDownloadData()
+        {
+
+            while (_downloadWriterQueue.Count > 0)
+            {
+                _isWritingDownloadedData = true;
+
+                byte[] buffer = null;
+                _downloadWriterQueue.TryDequeue(out buffer);
+
+                if (buffer != null && _downloadDataBinWriter != null)
+                {
+                    _downloadDataBinWriter.Write(buffer, 0, buffer.Length);
+                }
+            }
+
+            _isWritingDownloadedData = false;
         }
 
         #endregion
@@ -1209,10 +1281,15 @@ namespace RTI
         /// <param name="bytesWritten">Number of bytes written.</param>
         private void PublishDownloadProgressEvent(int bytesWritten)
         {
-            if (DownloadProgressEvent != null)
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += delegate(object s, DoWorkEventArgs args)
             {
-                DownloadProgressEvent(_downloadFileName, bytesWritten);
-            }
+                if (DownloadProgressEvent != null)
+                {
+                    DownloadProgressEvent(_downloadFileName, bytesWritten);
+                }
+            };
+            worker.RunWorkerAsync();
         }
 
         #endregion

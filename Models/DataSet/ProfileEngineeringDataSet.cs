@@ -89,22 +89,26 @@ namespace RTI
             public float SystemFreqHz { get; set; }
 
             /// <summary>
-            /// LagSamples
+            /// LagSamples.
+            /// Samples in lag.
             /// </summary>
             public float LagSamples { get; set; }
 
             /// <summary>
             /// CPCE.
+            /// Cycles per Code Element.
             /// </summary>
             public float CPCE { get; set; }
 
             /// <summary>
             /// NCE.
+            /// Number of code elements in code.
             /// </summary>
             public float NCE { get; set; }
 
             /// <summary>
             /// Repeat N.
+            /// Number of repeated codes.
             /// </summary>
             public float RepeatN { get; set; }
 

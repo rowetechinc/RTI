@@ -49,6 +49,7 @@
  * 02/25/2013      RC          2.18       Added JSON encoding and Decoding.
  * 02/26/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
  * 02/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
+ * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 
  */
 
@@ -167,6 +168,23 @@ namespace RTI
             /// <param name="name">Name of data type</param>
             public AncillaryDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
+            {
+
+            }
+
+            /// <summary>
+            /// Create a Ancillary data set.  Includes all the information
+            /// about the current Ancillary data.
+            /// </summary>
+            /// <param name="numBins">Number of Bins.</param>
+            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
+            public AncillaryDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+                base(DataSet.Ensemble.DATATYPE_FLOAT,                       // Type of data stored (Float or Int)
+                            numBins,                                        // Number of bins
+                            numBeams,                                       // Number of beams
+                            DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                            DataSet.Ensemble.AncillaryID)                   // Dataset ID
             {
 
             }
@@ -420,6 +438,36 @@ namespace RTI
 
                 return s;
             }
+
+            #region PD0 Ensemble
+
+            /// <summary>
+            /// Convert the PD0 Fixed Leader and Variable Leader data type to the RTI Ancillary data set.
+            /// </summary>
+            /// <param name="fl">PD0 Fixed Leader.</param>
+            /// <param name="vl">PD0 Variable Leader.</param>
+            public void DecodePd0Ensemble(Pd0FixedLeader fl, Pd0VariableLeader vl)
+            {
+                // Get the time
+                TimeSpan ts = new TimeSpan((int)vl.RtcY2kDay, (int)vl.RtcY2kHour, (int)vl.RtcY2kMinute, (int)vl.RtcY2kSecond);
+
+                // Initialize data
+                this.FirstBinRange = fl.Bin1Distance / 100.0f; ;
+                this.BinSize = fl.DepthCellLength / 100.0f;
+                this.FirstPingTime = (float)ts.TotalSeconds;
+                this.LastPingTime = FirstPingTime;
+                this.Heading = vl.Heading;
+                this.Pitch = vl.Pitch;
+                this.Roll = vl.Roll;
+                this.WaterTemp = vl.Temperature;
+                this.SystemTemp = 0.0f;
+                this.Salinity = vl.Salinity;
+                this.Pressure = vl.Pressure / 0.0001f;
+                this.TransducerDepth = vl.DepthOfTransducer / 10.0f;
+                this.SpeedOfSound = 0.0f;
+            }
+
+            #endregion
         }
 
         /// <summary>

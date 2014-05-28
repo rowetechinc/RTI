@@ -35,6 +35,7 @@
  * 07/23/2012      RC          2.19.1     Initial coding
  * 07/25/2013      RC          2.19.2     Added Instrument transform.
  *                                         Updated how Pitch and Roll are used per SM.
+ * 05/07/2014      RC          2.21.4     Added Correlation and SNR threshold.
  * 
  */
 
@@ -57,9 +58,14 @@ namespace RTI
         /// Convert the Beam velocity data to Instrument Velocity and Earth velocity data.  If the dataset does not exist in the ensemble,
         /// it will be created and then filled with the data.  If the ensemble already has the Instrument/Earth dataset, the
         /// data will be overwritten with new data.
+        /// 
+        /// Correlation Thresholds Defaults
+        /// BB = 0.25f
+        /// NB = 0.80f
         /// </summary>
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
-        public static void ProfileTransform(ref DataSet.Ensemble ensemble)
+        /// <param name="corrThresh">Correlation Threshold.</param>
+        public static void ProfileTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.25f)
         {
             // Create the array to hold the earth data
             int numBins = 0;
@@ -185,6 +191,8 @@ namespace RTI
             double SH = Math.Sin(Math.PI * Heading / 180.0);
             double CH = Math.Cos(Math.PI * Heading / 180.0);
 
+            float GOOD_CORR = corrThresh;                                                                       // Good Correlation threshold
+
             // Rotate to ENU
             // Check to see if a three beam solution is needed
             // Go through each bin
@@ -192,7 +200,6 @@ namespace RTI
             {
                 int goodBeam = 0;                                                                               // Count the number of good beams
                 int badBeam = 0;                                                                                // Keep track of bad beam
-                float GOOD_CORR = 0.8f;                                                                        // Good Correlation threshold
                 float[] tempVel = new float[numBeams];                                                          // Array to temperary hold velocity values
                 for (int beam = 0; beam < numBeams; beam++)
                 {
@@ -366,9 +373,17 @@ namespace RTI
         /// Convert the BottomTrack Beam velocity data to Bottom Track Instrument and Earth velocity data.  If the dataset does not exist in the ensemble,
         /// it will be created and then filled with the data.  If the ensemble already has the Instrument/Earth dataset, the
         /// data will be overwritten with new data.
+        /// 
+        /// Correlation Thresholds Default
+        /// BB = 0.90f
+        /// 
+        /// SNR Thresold Default
+        /// BB = 10.0f
         /// </summary>
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
-        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble)
+        /// <param name="corrThresh">Correlation Threshold.</param>
+        /// <param name="snrThresh">SNR Threshold.</param>
+        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f)
         {
             // If there is no ensemble data, we cannot get the subsystem
             // If there is no Bottom Track data, we have nothing to transform
@@ -461,8 +476,8 @@ namespace RTI
             // Check to see if a three beam solution is needed
             int goodBeam = 0;                                                                               // Count the number of good beams
             int badBeam = 0;                                                                                // Keep track of bad beam
-            float GOOD_CORR = 0.8f;                                                                         // Good Correlation threshold
-            float GOOD_SNR = 10.0f;                                                                         // Good SNR threshold
+            float GOOD_CORR = corrThresh;                                                                   // Good Correlation threshold
+            float GOOD_SNR = snrThresh;                                                                     // Good SNR threshold
             float[] tempVel = new float[numBeams];                                                          // Array to temperary hold velocity values
             for (int beam = 0; beam < numBeams; beam++)
             {

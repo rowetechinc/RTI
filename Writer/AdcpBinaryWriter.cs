@@ -58,6 +58,7 @@
  * 10/10/2013      RC          2.21.0     Made MaxFileSize a public property.
  * 10/14/2013      RC          2.21.0     Changed contructor to take individual name, folder and serial number to a project will not be needed.
  * 01/31/2014      RC          2.21.3     Added filetype to know what type of binary file is being created.  This will set the file name and extension.
+ * 04/09/2014      RC          2.21.4     Changed _writeBuffer from a list to ConcurrentQueue.
  *       
  * 
  */
@@ -67,6 +68,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using log4net;
+using System.Collections.Concurrent;
 
 namespace RTI
 {
@@ -144,7 +146,7 @@ namespace RTI
         /// be written to file, all the arrays
         /// will be written to the file.
         /// </summary>
-        private List<byte[]> _writeBuffer;
+        private ConcurrentQueue<byte[]> _writeBuffer;
 
         /// <summary>
         /// Index for the write buffer.
@@ -287,7 +289,7 @@ namespace RTI
             _fileType = fileType;
 
             // Write buffer
-            _writeBuffer = new List<byte[]>();
+            _writeBuffer = new ConcurrentQueue<byte[]>();
             _writeBufferIndex = 0;
         }
 
@@ -308,7 +310,7 @@ namespace RTI
             _fileType = fileType;
 
             // Write buffer
-            _writeBuffer = new List<byte[]>();
+            _writeBuffer = new ConcurrentQueue<byte[]>();
             _writeBufferIndex = 0;
 
             // Set the project.
@@ -346,7 +348,7 @@ namespace RTI
                 }
 
                 // Write the data to the buffer
-                _writeBuffer.Add(data);
+                _writeBuffer.Enqueue(data);
 
                 // Keep track of the number of bytes in the list
                 // The list stores byte arrays, this is to keep track of the total number of bytes.
@@ -439,18 +441,31 @@ namespace RTI
 
             // Make a copy of the buffer just in case new data is being added to the
             // buffer while we are writing
-            List<byte[]> buffer = new List<byte[]>(_writeBuffer);
+            //List<byte[]> buffer = new List<byte[]>(_writeBuffer);
 
             // Clear the buffer
-            _writeBuffer.Clear();
-            _writeBufferIndex = 0;
+            //_writeBuffer.Clear();
+            //_writeBufferIndex = 0;
 
             // Go through the list writing the data
-            for (int x = 0; x < buffer.Count; x++ )
-            {
+            //for (int x = 0; x < buffer.Count; x++ )
+            //{
                 // Write the data to the file
-                Write(buffer[x]);
+            //    Write(buffer[x]);
+            //}
+            while (!_writeBuffer.IsEmpty)
+            {
+                byte[] data = null;
+                _writeBuffer.TryDequeue(out data);
+                if (data != null)
+                {
+                    Write(data);
+                }
             }
+
+            // Clear the buffer index
+            _writeBufferIndex = 0;
+
 
             // Flush the data to the file
             if (_binWriter != null)

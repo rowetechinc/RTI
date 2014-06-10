@@ -98,6 +98,7 @@
  *                                         Added CHO command to GetDeploymentCommandList().
  * 09/23/2013      RC          2.20.1     Added DecodeSPOS().
  * 11/15/2013      RC          2.21.0     Added TimeZone property to know how to set STIME.
+ * 06/10/2014      RC          2.22.0     Fixed finding the Hardware in DecodeBREAK().
  * 
  */
 
@@ -3367,12 +3368,12 @@ namespace RTI
                             serial = elem[1];
                         }
                     }
-                }
 
-                // Hardware
-                if (lines.Length > 2)
-                {
-                    hw = lines[1];
+                    // Hardware
+                    if (lines[x].Contains("DP") || lines[x].Contains("SC"))
+                    {
+                        hw = lines[x];
+                    }
                 }
 
                 // Return the break statement values

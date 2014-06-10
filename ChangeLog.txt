@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-2.22.0
+ - Changed the version number.
+ - In AdcpCommands, fixed finding the Hardware in DecodeBREAK().
+
 RTI-2.21.4
  - Changed the version number.
  - In AdcpConfiguration, in AddConfiguration() checkc for a DVL serial number.

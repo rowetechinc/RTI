@@ -72,6 +72,7 @@
  * 01/24/2014      RC          2.21.3     Added Gps and NMEA writers.
  * 01/29/2014      RC          2.21.3     Added GPS1, GPS2, NMEA1, NMEA2 columns to CreateProjectTables().  Bump rev to D6.
  * 02/07/2014      RC          2.21.3     Added AdcpGps column to CreateProjectTables().  Bump rev to D7.
+ * 06/19/2014      RC          2.22.1     Added DVL column to CreateProjectTables().  Bump rev to D8.
  * 
  */
 
@@ -116,8 +117,9 @@ namespace RTI
         /// Revision D5 added SystemSetupDS column.
         /// Revision D6 added GPS1, GPS2, NMEA1, NMEA2 column.
         /// Revision D7 added AdcpGps column.
+        /// Revision D8 added DVL column.
         /// </summary>
-        public const string REV = "D7";
+        public const string REV = "D8";
 
         /// <summary>
         /// ID for project if no project 
@@ -673,7 +675,7 @@ namespace RTI
                 //"PRAGMA main.synchronous=NORMAL",
                 //"PRAGMA main.journal_mode=WAL",
                 //"PRAGMA main.cache_size=5000",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT, SystemSetupDS TEXT, AdcpGpsData TEXT, Gps1Data TEXT, Gps2Data TEXT, Nmea1Data TEXT, Nmea2Data TEXT)",
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT, SystemSetupDS TEXT, AdcpGpsData TEXT, Gps1Data TEXT, Gps2Data TEXT, Nmea1Data TEXT, Nmea2Data TEXT, DVL TEXT)",
                 "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, ProjectOptions TEXT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
                 string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, \"{4}\");", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", REV),   // Put at least 1 entry so an insert does not have to be done later
             };

@@ -178,7 +178,7 @@ namespace RTI
             /// </summary>
             /// <param name="numBins">Number of Bins.</param>
             /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
-            public AncillaryDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+            public AncillaryDataSet(int numBins = NUM_DATA_ELEMENTS, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT,                       // Type of data stored (Float or Int)
                             numBins,                                        // Number of bins
                             numBeams,                                       // Number of beams

@@ -108,6 +108,19 @@ namespace RTI
             }
 
             /// <summary>
+            /// Create an empty Earth Water Mass Velocity data set.
+            /// </summary>
+            public EarthWaterMassDataSet() :
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.WaterMassEarthID)
+            {
+                // Initialize data
+                VelocityEast = Ensemble.EMPTY_VELOCITY;
+                VelocityNorth = Ensemble.EMPTY_VELOCITY;
+                VelocityVertical = Ensemble.EMPTY_VELOCITY;
+                WaterMassDepthLayer = 0;
+            }
+
+            /// <summary>
             /// Create an Earth Water Mass Velocity data set.  Include all the information
             /// to create the data set from the NMEA sentence.
             /// </summary>

@@ -82,6 +82,7 @@
  * 09/17/2013      RC          2.20.0     Added another StartPinging() that does not set the time also.
  * 09/25/2013      RC          2.20.1     In TestSerialBaudConnection(), check if the serial port is open and disconnect if it is to prevent exception.  Change the timeout for the response.
  * 09/30/2013      RC          2.20.1     Fixed bug in GetAdcpConfiguration() where the serial options were not set and lost by the constructor.
+ * 06/11/2014      RC          2.22.1     Check every baud rate in TestSerialBaudConnection().
  * 
  */
 
@@ -3060,16 +3061,16 @@ namespace RTI
         public AdcpSerialOptions TestSerialBaudConnection(string port)
         {
             // Get a list of all the baud rates
-            //List<int> bauds = SerialOptions.BaudRateOptions;
-            List<int> bauds = new List<int>();
-            bauds.Add(115200);
-            bauds.Add(921600);
-            //bauds.Add(460800);
-            //bauds.Add(230400);
+            List<int> bauds = SerialOptions.BaudRateOptions;
+            //List<int> bauds = new List<int>();
             //bauds.Add(115200);
-            //bauds.Add(38400);
-            bauds.Add(19200);
-            //bauds.Add(9600);
+            //bauds.Add(921600);
+            ////bauds.Add(460800);
+            ////bauds.Add(230400);
+            ////bauds.Add(115200);
+            ////bauds.Add(38400);
+            //bauds.Add(19200);
+            ////bauds.Add(9600);
 
             //bauds.Insert(0, SerialOptions.DEFAULT_BAUD);                // Add this to the front of the list so the default is tried first to speed up the process
 

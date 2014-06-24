@@ -514,6 +514,21 @@ namespace RTI
             }
 
             /// <summary>
+            /// Create an Ensemble data set.  Include all the information
+            /// about the current ensemble from the sentence.  This will include
+            /// the ensemble number and status.
+            /// </summary>
+            /// <param name="sentence">Sentence containing data.</param>
+            public EnsembleDataSet(IDvlData sentence) :
+                base(DataSet.Ensemble.DATATYPE_INT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.EnsembleDataID)
+            {
+                if (sentence is SA)
+                {
+
+                }
+            }
+
+            /// <summary>
             /// Create an Ensemble data set.  Intended for JSON  deserialize.  This method
             /// is called when Newtonsoft.Json.JsonConvert.DeserializeObject{DataSet.EnsembleDataSet}(json) is
             /// called.
@@ -793,10 +808,28 @@ namespace RTI
             /// DateTime and all the individual
             /// values.
             /// </summary>
-            private void SetTime()
+            public void SetTime()
             {
                 // Set time to now
                 EnsDateTime = DateTime.Now;
+                Year = EnsDateTime.Year;
+                Month = EnsDateTime.Month;
+                Day = EnsDateTime.Day;
+                Hour = EnsDateTime.Hour;
+                Minute = EnsDateTime.Minute;
+                Second = EnsDateTime.Second;
+                HSec = EnsDateTime.Millisecond * 10;
+            }
+
+            /// <summary>
+            /// Set the time to the given date and time.  This will set the
+            /// DateTime and all the individual
+            /// values.
+            /// </summary>
+            public void SetTime(DateTime dt)
+            {
+                // Set time to now
+                EnsDateTime = dt;
                 Year = EnsDateTime.Year;
                 Month = EnsDateTime.Month;
                 Day = EnsDateTime.Day;

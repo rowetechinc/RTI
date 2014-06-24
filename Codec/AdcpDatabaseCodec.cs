@@ -439,6 +439,16 @@ namespace RTI
                     ensemble.IsNmea2DataAvail = true;
                 }
 
+                // DVL
+                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_DVL_DS))
+                {
+                    ensemble.DvlData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.DvlDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_DVL_DS]));
+                }
+                if (ensemble.DvlData != null)
+                {
+                    ensemble.IsDvlDataAvail = true;
+                }
+
             }
             catch (Exception e)
             {

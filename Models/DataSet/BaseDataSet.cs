@@ -791,6 +791,301 @@ namespace RTI
 
             #endregion
 
+            #region DVL
+
+            /// <summary>
+            /// String for DVL.
+            /// </summary>
+            public const string JSON_STR_DVLDATA = "DvlData";
+
+            /// <summary>
+            /// String for DVL Sample Number.
+            /// </summary>
+            public const string JSON_STR_DVL_SAMPLENUMBER = "SampleNumber";
+
+            /// <summary>
+            /// String for DVL Pitch.
+            /// </summary>
+            public const string JSON_STR_DVL_PITCH = "Pitch";
+
+            /// <summary>
+            /// String for DVL Roll.
+            /// </summary>
+            public const string JSON_STR_DVL_ROLL = "Roll";
+
+            /// <summary>
+            /// String for DVL Heading.
+            /// </summary>
+            public const string JSON_STR_DVL_HEADING = "Heading";
+
+            /// <summary>
+            /// String for DVL temperature.
+            /// </summary>
+            public const string JSON_STR_DVL_TEMPERATURE = "Temperature";
+
+            /// <summary>
+            /// String for DVL BIT.
+            /// </summary>
+            public const string JSON_STR_DVL_BIT = "BIT";
+
+            /// <summary>
+            /// Reference layer minimum.
+            /// </summary>
+            public const string JSON_STR_DVL_REF_LAYER_MIN = "RefLayerMin";
+
+            /// <summary>
+            /// Reference layer maximum.
+            /// </summary>
+            public const string JSON_STR_DVL_REF_LAYER_MAX = "RefLayerMax";
+
+            #region Water Mass Instrument Velocity
+
+            /// <summary>
+            /// Water Mass X Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_X_VEL = "WmXVelocity";
+
+            /// <summary>
+            /// Water Mass Y Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_Y_VEL = "WmYVelocity";
+
+            /// <summary>
+            /// Water Mass Z Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_Z_VEL = "WmZVelocity";
+
+            /// <summary>
+            /// Water Mass Error Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_ERROR_VEL = "WmErrorVelocity";
+
+            /// <summary>
+            /// Water Mass Instrument Is Good Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_INSTRUMENT_IS_GOOD_VEL = "WmInstrumentIsGoodVelocity";
+
+            #endregion
+
+            #region Water Mass Ship Instrument Velocity
+
+            /// <summary>
+            /// Water Mass Transverse Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_TRANSVERSE_VEL = "WmTransverseVelocity";
+
+            /// <summary>
+            /// Water Mass Longitudinal Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_LONGITUDINAL_VEL = "WmLongitudinalVelocity";
+
+            /// <summary>
+            /// Water Mass Normal Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_NORMAL_VEL = "WmNormalVelocity";
+
+            /// <summary>
+            /// Water Mass Ship Is Good Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_SHIP_IS_GOOD_VEL = "WmShipIsGoodVelocity";
+
+            #endregion
+
+            #region Water Mass Earth Velocity
+
+            /// <summary>
+            /// Water Mass East Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_EAST_VEL = "WmEastVelocity";
+
+            /// <summary>
+            /// Water Mass North Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_NORTH_VEL = "WmNorthVelocity";
+
+            /// <summary>
+            /// Water Mass Upward Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_UPWARD_VEL = "WmUpwardVelocity";
+
+            /// <summary>
+            /// Water Mass Earth Is Good Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_EARTH_IS_GOOD_VEL = "WmEarthIsGoodVelocity";
+
+            #endregion
+
+            #region Water Mass Earth Distance
+
+            /// <summary>
+            /// Water Mass Earth East Distance.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_EAST_DMG = "WmEastDistance";
+
+            /// <summary>
+            /// Water Mass Earth North Distance.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_NORTH_DMG = "WmNorthDistance";
+
+            /// <summary>
+            /// Water Mass Earth East Distance.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_UPWARD_DMG = "WmUpwardDistance";
+
+            /// <summary>
+            /// Water Mass Earth Range to Water Mass Center.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_EARTH_RANGE_TO_WM_CENTER = "WmEarthRangeToWaterMassCenter";
+
+            /// <summary>
+            /// Water Mass Earth Time of last good velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_WM_EARTH_TIME_LAST_GOOD_VEL = "WmEarthTimeLastGoodVel";
+
+            #endregion
+
+            #region Bottom Track Instrument Velocity
+
+            /// <summary>
+            /// Bottom Track X Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_X_VEL = "BtXVelocity";
+
+            /// <summary>
+            /// Bottom Track Y Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_Y_VEL = "BtYVelocity";
+
+            /// <summary>
+            /// Bottom Track Z Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_Z_VEL = "BtZVelocity";
+
+            /// <summary>
+            /// Bottom Track Error Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_ERROR_VEL = "BtErrorVelocity";
+
+            /// <summary>
+            /// Bottom Track Instrument Is Good Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_INSTRUMENT_IS_GOOD_VEL = "BtInstrumentIsGoodVelocity";
+
+            #endregion
+
+            #region Bottom Track Ship Instrument Velocity
+
+            /// <summary>
+            /// Bottom Track Transverse Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_TRANSVERSE_VEL = "BtTransverseVelocity";
+
+            /// <summary>
+            /// Bottom Track Longitudinal Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_LONGITUDINAL_VEL = "BtLongitudinalVelocity";
+
+            /// <summary>
+            /// Bottom Track Normal Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_NORMAL_VEL = "BtNormalVelocity";
+
+            /// <summary>
+            /// Bottom Track Ship Is Good Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_SHIP_IS_GOOD_VEL = "BtShipIsGoodVelocity";
+
+            #endregion
+
+            #region Bottom Track Earth Velocity
+
+            /// <summary>
+            /// Bottom Track East Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_EAST_VEL = "BtEastVelocity";
+
+            /// <summary>
+            /// Bottom Track North Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_NORTH_VEL = "BtNorthVelocity";
+
+            /// <summary>
+            /// Bottom Track Upward Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_UPWARD_VEL = "BtUpwardVelocity";
+
+            /// <summary>
+            /// Bottom Track Earth Is Good Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_EARTH_IS_GOOD_VEL = "BtEarthIsGoodVelocity";
+
+            #endregion
+
+            #region Bottom Track Earth Distance
+
+            /// <summary>
+            /// Bottom Track Earth East Distance.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_EAST_DMG = "BtEastDistance";
+
+            /// <summary>
+            /// Bottom Track Earth North Distance.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_NORTH_DMG = "BtNorthDistance";
+
+            /// <summary>
+            /// Bottom Track Earth East Distance.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_UPWARD_DMG = "BtUpwardDistance";
+
+            /// <summary>
+            /// Bottom Track Earth Range to Water Mass Center.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_EARTH_RANGE_TO_WM_CENTER = "BtEarthRangeToWaterMassCenter";
+
+            /// <summary>
+            /// Bottom Track Earth Time of last good velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_EARTH_TIME_LAST_GOOD_VEL = "BtEarthTimeLastGoodVel";
+
+            #endregion
+
+            #region Pressure and Range
+
+            /// <summary>
+            /// Bottom Track Pressure 
+            /// </summary>
+            public const string JSON_STR_DVL_PRESSURE = "Pressure";
+
+            /// <summary>
+            /// Bottom Track Range Beam 0.
+            /// </summary>
+            public const string JSON_STR_DVL_RANGE_B0 = "RangeBeam0";
+
+            /// <summary>
+            /// Bottom Track Range Beam 1.
+            /// </summary>
+            public const string JSON_STR_DVL_RANGE_B1 = "RangeBeam1";
+
+            /// <summary>
+            /// Bottom Track Range Beam 2.
+            /// </summary>
+            public const string JSON_STR_DVL_RANGE_B2 = "RangeBeam2";
+
+            /// <summary>
+            /// Bottom Track Range Beam 3.
+            /// </summary>
+            public const string JSON_STR_DVL_RANGE_B3 = "RangeBeam3";
+
+            /// <summary>
+            /// Bottom Track Range Beam 3.
+            /// </summary>
+            public const string JSON_STR_DVL_AVG_RANGE = "AverageRange";
+
+            #endregion
+
+            #endregion
+
             #endregion
 
             #endregion

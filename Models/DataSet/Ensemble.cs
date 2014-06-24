@@ -71,7 +71,8 @@
  * 01/09/2014      RC          2.21.3     Added SystemSetupDataSet.
  * 02/06/2014      RC          2.21.3     Added ability to decode PRIT03 sentence.
  * 02/10/2014      RC          2.21.3     Added AdcpGpsData, Gps1Data, Gps2Data, Nmea1Data and Nmea2Data.
- * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().      
+ * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().   
+ * 06/19/2014      RC          2.22.1     Added DvlDataSet.
  * 
  */
 
@@ -180,6 +181,12 @@ namespace RTI
             /// Insturment Velocity and Water Mass
             /// </summary>
             public const string WaterMassInstrumentID = "PRTI01";
+
+            /// <summary>
+            /// DVL Data ID.  This is for Pulse usage only.
+            /// This ID is not output by the ADCP.
+            /// </summary>
+            public const string DvlID = "E000DVL\0"; 
 
             #endregion
 
@@ -494,6 +501,11 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISNMEA2AVAIL = "IsNmea2DataAvail";
 
+            /// <summary>
+            /// String for IsDvlAvail.
+            /// </summary>
+            public const string JSON_STR_ISDVLAVAIL = "JSON_STR_ISDVLAVAIL";
+
             #endregion
 
             #region DataSets
@@ -602,6 +614,11 @@ namespace RTI
             /// String for Nmea2Data.
             /// </summary>
             public const string JSON_STR_NMEA2DATA = "Nmea2Data";
+
+            /// <summary>
+            /// String for DvlData.
+            /// </summary>
+            public const string JSON_STR_DVLDATA = "DvlData";
 
             #endregion
 
@@ -718,6 +735,11 @@ namespace RTI
             /// </summary>
             public bool IsNmea2DataAvail { get; set; }
 
+            /// <summary>
+            /// Set if the DVL data set is available to this ensemble.
+            /// </summary>
+            public bool IsDvlDataAvail { get; set; }
+
             #endregion
 
             #region Data Sets Properties
@@ -827,6 +849,14 @@ namespace RTI
             /// </summary>
             public string Nmea2Data { get; set; }
 
+            /// <summary>
+            /// DVL data set.
+            /// This data set is not output by the ADCP.
+            /// It is created from a combination of DVL
+            /// messages.
+            /// </summary>
+            public DvlDataSet DvlData { get; set; }
+
             #endregion
 
             #endregion
@@ -863,6 +893,7 @@ namespace RTI
                 IsGps2DataAvail = false;
                 IsNmea1DataAvail = false;
                 IsNmea2DataAvail = false;
+                IsDvlDataAvail = false;
             }
 
             /// <summary>
@@ -913,6 +944,7 @@ namespace RTI
             /// <param name="IsGps2DataAvail">Flag if GPS 2 data is available.</param>
             /// <param name="IsNmea1DataAvail">Flag if NMEA 1 data is available.</param>
             /// <param name="IsNmea2DataAvail">Flag if NMEA 2 data is available.</param>
+            /// <param name="IsDvlDataAvail">Flag if DVL data is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -934,17 +966,20 @@ namespace RTI
             /// <param name="Gps2Data">GPS 2 data.</param>
             /// <param name="Nmea1Data">NMEA 1 data.</param>
             /// <param name="Nmea2Data">NMEA 2 data.</param>
+            /// <param name="DvlData">DVL data.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
                             bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
                             bool IsSystemSetupAvail,
                             bool IsAdcpGpsDataAvail, bool IsGps1DataAvail, bool IsGps2DataAvail, bool IsNmea1DataAvail, bool IsNmea2DataAvail,
+                            bool IsDvlDataAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
                             InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
                             SystemSetupDataSet SystemSetupData,
+                            DvlDataSet DvlData,
                             string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
             {
                 // Initialize all ranges
@@ -969,6 +1004,7 @@ namespace RTI
                 this.IsGps2DataAvail = IsGps2DataAvail;
                 this.IsNmea1DataAvail = IsNmea1DataAvail;
                 this.IsNmea2DataAvail = IsNmea2DataAvail;
+                this.IsDvlDataAvail = IsDvlDataAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -991,6 +1027,7 @@ namespace RTI
                 this.Gps2Data = Gps2Data;
                 this.Nmea1Data = Nmea2Data;
                 this.Nmea2Data = Nmea2Data;
+                this.DvlData = DvlData;
             }
 
             #region Beam Velocity Data Set
@@ -1775,6 +1812,23 @@ namespace RTI
 
             #endregion
 
+            #region DVL Data Set
+
+            /// <summary>
+            /// Add the DVL data to the ensemble.
+            /// </summary>
+            /// <param name="dvlData">DVL Data set already populated.</param>
+            public void AddDvlData(DvlDataSet dvlData)
+            {
+                if (dvlData != null)
+                {
+                    IsDvlDataAvail = true;
+                    DvlData = dvlData;
+                }
+            }
+
+            #endregion
+
             #region Vessel Mount Data
 
             /// <summary>
@@ -1987,6 +2041,11 @@ namespace RTI
                 {
                     s += SystemSetupData.ToString();
                 }
+                if (IsDvlDataAvail)
+                {
+                    s += DvlData.ToString();
+                }
+
 
                 return s;
             }
@@ -2660,6 +2719,10 @@ namespace RTI
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEA2AVAIL);
                 writer.WriteValue(ensemble.IsNmea2DataAvail);
 
+                // IsDvlDataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISDVLAVAIL);
+                writer.WriteValue(ensemble.IsDvlDataAvail);
+
                 #endregion
 
                 #region DataSet
@@ -2884,11 +2947,11 @@ namespace RTI
                     writer.WriteNull();
                 }
 
-                // NMEA 2 data
-                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_NMEA2DATA);
-                if (ensemble.IsNmea2DataAvail)
+                // DVL data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_DVLDATA);
+                if (ensemble.IsDvlDataAvail)
                 {
-                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Nmea2Data));
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.DvlData));
                 }
                 else
                 {

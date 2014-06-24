@@ -114,6 +114,20 @@ namespace RTI
                 WaterMassDepthLayer = 0;
             }
 
+            /// <summary>
+            /// Create an empty Instrument Water Mass Velocity data set.
+            /// </summary>
+            public InstrumentWaterMassDataSet() :
+                base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.WaterMassInstrumentID)
+            {
+                // Initialize data
+                VelocityX = Ensemble.EMPTY_VELOCITY;
+                VelocityY = Ensemble.EMPTY_VELOCITY;
+                VelocityZ = Ensemble.EMPTY_VELOCITY;
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
+                WaterMassDepthLayer = 0;
+            }
+
             ///// <summary>
             ///// Create an Instrument Water Mass Velocity data set.  Include all the information to
             ///// create the data set.

@@ -59,6 +59,7 @@
  * 01/09/2014      RC          2.21.3     Added COL_SYSTEMSETUP_DS.
  * 02/07/2014      RC          2.21.3     Added COL_ADCPGPS.
  * 02/13/2014      RC          2.21.3     Added COL_ENS_POSITION.
+ * 06/19/2014      RC          2.22.1     Added COL_DVL.
  * 
  */
 
@@ -293,6 +294,13 @@ namespace RTI
         /// TEXT
         /// </summary>
         public const string COL_NMEA2 = "Nmea2Data";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// DVL.
+        /// TEXT
+        /// </summary>
+        public const string COL_DVL_DS = "DVL";
 
         #endregion
 

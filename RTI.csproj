@@ -69,6 +69,7 @@
     <Compile Include="Codec\AdcpBinaryCodec.cs" />
     <Compile Include="Codec\AdcpDatabaseCodec.cs" />
     <Compile Include="Codec\AdcpDvlCodec.cs" />
+    <Compile Include="Codec\Pd6_13Codec.cs" />
     <Compile Include="Codec\ICodec.cs" />
     <Compile Include="Codec\ImportGpsText.cs" />
     <Compile Include="Codec\Pd0Codec.cs" />
@@ -114,6 +115,8 @@
     <Compile Include="DotSpatial\Positioning\Speed.cs" />
     <Compile Include="Exporter\CsvExporterWriter.cs" />
     <Compile Include="Exporter\Pd0ExporterWriter.cs" />
+    <Compile Include="Models\DataSet\DvlDataSet.cs" />
+    <Compile Include="Models\DVL\IDvlData.cs" />
     <Compile Include="Models\Options\ExportOptions.cs" />
     <Compile Include="Exporter\IExporterWriter.cs" />
     <Compile Include="Exporter\MatlabExporterWriter.cs" />

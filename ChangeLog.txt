@@ -1,5 +1,16 @@
 RTI Changelog
 
+RTI-2-22.1
+ - Changed the version number.
+ - In AdcpSerialPort, check every baud rate in TestSerialBaudConnection().
+ - In Ensemble, added DvlDataSet.
+ - Created Pd6_13Codec to decode PD6 and PD13 messages.
+ - In Project, added DVL column to CreateProjectTables().  Bump rev to D8.
+ - In DbCommon, added COL_DVL.
+ - In AdcpDatabaseWriter, added writing the DVL dataset in WriteEnsembleDataToDatabase().
+ - In Pd6_13Codec, fixed setting the time for the ensemble.
+ - In IDvlData, added Sentence property and ToByteArray() in IDvlData.
+
 RTI-2.22.0
  - Changed the version number.
  - In AdcpCommands, fixed finding the Hardware in DecodeBREAK().

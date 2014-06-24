@@ -77,6 +77,7 @@
  * 02/13/2014      RC          2.21.3     Write the position if the GPGGA message is given.
  * 02/20/2014      RC          2.21.3     Fixed bug in WriteEnsembleDataToDatabase() where if GPS data was not present, the @position value was not set.
  * 03/03/2014      RC          2.21.4     In ProcessDataThread(), check for a DVL serial number.
+ * 06/19/2014      RC          2.22.1     Added writing the DVL dataset in WriteEnsembleDataToDatabase().
  * 
  */
 
@@ -768,7 +769,8 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_GPS1));
                     builder.Append(string.Format("{0},", DbCommon.COL_GPS2));
                     builder.Append(string.Format("{0},", DbCommon.COL_NMEA1));
-                    builder.Append(string.Format("{0}", DbCommon.COL_NMEA2));
+                    builder.Append(string.Format("{0},", DbCommon.COL_NMEA2));
+                    builder.Append(string.Format("{0}", DbCommon.COL_DVL_DS));
 
                     builder.Append(") ");
                     builder.Append("VALUES(");
@@ -795,7 +797,8 @@ namespace RTI
                     builder.Append("@gps1, ");
                     builder.Append("@gps2, ");
                     builder.Append("@nmea1, ");
-                    builder.Append("@nmea2 ");
+                    builder.Append("@nmea2, ");
+                    builder.Append("@dvl ");
                     builder.Append("); ");
                     builder.Append("SELECT last_insert_rowid();");
 
@@ -1038,6 +1041,16 @@ namespace RTI
                     else
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@nmea2", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // DVL
+                    if (ensemble.IsDvlDataAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@dvl", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.DvlData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@dvl", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
                     // Run the query and get the result for the last row

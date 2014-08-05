@@ -114,6 +114,16 @@ namespace RTI
             /// NMEA 2 data.
             /// </summary>
             NMEA2,
+
+            /// <summary>
+            /// Short Term Averaged data.
+            /// </summary>
+            STA,
+
+            /// <summary>
+            /// Long Term Averaged data.
+            /// </summary>
+            LTA
         }
 
         #endregion
@@ -436,44 +446,51 @@ namespace RTI
         /// </summary>
         private void WriteBuffer()
         {
-            // Open the writer
-            Open();
-
-            // Make a copy of the buffer just in case new data is being added to the
-            // buffer while we are writing
-            //List<byte[]> buffer = new List<byte[]>(_writeBuffer);
-
-            // Clear the buffer
-            //_writeBuffer.Clear();
-            //_writeBufferIndex = 0;
-
-            // Go through the list writing the data
-            //for (int x = 0; x < buffer.Count; x++ )
-            //{
-                // Write the data to the file
-            //    Write(buffer[x]);
-            //}
-            while (!_writeBuffer.IsEmpty)
+            try
             {
-                byte[] data = null;
-                _writeBuffer.TryDequeue(out data);
-                if (data != null)
+                // Open the writer
+                Open();
+
+                // Make a copy of the buffer just in case new data is being added to the
+                // buffer while we are writing
+                //List<byte[]> buffer = new List<byte[]>(_writeBuffer);
+
+                // Clear the buffer
+                //_writeBuffer.Clear();
+                //_writeBufferIndex = 0;
+
+                // Go through the list writing the data
+                //for (int x = 0; x < buffer.Count; x++ )
+                //{
+                // Write the data to the file
+                //    Write(buffer[x]);
+                //}
+                while (!_writeBuffer.IsEmpty)
                 {
-                    Write(data);
+                    byte[] data = null;
+                    _writeBuffer.TryDequeue(out data);
+                    if (data != null)
+                    {
+                        Write(data);
+                    }
+                }
+
+                // Clear the buffer index
+                _writeBufferIndex = 0;
+
+
+                // Flush the data to the file
+                if (_binWriter != null)
+                {
+                    _binWriter.Flush();
+
+                    // Close the writer
+                    _binWriter.Close();
                 }
             }
-
-            // Clear the buffer index
-            _writeBufferIndex = 0;
-
-
-            // Flush the data to the file
-            if (_binWriter != null)
+            catch (Exception e)
             {
-                _binWriter.Flush();
-
-                // Close the writer
-                _binWriter.Close();
+                log.Error(string.Format("Error writing data to file. {0}", _fileName), e);
             }
         }
 
@@ -501,7 +518,10 @@ namespace RTI
                 // Write the data to the file
                 _binWriter.Write(data);
             }
-            catch (Exception) { }
+            catch (Exception e) 
+            {
+                log.Error(string.Format("Error writing data. {0}", _fileName), e);
+            }
 
             // Keep track of the file size
             _fileSize += data.Length;
@@ -572,6 +592,10 @@ namespace RTI
                     return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_NMEA1" + Core.Commons.NMEA_FILE_EXT;
                 case FileType.NMEA2:
                     return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_NMEA2" + Core.Commons.NMEA_FILE_EXT;
+                case FileType.STA:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_STA" + Core.Commons.AVG_STA_ENSEMBLE_FILE_EXT;
+                case FileType.LTA:
+                    return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + "_LTA" + Core.Commons.AVG_LTA_ENSEMBLE_FILE_EXT;
                 case FileType.Ensemble:
                 default:
                     return ProjectFolderPath + @"\" + SerialNumber + "_" + ProjectName + "_" + (index) + Core.Commons.SINGLE_ENSEMBLE_FILE_EXT;

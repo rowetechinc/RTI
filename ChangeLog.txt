@@ -1,5 +1,43 @@
 RTI Changelog
 
+RTI-2.23.0
+ - Changed the version number.
+ - Added Averagers for Bottom Track, Earth Vel, Instrument Vel and Beam vel.
+ - In AverageManager, added Bottom Track, Earth Vel, Instrument Vel and Beam vel to average.
+ - In Pd6_13Codec, fixed bug in SetBS() and FindSentence().
+ - In AverageBottomTrack, fixed a bug in SetTimeAndCount().
+ - In IDvlData, changed Convert() to TryParse() and initialized the values.
+ - In AverageManager, moved the logic for removing accumulated data from the averager to the manager.
+ - In Ensemble, added EncodeJSON().
+ - In Pd0VariableLeader and Pd0FixedLeader, check if the values are given in DecodeRtiEnsemble().
+ - In ExportOptions, added SetMaxBin() set all the max bin values.
+ - In SystemSetupDataSet, fixed checking if the voltage existed in Decode().
+ - In AdcpEthernetOption, added Port property.
+ - In MathHelper, added functions to set and get byte arrays for strings.
+ - In AdcpDvlCodec, fixed a bug if AddIncomingData() received a null byte array.
+ - In Status, added a comma to the status errors.
+ - In AdcpDvlCodec, when adding PRTI30 and PRTI31 messages, replace the serialnumber subsystem with the correct value.
+ - In SystemSetupDataSet, added and empty constructor.
+ - In CorrelationDataSet, fixed bug in DecodePd0Ensemble() if numCodeRepeats is 0 or N is 0.
+ - In Pd0Correlatoin, fixed bug in DecodeRtiEnsemble() if numCodeRepeats is 0 or N is 0.
+ - In Pd0VariableLeader, fixed ensemble number to start with 1 in DecodeRtiEnsemble().
+ - Added AdcpTcpIp.cs.
+ - In AverageManagerOptions, added the IsRecording property.
+ - In Common, added AVG_LTA_ENSEMBLE_FILE_EXT and AVG_STA_ENSEMBLE_FILE_EXT.
+ - In MathHelper, added a try/catch block in SubArray().
+ - In AncillaryDataSet, fixed a bug setting the ElementMulitplier and NumElements.
+ - In EnsembleHelper, fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
+ - In BaseDataSet, changed the name of numBins and numBeams to NumElements and ElementMutiplier.
+ - In Ensemble, fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
+ - In VelocityVector, added Instrument Velocity Vectors.  Made specific Earth and Instrument functions.
+ - In EarthVelocityData, changed the name of the VelocityVector functions.
+ - In InstrumentVelocityData, added VelocityVector.
+ - In AdcpDvlCodec, removed trimming the sentence in FindSentence().
+ - In VesselMountOptions, added SRC_STR_ADCP_GPS for ADCP GPS data.
+ - In VmHeadingSource, set the heading based off the ADCP GPS data also.
+ - In SerialConnection, force the thread to shutdown by sending an abort in Dispose().
+
+
 RTI-2-22.1
  - Changed the version number.
  - In AdcpSerialPort, check every baud rate in TestSerialBaudConnection().

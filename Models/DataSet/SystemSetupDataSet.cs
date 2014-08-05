@@ -33,6 +33,8 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 01/09/2014      RC          2.21.3     Initial coding
+ * 07/21/2014      RC          2.23.0     Fixed checking if the voltage existed in Decode().
+ * 07/24/2014      RC          2.23.0     Added and empty constructor.
  * 
  */
 
@@ -135,6 +137,21 @@ namespace RTI
             /// <summary>
             /// Create a System Setup data set.  This will create an empty dataset.
             /// </summary>
+            public SystemSetupDataSet() :
+                base(DataSet.Ensemble.DATATYPE_FLOAT,                       // Type of data stored (Float or Int)
+                            NUM_DATA_ELEMENTS,                              // Number of data elements
+                            1,                                              // Number of beams
+                            DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                            DataSet.Ensemble.SystemSetupID)
+            {
+                // Initialize arrays
+                Init();
+            }
+
+            /// <summary>
+            /// Create a System Setup data set.  This will create an empty dataset.
+            /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
             /// <param name="numBins">Number of Bin</param>
             /// <param name="numBeams">Number of beams</param>
@@ -145,7 +162,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize arrays
-                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
+                Init();
             }
 
             /// <summary>
@@ -163,7 +180,7 @@ namespace RTI
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
                 // Initialize arrays
-                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
+                Init();
 
                 // Decode the information
                 Decode(ssData);
@@ -234,8 +251,7 @@ namespace RTI
             /// This will create the arrays based off the number of beams
             /// given.
             /// </summary>
-            /// <param name="numBeams">Number of beams.</param>
-            public void Init(int numBeams)
+            public void Init()
             {
 
                 this.BtSamplesPerSecond = 0.0f;
@@ -299,7 +315,7 @@ namespace RTI
                 WpRepeatN = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
                 WpLagSamples = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
 
-                if (data.Length > 11)
+                if (data.Length > 48)
                 {
                     Voltage = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
                 }

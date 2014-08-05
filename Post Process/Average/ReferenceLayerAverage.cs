@@ -110,12 +110,12 @@ namespace RTI
             /// Minimum reference layer bin.
             /// The bin starts with bin 0.
             /// </summary>
-            private int _minRefLayerBin;
+            private uint _minRefLayerBin;
 
             /// <summary>
             /// Maximum reference layer bin.
             /// </summary>
-            private int _maxRefLayerBin;
+            private uint _maxRefLayerBin;
 
             #endregion
 
@@ -129,7 +129,7 @@ namespace RTI
             /// <param name="minRefLayerBin">Reference layer minimum bin.</param>
             /// <param name="maxRefLayerBin">Reference layer maximum bin.</param>
             /// <param name="runningAvg">Flag if a running average.</param>
-            public ReferenceLayerAverage(int numSamples, int minRefLayerBin, int maxRefLayerBin, bool runningAvg)
+            public ReferenceLayerAverage(int numSamples, uint minRefLayerBin, uint maxRefLayerBin, bool runningAvg)
             {
                 // Initialize values
                 // Validate number of samples
@@ -184,7 +184,7 @@ namespace RTI
 
                             // If running average, remove the first ensemble
                             // If not running average, remove all the ensembles
-                            RemoveEnsemble();
+                            RemoveFirstEnsemble();
                         }
                     }
                 //};
@@ -196,7 +196,7 @@ namespace RTI
             /// If the averaging needs to be restarted,
             /// then clear the accumulators of data.
             /// </summary>
-            public override void Clear()
+            public override void ClearAllEnsembles()
             {
                 if (_accumEns != null && _accumRefLayerAvg != null)
                 {
@@ -227,7 +227,7 @@ namespace RTI
             /// </summary>
             /// <param name="minRefLayer">Minimum Reference layer.</param>
             /// <param name="maxRefLayer">Maximum Reference layer.</param>
-            public void SetMinMaxReferenceLayer(int minRefLayer, int maxRefLayer)
+            public void SetMinMaxReferenceLayer(uint minRefLayer, uint maxRefLayer)
             {
                 // Check for less than 0
                 if (minRefLayer < 0)
@@ -250,7 +250,7 @@ namespace RTI
                 _maxRefLayerBin = maxRefLayer;
 
                 // Clear everything, because a new reference layer is used
-                Clear();
+                ClearAllEnsembles();
             }
 
             /// <summary>
@@ -259,7 +259,8 @@ namespace RTI
             /// so the last time and date for the accumulated is given in the ensemble.
             /// </summary>
             /// <param name="ensemble">Ensemble to add the averaged data to.</param>
-            public override void SetAverage(ref DataSet.Ensemble ensemble)
+            /// <param name="scale">Scale value to multiply to the averaged value.</param>
+            public override void SetAverage(ref DataSet.Ensemble ensemble, float scale)
             {
                 float[,] avgData = GetAverage();
 
@@ -274,7 +275,7 @@ namespace RTI
 
                 // If running average, remove the first ensemble
                 // If not running average, remove all the ensembles
-                RemoveEnsemble();
+                RemoveFirstEnsemble();
             }
 
             /// <summary>
@@ -284,7 +285,8 @@ namespace RTI
             /// be calculated, NULL will be returned.
             /// </summary>
             /// <returns>Reference Layer Averaged Earth Velocity data or NULL.</returns>
-            public override float[,] GetAverage()
+            /// <param name="scale">Scale value to multiply to the averaged value.</param>
+            public override float[,] GetAverage(float scale = 1.0f)
             {
                 try
                 {
@@ -351,15 +353,15 @@ namespace RTI
                 float[] refLayerAvg = new float[NUM_ELEMENTS];
 
                 // Subtract 1 from NumBins because the bin starts at 0
-                int maxRefLayer = Math.Min(ensemble.EnsembleData.NumBins - 1, _maxRefLayerBin);
-                int minRefLayer = _minRefLayerBin;
+                uint maxRefLayer = (uint)Math.Min(ensemble.EnsembleData.NumBins - 1, _maxRefLayerBin);
+                uint minRefLayer = _minRefLayerBin;
                 
                 int samplesEast = 0;
                 int samplesNorth = 0;
                 int samplesVert = 0;
 
                 // Accumulate the reference layer values
-                for (int bin = minRefLayer; bin <= maxRefLayer; bin++)
+                for (uint bin = minRefLayer; bin <= maxRefLayer; bin++)
                 {
                     // Ensure the velocity is good
                     // East
@@ -769,7 +771,7 @@ namespace RTI
             /// list and wait for _numSamples to be accumulated
             /// before taking the next average.
             /// </summary>
-            protected override void RemoveEnsemble()
+            public override void RemoveFirstEnsemble()
             {
                 // Check if the number of samples has been met in the list
                 if (_accumEns.Count >= NumSamples)

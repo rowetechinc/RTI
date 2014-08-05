@@ -70,9 +70,6 @@ namespace RTI
             /// <param name="ensemble">Ensemble to accumulate.</param>
             public override void AddEnsemble(DataSet.Ensemble ensemble)
             {
-                // Remove the first ensemble if NumSamples has been met
-                RemoveEnsemble();
-
                 // Accumulate the data
                 if (ensemble.IsAmplitudeAvail)
                 {
@@ -86,15 +83,13 @@ namespace RTI
             /// If this is not a running average, it will clear the accumulator.
             /// </summary>
             /// <param name="ensemble">Set the average data to this ensemble.</param>
-            public override void SetAverage(ref DataSet.Ensemble ensemble)
+            /// <param name="scale">Scale value to multiply to the averaged value.</param>
+            public override void SetAverage(ref DataSet.Ensemble ensemble, float scale)
             {
                 if (ensemble.IsAmplitudeAvail)
                 {
-                    ensemble.AmplitudeData.AmplitudeData = GetAverage();
+                    ensemble.AmplitudeData.AmplitudeData = GetAverage(scale);
                 }
-
-                // Clear the accum
-                RemoveEnsemble();
             }
 
         }

@@ -38,6 +38,7 @@
  * 03/06/2013      RC          2.18       Maded AddNmea() only take an ensemble.
  * 08/13/2013      RC          2.19.4     In SetVelocitiesBad(), also set the VelocityVector to bad velocity if it exist.
  * 10/03/2013      RC          2.20.2     Fixed bug in AddNmea() where the datatype was not set correctly.  It is a byte type.
+ * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
  * 
  */
 
@@ -72,7 +73,7 @@ namespace RTI
             {
                 AddEnsemble(ref ensemble, numBins, numBeams);
 
-                AddAncillary(ref ensemble, numBins, numBeams);
+                AddAncillary(ref ensemble);
 
                 AddCorrelation(ref ensemble, numBins, numBeams);
 
@@ -110,11 +111,13 @@ namespace RTI
         public static void AddEnsemble(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
         {
             ensemble.AddEnsembleData(DataSet.Ensemble.DATATYPE_INT,                     // Type of data stored (Float or Int)
-                                            numBins,                                    // Number of bins
-                                            numBeams,                                   // Number of beams
+                                            DataSet.EnsembleDataSet.NUM_DATA_ELEMENTS,  // Number of Elements
+                                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, // Element Mulitplier
                                             DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
-                                            DataSet.Ensemble.EnsembleDataID);           // Dataset ID
+                                            DataSet.Ensemble.EnsembleDataID,            // Dataset ID
+                                            numBins,                                    // Number of bins
+                                            numBeams);                                  // Number of beams
         }
 
         #endregion
@@ -125,13 +128,11 @@ namespace RTI
         /// Add Ancillary Dataset to the ensemble.
         /// </summary>
         /// <param name="ensemble">Ensemble to add the dataset to.</param>
-        /// <param name="numBins">Number of bins.</param>
-        /// <param name="numBeams">Number of beams.</param>
-        public static void AddAncillary(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        public static void AddAncillary(ref DataSet.Ensemble ensemble)
         {
             ensemble.AddAncillaryData(DataSet.Ensemble.DATATYPE_FLOAT,                  // Type of data stored (Float or Int)
-                                            numBins,                                    // Number of bins
-                                            numBeams,                                   // Number of beams
+                                            DataSet.EnsembleDataSet.NUM_DATA_ELEMENTS,  // Number of Elements
+                                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, // Element Mulitplier
                                             DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
                                             DataSet.Ensemble.AncillaryID);              // Dataset ID

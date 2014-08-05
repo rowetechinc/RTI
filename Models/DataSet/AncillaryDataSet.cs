@@ -50,6 +50,7 @@
  * 02/26/2013      RC          2.18       Fixed FirstPingTime for PRTI sentences.
  * 02/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
+ * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements.
  * 
  */
 
@@ -169,24 +170,24 @@ namespace RTI
             public AncillaryDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
                 base(valueType, numBins, numBeams, imag, nameLength, name)
             {
-
+                // Init the values
+                Init();
             }
 
             /// <summary>
             /// Create a Ancillary data set.  Includes all the information
             /// about the current Ancillary data.
             /// </summary>
-            /// <param name="numBins">Number of Bins.</param>
-            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
-            public AncillaryDataSet(int numBins = NUM_DATA_ELEMENTS, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM) :
+            public AncillaryDataSet() :
                 base(DataSet.Ensemble.DATATYPE_FLOAT,                       // Type of data stored (Float or Int)
-                            numBins,                                        // Number of bins
-                            numBeams,                                       // Number of beams
+                            NUM_DATA_ELEMENTS,                              // Number of Elements
+                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM,     // Element Multiplier
                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
                             DataSet.Ensemble.AncillaryID)                   // Dataset ID
             {
-
+                // Init the values
+                Init();
             }
 
             /// <summary>
@@ -216,6 +217,9 @@ namespace RTI
             public AncillaryDataSet(Prti01Sentence sentence) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID)
             {
+                // Init the values
+                Init();
+
                 WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);     // Sentence stores temp at 1/100 degree Celcius.
                 LastPingTime = sentence.StartTime / 100;                        // Convert the Start Time for hundreds of seconds to seconds.
             }
@@ -229,6 +233,9 @@ namespace RTI
             public AncillaryDataSet(Prti02Sentence sentence) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID)
             {
+                // Init the values
+                Init();
+
                 WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);   // Sentence stores temp at 1/100 degree Celcius.
                 LastPingTime = sentence.StartTime / 100;                        // Convert the Start Time for hundreds of seconds to seconds.
             }
@@ -242,6 +249,9 @@ namespace RTI
             public AncillaryDataSet(Prti03Sentence sentence) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT, NUM_DATA_ELEMENTS, DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AncillaryID)
             {
+                // Init the values
+                Init();
+
                 WaterTemp = Convert.ToSingle(sentence.Temperature / 100.0);     // Sentence stores temp at 1/100 degree Celcius.
                 LastPingTime = sentence.StartTime / 100;                        // Convert the Start Time for hundreds of seconds to seconds.
             }
@@ -330,6 +340,26 @@ namespace RTI
             }
 
             /// <summary>
+            /// Initialize the value.
+            /// </summary>
+            private void Init()
+            {
+                FirstBinRange = 0.0f;
+                BinSize = 0.0f;
+                FirstPingTime = 0.0f;
+                LastPingTime = 0.0f;
+                Heading = 0.0f;
+                Pitch = 0.0f;
+                Roll = 0.0f;
+                WaterTemp = 0.0f;
+                SystemTemp = 0.0f;
+                Salinity = 0.0f;
+                Pressure = 0.0f;
+                TransducerDepth = 0.0f;
+                SpeedOfSound = 0.0f;
+            }
+
+            /// <summary>
             /// Get all the information about the Ancillary data.
             /// </summary>
             /// <param name="data">Byte array containing the Ancillary data type.</param>
@@ -380,7 +410,7 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SpeedOfSound), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
-                byte[] header = this.GenerateHeader(NumElements);
+                byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
 
                 // Create the array to hold the dataset
                 byte[] result = new byte[payload.Length + header.Length];

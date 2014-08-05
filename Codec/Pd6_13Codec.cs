@@ -35,6 +35,7 @@
  * -----------------------------------------------------------------
  * 06/16/2014      RC          2.22.1     Initial coding
  * 06/23/2014      RC          2.22.1     Fixed setting the time for the ensemble.
+ * 07/01/2014      RC          2.23.0     Fixed bug in SetBS() and FindSentence().
  * 
  * 
  */
@@ -200,17 +201,20 @@ namespace RTI
         /// <param name="data">Data to add to incoming buffer.</param>
         public void AddIncomingData(byte[] data)
         {
-            // Convert to string 
-            string rcvData = System.Text.ASCIIEncoding.ASCII.GetString(data);
-
-            // Add the data to the buffer
-            lock (_bufferLock)
+            if (data != null)
             {
-                _buffer += rcvData;
-            }
+                // Convert to string 
+                string rcvData = System.Text.ASCIIEncoding.ASCII.GetString(data);
 
-            // Start to process the data
-            ProcessData();
+                // Add the data to the buffer
+                lock (_bufferLock)
+                {
+                    _buffer += rcvData;
+                }
+
+                // Start to process the data
+                ProcessData();
+            }
         }
 
         /// <summary>
@@ -285,39 +289,51 @@ namespace RTI
         /// <returns>Sentence found in buffer.</returns>
         private string FindSentence()
         {
+
             string sent = "";
             lock (_bufferLock)
             {
-                // Remove everything to first ':'
-                int begin = _buffer.IndexOf(":");
-                if (begin > 0)
+                try
                 {
-                    _buffer = _buffer.Remove(0, begin);
+                    // Remove everything to first ':'
+                    int begin = _buffer.IndexOf(":");
+                    if (begin > 0)
+                    {
+                        _buffer = _buffer.Remove(0, begin);
+                    }
+
+                    // Find the next start sentence
+                    int nextSentLoc = 0;
+                    if (begin > 0 && _buffer.Length > begin + 1 )
+                    {
+                        nextSentLoc = _buffer.IndexOf(":", begin + 1);
+                    }
+
+                    // If another sentence is found, process the current sentence
+                    if (nextSentLoc > 0)
+                    {
+                        sent = _buffer.Substring(0, nextSentLoc);           // Get the sentence
+                        _buffer = _buffer.Remove(0, sent.Length);           // Remove it from the buffer
+
+                        // Remove any trailing new lines
+                        sent = sent.TrimEnd(REMOVE_END);
+                    }
+
+                    // Ensure buffer does not overflow
+                    if (_buffer.Length > MAX_BUFFER_SIZE)
+                    {
+                        _buffer = _buffer.Substring(_buffer.Length - MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
+                    }
+
+                    // Sentence not found so remove the first char
+                    if (string.IsNullOrEmpty(sent) && _buffer.Length > 0)
+                    {
+                        _buffer = _buffer.Remove(0);
+                    }
                 }
-
-                // Find the next start sentence
-                int nextSentLoc = _buffer.IndexOf(":", begin + 1);
-
-                // If another sentence is found, process the current sentence
-                if(nextSentLoc > 0)
+                catch (Exception e)
                 {
-                    sent = _buffer.Substring(0, nextSentLoc);           // Get the sentence
-                    _buffer = _buffer.Remove(0, sent.Length);           // Remove it from the buffer
-
-                    // Remove any trailing new lines
-                    sent = sent.TrimEnd(REMOVE_END);
-                }
-
-                // Ensure buffer does not overflow
-                if (_buffer.Length > MAX_BUFFER_SIZE)
-                {
-                    _buffer = _buffer.Substring(_buffer.Length - MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
-                }
-
-                // Sentence not found so remove the first char
-                if (string.IsNullOrEmpty(sent) && _buffer.Length > 0)
-                {
-                    _buffer = _buffer.Remove(0);
+                    log.Error("Error finding a sentence", e);
                 }
             }
 
@@ -356,7 +372,7 @@ namespace RTI
             if(!_prevEns.IsEnsembleAvail)
             {
                 _prevEns.IsEnsembleAvail = true;
-                _prevEns.EnsembleData = new DataSet.EnsembleDataSet(1);
+                _prevEns.EnsembleData = new DataSet.EnsembleDataSet();
             }
 
             // Add Ensemble DataSet
@@ -782,7 +798,7 @@ namespace RTI
             _prevEns.DvlData.BtTransverseVelocity = _prevBS.T;
             _prevEns.DvlData.BtLongitudinalVelocity = _prevBS.L;
             _prevEns.DvlData.BtNormalVelocity = _prevBS.N;
-            _prevEns.DvlData.BtShipIsGoodVelocity = _prevBI.IsGood;
+            _prevEns.DvlData.BtShipIsGoodVelocity = _prevBS.IsGood;
         }
 
         /// <summary>

@@ -35,6 +35,7 @@
  * -----------------------------------------------------------------
  * 06/18/2014      RC          2.22.1     Initial coding
  * 06/23/2014      RC          2.22.1     Added Sentence property and ToByteArray() in IDvlData.
+ * 07/02/2014      RC          2.23.0     Changed Convert() to TryParse() and initialized the values.
  * 
  * 
  */
@@ -123,9 +124,12 @@ namespace RTI
                 result[3].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                Pitch = Convert.ToSingle(result[1].Trim());
-                Roll = Convert.ToSingle(result[2].Trim());
-                Heading = Convert.ToSingle(result[3].Trim());
+                Pitch = 0.0f;
+                Roll = 0.0f;
+                Heading = 0.0f;
+                Single.TryParse(result[1].Trim(), out Pitch);
+                Single.TryParse(result[2].Trim(), out Roll);
+                Single.TryParse(result[3].Trim(), out Heading);
             }
         }
     }
@@ -191,11 +195,16 @@ namespace RTI
                 result[4].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                Salinity = Convert.ToSingle(result[1].Trim());
-                Temperature = Convert.ToSingle(result[2].Trim());
-                DepthOfTransducer = Convert.ToSingle(result[3].Trim());
-                SpeedOfSound = Convert.ToSingle(result[4].Trim());
-                BIT = Convert.ToInt32(result[5].Trim());
+                Salinity = 0.0f;
+                Temperature = 0.0f;
+                DepthOfTransducer = 0.0f;
+                SpeedOfSound = 0.0f;
+                BIT = 0;
+                Single.TryParse(result[1].Trim(), out Salinity);
+                Single.TryParse(result[2].Trim(), out Temperature);
+                Single.TryParse(result[3].Trim(), out DepthOfTransducer);
+                Single.TryParse(result[4].Trim(), out SpeedOfSound);
+                Int32.TryParse(result[5].Trim(), out BIT);
             }
         }
     }
@@ -262,11 +271,16 @@ namespace RTI
                 result[5].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                Pressure = Convert.ToSingle(result[1].Trim());
-                RangeToBottomB0 = Convert.ToSingle(result[2].Trim());
-                RangeToBottomB1 = Convert.ToSingle(result[3].Trim());
-                RangeToBottomB2 = Convert.ToSingle(result[4].Trim());
-                RangeToBottomB3 = Convert.ToSingle(result[5].Trim());
+                Pressure = 0.0f;
+                RangeToBottomB0 = 0.0f;
+                RangeToBottomB1 = 0.0f;
+                RangeToBottomB2 = 0.0f;
+                RangeToBottomB3 = 0.0f;
+                Single.TryParse(result[1].Trim(), out Pressure);
+                Single.TryParse(result[2].Trim(), out RangeToBottomB0);
+                Single.TryParse(result[3].Trim(), out RangeToBottomB1);
+                Single.TryParse(result[4].Trim(), out RangeToBottomB2);
+                Single.TryParse(result[5].Trim(), out RangeToBottomB3);
             }
         }
     }
@@ -333,10 +347,14 @@ namespace RTI
                 result[4].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                X = Convert.ToSingle(result[1].Trim());
-                Y = Convert.ToSingle(result[2].Trim());
-                Z = Convert.ToSingle(result[3].Trim());
-                Q = Convert.ToSingle(result[4].Trim());
+                X = PD0.BAD_VELOCITY;
+                Y = PD0.BAD_VELOCITY;
+                Z = PD0.BAD_VELOCITY;
+                Q = PD0.BAD_VELOCITY;
+                Single.TryParse(result[1].Trim(), out X);
+                Single.TryParse(result[2].Trim(), out Y);
+                Single.TryParse(result[3].Trim(), out Z);
+                Single.TryParse(result[4].Trim(), out Q);
 
                 // Check for Bad Velocity
                 if (X == PD0.BAD_VELOCITY)
@@ -428,9 +446,12 @@ namespace RTI
                 result[3].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                T = Convert.ToSingle(result[1].Trim());
-                L = Convert.ToSingle(result[2].Trim());
-                N = Convert.ToSingle(result[3].Trim());
+                T = PD0.BAD_VELOCITY;
+                L = PD0.BAD_VELOCITY;
+                N = PD0.BAD_VELOCITY;
+                Single.TryParse(result[1].Trim(), out T);
+                Single.TryParse(result[2].Trim(), out L);
+                Single.TryParse(result[3].Trim(), out N);
 
                 // Check for Bad Velocity
                 if (T == PD0.BAD_VELOCITY)
@@ -517,9 +538,12 @@ namespace RTI
                 result[3].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                E = Convert.ToSingle(result[1].Trim());
-                N = Convert.ToSingle(result[2].Trim());
-                U = Convert.ToSingle(result[3].Trim());
+                E = PD0.BAD_VELOCITY;
+                N = PD0.BAD_VELOCITY;
+                U = PD0.BAD_VELOCITY;
+                Single.TryParse(result[1].Trim(), out E);
+                Single.TryParse(result[2].Trim(), out N);
+                Single.TryParse(result[3].Trim(), out U);
 
                 // Check for Bad Velocity
                 if (E == PD0.BAD_VELOCITY)
@@ -615,11 +639,16 @@ namespace RTI
                 result[5].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                E = Convert.ToSingle(result[1].Trim());
-                N = Convert.ToSingle(result[2].Trim());
-                U = Convert.ToSingle(result[3].Trim());
-                RangeToWmCenter = Convert.ToSingle(result[4].Trim());
-                Time = Convert.ToSingle(result[5].Trim());
+                E = PD0.BAD_VELOCITY;
+                N = PD0.BAD_VELOCITY;
+                U = PD0.BAD_VELOCITY;
+                RangeToWmCenter = 0.0f;
+                Time = 0.0f;
+                Single.TryParse(result[1].Trim(), out E);
+                Single.TryParse(result[2].Trim(), out N);
+                Single.TryParse(result[3].Trim(), out U);
+                Single.TryParse(result[4].Trim(), out RangeToWmCenter);
+                Single.TryParse(result[5].Trim(), out Time);
 
                 // Check for Bad Velocity
                 if (E == PD0.BAD_VELOCITY)
@@ -712,10 +741,14 @@ namespace RTI
                 result[4].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                X = Convert.ToSingle(result[1].Trim());
-                Y = Convert.ToSingle(result[2].Trim());
-                Z = Convert.ToSingle(result[3].Trim());
-                Q = Convert.ToSingle(result[4].Trim());
+                X = PD0.BAD_VELOCITY;
+                Y = PD0.BAD_VELOCITY;
+                Z = PD0.BAD_VELOCITY;
+                Q = PD0.BAD_VELOCITY;
+                Single.TryParse(result[1].Trim(), out X);
+                Single.TryParse(result[2].Trim(), out Y);
+                Single.TryParse(result[3].Trim(), out Z);
+                Single.TryParse(result[4].Trim(), out Q);
 
                 // Check for Bad Velocity
                 if (X == PD0.BAD_VELOCITY)
@@ -806,9 +839,12 @@ namespace RTI
                 result[3].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                T = Convert.ToSingle(result[1].Trim());
-                L = Convert.ToSingle(result[2].Trim());
-                N = Convert.ToSingle(result[3].Trim());
+                T = PD0.BAD_VELOCITY;
+                L = PD0.BAD_VELOCITY;
+                N = PD0.BAD_VELOCITY;
+                Single.TryParse(result[1].Trim(), out T);
+                Single.TryParse(result[2].Trim(), out L);
+                Single.TryParse(result[3].Trim(), out N);
 
                 // Check for Bad Velocity
                 if (T == PD0.BAD_VELOCITY)
@@ -895,9 +931,12 @@ namespace RTI
                 result[3].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                E = Convert.ToSingle(result[1].Trim());
-                N = Convert.ToSingle(result[2].Trim());
-                U = Convert.ToSingle(result[3].Trim());
+                E = PD0.BAD_VELOCITY;
+                N = PD0.BAD_VELOCITY;
+                U = PD0.BAD_VELOCITY;
+                Single.TryParse(result[1].Trim(), out E);
+                Single.TryParse(result[2].Trim(), out N);
+                Single.TryParse(result[3].Trim(), out U);
 
                 // Check for Bad Velocity
                 if (E == PD0.BAD_VELOCITY)
@@ -996,11 +1035,16 @@ namespace RTI
                 result[5].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
-                E = Convert.ToSingle(result[1].Trim());
-                N = Convert.ToSingle(result[2].Trim());
-                U = Convert.ToSingle(result[3].Trim());
-                RangeToBottom = Convert.ToSingle(result[4].Trim());
-                Time = Convert.ToSingle(result[5].Trim());
+                E = PD0.BAD_VELOCITY;
+                N = PD0.BAD_VELOCITY;
+                U = PD0.BAD_VELOCITY;
+                RangeToBottom = 0.0f;
+                Time = 0.0f;
+                Single.TryParse(result[1].Trim(), out E);
+                Single.TryParse(result[2].Trim(), out N);
+                Single.TryParse(result[3].Trim(), out U);
+                Single.TryParse(result[4].Trim(), out RangeToBottom);
+                Single.TryParse(result[5].Trim(), out Time);
 
                 // Check for Bad Velocity
                 if (E == PD0.BAD_VELOCITY)

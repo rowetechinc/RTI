@@ -25,6 +25,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/31/2014      RC          2.21.4       Initial coding
+ * 07/16/2014      RC          2.23.0       Added SetMaxBin() set all the max bin values.
  * 
  */
 
@@ -301,6 +302,21 @@ namespace RTI
             GoodBeamMaxBin = 0;
             GoodEarthMinBin = 0;
             GoodEarthMaxBin = 0;
+        }
+
+        /// <summary>
+        /// Set the max bin for all the options.
+        /// </summary>
+        /// <param name="maxBin">Maximum bin to display.</param>
+        public void SetMaxBin(int maxBin)
+        {
+            BeamMaxBin = maxBin;
+            InstrumentMaxBin = maxBin;
+            EarthMaxBin = maxBin;
+            CorrelationMaxBin = maxBin;
+            AmplitudeMaxBin = maxBin;
+            GoodBeamMaxBin = maxBin;
+            GoodEarthMaxBin = maxBin;
         }
 
     }

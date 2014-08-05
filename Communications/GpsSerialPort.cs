@@ -100,11 +100,24 @@ namespace RTI
                         this.ReceiveGpsSerialDataEvent(nmeaStrings);
                     }
                 }
+                catch (System.Threading.ThreadAbortException)
+                {
+                    // Do nothing, the serialport read thread was shutdown
+                }
                 catch(Exception)
                 {
                     // Do nothing
                 }
             }
+        }
+
+        /// <summary>
+        /// Dispose of the serial port.
+        /// </summary>
+        public new void Dispose()
+        {
+            base.Dispose();
+
         }
 
         /// <summary>

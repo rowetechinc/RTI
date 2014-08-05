@@ -48,6 +48,9 @@
  * 08/02/2013      RC          2.19.4     Have ProcessDataEventHandler match AdcpBinaryCodec and give both binary and ensemble.  Removed BinaryRecordEvent.
  * 02/06/2014      RC          2.21.3     Added ability to decode PRIT03 sentence.
  * 02/13/2014      RC          2.21.3     Pass all the DVL data to as binary data to be recorded in SendData().
+ * 07/24/2014      RC          2.23.0     Fixed a bug if AddIncomingData() received a null byte array.
+ * 07/24/2014      RC          2.23.0     When adding PRTI30 and PRTI31 messages, replace the serialnumber subsystem with the correct value.
+ * 07/31/2014      RC          2.23.0     Removed trimming the sentence in FindSentence().
  * 
  */
 
@@ -206,17 +209,20 @@ namespace RTI
         /// <param name="data">Data to add to incoming buffer.</param>
         public void AddIncomingData(byte[] data)
         {
-            // Convert to string 
-            string rcvData = System.Text.ASCIIEncoding.ASCII.GetString(data);
-
-            // Add the data to the buffer
-            lock (_bufferLock)
+            if (data != null)
             {
-                _buffer += rcvData;
-            }
+                // Convert to string 
+                string rcvData = System.Text.ASCIIEncoding.ASCII.GetString(data);
 
-            // Start to process the data
-            ProcessData();
+                // Add the data to the buffer
+                lock (_bufferLock)
+                {
+                    _buffer += rcvData;
+                }
+
+                // Start to process the data
+                ProcessData();
+            }
         }
 
         /// <summary>
@@ -333,6 +339,16 @@ namespace RTI
                 {
                     adcpData.AddAdditionalAncillaryData(prti30);
                     adcpData.AddAdditionalBottomTrackData(prti30);
+
+                    // Setup the serial number
+                    if (adcpData.IsEnsembleAvail)
+                    {
+                        // Remove the temp serial number subsystem
+                        adcpData.EnsembleData.SysSerialNumber.RemoveSubsystem(SerialNumber.DVL_Subsystem);
+
+                        // Add the actual subsystem
+                        adcpData.EnsembleData.SysSerialNumber.AddSubsystem(prti30.SubsystemConfig.SubSystem);
+                    }
                 }
             }
             else
@@ -341,6 +357,16 @@ namespace RTI
                 {
                     adcpData.AddAdditionalAncillaryData(prti31);
                     adcpData.AddAdditionalBottomTrackData(prti31);
+
+                    // Setup the serial number
+                    if (adcpData.IsEnsembleAvail)
+                    {
+                        // Remove the temp serial number subsystem
+                        adcpData.EnsembleData.SysSerialNumber.RemoveSubsystem(SerialNumber.DVL_Subsystem);
+
+                        // Add the actual subsystem
+                        adcpData.EnsembleData.SysSerialNumber.AddSubsystem(prti30.SubsystemConfig.SubSystem);
+                    }
                 }
             }
 
@@ -437,7 +463,7 @@ namespace RTI
                         _buffer = _buffer.Remove(0, nmea.Length);
 
                         // Remove any trailing new lines
-                        nmea = nmea.TrimEnd(REMOVE_END);
+                        //nmea = nmea.TrimEnd(REMOVE_END);
                     }
                     else
                     {

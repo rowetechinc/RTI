@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/10/2014      RC          2.21.3     Initial coding
+ * 07/31/2014      RC          2.23.0     Set the heading based off the ADCP GPS data also.
  * 
  */
 
@@ -57,6 +58,13 @@ namespace RTI
             /// ensemble is from the ADCP.  If the options are set to anything
             /// other than ADCP, the heading will be changed.  If the source
             /// does not exist, the value will not change.
+            /// 
+            /// ADCP GPS is GPS data that came in through the underwater cable into the ADCP and stored in the GPS dataset.
+            /// GPS1 is data that came in on the GPS 1 terminal port.
+            /// GPS2 is data that came in on the GPS 2 terminal port.
+            /// NMEA1 is data that came in on the NMEA 1 terminal port.
+            /// NMEA2 is data that came in on the NMEA 2 terminal port.
+            /// 
             /// </summary>
             /// <param name="ensemble">Ensemble to change the value.</param>
             /// <param name="options">Options to know how the change the value.</param>
@@ -66,6 +74,9 @@ namespace RTI
                 {
                     case VesselMountOptions.SRC_STR_FIXED_HEADING:
                         HeadingSourceFixed(ref ensemble, options.FixedHeading);
+                        break;
+                    case VesselMountOptions.SRC_STR_ADCP_GPS:
+                        HeadingSourceAdcpGps(ref ensemble);
                         break;
                     case VesselMountOptions.SRC_STR_GPS1:
                         HeadingSourceGps1(ref ensemble);
@@ -113,6 +124,39 @@ namespace RTI
             private static void HeadingSourceFixed(ref DataSet.Ensemble ensemble, float fixedHeading)
             {
                 SetHeading(ref ensemble, fixedHeading);
+            }
+
+            /// <summary>
+            /// Set the heading based off the ADCP GPS  data.  This will get the ADCP GPS data and
+            /// get the heading value from GPHDT or GPRMC sentences.  It will set the heading
+            /// to this value.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to set the value.</param>
+            private static void HeadingSourceAdcpGps(ref DataSet.Ensemble ensemble)
+            {
+                double heading = 0.0;
+
+                // Check if GPS 1 data exist
+                if (ensemble.IsAdcpGpsDataAvail)
+                {
+                    // Create a NMEA dataset to decode the data
+                    DataSet.NmeaDataSet adcpGps = new DataSet.NmeaDataSet(ensemble.AdcpGpsData);
+
+                    // GPHDT
+                    if (adcpGps.IsGphdtAvail())
+                    {
+                        heading = adcpGps.GPHDT.Heading.DecimalDegrees;
+                    }
+                    // GPRMC
+                    else if (adcpGps.IsGprmcAvail())
+                    {
+                        heading = adcpGps.GPRMC.Bearing.DecimalDegrees;
+                    }
+                }
+
+                // Set the heading
+                SetHeading(ref ensemble, (float)heading);
+
             }
 
             /// <summary>

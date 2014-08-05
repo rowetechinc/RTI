@@ -50,7 +50,7 @@ namespace RTI
         [Test]
         public void AverageAmplitudeTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = false;
@@ -103,7 +103,7 @@ namespace RTI
         [Test]
         public void AverageCorrelationTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = false;
@@ -160,7 +160,7 @@ namespace RTI
             // Min Ref layer = 1
             // Max Ref Layer = 3
             // Not running average
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsReferenceLayerAveraging = true;
             avgMgr.IsRunningAverage = false;
             avgMgr.MinRefLayer = 1;
@@ -298,7 +298,7 @@ namespace RTI
         [Test]
         public void AverageAll()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.IsReferenceLayerAveraging = true;
             avgMgr.IsCorrelationAveraging = true;
@@ -506,7 +506,7 @@ namespace RTI
         [Test]
         public void RunningAverageCorrelationTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = true;
@@ -606,7 +606,7 @@ namespace RTI
         [Test]
         public void RunningAverageAmplitudeTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = true;
@@ -706,7 +706,7 @@ namespace RTI
         [Test]
         public void RunningAverageReferencelayerTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsRunningAverage = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsReferenceLayerAveraging = true;
@@ -896,7 +896,7 @@ namespace RTI
         [Test]
         public void RunningAverageAllTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.IsReferenceLayerAveraging = true;
             avgMgr.IsCorrelationAveraging = true;
@@ -1186,7 +1186,7 @@ namespace RTI
         [Test]
         public void AverageParametersTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = false;
@@ -1235,7 +1235,7 @@ namespace RTI
         {
             Assert.IsNotNull(ensemble, "Ensemble is incorrect.");
 
-            Assert.AreEqual(1.123f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping time is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping time is incorrect.");
             Assert.AreEqual(3.123f, ensemble.AncillaryData.LastPingTime, 0.001, "Last Ping time is incorrect.");
             Assert.AreEqual(3, ensemble.EnsembleData.DesiredPingCount, "Desired Ping count is incorrect.");
             Assert.AreEqual(3, ensemble.EnsembleData.ActualPingCount, "Actual Ping count is incorrect.");
@@ -1259,7 +1259,7 @@ namespace RTI
         [Test]
         public void AverageParameters2PingCountTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = false;
@@ -1308,7 +1308,7 @@ namespace RTI
         {
             Assert.IsNotNull(ensemble, "Ensemble is incorrect.");
 
-            Assert.AreEqual(1.123f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping time is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping time is incorrect.");
             Assert.AreEqual(3.223f, ensemble.AncillaryData.LastPingTime, 0.001, "Last Ping time is incorrect.");
             Assert.AreEqual(6, ensemble.EnsembleData.DesiredPingCount, "Desired Ping count is incorrect.");
             Assert.AreEqual(6, ensemble.EnsembleData.ActualPingCount, "Actual Ping count is incorrect.");
@@ -1333,7 +1333,7 @@ namespace RTI
         [Test]
         public void AverageParameters2PingCountRunningAvgTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsRunningAverage = true;
@@ -1410,7 +1410,7 @@ namespace RTI
         {
             Assert.IsNotNull(ensemble, "Ensemble is incorrect.");
 
-            Assert.AreEqual(1.123f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping time is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping time is incorrect.");
             Assert.AreEqual(3.223f, ensemble.AncillaryData.LastPingTime, 0.001, "Last Ping time is incorrect.");
             Assert.AreEqual(6, ensemble.EnsembleData.DesiredPingCount, "Desired Ping count is incorrect.");
             Assert.AreEqual(6, ensemble.EnsembleData.ActualPingCount, "Actual Ping count is incorrect.");
@@ -1488,7 +1488,7 @@ namespace RTI
         [Test]
         public void FirstLastPingNotRunningTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 2;
             avgMgr.IsRunningAverage = false;
@@ -1545,7 +1545,7 @@ namespace RTI
         {
             Assert.IsNotNull(ensemble, "Ensemble is incorrect.");
             Assert.IsTrue(ensemble.IsCorrelationAvail, "IsCorrelationAvail is incorrect.");
-            Assert.AreEqual(1.1f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping Time is incorrect.");
+            Assert.AreEqual(0.0f, ensemble.AncillaryData.FirstPingTime, 0.001, "First Ping Time is incorrect.");
             Assert.AreEqual(2.2f, ensemble.AncillaryData.LastPingTime, 0.001, "Last Ping Time is incorrect.");
         }
         /// <summary>
@@ -1567,7 +1567,7 @@ namespace RTI
         [Test]
         public void FirstLastPingRunningTest()
         {
-            AverageManager avgMgr = new AverageManager();
+            AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 5;
             avgMgr.IsRunningAverage = true;

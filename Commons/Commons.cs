@@ -57,6 +57,7 @@
  * 09/11/2012      RC          2.15       Made version number get retrieved from AssemblyInfo.cs.
  * 01/16/2013      RC          2.17       Added list for Transform types and Measurement standard types.
  * 01/24/2014      RC          2.21.3     Added NMEA_FILE_EXT to file extensions.
+ * 07/28/2014      RC          2.23.0     Added AVG_LTA_ENSEMBLE_FILE_EXT and AVG_STA_ENSEMBLE_FILE_EXT.
  * 
  */
 using System;
@@ -120,11 +121,18 @@ namespace RTI
             public const string SINGLE_ENSEMBLE_FILE_EXT = ".ENS";
 
             /// <summary>
-            /// File extension for the Averaged ADCP binary data.
+            /// File extension for the Short Term Averaged ADCP binary data.
             /// This file will contain X averaged ensembles per
             /// entry.
             /// </summary>
-            public const string AVG_ENSEMBLE_FILE_EXT = ".ENA";
+            public const string AVG_STA_ENSEMBLE_FILE_EXT = ".STA";
+
+            /// <summary>
+            /// File extension for the Long Term Averaged ADCP binary data.
+            /// This file will contain X averaged ensembles per
+            /// entry.
+            /// </summary>
+            public const string AVG_LTA_ENSEMBLE_FILE_EXT = ".LTA";
 
             /// <summary>
             /// NMEA file extension.

@@ -50,6 +50,7 @@
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 05/07/2014      RC          2.21.4     Fixed bug in DecodePd0Ensemble() looking for bad velocity.
+ * 07/29/2014      RC          2.23.0     Added VelocityVector.
  * 
  */
 
@@ -76,6 +77,22 @@ namespace RTI
             public float[,] InstrumentVelocityData { get; set; }
 
             /// <summary>
+            /// Flag if the Velocity Vector Array is available.  This 
+            /// array is created if screening is turned on and an array
+            /// was created during the screening process.
+            /// </summary>
+            public bool IsVelocityVectorAvail { get; set; }
+
+            /// <summary>
+            /// Velocity Vector.  This is an array of VelocityVectors.
+            /// The VelocityVector holds the magnitude and direciton for the 
+            /// water velocity in a bin.  Each bin will have a VelocityVector.
+            /// During screening this array can be created.  The screening
+            /// will also remove the ship speed before creating the vector.
+            /// </summary>
+            public VelocityVector[] VelocityVectors { get; set; }
+
+            /// <summary>
             /// Create an Instrument Velocity data set.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
@@ -89,6 +106,8 @@ namespace RTI
             {
                 // Initialize data
                 InstrumentVelocityData = new float[NumElements, ElementsMultiplier];
+                IsVelocityVectorAvail = false;
+                VelocityVectors = new VelocityVector[NumElements];
             }
 
             /// <summary>
@@ -98,14 +117,16 @@ namespace RTI
             /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
             public InstrumentVelocityDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT,                   // Type of data stored (Float or Int)
-                        30,                                             // Number of bins
-                        4,                                              // Number of beams
+                        numBins,                                             // Number of bins
+                        numBeams,                                              // Number of beams
                         DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                         DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
                         DataSet.Ensemble.InstrumentVelocityID)          // Dataset ID
             {
                 // Initialize data
                 InstrumentVelocityData = new float[NumElements, ElementsMultiplier];
+                IsVelocityVectorAvail = false;
+                VelocityVectors = new VelocityVector[NumElements];
             }
 
             /// <summary>
@@ -124,6 +145,8 @@ namespace RTI
             {
                 // Initialize data
                 InstrumentVelocityData = new float[NumElements, ElementsMultiplier];
+                IsVelocityVectorAvail = false;
+                VelocityVectors = new VelocityVector[NumElements];
 
                 // Decode the byte array for velocity data
                 Decode(velocityData);
@@ -157,6 +180,8 @@ namespace RTI
             {
                 // Initialize data
                 this.InstrumentVelocityData = InstrumentVelocityData;
+                this.IsVelocityVectorAvail = IsVelocityVectorAvail;
+                this.VelocityVectors = VelocityVectors;
             }
 
             /// <summary>

@@ -50,6 +50,8 @@
  * 11/18/2013      RC          2.21.0     Added TimeSpanPrettyFormat() to give the time span as a string with plurization.
  * 12/05/2013      RC          2.21.0     Added seconds to TimeSpanPrettyFormat().
  * 02/24/2014      RC          2.21.4     Added MsbLsb().
+ * 07/23/2014      RC          2.23.0     Added functions to set and get byte arrays for strings.
+ * 07/28/2014      RC          2.23.0     Added a try/catch block in SubArray().
  * 
  * 
  */
@@ -58,6 +60,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using log4net;
 
 
 namespace RTI
@@ -68,6 +71,11 @@ namespace RTI
     public class MathHelper
     {
         #region Variables
+
+        /// <summary>
+        /// Logger for logging error messages.
+        /// </summary>
+        private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Value to convert megabytes to bytes.
@@ -821,8 +829,20 @@ namespace RTI
         /// <returns></returns>
         public static T[] SubArray<T>(T[] data, int index, int length)
         {
+            // Create a new buffer
             T[] result = new T[length];
-            System.Buffer.BlockCopy(data, index, result, 0, length);
+
+            try
+            {
+                // Copy the buffer
+                System.Buffer.BlockCopy(data, index, result, 0, length);
+            }
+            catch (Exception e)
+            {
+                log.Error(string.Format("Error getting subarray. Data Length: {0}, Data Index: {1}, Result Length: {2}", data.Length, index, length), e);
+            }
+            
+            
             return result;
         }
 
@@ -1241,6 +1261,34 @@ namespace RTI
         public static bool IsBitSet(int value, int position)
         {
             return (value & (1 << position)) != 0;
+        }
+
+        #endregion
+
+        #region Strings
+
+        /// <summary>
+        /// Convert the given string to a byte array.
+        /// </summary>
+        /// <param name="str">String to convert.</param>
+        /// <returns>Byte array of the string.</returns>
+        public static byte[] GetBytes(string str)
+        {
+            byte[] bytes = new byte[str.Length * sizeof(char)];
+            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
+
+        /// <summary>
+        /// Convert the byte array to a string.
+        /// </summary>
+        /// <param name="bytes">Byte array to convert.</param>
+        /// <returns>String of the given byte array.</returns>
+        public static string GetString(byte[] bytes)
+        {
+            char[] chars = new char[bytes.Length / sizeof(char)];
+            System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+            return new string(chars);
         }
 
         #endregion

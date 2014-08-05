@@ -54,6 +54,7 @@
  * 03/04/2013      RC          2.18       Create the VelocityVectors array in the constructor.
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
+ * 07/29/2014      RC          2.23.0     Changed the name of the VelocityVector functions.
  * 
  */
 

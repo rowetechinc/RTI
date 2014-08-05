@@ -76,6 +76,7 @@
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 08/09/2013      RC          2.19.4     Added a soft BREAK in SendBreak() for connections that can not handle hard BREAKs.
  * 09/25/2013      RC          2.20.1     In SendDataWaitReply() check the response if it is a BREAK and handle differently.
+ * 08/05/2014      RC          2.23.0     Force the thread to shutdown by sending an abort in Dispose().
  * 
  */
 
@@ -181,6 +182,8 @@ namespace RTI
         private int _threadInterval;
 
         /// <summary>
+        /// Volatile is used as hint to the compiler that this data 
+        /// member will be accessed by multiple threads.
         /// Flag used to stop the ReadThread.
         /// </summary>
         private volatile bool _stopThread;
@@ -190,7 +193,7 @@ namespace RTI
         /// read thread.  This will cause no processing
         /// to be done in the read thread if set true.
         /// </summary>
-        private bool _pauseReadThread;
+        private volatile bool _pauseReadThread;
 
         /// <summary>
         /// Flag used to determine if we are sending data.
@@ -309,26 +312,25 @@ namespace RTI
         /// </summary>
         public void Dispose()
         {
-            // Set the flag to stop the Read thread
-            _stopThread = true;
+            try
+            {
+                // Disconnect the serial port
+                Disconnect();
 
-            // Disconnect the serial port
-            Disconnect();
+                // Set the flag to stop the Read thread
+                _stopThread = true;
+                _threadWait.Set();
 
-            // Call any subsystem shutdown methods
-            // Any objects that extend this object
-            // must implement this method to ensure
-            // proper shutdown.
-            SubDispose();
-        }
-
-        /// <summary>
-        /// Virtual method to extend the shutdown method.
-        /// </summary>
-        protected virtual void SubDispose()
-        {
-            // Put shutdown process in here for any objects that
-            // extend this object.
+                // Stop the thread if it is still alive
+                if (_readThread.IsAlive)
+                {
+                    _readThread.Abort();
+                }
+            }
+            catch (Exception)
+            {
+                // Do nothing, the thread was forced to stop
+            }
         }
 
         #region Methods
@@ -580,71 +582,88 @@ namespace RTI
         /// <param name="data">Not Used.</param>
         private void ReadThreadMethod(object data)
         {
-            while (!_stopThread)
+            try
             {
-                try
+                while (!_stopThread)
                 {
-                    // Ensure the serial port is open
-                    // Not in a break state
-                    // And not sending data
-                    // And not pasued
-                    if (IsAvailable() && !_isSendingData && !_pauseReadThread)
+                    try
                     {
-                        // Block until data is available
-                        int bytesAvail = _serialPort.BytesToRead;
-
-                        // Verify data was read from the serial port
-                        if (bytesAvail > 0)
+                        // Ensure the serial port is open
+                        // Not in a break state
+                        // And not sending data
+                        // And not pasued
+                        if (IsAvailable() && !_isSendingData && !_pauseReadThread)
                         {
-                            // Create a buffer to hold the data
-                            byte[] buffer = new byte[bytesAvail];
+                            // Block until data is available
+                            int bytesAvail = _serialPort.BytesToRead;
 
-                            //Debug.WriteLine("Reading data from Serial Port");
-                            int bytesRead = _serialPort.Read(buffer, 0, buffer.Length);
-
-                            // Determine if we need to continue to read because not all the bytes were reads
-                            if (bytesRead != bytesAvail)
+                            // Verify data was read from the serial port
+                            if (bytesAvail > 0)
                             {
-                                Debug.WriteLine(string.Format("Bytes Read {0},  Bytes Available {1]", bytesRead, bytesAvail));
-                                log.Warn(string.Format("Bytes Read {0},  Bytes Available {1]", bytesRead, bytesAvail));
-                            }
+                                // Create a buffer to hold the data
+                                byte[] buffer = new byte[bytesAvail];
 
-                            // Pass the data to all subscribers
-                            if (this.ReceiveRawSerialDataEvent != null)
-                            {
-                                this.ReceiveRawSerialDataEvent(buffer);
-                            }
+                                //Debug.WriteLine("Reading data from Serial Port");
+                                int bytesRead = _serialPort.Read(buffer, 0, buffer.Length);
 
-                            // Pass the data to a function that can be overloaded
-                            // so the data can be handled differently
-                            ReceiveDataHandler(buffer);
+                                // Determine if we need to continue to read because not all the bytes were reads
+                                if (bytesRead != bytesAvail)
+                                {
+                                    Debug.WriteLine(string.Format("Bytes Read {0},  Bytes Available {1]", bytesRead, bytesAvail));
+                                    log.Warn(string.Format("Bytes Read {0},  Bytes Available {1]", bytesRead, bytesAvail));
+                                }
+
+                                // Pass the data to all subscribers
+                                if (this.ReceiveRawSerialDataEvent != null)
+                                {
+                                    this.ReceiveRawSerialDataEvent(buffer);
+                                }
+
+                                // Pass the data to a function that can be overloaded
+                                // so the data can be handled differently
+                                ReceiveDataHandler(buffer);
+                            }
                         }
                     }
-                }
-                catch (System.UnauthorizedAccessException ex)
-                {
-                    // If the port is already in use, do not
-                    // start the thread
-                    log.Warn("COMM Port Error Reading: " + _serialOptions.Port, ex);
-
-                    if (_serialPort != null)
+                    catch (System.UnauthorizedAccessException ex)
                     {
-                        Disconnect();
+                        // If the port is already in use, do not
+                        // start the thread
+                        log.Warn("COMM Port Error Reading: " + _serialOptions.Port, ex);
+
+                        if (_serialPort != null)
+                        {
+                            Disconnect();
+                        }
+                    }
+                    catch (ThreadAbortException etax)
+                    {
+                        // Do nothing, forcing the thread to stop if it does not stop at shutdown
+                        log.Error("Thread aborted" + _serialOptions.ToString(), etax);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Warn("Error Reading in COMM Port: " + _serialOptions.Port, ex);
+
+                        if (_serialPort != null)
+                        {
+                            Disconnect();
+                        }
+                    }
+                    finally
+                    {
+                        _threadWait.WaitOne(_threadInterval);
                     }
                 }
-                catch (Exception ex)
-                {
-                    log.Warn("Error Reading in COMM Port: " + _serialOptions.Port, ex);
-
-                    if (_serialPort != null)
-                    {
-                        Disconnect();
-                    }
-                }
-                finally
-                {
-                    _threadWait.WaitOne(_threadInterval);
-                }
+            }
+            catch (ThreadAbortException ex)
+            {
+                // Do nothing, forcing the thread to stop if it does not stop at shutdown
+                log.Error("Error with serial port read thread. {0}" + _serialOptions.ToString(), ex);
+            }
+            catch (Exception e)
+            {
+                log.Error("Error with serial port read thread. {0}" + _serialOptions.ToString(), e);
             }
         }
 
@@ -919,9 +938,7 @@ namespace RTI
                 {
                     _eventWaitResponse.Set();
                 }
-            }
-
-                
+            }  
         }
 
         #endregion

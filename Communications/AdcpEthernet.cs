@@ -51,14 +51,40 @@ namespace RTI
     using System.Threading;
 using System.Collections.Concurrent;
     using System.ComponentModel;
+    using System.Net.Sockets;
 
     /// <summary>
     /// Send commands and receive data from the ADCP using
     /// an ethernet connection.
+    /// 
+    /// The Ethernet pinging is done different from serial communication.  You must poll the ADCP for data.  A buffer within the ADCP is filled, when the ADCP is pinged through the ethernet, it will dump whatever is in the buffer. 
+    /// The ADCP is not using UDP and is not a TCP/IP server.  You are really just pinging the ADCP and within the ping is a buffer with the command.  The ping will cause the ADCP to send a ping response and within the ping response is a buffer which contains the ADCP data.  The ping response is a "Internet Control Message Protocol (ICMP)" echo.
+    /// 
+    /// Any command sent through the ethernet must start with "RTIy".
+    /// The command must end with a carriage return (\r).
+    /// Example if you want to send a BREAK.
+    /// 
+    /// RTIyBREAK\r
+    /// 
+    /// To poll the ADCP for data you send a blank command.
+    /// RTIy\r
+    /// 
+    /// If you are writing your code in C#, you can find examples of this in the file:
+    /// https://github.com/rowetechinc/RTI/blob/master/Communications/AdcpEthernet.cs
+    /// 
+    /// CSHOW will give the IP address of the ADCP.  
+    /// 
+    /// The IP Port does not need to be used for this setup.
+    /// 
     /// </summary>
     public class AdcpEthernet: IDisposable
     {
         #region Variables
+
+        /// <summary>
+        ///  Setup logger
+        /// </summary>
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Number of retries when downloading the data.
@@ -128,6 +154,7 @@ using System.Collections.Concurrent;
 
         /// <summary>
         /// Options for the ethernet connection.
+        /// Port does not need to be set for this setup.
         /// </summary>
         public AdcpEthernetOptions Options { get; set; }
 
@@ -341,7 +368,7 @@ using System.Collections.Concurrent;
         public void SendBreak()
         {
             // Create any array, this buffer will be resized by response
-            byte[] buffer = new byte[100];
+            //byte[] buffer = new byte[100];
             
             // Send a soft break
             SendDataGetReply(Commands.AdcpCommands.CMD_BREAK, false);
@@ -384,16 +411,6 @@ using System.Collections.Concurrent;
         /// <param name="data">Data to write.</param>
         public void SendData(string data)
         {
-            //// This buffer will get recreated in the response
-            //byte[] buffer = new byte[100];
-            //SendData(data, ref buffer);
-
-            //Thread.Sleep(WAIT_STATE);
-
-            //// Read the buffer for a reply
-            //byte[] reply = new byte[100];
-            //ReadData(ref reply);
-
             // Send data and wait for the reply
             SendDataWaitReply(data);
         }
@@ -542,6 +559,9 @@ using System.Collections.Concurrent;
                             // Set the number of bytes in the reply
                             result = bytes;
 
+                            // Start where the buffer data is
+                            // and copy the buffered ADCP data from
+                            // the response
                             int j = 0;
                             replyBuffer = new byte[bytes];
                             for (i = 6; i < bytes + 6; i++, j++)
@@ -553,9 +573,6 @@ using System.Collections.Concurrent;
                             // Display the results
                             if (showResults && result > 0)
                             {
-                                // Set the last byte to 0 to end the string
-                                //replyBuffer[j-1] = 0;
-
                                 // Display the reply
                                 string strBuffer = Encoding.ASCII.GetString(replyBuffer);
                                 ReceiveBufferString += strBuffer;

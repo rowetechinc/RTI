@@ -79,6 +79,7 @@
     <Compile Include="Communications\AdcpEthernet.cs" />
     <Compile Include="Communications\AdcpEthernetOptions.cs" />
     <Compile Include="Communications\AdcpSerialPort.cs" />
+    <Compile Include="Communications\AdcpTcpIp.cs" />
     <Compile Include="Communications\GpsSerialPort.cs" />
     <Compile Include="Communications\SerialConnection.cs" />
     <Compile Include="Communications\SerialOptions.cs" />
@@ -115,8 +116,10 @@
     <Compile Include="DotSpatial\Positioning\Speed.cs" />
     <Compile Include="Exporter\CsvExporterWriter.cs" />
     <Compile Include="Exporter\Pd0ExporterWriter.cs" />
+    <Compile Include="Models\AdcpReceiver.cs" />
     <Compile Include="Models\DataSet\DvlDataSet.cs" />
     <Compile Include="Models\DVL\IDvlData.cs" />
+    <Compile Include="Models\Options\AverageManagerOptions.cs" />
     <Compile Include="Models\Options\ExportOptions.cs" />
     <Compile Include="Exporter\IExporterWriter.cs" />
     <Compile Include="Exporter\MatlabExporterWriter.cs" />
@@ -179,6 +182,10 @@
     <Compile Include="Post Process\Average\AverageCorrelation.cs" />
     <Compile Include="Post Process\Average\AverageManager.cs" />
     <Compile Include="Post Process\Average\AverageAmplitude.cs" />
+    <Compile Include="Post Process\Average\AverageEarthVelocity.cs" />
+    <Compile Include="Post Process\Average\AverageInstrumentVelocity.cs" />
+    <Compile Include="Post Process\Average\AverageBeamVelocity.cs" />
+    <Compile Include="Post Process\Average\AverageBottomTrack.cs" />
     <Compile Include="Post Process\Average\ReferenceLayerAverage.cs" />
     <Compile Include="Post Process\Screen\RemoveShipSpeed.cs" />
     <Compile Include="Post Process\Screen\ScreenBottomTrackRange.cs" />

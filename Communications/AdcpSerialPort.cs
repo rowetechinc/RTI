@@ -498,10 +498,12 @@ namespace RTI
         }
 
         /// <summary>
-        /// Shutdown the object.
+        /// Dispose of the serial port.
         /// </summary>
-        protected override void SubDispose()
+        public new void Dispose()
         {
+            base.Dispose();
+
             // Close any previous binary writers
             CloseBinaryWriter();
         }
@@ -548,10 +550,14 @@ namespace RTI
                         Debug.WriteLine("Upload data received.");
                     }
                 }
+                catch (ThreadAbortException)
+                {
+                    // Do nothing, the serialport read thread was shutdown
+                }
                 catch (Exception e)
                 {
                     // Do nothing on exception
-                    Debug.WriteLine("Receive Serial Data Exception: {0}", e.ToString());
+                    Debug.WriteLine("Receive Serial Data Exception", e.ToString());
                 }
             }
         }
@@ -669,9 +675,16 @@ namespace RTI
         {
             if (_downloadDataBinWriter != null)
             {
-                _downloadDataBinWriter.Close();
-                _downloadDataBinWriter.Dispose();
-                _downloadDataBinWriter = null;
+                try
+                {
+                    _downloadDataBinWriter.Close();
+                    _downloadDataBinWriter.Dispose();
+                    _downloadDataBinWriter = null;
+                }
+                catch (Exception e)
+                {
+                    log.Warn("Error disposing AdcpSerialPort binary writer.", e);
+                }
             }
         }
 

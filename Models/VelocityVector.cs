@@ -38,6 +38,7 @@
  * 06/07/2012      RC          2.11       Added GenerateVelocityVectors() and GenerateAmplitudeVectors().
  * 03/07/2013      RC          2.18       In CreateVelocityVector(), create the VelocityVector before setting the values.
  * 03/22/2013      RC          2.19       Fixed bug in GenerateAmplitudeVectors() where the VelociytVector was not created.      
+ * 07/29/2014      RC          2.23.0     Added Instrument Velocity Vectors.  Made specific Earth and Instrument functions.
  * 
  */
 
@@ -113,6 +114,142 @@ namespace RTI
             /// <returns>VelocityVector created.</returns>
             public static bool CreateVelocityVector(ref DataSet.Ensemble ensemble)
             {
+                // Generate the Earth Velocity Vectors
+                GenerateEarthVectors(ref ensemble);
+
+                // Generate the Instrument Velocity Vectors
+                GenerateInstrumentVectors(ref ensemble);
+
+                return true;
+            }
+
+            /// <summary>
+            /// Create an struct to hold bin vectors for the velocity data
+            /// based off the ensemble given.  This will remove the
+            /// Bottom Track velocity from the velocity data then
+            /// create  a vector representing the
+            /// water velocity.
+            /// Removing Ship Speed:
+            /// BT Good, GPS Good or Bad = BT velocities
+            /// BT Bad, GPS Good = GPS velocity
+            /// BT Bad, GPS Bad = Previous Good BT
+            /// BT Bad, Gps Bad, Previous BT Bad = None
+            /// 
+            /// </summary>
+            /// <param name="adcpData">Ensemble to generate vector values.</param>
+            /// <returns>Vectors for each bin in ensemble.</returns>
+            public static DataSet.EnsembleVelocityVectors GenerateEarthVelocityVectors(DataSet.Ensemble adcpData)
+            {
+                // Create the velocity vector data
+                DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
+
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = adcpData.EnsembleData.UniqueId;
+
+                if (adcpData.IsEarthVelocityAvail && adcpData.EarthVelocityData.IsVelocityVectorAvail)
+                {
+                    ensVec.Vectors = adcpData.EarthVelocityData.VelocityVectors;
+                }
+
+                return ensVec;
+            }
+
+            /// <summary>
+            /// Create an struct to hold bin vectors for the velocity data
+            /// based off the ensemble given.  This will remove the
+            /// Bottom Track velocity from the velocity data then
+            /// create  a vector representing the
+            /// water velocity.
+            /// Removing Ship Speed:
+            /// BT Good, GPS Good or Bad = BT velocities
+            /// BT Bad, GPS Good = GPS velocity
+            /// BT Bad, GPS Bad = Previous Good BT
+            /// BT Bad, Gps Bad, Previous BT Bad = None
+            /// 
+            /// </summary>
+            /// <param name="adcpData">Ensemble to generate vector values.</param>
+            /// <returns>Vectors for each bin in ensemble.</returns>
+            public static DataSet.EnsembleVelocityVectors GenerateInstrumentVelocityVectors(DataSet.Ensemble adcpData)
+            {
+                // Create the velocity vector data
+                DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
+
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = adcpData.EnsembleData.UniqueId;
+
+                if (adcpData.IsInstrumentVelocityAvail && adcpData.InstrumentVelocityData.IsVelocityVectorAvail)
+                {
+                    ensVec.Vectors = adcpData.InstrumentVelocityData.VelocityVectors;
+                }
+
+                return ensVec;
+            }
+
+            /// <summary>
+            /// Create an EnsembleVelocityVector based off the ensemble.
+            /// If the Velocity Vectors do not exist, create the vectors.
+            /// </summary>
+            /// <param name="adcpData">Ensemble data.</param>
+            /// <returns>EnsembleVelocityVector with the velocity vector data.</returns>
+            public static DataSet.EnsembleVelocityVectors GetEarthVelocityVectors(DataSet.Ensemble adcpData)
+            {
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = adcpData.EnsembleData.UniqueId;
+
+                // Check, if velocity vectors exist
+                if (adcpData.IsEarthVelocityAvail && adcpData.EarthVelocityData.IsVelocityVectorAvail)
+                {
+                    ensVec.Vectors = adcpData.EarthVelocityData.VelocityVectors;
+                }
+                else if (adcpData.IsEarthVelocityAvail)
+                {
+                    // Create the velocity vector data
+                    DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
+
+                    ensVec.Vectors = adcpData.EarthVelocityData.VelocityVectors;
+                }
+
+                return ensVec;
+            }
+
+            /// <summary>
+            /// Create an EnsembleVelocityVector based off the ensemble.
+            /// If the Velocity Vectors do not exist, create the vectors.
+            /// </summary>
+            /// <param name="adcpData">Ensemble data.</param>
+            /// <returns>EnsembleVelocityVector with the velocity vector data.</returns>
+            public static DataSet.EnsembleVelocityVectors GetInstrumentVelocityVectors(DataSet.Ensemble adcpData)
+            {
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = adcpData.EnsembleData.UniqueId;
+
+                // Check, if velocity vectors exist
+                if (adcpData.IsInstrumentVelocityAvail && adcpData.InstrumentVelocityData.IsVelocityVectorAvail)
+                {
+                    ensVec.Vectors = adcpData.InstrumentVelocityData.VelocityVectors;
+                }
+                else if (adcpData.IsInstrumentVelocityAvail)
+                {
+                    // Create the velocity vector data
+                    DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
+
+                    ensVec.Vectors = adcpData.InstrumentVelocityData.VelocityVectors;
+                }
+
+                return ensVec;
+            }
+
+            /// <summary>
+            /// Generate the Earth Velocity vector and store it to the
+            /// give ensemble.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to create the Earth velocity vectors.</param>
+            public static void GenerateEarthVectors(ref DataSet.Ensemble ensemble)
+            {
                 if (ensemble != null && ensemble.IsEarthVelocityAvail)
                 {
                     // Create array to store all the vectors
@@ -156,45 +293,60 @@ namespace RTI
                             ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
                         }
                     }
-
-                    // VelocityVector array created
-                    return true;
                 }
-
-                // VelocityVector array could not be created
-                return false;
             }
 
             /// <summary>
-            /// Create an struct to hold bin vectors for the velocity data
-            /// based off the ensemble given.  This will remove the
-            /// Bottom Track velocity from the velocity data then
-            /// create  a vector representing the
-            /// water velocity.
-            /// Removing Ship Speed:
-            /// BT Good, GPS Good or Bad = BT velocities
-            /// BT Bad, GPS Good = GPS velocity
-            /// BT Bad, GPS Bad = Previous Good BT
-            /// BT Bad, Gps Bad, Previous BT Bad = None
-            /// 
+            /// Generate the Instrument Velocity vector and store it to the
+            /// give ensemble.
             /// </summary>
-            /// <param name="adcpData">Ensemble to generate vector values.</param>
-            /// <returns>Vectors for each bin in ensemble.</returns>
-            public static DataSet.EnsembleVelocityVectors GenerateVelocityVectors(DataSet.Ensemble adcpData)
+            /// <param name="ensemble">Ensemble to create the Instrument velocity vectors.</param>
+            public static void GenerateInstrumentVectors(ref DataSet.Ensemble ensemble)
             {
-                // Create the velocity vector data
-                DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
-
-                // Create struct to hold the data
-                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
-                ensVec.Id = adcpData.EnsembleData.UniqueId;
-
-                if (adcpData.IsEarthVelocityAvail && adcpData.EarthVelocityData.IsVelocityVectorAvail)
+                if (ensemble != null && ensemble.IsInstrumentVelocityAvail)
                 {
-                    ensVec.Vectors = adcpData.EarthVelocityData.VelocityVectors;
-                }
+                    // Create array to store all the vectors
+                    ensemble.InstrumentVelocityData.IsVelocityVectorAvail = true;
+                    ensemble.InstrumentVelocityData.VelocityVectors = new VelocityVector[ensemble.InstrumentVelocityData.NumElements];
 
-                return ensVec;
+                    // Create a vector for each bin
+                    for (int bin = 0; bin < ensemble.InstrumentVelocityData.NumElements; bin++)
+                    {
+                        // Create the object
+                        ensemble.InstrumentVelocityData.VelocityVectors[bin] = new VelocityVector();
+
+                        // Get the velocity values
+                        float east = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX];
+                        float north = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX];
+                        float vertical = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX];
+
+                        // If any of the velocities are bad, then set bad velocities for all the velocities and move to the next bin
+                        if (east == DataSet.Ensemble.BAD_VELOCITY ||
+                            north == DataSet.Ensemble.BAD_VELOCITY ||
+                            vertical == DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            ensemble.InstrumentVelocityData.VelocityVectors[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.InstrumentVelocityData.VelocityVectors[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.InstrumentVelocityData.VelocityVectors[bin].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+                        else
+                        {
+
+                            // Calculate the magnitude of the velocity
+                            //double mag = MathHelper.CalculateMagnitude(ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
+                            //                                           ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
+                            //                                           ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]);
+                            double mag = MathHelper.CalculateMagnitude(ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
+                                                                        ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
+                                                                        0);      // do not use Vertical
+
+                            // Set the values
+                            ensemble.InstrumentVelocityData.VelocityVectors[bin].Magnitude = Math.Abs(mag);
+                            ensemble.InstrumentVelocityData.VelocityVectors[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
+                            ensemble.InstrumentVelocityData.VelocityVectors[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
+                        }
+                    }
+                }
             }
 
             /// <summary>

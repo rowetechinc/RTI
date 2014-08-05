@@ -173,16 +173,8 @@ namespace RTI
             /// clear.
             /// </summary>
             /// <param name="ensemble">Ensemble to set the average.</param>
-            public abstract void SetAverage(ref DataSet.Ensemble ensemble);
-
-            /// <summary>
-            /// Cear the accumulator and counter.
-            /// </summary>
-            public virtual void Clear()
-            {
-                // Clear the list
-                _accumData.Clear();
-            }
+            /// <param name="scale">Scale value to multiply to the averaged value.</param>
+            public abstract void SetAverage(ref DataSet.Ensemble ensemble, float scale);
 
             /// <summary>
             /// Get the averaged value.  This will take the accumulated values and generate
@@ -190,14 +182,15 @@ namespace RTI
             /// value.  The average value is then stored to the array.
             /// If no data has been accumulated, NULL will be returned.
             /// </summary>
+            /// <param name="scale">Scale value to multiply to the averaged value.</param>
             /// <returns>An array of averaged value and a scale value multiplied in.</returns>
-            public virtual float[,] GetAverage()
+            public virtual float[,] GetAverage(float scale = 1.0f)
             {
                 // Accumulate the data
                 AccumulatedData data = AccumulateData();
 
                 // Then average the data
-                return AverageData(data);
+                return AverageData(data, scale);
             }
 
             #region Methods
@@ -215,25 +208,23 @@ namespace RTI
             /// list and wait for _numSamples to be accumulated
             /// before taking the next average.
             /// </summary>
-            protected virtual void RemoveEnsemble()
+            public virtual void RemoveFirstEnsemble()
             {
                 // Check if the number of samples has been met in the list
-                if (_accumData.Count >= NumSamples)
+                if (_accumData.Count >= 1)
                 {
-                    // Clear the accum if not a running average
-                    if (!IsRunningAverage)
-                    {
-
-                        Clear();
-                    }
-
-                    // If a RunningAverage, check if the max number of samples has been met
-                    if (IsRunningAverage)
-                    {
-                        // Remove the first data in the list
-                        _accumData.RemoveAt(0);
-                    }
+                    // Remove the first data in the list
+                    _accumData.RemoveAt(0);
                 }
+            }
+
+            /// <summary>
+            /// Clear the accumulator.
+            /// </summary>
+            public virtual void ClearAllEnsembles()
+            {
+                // Clear the list
+                _accumData.Clear();
             }
 
             /// <summary>
@@ -271,35 +262,47 @@ namespace RTI
                         for (int bin = 0; bin < data.GetLength(0); bin++)
                         {
                             // Beam 0
-                            float b0 = data[bin, DataSet.Ensemble.BEAM_0_INDEX];
-                            if (b0 != DataSet.Ensemble.BAD_VELOCITY)
+                            if (numBeams > 0)
                             {
-                                avgAccum[bin, DataSet.Ensemble.BEAM_0_INDEX] += b0;
-                                avgCount[bin, DataSet.Ensemble.BEAM_0_INDEX]++;
+                                float b0 = data[bin, DataSet.Ensemble.BEAM_0_INDEX];
+                                if (b0 != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    avgAccum[bin, DataSet.Ensemble.BEAM_0_INDEX] += b0;
+                                    avgCount[bin, DataSet.Ensemble.BEAM_0_INDEX]++;
+                                }
                             }
 
                             // Beam 1
-                            float b1 = data[bin, DataSet.Ensemble.BEAM_1_INDEX];
-                            if (b1 != DataSet.Ensemble.BAD_VELOCITY)
+                            if (numBeams > 1)
                             {
-                                avgAccum[bin, DataSet.Ensemble.BEAM_1_INDEX] += b1;
-                                avgCount[bin, DataSet.Ensemble.BEAM_1_INDEX]++;
+                                float b1 = data[bin, DataSet.Ensemble.BEAM_1_INDEX];
+                                if (b1 != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    avgAccum[bin, DataSet.Ensemble.BEAM_1_INDEX] += b1;
+                                    avgCount[bin, DataSet.Ensemble.BEAM_1_INDEX]++;
+                                }
                             }
 
                             // Beam 2
-                            float b2 = data[bin, DataSet.Ensemble.BEAM_2_INDEX];
-                            if (b2 != DataSet.Ensemble.BAD_VELOCITY)
+                            if (numBeams > 2)
                             {
-                                avgAccum[bin, DataSet.Ensemble.BEAM_2_INDEX] += b2;
-                                avgCount[bin, DataSet.Ensemble.BEAM_2_INDEX]++;
+                                float b2 = data[bin, DataSet.Ensemble.BEAM_2_INDEX];
+                                if (b2 != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    avgAccum[bin, DataSet.Ensemble.BEAM_2_INDEX] += b2;
+                                    avgCount[bin, DataSet.Ensemble.BEAM_2_INDEX]++;
+                                }
                             }
 
                             // Beam 3
-                            float b3 = data[bin, DataSet.Ensemble.BEAM_3_INDEX];
-                            if (b3 != DataSet.Ensemble.BAD_VELOCITY)
+                            if (numBeams > 3)
                             {
-                                avgAccum[bin, DataSet.Ensemble.BEAM_3_INDEX] += b3;
-                                avgCount[bin, DataSet.Ensemble.BEAM_3_INDEX]++;
+                                float b3 = data[bin, DataSet.Ensemble.BEAM_3_INDEX];
+                                if (b3 != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    avgAccum[bin, DataSet.Ensemble.BEAM_3_INDEX] += b3;
+                                    avgCount[bin, DataSet.Ensemble.BEAM_3_INDEX]++;
+                                }
                             }
                         }
                     }
@@ -317,8 +320,9 @@ namespace RTI
             /// scale value to the averaged data.
             /// </summary>
             /// <param name="accumData">Accumulated values.</param>
+            /// <param name="scale">Scale value to multiply to averaged value.</param>
             /// <returns>Array with the averaged and scaled value.</returns>
-            protected float[,] AverageData(AccumulatedData accumData)
+            protected float[,] AverageData(AccumulatedData accumData, float scale)
             {
                 // Create an array, if no data is accumulated, null will be retruned
                 float[,] result = null;
@@ -331,44 +335,67 @@ namespace RTI
                     // Set Min and Max bin
                     int minBin = 0;
                     int maxBin = accumData.AvgAccum.GetLength(0);
+                    int numBeams = accumData.AvgCount.GetLength(1);
 
                     // Average all the accumulated data
                     for (int bin = minBin; bin < maxBin; bin++)
                     {
-                        // Calculate the average values
-                        float B0 = 0.0f;
-                        if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_0_INDEX] > 0)
+                        // Check if it has at least 1 beams
+                        if (numBeams > 0)
                         {
-                            B0 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_0_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_0_INDEX];       // Beam 0 Average
-                        }
-                        float B1 = 0.0f;
-                        if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_1_INDEX] > 0)
-                        {
-                            B1 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_1_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_1_INDEX];       // Beam 1 Average
-                        }
-                        float B2 = 0.0f;
-                        if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_2_INDEX] > 0)
-                        {
-                            B2 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_2_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_2_INDEX];       // Beam 2 Average
-                        }
-                        float B3 = 0.0f;
-                        if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_3_INDEX] > 0)
-                        {
-                            B3 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_3_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_3_INDEX];       // Beam 3 Average
+                            // Calculate the average values
+                            float B0 = 0.0f;
+                            if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_0_INDEX] > 0)
+                            {
+                                B0 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_0_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_0_INDEX];       // Beam 0 Average
+                            }
+
+                            // Set results
+                            B0 *= scale;
+                            result[bin, DataSet.Ensemble.BEAM_0_INDEX] = B0;
                         }
 
-                        // Multiply the scale value
-                        B0 *= Scale;
-                        B1 *= Scale;
-                        B2 *= Scale;
-                        B3 *= Scale;
+                        // Check if it has at least 2 beams
+                        if (numBeams > 1)
+                        {
+                            float B1 = 0.0f;
+                            if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_1_INDEX] > 0)
+                            {
+                                B1 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_1_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_1_INDEX];       // Beam 1 Average
+                            }
 
-                        // Set the results
-                        result[bin, DataSet.Ensemble.BEAM_0_INDEX] = B0;
-                        result[bin, DataSet.Ensemble.BEAM_1_INDEX] = B1;
-                        result[bin, DataSet.Ensemble.BEAM_2_INDEX] = B2;
-                        result[bin, DataSet.Ensemble.BEAM_3_INDEX] = B3;
+                            // Set Results
+                            B1 *= scale;
+                            result[bin, DataSet.Ensemble.BEAM_1_INDEX] = B1;
+                        }
 
+                        // Check if it has a least 3 beams
+                        if (numBeams > 2)
+                        {
+                            float B2 = 0.0f;
+                            if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_2_INDEX] > 0)
+                            {
+                                B2 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_2_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_2_INDEX];       // Beam 2 Average
+                            }
+
+                            // Set Results
+                            B2 *= scale;
+                            result[bin, DataSet.Ensemble.BEAM_2_INDEX] = B2;
+                        }
+
+                        // Check if it has a least 4 beams
+                        if (numBeams > 3)
+                        {
+                            float B3 = 0.0f;
+                            if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_3_INDEX] > 0)
+                            {
+                                B3 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_3_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_3_INDEX];       // Beam 3 Average
+                            }
+
+                            // Set Result
+                            B3 *= scale;
+                            result[bin, DataSet.Ensemble.BEAM_3_INDEX] = B3;
+                        }
                     }
                 }
 

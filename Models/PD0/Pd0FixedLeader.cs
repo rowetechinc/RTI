@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/25/2014      RC          2.21.4     Initial coding
+ * 07/16/2014      RC          2.23.0     Check if the values are given in DecodeRtiEnsemble().
  * 
  * 
  * 
@@ -749,12 +750,13 @@ namespace RTI
         /// </summary>
         /// <param name="ens">RTI Ensemble aata set.</param>
         /// <param name="anc">RTI Ancillary data set.</param>
+        /// <param name="sysSetup">SystemSetup data set.</param>
         /// <param name="xform">Coordinate transform used for this ensemble.</param>
-        public Pd0FixedLeader(DataSet.EnsembleDataSet ens, DataSet.AncillaryDataSet anc, PD0.CoordinateTransforms xform)
+        public Pd0FixedLeader(DataSet.EnsembleDataSet ens, DataSet.AncillaryDataSet anc, DataSet.SystemSetupDataSet sysSetup, PD0.CoordinateTransforms xform)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.FixedLeader)
         {
             Initialize();
-            DecodeRtiEnsemble(ens, anc, xform);
+            DecodeRtiEnsemble(ens, anc, sysSetup, xform);
         }
 
         #region Initialize
@@ -2362,11 +2364,26 @@ namespace RTI
         /// </summary>
         /// <param name="ens">RTI Ensemble data set.</param>
         /// <param name="anc">RTI Ancillary data set.</param>
+        /// <param name="sysSetup">SystemSetup data set.</param>
         /// <param name="xform">Coordinate Transform.</param>
-        public void DecodeRtiEnsemble(DataSet.EnsembleDataSet ens, DataSet.AncillaryDataSet anc, PD0.CoordinateTransforms xform)
+        public void DecodeRtiEnsemble(DataSet.EnsembleDataSet ens, DataSet.AncillaryDataSet anc, DataSet.SystemSetupDataSet sysSetup, PD0.CoordinateTransforms xform)
         {
-            CpuFirmwareVersion = (byte)ens.SysFirmware.FirmwareMajor;                           // Firmware Major
-            CpuFirmwareRevision = (byte)ens.SysFirmware.FirmwareMinor;                          // Firmware Minor
+            // Ensure the values were given, or create default values
+            if (ens == null)
+            {
+                ens = new DataSet.EnsembleDataSet();
+            }
+            if (anc == null)
+            {
+                anc = new DataSet.AncillaryDataSet();
+            }
+            if (sysSetup == null)
+            {
+                sysSetup = new DataSet.SystemSetupDataSet();
+            }
+
+            CpuFirmwareVersion = (byte)ens.SysFirmware.FirmwareMinor;                           // Firmware Major
+            CpuFirmwareRevision = (byte)ens.SysFirmware.FirmwareRevision;                          // Firmware Minor
 
             switch(ens.SubsystemConfig.SubSystem.GetSystemFrequency())
             {
@@ -2441,7 +2458,7 @@ namespace RTI
             BlankAfterTransmit = 0;                                                             // Blank - CWPBL - Do not have enough info
             ProfilingMode = 0;                                                                  // Signal Processing Mode - CWPBB - Do not have enough info
             LowCorrThresh = 0;                                                                  // Low Correlation Threshold - CWPCT - Do not have enough info
-            NumCodeRepeats = 0;                                                                 // Number of Code Repeats - Do not have enough info
+            NumCodeRepeats = (byte)sysSetup.WpRepeatN;                                          // Number of Code Repeats
             PercentGoodMinimum = 0;                                                             // Percent Good Minimum - Do not have enough info
             ErrorVelMaximum = 0;                                                                // Error Velocity Maximum - Do not have enough info
             TimeBetweenPingMinutes = 0;                                                         // Time Between Pings Minutes - CWPTBP - Do not have enough info

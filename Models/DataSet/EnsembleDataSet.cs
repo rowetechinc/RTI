@@ -73,6 +73,7 @@
  * 10/02/2013      RC          2.20.2     Fixed bug where i was not consistent in Encode() in setting the number of elements.
  * 02/06/2013      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
+ * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements.
  * 
  */
 
@@ -242,6 +243,10 @@ namespace RTI
             /// Date and time of the ensemble.
             /// If the Year, Month or Day are not set, then this will
             /// return the current date and time.
+            /// 
+            /// Do not set this value directly.
+            /// Use UpdateAverageEnsemble(1) to set
+            /// all proper values.
             /// </summary>
             [JsonIgnore]
             public DateTime EnsDateTime { get; set; }
@@ -277,13 +282,15 @@ namespace RTI
             /// the important values.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElments">Number of Elements.</param>
+            /// <param name="elementMultiplier">Element Multipliers.</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            public EnsembleDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            public EnsembleDataSet(int valueType, int numElments, int elementMultiplier, int imag, int nameLength, string name, int numBins, int numBeams) :
+                base(valueType, numElments, elementMultiplier, imag, nameLength, name)
             {
                 // Set the ensemble number to the default ensemble number
                 EnsembleNumber = DEFAULT_ENS_NUM;
@@ -317,12 +324,10 @@ namespace RTI
             /// Create a Ensemble data set.  This will create a blank dataset.  The user must fill in the data for all
             /// the important values.
             /// </summary>
-            /// <param name="numBins">Number of Bins.</param>
-            /// <param name="numBeams">Number of beams.  Default uses DEFAULT_NUM_BEAMS_BEAM.</param>
-            public EnsembleDataSet(int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
+            public EnsembleDataSet() :
                 base(DataSet.Ensemble.DATATYPE_INT,                         // Type of data stored (Float or Int)
-                            numBeams,                                       // Number of bins
-                            numBins,                                        // Number of beams
+                            NUM_DATA_ELEMENTS,                              // Number of elements
+                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_NONBEAM,     // Element Multiplier
                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
                             DataSet.Ensemble.EnsembleDataID)                // Dataset ID
@@ -337,10 +342,10 @@ namespace RTI
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
 
                 // Set the number of beams
-                NumBeams = numBeams;
+                //NumBeams = numBeams;
 
                 // Set the number of bins
-                NumBins = numBins;
+                //NumBins = numElements;
 
                 // Use a blank serial number
                 SysSerialNumber = new SerialNumber();
@@ -360,14 +365,14 @@ namespace RTI
             /// about the current Ensemble.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Bin</param>
+            /// <param name="elementMulitpliers">Number of beams</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="ensembleData">Byte array containing Ensemble data</param>
-            public EnsembleDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ensembleData) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
+            public EnsembleDataSet(int valueType, int numElements, int elementMulitpliers, int imag, int nameLength, string name, byte[] ensembleData) :
+                base(valueType, numElements, elementMulitpliers, imag, nameLength, name)
             {
                 // Initialize ranges
 
@@ -609,14 +614,7 @@ namespace RTI
             public void UpdateAverageEnsemble(int numSamples)
             {
                 // Set the time as now
-                EnsDateTime = DateTime.Now;
-                Year = EnsDateTime.Year;
-                Month = EnsDateTime.Month;
-                Day = EnsDateTime.Day;
-                Hour = EnsDateTime.Hour;
-                Minute = EnsDateTime.Minute;
-                Second = EnsDateTime.Second;
-                HSec = EnsDateTime.Millisecond * 10;
+                SetTime();
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
@@ -962,6 +960,22 @@ namespace RTI
 
                 // Create UniqueId
                 UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
+            }
+
+            #endregion
+
+            #region Clone
+
+            /// <summary>
+            /// Make a deep copy of this object.
+            /// This will clone the object and
+            /// return a new object.
+            /// </summary>
+            /// <returns>A new object identical to this object.  Deep Copy.</returns>
+            public DataSet.EnsembleDataSet Clone()
+            {
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(this);
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EnsembleDataSet>(json);
             }
 
             #endregion

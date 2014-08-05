@@ -361,7 +361,7 @@ namespace RTI
             vl.Pressure = 11;
             vl.DepthOfTransducer = 23 * 10;
 
-            DataSet.AncillaryDataSet anc = new DataSet.AncillaryDataSet(30);
+            DataSet.AncillaryDataSet anc = new DataSet.AncillaryDataSet();
             anc.DecodePd0Ensemble(fl, vl);
 
             Assert.AreEqual(23, anc.BinSize, "Bin size is incorrect.");

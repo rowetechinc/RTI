@@ -168,10 +168,10 @@ namespace RTI
             float[,] result = avgCorr.GetAverage();
 
             Assert.IsNotNull(result, "Result is incorrect.");
-            Assert.AreEqual(6, result[0, DataSet.Ensemble.BEAM_0_INDEX], "Bin 0 Beam 0 is incorrect.");
-            Assert.AreEqual(7, result[0, DataSet.Ensemble.BEAM_1_INDEX], "Bin 0 Beam 1 is incorrect.");
-            Assert.AreEqual(8, result[0, DataSet.Ensemble.BEAM_2_INDEX], "Bin 0 Beam 2 is incorrect.");
-            Assert.AreEqual(9, result[0, DataSet.Ensemble.BEAM_3_INDEX], "Bin 0 Beam 3 is incorrect.");
+            Assert.AreEqual(4, result[0, DataSet.Ensemble.BEAM_0_INDEX], "Bin 0 Beam 0 is incorrect.");
+            Assert.AreEqual(5, result[0, DataSet.Ensemble.BEAM_1_INDEX], "Bin 0 Beam 1 is incorrect.");
+            Assert.AreEqual(6, result[0, DataSet.Ensemble.BEAM_2_INDEX], "Bin 0 Beam 2 is incorrect.");
+            Assert.AreEqual(7, result[0, DataSet.Ensemble.BEAM_3_INDEX], "Bin 0 Beam 3 is incorrect.");
         }
 
         /// <summary>
@@ -210,10 +210,10 @@ namespace RTI
             float[,] result = avgCorr.GetAverage();
 
             Assert.IsNotNull(result, "Result is incorrect.");
-            Assert.AreEqual(6, result[0, DataSet.Ensemble.BEAM_0_INDEX], "Bin 0 Beam 0 is incorrect.");
-            Assert.AreEqual(7, result[0, DataSet.Ensemble.BEAM_1_INDEX], "Bin 0 Beam 1 is incorrect.");
-            Assert.AreEqual(8, result[0, DataSet.Ensemble.BEAM_2_INDEX], "Bin 0 Beam 2 is incorrect.");
-            Assert.AreEqual(9, result[0, DataSet.Ensemble.BEAM_3_INDEX], "Bin 0 Beam 3 is incorrect.");
+            Assert.AreEqual(4, result[0, DataSet.Ensemble.BEAM_0_INDEX], "Bin 0 Beam 0 is incorrect.");
+            Assert.AreEqual(5, result[0, DataSet.Ensemble.BEAM_1_INDEX], "Bin 0 Beam 1 is incorrect.");
+            Assert.AreEqual(6, result[0, DataSet.Ensemble.BEAM_2_INDEX], "Bin 0 Beam 2 is incorrect.");
+            Assert.AreEqual(7, result[0, DataSet.Ensemble.BEAM_3_INDEX], "Bin 0 Beam 3 is incorrect.");
         }
     }
 }

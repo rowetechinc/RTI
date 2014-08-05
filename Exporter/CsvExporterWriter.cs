@@ -94,109 +94,8 @@ namespace RTI
 
             _writer = new StreamWriter(file, false);
 
-            StringBuilder sb = new StringBuilder();
-
-            // Ensemble DataSet
-            sb.Append(CreateEnsembleHeader());
-            sb.Append(",");
-
-            // Ancillary DataSet
-            sb.Append(CreateAncillaryHeader());
-            sb.Append(",");
-
-            // Beam Velocity
-            if (_options.IsBeamVelocityDataSetOn)
-            {
-                sb.Append(CreateBeamVelocityHeader());
-                sb.Append(",");
-            }
-
-            // Instrument Velocity
-            if (_options.IsInstrumentVelocityDataSetOn)
-            {
-                sb.Append(CreateInstrumentVelocityHeader());
-                sb.Append(",");
-            }
-
-            // Earth Velocity
-            if (_options.IsEarthVelocityDataSetOn)
-            {
-                sb.Append(CreateEarthVelocityHeader());
-                sb.Append(",");
-            }
-
-            // Amplitude DataSet
-            if (_options.IsAmplitudeDataSetOn)
-            {
-                sb.Append(CreateAmplitudeHeader());
-                sb.Append(",");
-            }
-
-            // Correlation DataSet
-            if (_options.IsCorrelationDataSetOn)
-            {
-                sb.Append(CreateAmplitudeHeader());
-                sb.Append(",");
-            }
-
-            // Earth Water Mass DataSet
-            if (_options.IsEarthWaterMassDataSetOn)
-            {
-                sb.Append(CreateEarthWaterMassHeader());
-                sb.Append(",");
-            }
-
-            // Instrument Water Mass DataSet
-            if (_options.IsInstrumentWaterMassDataSetOn)
-            {
-                sb.Append(CreateInstrumentWaterMassHeader());
-                sb.Append(",");
-            }
-
-            // Good Beam DataSet
-            if (_options.IsGoodBeamDataSetOn)
-            {
-                sb.Append(CreateGoodBeamHeader());
-                sb.Append(",");
-            }
-
-            // Good Earth DataSet
-            if (_options.IsGoodEarthDataSetOn)
-            {
-                sb.Append(CreateGoodEarthHeader());
-                sb.Append(",");
-            }
-
-            // Bottom Track DataSet
-            if (_options.IsBottomTrackDataSetOn)
-            {
-                sb.Append(CreateBottomTrackHeader());
-                sb.Append(",");
-            }
-
-            // Bottom Track Engineering DataSet
-            if (_options.IsBottomTrackEngineeringDataSetOn)
-            {
-                sb.Append(CreateBottomTrackEngineeringHeader());
-                sb.Append(",");
-            }
-
-            // Profile Engineering DataSet
-            if (_options.IsProfileEngineeringDataSetOn)
-            {
-                sb.Append(CreateProfileEngineeringHeader());
-                sb.Append(",");
-            }
-
-            // System Setup DataSet
-            if (_options.IsSystemSetupDataSetOn)
-            {
-                sb.Append(CreateSystemSetupHeader());
-                sb.Append(",");
-            }
-
-
-            _writer.WriteLine(sb.ToString());
+            // Write the header
+            _writer.WriteLine(GetHeader(options));
         }
 
         /// <summary>
@@ -207,111 +106,8 @@ namespace RTI
         /// <param name="isMultipleFiles">Set if each ensemble should be a seperate file.  Default to FALSE.</param>
         public void Write(Ensemble ensemble, bool isMultipleFiles = false)
         {
-            if (ensemble != null)
-            {
-                StringBuilder sb = new StringBuilder();
-
-                // Ensemble Data
-                sb.Append(WriteEnsembleData(ensemble));
-                sb.Append(",");
-
-                // Ancillary Data
-                sb.Append(WriteAncillaryData(ensemble));
-                sb.Append(",");
-
-                // Beam Velocity
-                if (_options.IsBeamVelocityDataSetOn)
-                {
-                    sb.Append(WriteBeamVelocityData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Instrument Velocity
-                if (_options.IsInstrumentVelocityDataSetOn)
-                {
-                    sb.Append(WriteInstrumentVelocityData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Earth Velocity
-                if (_options.IsEarthVelocityDataSetOn)
-                {
-                    sb.Append(WriteEarthVelocityData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Amplitude Data
-                if (_options.IsAmplitudeDataSetOn)
-                {
-                    sb.Append(WriteAmplitudeData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Correlation Data
-                if (_options.IsCorrelationDataSetOn)
-                {
-                    sb.Append(WriteCorrelationData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Earth Water Mass Data
-                if (_options.IsEarthWaterMassDataSetOn)
-                {
-                    sb.Append(WriteEarthWaterMassData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Instrument Water Mass Data
-                if (_options.IsInstrumentWaterMassDataSetOn)
-                {
-                    sb.Append(WriteInstrumentWaterMassData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Good Beam Data
-                if (_options.IsGoodBeamDataSetOn)
-                {
-                    sb.Append(WriteGoodBeamData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Good Earth Data
-                if (_options.IsGoodEarthDataSetOn)
-                {
-                    sb.Append(WriteGoodEarthData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Bottom Track Data
-                if (_options.IsBottomTrackDataSetOn)
-                {
-                    sb.Append(WriteBottomTrackData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Bottom Track Engineering Data
-                if (_options.IsBottomTrackEngineeringDataSetOn)
-                {
-                    sb.Append(WriteBottomTrackEngineeringData(ensemble));
-                    sb.Append(",");
-                }
-
-                // Profile Engineering Data
-                if (_options.IsProfileEngineeringDataSetOn)
-                {
-                    sb.Append(WriteProfileEngineeringData(ensemble));
-                    sb.Append(",");
-                }
-
-                // System Setup Data
-                if (_options.IsSystemSetupDataSetOn)
-                {
-                    sb.Append(WriteSystemSetupData(ensemble));
-                    sb.Append(",");
-                }
-
-                _writer.WriteLine(sb.ToString());
-            }
+            // Encode the ensemble to a string and write it to the file
+            _writer.WriteLine(EncodeCSV(ensemble, _options));
         }
 
         /// <summary>
@@ -328,13 +124,250 @@ namespace RTI
             return _options;
         }
 
+        #region Header
+        
+        /// <summary>
+        /// Get the Header for the CSV file.
+        /// </summary>
+        /// <param name="options">Export options.</param>
+        /// <returns>CSV Header.</returns>
+        public static string GetHeader(ExportOptions options)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            // Ensemble DataSet
+            sb.Append(CreateEnsembleHeader());
+            sb.Append(",");
+
+            // Ancillary DataSet
+            sb.Append(CreateAncillaryHeader());
+            sb.Append(",");
+
+            // Beam Velocity
+            if (options.IsBeamVelocityDataSetOn)
+            {
+                sb.Append(CreateBeamVelocityHeader(options));
+                sb.Append(",");
+            }
+
+            // Instrument Velocity
+            if (options.IsInstrumentVelocityDataSetOn)
+            {
+                sb.Append(CreateInstrumentVelocityHeader(options));
+                sb.Append(",");
+            }
+
+            // Earth Velocity
+            if (options.IsEarthVelocityDataSetOn)
+            {
+                sb.Append(CreateEarthVelocityHeader(options));
+                sb.Append(",");
+            }
+
+            // Amplitude DataSet
+            if (options.IsAmplitudeDataSetOn)
+            {
+                sb.Append(CreateAmplitudeHeader(options));
+                sb.Append(",");
+            }
+
+            // Correlation DataSet
+            if (options.IsCorrelationDataSetOn)
+            {
+                sb.Append(CreateAmplitudeHeader(options));
+                sb.Append(",");
+            }
+
+            // Earth Water Mass DataSet
+            if (options.IsEarthWaterMassDataSetOn)
+            {
+                sb.Append(CreateEarthWaterMassHeader());
+                sb.Append(",");
+            }
+
+            // Instrument Water Mass DataSet
+            if (options.IsInstrumentWaterMassDataSetOn)
+            {
+                sb.Append(CreateInstrumentWaterMassHeader());
+                sb.Append(",");
+            }
+
+            // Good Beam DataSet
+            if (options.IsGoodBeamDataSetOn)
+            {
+                sb.Append(CreateGoodBeamHeader(options));
+                sb.Append(",");
+            }
+
+            // Good Earth DataSet
+            if (options.IsGoodEarthDataSetOn)
+            {
+                sb.Append(CreateGoodEarthHeader(options));
+                sb.Append(",");
+            }
+
+            // Bottom Track DataSet
+            if (options.IsBottomTrackDataSetOn)
+            {
+                sb.Append(CreateBottomTrackHeader());
+                sb.Append(",");
+            }
+
+            // Bottom Track Engineering DataSet
+            if (options.IsBottomTrackEngineeringDataSetOn)
+            {
+                sb.Append(CreateBottomTrackEngineeringHeader());
+                sb.Append(",");
+            }
+
+            // Profile Engineering DataSet
+            if (options.IsProfileEngineeringDataSetOn)
+            {
+                sb.Append(CreateProfileEngineeringHeader());
+                sb.Append(",");
+            }
+
+            // System Setup DataSet
+            if (options.IsSystemSetupDataSetOn)
+            {
+                sb.Append(CreateSystemSetupHeader());
+                sb.Append(",");
+            }
+
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region Encode Ensemble
+
+        /// <summary>
+        /// Encode the given ensemble in a CSV format.  This will be
+        /// based off the options given.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to encode to CSV.</param>
+        /// <param name="options">Options for encoding the CSV file.</param>
+        /// <returns>A string of the ensemble in CSV format.</returns>
+        public static string EncodeCSV(DataSet.Ensemble ensemble, ExportOptions options)
+        {
+            if (ensemble != null)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                // Ensemble Data
+                sb.Append(WriteEnsembleData(ensemble));
+                sb.Append(",");
+
+                // Ancillary Data
+                sb.Append(WriteAncillaryData(ensemble));
+                sb.Append(",");
+
+                // Beam Velocity
+                if (options.IsBeamVelocityDataSetOn)
+                {
+                    sb.Append(WriteBeamVelocityData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Instrument Velocity
+                if (options.IsInstrumentVelocityDataSetOn)
+                {
+                    sb.Append(WriteInstrumentVelocityData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Earth Velocity
+                if (options.IsEarthVelocityDataSetOn)
+                {
+                    sb.Append(WriteEarthVelocityData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Amplitude Data
+                if (options.IsAmplitudeDataSetOn)
+                {
+                    sb.Append(WriteAmplitudeData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Correlation Data
+                if (options.IsCorrelationDataSetOn)
+                {
+                    sb.Append(WriteCorrelationData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Earth Water Mass Data
+                if (options.IsEarthWaterMassDataSetOn)
+                {
+                    sb.Append(WriteEarthWaterMassData(ensemble));
+                    sb.Append(",");
+                }
+
+                // Instrument Water Mass Data
+                if (options.IsInstrumentWaterMassDataSetOn)
+                {
+                    sb.Append(WriteInstrumentWaterMassData(ensemble));
+                    sb.Append(",");
+                }
+
+                // Good Beam Data
+                if (options.IsGoodBeamDataSetOn)
+                {
+                    sb.Append(WriteGoodBeamData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Good Earth Data
+                if (options.IsGoodEarthDataSetOn)
+                {
+                    sb.Append(WriteGoodEarthData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Bottom Track Data
+                if (options.IsBottomTrackDataSetOn)
+                {
+                    sb.Append(WriteBottomTrackData(ensemble));
+                    sb.Append(",");
+                }
+
+                // Bottom Track Engineering Data
+                if (options.IsBottomTrackEngineeringDataSetOn)
+                {
+                    sb.Append(WriteBottomTrackEngineeringData(ensemble));
+                    sb.Append(",");
+                }
+
+                // Profile Engineering Data
+                if (options.IsProfileEngineeringDataSetOn)
+                {
+                    sb.Append(WriteProfileEngineeringData(ensemble));
+                    sb.Append(",");
+                }
+
+                // System Setup Data
+                if (options.IsSystemSetupDataSetOn)
+                {
+                    sb.Append(WriteSystemSetupData(ensemble));
+                    sb.Append(",");
+                }
+
+                return sb.ToString();
+            }
+
+            return string.Empty;
+        }
+
+        #endregion
+
         #region Ensemble DataSet
 
         /// <summary>
         /// Create the Ensemble header based off the options selected.
         /// </summary>
         /// <returns>Ensemble Header.</returns>
-        private string CreateEnsembleHeader()
+        public static string CreateEnsembleHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -342,10 +375,13 @@ namespace RTI
             sb.Append("DateTime,");
             sb.Append("NumBins,");
             sb.Append("NumBeams,");
-            sb.Append("PingCount,");
+            sb.Append("DesiredPingCount,");
+            sb.Append("ActualPingCount,");
             sb.Append("SerialNumber,");
             sb.Append("Firmware,");
-            sb.Append("SubsystemConfig");
+            sb.Append("SubsystemCode,");
+            sb.Append("SubsystemIndex,");
+            sb.Append("Status");
 
             return sb.ToString();
         }
@@ -355,27 +391,38 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Ensemble DataSet data in CSV format.</returns>
-        private string WriteEnsembleData(Ensemble ensemble)
+        public static string WriteEnsembleData(Ensemble ensemble)
         {
-            StringBuilder sb = new StringBuilder();
+            if (ensemble.IsEnsembleAvail)
+            {
+                StringBuilder sb = new StringBuilder();
 
-            sb.Append(ensemble.EnsembleData.EnsembleNumber);
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.EnsDateTime.ToString());
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.NumBins);
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.NumBeams);
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.ActualPingCount);
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.SysSerialNumber.ToString());
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.SysFirmware.ToString());
-            sb.Append(",");
-            sb.Append(ensemble.EnsembleData.SubsystemConfig.DescString());
+                sb.Append(ensemble.EnsembleData.EnsembleNumber);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.EnsDateTime.ToString());
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.NumBins);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.NumBeams);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.DesiredPingCount);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.ActualPingCount);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.SysSerialNumber.ToString());
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.SysFirmware.ToString());
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.SubsystemConfig.SubSystem.CodeToString());
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.SubsystemConfig.SubSystem.Index);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.Status.Value);
 
-            return sb.ToString();
+                return sb.ToString();
+            }
+
+            return ",,,,,,,,,,";
         }
 
         #endregion
@@ -386,7 +433,7 @@ namespace RTI
         /// Create the Ancillary header based off the options selected.
         /// </summary>
         /// <returns>Ancillary Header</returns>
-        private string CreateAncillaryHeader()
+        public static string CreateAncillaryHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -412,41 +459,43 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Ancillary DataSet data in CSV format.</returns>
-        private string WriteAncillaryData(Ensemble ensemble)
+        public static string WriteAncillaryData(Ensemble ensemble)
         {
-            StringBuilder sb = new StringBuilder();
+            if (ensemble.IsAncillaryAvail)
+            {
+                StringBuilder sb = new StringBuilder();
 
-            sb.Append(ensemble.AncillaryData.FirstBinRange);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.BinSize);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.FirstPingTime);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.LastPingTime);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.Heading);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.Pitch);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.Roll);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.WaterTemp);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.SystemTemp);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.Salinity);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.Pressure);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.TransducerDepth);
-            sb.Append(",");
-            sb.Append(ensemble.AncillaryData.SpeedOfSound);
+                sb.Append(ensemble.AncillaryData.FirstBinRange);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.BinSize);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.FirstPingTime);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.LastPingTime);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.Heading);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.Pitch);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.Roll);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.WaterTemp);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.SystemTemp);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.Salinity);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.Pressure);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.TransducerDepth);
+                sb.Append(",");
+                sb.Append(ensemble.AncillaryData.SpeedOfSound);
 
-            return sb.ToString();
+                return sb.ToString();
+            }
+
+            return ",,,,,,,,,,,,";
         }
-
-
-
 
         #endregion
 
@@ -455,12 +504,13 @@ namespace RTI
         /// <summary>
         /// Create the Beam Velocity header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Beam Velocity Header</returns>
-        private string CreateBeamVelocityHeader()
+        public static string CreateBeamVelocityHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.BeamMinBin; bin < _options.BeamMaxBin + 1; bin++)
+            for (int bin = options.BeamMinBin; bin < options.BeamMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -475,14 +525,15 @@ namespace RTI
         /// Output the Beam Velocity dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Beam Velocity DataSet data in CSV format.</returns>
-        private string WriteBeamVelocityData(Ensemble ensemble)
+        public static string WriteBeamVelocityData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsBeamVelocityAvail)
             {
-                for (int bin = _options.BeamMinBin; bin < _options.BeamMaxBin + 1; bin++)
+                for (int bin = options.BeamMinBin; bin < options.BeamMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.BeamVelocityData.BeamVelocityData.GetLength(1); beam++)
                     {
@@ -499,7 +550,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.BeamMinBin; bin < _options.BeamMaxBin + 1; bin++)
+                for (int bin = options.BeamMinBin; bin < options.BeamMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -518,12 +569,13 @@ namespace RTI
         /// <summary>
         /// Create the Instrument Velocity header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Instrument Velocity Header</returns>
-        private string CreateInstrumentVelocityHeader()
+        public static string CreateInstrumentVelocityHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.InstrumentMinBin; bin < _options.InstrumentMaxBin + 1; bin++)
+            for (int bin = options.InstrumentMinBin; bin < options.InstrumentMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -538,14 +590,15 @@ namespace RTI
         /// Output the Instrument Velocity dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Instrument Velocity DataSet data in CSV format.</returns>
-        private string WriteInstrumentVelocityData(Ensemble ensemble)
+        public static string WriteInstrumentVelocityData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsInstrumentVelocityAvail)
             {
-                for (int bin = _options.InstrumentMinBin; bin < _options.InstrumentMaxBin + 1; bin++)
+                for (int bin = options.InstrumentMinBin; bin < options.InstrumentMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(1); beam++)
                     {
@@ -562,7 +615,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.InstrumentMinBin; bin < _options.InstrumentMaxBin + 1; bin++)
+                for (int bin = options.InstrumentMinBin; bin < options.InstrumentMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -571,9 +624,6 @@ namespace RTI
             return sb.ToString();
         }
 
-
-
-
         #endregion
 
         #region Earth Velocity DataSet
@@ -581,12 +631,13 @@ namespace RTI
         /// <summary>
         /// Create the Earth Velocity header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Earth Velocity Header</returns>
-        private string CreateEarthVelocityHeader()
+        public static string CreateEarthVelocityHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.EarthMinBin; bin < _options.EarthMaxBin + 1; bin++)
+            for (int bin = options.EarthMinBin; bin < options.EarthMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -601,14 +652,15 @@ namespace RTI
         /// Output the Earth Velocity dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Earth Velocity DataSet data in CSV format.</returns>
-        private string WriteEarthVelocityData(Ensemble ensemble)
+        public static string WriteEarthVelocityData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsEarthVelocityAvail)
             {
-                for (int bin = _options.EarthMinBin; bin < _options.EarthMaxBin + 1; bin++)
+                for (int bin = options.EarthMinBin; bin < options.EarthMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.EarthVelocityData.EarthVelocityData.GetLength(1); beam++)
                     {
@@ -625,7 +677,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.EarthMinBin; bin < _options.EarthMaxBin + 1; bin++)
+                for (int bin = options.EarthMinBin; bin < options.EarthMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -644,12 +696,13 @@ namespace RTI
         /// <summary>
         /// Create the Correlation header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Correlation Header</returns>
-        private string CreateCorrelationHeader()
+        public static string CreateCorrelationHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.CorrelationMinBin; bin < _options.CorrelationMaxBin + 1; bin++)
+            for (int bin = options.CorrelationMinBin; bin < options.CorrelationMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -664,14 +717,15 @@ namespace RTI
         /// Output the Correlation dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Correlation DataSet data in CSV format.</returns>
-        private string WriteCorrelationData(Ensemble ensemble)
+        public static string WriteCorrelationData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsCorrelationAvail)
             {
-                for (int bin = _options.CorrelationMinBin; bin < _options.CorrelationMaxBin + 1; bin++)
+                for (int bin = options.CorrelationMinBin; bin < options.CorrelationMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.CorrelationData.CorrelationData.GetLength(1); beam++)
                     {
@@ -688,7 +742,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.CorrelationMinBin; bin < _options.CorrelationMaxBin + 1; bin++)
+                for (int bin = options.CorrelationMinBin; bin < options.CorrelationMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -697,9 +751,6 @@ namespace RTI
             return sb.ToString();
         }
 
-
-
-
         #endregion
 
         #region Amplitude DataSet
@@ -707,12 +758,13 @@ namespace RTI
         /// <summary>
         /// Create the Amplitude header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Amplitude Header</returns>
-        private string CreateAmplitudeHeader()
+        public static string CreateAmplitudeHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.AmplitudeMinBin; bin < _options.AmplitudeMaxBin + 1; bin++)
+            for (int bin = options.AmplitudeMinBin; bin < options.AmplitudeMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -727,14 +779,15 @@ namespace RTI
         /// Output the Amplitude dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Amplitude DataSet data in CSV format.</returns>
-        private string WriteAmplitudeData(Ensemble ensemble)
+        public static string WriteAmplitudeData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsAmplitudeAvail)
             {
-                for (int bin = _options.AmplitudeMinBin; bin < _options.AmplitudeMaxBin + 1; bin++)
+                for (int bin = options.AmplitudeMinBin; bin < options.AmplitudeMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.AmplitudeData.AmplitudeData.GetLength(1); beam++)
                     {
@@ -751,7 +804,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.AmplitudeMinBin; bin < _options.AmplitudeMaxBin + 1; bin++)
+                for (int bin = options.AmplitudeMinBin; bin < options.AmplitudeMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -759,9 +812,6 @@ namespace RTI
 
             return sb.ToString();
         }
-
-
-
 
         #endregion
 
@@ -771,7 +821,7 @@ namespace RTI
         /// Create the Earth Water Mass header based off the options selected.
         /// </summary>
         /// <returns>Earth Water Mass Header</returns>
-        private string CreateEarthWaterMassHeader()
+        public static string CreateEarthWaterMassHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -788,7 +838,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Earth Water Mass DataSet data in CSV format.</returns>
-        private string WriteEarthWaterMassData(Ensemble ensemble)
+        public static string WriteEarthWaterMassData(Ensemble ensemble)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -811,9 +861,6 @@ namespace RTI
             return sb.ToString();
         }
 
-
-
-
         #endregion
 
         #region Instrument Water Mass DataSet
@@ -822,7 +869,7 @@ namespace RTI
         /// Create the Instrument Water Mass header based off the options selected.
         /// </summary>
         /// <returns>Instrument Water Mass Header</returns>
-        private string CreateInstrumentWaterMassHeader()
+        public static string CreateInstrumentWaterMassHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -839,7 +886,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Instrument Water Mass DataSet data in CSV format.</returns>
-        private string WriteInstrumentWaterMassData(Ensemble ensemble)
+        public static string WriteInstrumentWaterMassData(Ensemble ensemble)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -862,9 +909,6 @@ namespace RTI
             return sb.ToString();
         }
 
-
-
-
         #endregion
 
         #region Good Beam DataSet
@@ -872,12 +916,13 @@ namespace RTI
         /// <summary>
         /// Create the Good Beam header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Good Beam Header</returns>
-        private string CreateGoodBeamHeader()
+        public static string CreateGoodBeamHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.GoodBeamMinBin; bin < _options.GoodBeamMaxBin + 1; bin++)
+            for (int bin = options.GoodBeamMinBin; bin < options.GoodBeamMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -892,14 +937,15 @@ namespace RTI
         /// Output the Good Beam dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Good Beam DataSet data in CSV format.</returns>
-        private string WriteGoodBeamData(Ensemble ensemble)
+        public static string WriteGoodBeamData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsGoodBeamAvail)
             {
-                for (int bin = _options.GoodBeamMinBin; bin < _options.GoodBeamMaxBin + 1; bin++)
+                for (int bin = options.GoodBeamMinBin; bin < options.GoodBeamMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.GoodBeamData.GoodBeamData.GetLength(1); beam++)
                     {
@@ -916,7 +962,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.GoodBeamMinBin; bin < _options.GoodBeamMaxBin + 1; bin++)
+                for (int bin = options.GoodBeamMinBin; bin < options.GoodBeamMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -925,9 +971,6 @@ namespace RTI
             return sb.ToString();
         }
 
-
-
-
         #endregion
 
         #region Good Earth DataSet
@@ -935,12 +978,13 @@ namespace RTI
         /// <summary>
         /// Create the Good Earth header based off the options selected.
         /// </summary>
+        /// <param name="options">Export Options.</param>
         /// <returns>Good Earth Header</returns>
-        private string CreateGoodEarthHeader()
+        public static string CreateGoodEarthHeader(ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int bin = _options.GoodEarthMinBin; bin < _options.GoodEarthMaxBin + 1; bin++)
+            for (int bin = options.GoodEarthMinBin; bin < options.GoodEarthMaxBin + 1; bin++)
             {
                 for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
                 {
@@ -955,14 +999,15 @@ namespace RTI
         /// Output the Good Earth dataset to CSV format.
         /// </summary>
         /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
         /// <returns>Good Earth DataSet data in CSV format.</returns>
-        private string WriteGoodEarthData(Ensemble ensemble)
+        public static string WriteGoodEarthData(Ensemble ensemble, ExportOptions options)
         {
             StringBuilder sb = new StringBuilder();
 
             if (ensemble.IsGoodEarthAvail)
             {
-                for (int bin = _options.GoodEarthMinBin; bin < _options.GoodEarthMaxBin + 1; bin++)
+                for (int bin = options.GoodEarthMinBin; bin < options.GoodEarthMaxBin + 1; bin++)
                 {
                     for (int beam = 0; beam < ensemble.GoodEarthData.GoodEarthData.GetLength(1); beam++)
                     {
@@ -979,7 +1024,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                for (int bin = _options.GoodEarthMinBin; bin < _options.GoodEarthMaxBin + 1; bin++)
+                for (int bin = options.GoodEarthMinBin; bin < options.GoodEarthMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
                 }
@@ -999,7 +1044,7 @@ namespace RTI
         /// Create the Bottom Track header based off the options selected.
         /// </summary>
         /// <returns>Bottom Track Header.</returns>
-        private string CreateBottomTrackHeader()
+        public static string CreateBottomTrackHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1066,7 +1111,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Bottom Track DataSet data in CSV format.</returns>
-        private string WriteBottomTrackData(Ensemble ensemble)
+        public static string WriteBottomTrackData(Ensemble ensemble)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1197,7 +1242,7 @@ namespace RTI
         /// Create the Bottom Track Engineering header based off the options selected.
         /// </summary>
         /// <returns>Bottom Track Engineering Header.</returns>
-        private string CreateBottomTrackEngineeringHeader()
+        public static string CreateBottomTrackEngineeringHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1240,7 +1285,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Bottom Track Engineering DataSet data in CSV format.</returns>
-        private string WriteBottomTrackEngineeringData(Ensemble ensemble)
+        public static string WriteBottomTrackEngineeringData(Ensemble ensemble)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1323,7 +1368,7 @@ namespace RTI
         /// Create the Profile Engineering header based off the options selected.
         /// </summary>
         /// <returns>Profile Engineering Header.</returns>
-        private string CreateProfileEngineeringHeader()
+        public static string CreateProfileEngineeringHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1359,7 +1404,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>Profile Engineering DataSet data in CSV format.</returns>
-        private string WriteProfileEngineeringData(Ensemble ensemble)
+        public static string WriteProfileEngineeringData(Ensemble ensemble)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1428,7 +1473,7 @@ namespace RTI
         /// Create the System Setup header based off the options selected.
         /// </summary>
         /// <returns>System Setup Header.</returns>
-        private string CreateSystemSetupHeader()
+        public static string CreateSystemSetupHeader()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -1453,7 +1498,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Data.</param>
         /// <returns>System Setup DataSet data in CSV format.</returns>
-        private string WriteSystemSetupData(Ensemble ensemble)
+        public static string WriteSystemSetupData(Ensemble ensemble)
         {
             StringBuilder sb = new StringBuilder();
 

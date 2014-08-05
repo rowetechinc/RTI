@@ -47,6 +47,7 @@
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 05/07/2014      RC          2.21.4     In DecodePd0Ensemble(), changed the conversion to match WH correlation values.
+ * 07/24/2014      RC          2.23.0     Fixed bug in DecodePd0Ensemble() if numCodeRepeats is 0 or N is 0.
  * 
  */
 
@@ -243,7 +244,7 @@ namespace RTI
             /// </summary>
             /// <param name="corr">PD0 Correlation.</param>
             /// <param name="numRepeats">Number of code repeats from the fixed leader.</param>
-            public void DecodePd0Ensemble(Pd0Correlation corr, int numRepeats)
+            public void DecodePd0Ensemble(Pd0Correlation corr, float numRepeats)
             {
                 if (corr.Correlation != null)
                 {
@@ -275,9 +276,16 @@ namespace RTI
 
                             //CorrelationData[bin, beam] = corr.Correlation[bin, newBeam] / 255.0f;
 
+                            // Check if numRepeats = 0    
+                            if (numRepeats == 0) { numRepeats = 1; }
+
                             // Constant used in WH to normalize the value based off the number of repeats
                             // Then normalize the value to 128 being the max
                             float n = ((numRepeats - 1.0f) / numRepeats);
+
+                            // Check if n = 0    
+                            if (n == 0) { n = 1.0f; }
+
                             CorrelationData[bin, beam] = (corr.Correlation[bin, newBeam] / 128.0f) * n ;
                         }
                     }

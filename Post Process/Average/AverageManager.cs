@@ -36,6 +36,8 @@
  * 01/08/2013      RC          2.17       Added Amplitude Averaging and finished Reference Layer averaging.
  *                                         Set the parameters of the averaging to the averaged ensemble (num samples, first/last ping time)
  * 01/09/2012      RC          2.17       Fixed setting the first and last ping time.
+ * 06/27/2014      RC          2.23.0     Added Bottom Track, Earth Vel, Instrument Vel and Beam vel to average.
+ * 07/14/2014      RC          2.23.0     Moved the logic for removing accumulated data from the averager to the manager.
  * 
  */
 
@@ -46,6 +48,7 @@ namespace RTI
     using System.Linq;
     using System.Text;
 using RTI.Average;
+    using System.Timers;
 
     /// <summary>
     /// This will take in ensembles.  Pass them to the different accumulators and wait for averaged data.
@@ -61,56 +64,10 @@ using RTI.Average;
         #region Defaults
 
         /// <summary>
-        /// Default number of samples if a bad number
-        /// of samples is given.
-        /// </summary>
-        private const int DEFAULT_NUM_SAMPLES = 2;
-
-        /// <summary>
-        /// Default scale.
-        /// </summary>
-        private const float DEFAULT_SCALE = 1.0f;
-
-        /// <summary>
-        /// Default minimum reference layer.
-        /// </summary>
-        private const int DEFAULT_MIN_REF_LAYER = 1;
-
-        /// <summary>
-        /// Default maximum reference layer.
-        /// </summary>
-        private const int DEFAULT_MAX_REF_LAYER = 3;
-
-        /// <summary>
-        /// Default flag for reference layer averaging.
-        /// </summary>
-        private const bool DEFAULT_IS_REF_LAYER_AVG = false;
-
-        /// <summary>
-        /// Default flag for Correlation Averaging.
-        /// </summary>
-        private const bool DEFAULT_IS_CORR_AVG = false;
-
-        /// <summary>
-        /// Default flag for Amplitude averaging.
-        /// </summary>
-        private const bool DEFAULT_IS_AMP_AVG = false;
-
-        /// <summary>
-        /// Default value for _ensCount.
-        /// </summary>
-        private const int DEFAULT_ENS_COUNT = 0;
-
-        /// <summary>
-        /// Default value for Is Running Average.
-        /// </summary>
-        private const bool DEFAULT_IS_RUNNING_AVG = false;
-
-        /// <summary>
         /// Default first ping time.  Negative because the time
         /// can never be negative.
         /// </summary>
-        private const float DEFAULT_FIRST_PING_TIME = -1.0f;
+        public const float DEFAULT_FIRST_PING_TIME = -1.0f;
 
         #endregion
 
@@ -131,6 +88,21 @@ using RTI.Average;
         /// </summary>
         private float _firstPingTime;
 
+        /// <summary>
+        /// The last ensemble.
+        /// </summary>
+        private DataSet.Ensemble _lastEnsemble;
+
+        /// <summary>
+        /// Average Manager options.
+        /// </summary>
+        private AverageManagerOptions _options;
+
+        /// <summary>
+        /// If timing based off time, enable this timer.
+        /// </summary>
+        private Timer _avgTimer;
+
         #region Averagers
 
         /// <summary>
@@ -148,6 +120,26 @@ using RTI.Average;
         /// </summary>
         private AverageAmplitude _amplitudeAverager;
 
+        /// <summary>
+        /// Average Beam Velocity data.
+        /// </summary>
+        private AverageBeamVelocity _beamVelAverager;
+
+        /// <summary>
+        /// Average Instrument Velocity data.
+        /// </summary>
+        private AverageInstrumentVelocity _instrumentVelAverager;
+
+        /// <summary>
+        /// Average Earth Velocity data.
+        /// </summary>
+        private AverageEarthVelocity _earthVelAverager;
+
+        /// <summary>
+        /// Average Bottom Track data.
+        /// </summary>
+        private AverageBottomTrack _bottomTrackAverager;
+
         #endregion
 
         #endregion
@@ -157,11 +149,33 @@ using RTI.Average;
         #region Average Parameters
 
         /// <summary>
-        /// Number of samples to accumulate before
-        /// averaging the data.  The value cannot be less than or equal to 0.
-        /// If a bad value is given, the default value will be used.
+        /// Set flag if recording the data to a file.
         /// </summary>
-        private int _numSamples;
+        public bool IsRecording
+        {
+            get { return _options.IsRecording; }
+            set
+            {
+                _options.IsRecording = value;
+            }
+        }
+
+        /// <summary>
+        /// Set flag if the averaging is done by number of samples
+        /// or timer.
+        /// </summary>
+        public bool IsAvgByNumSamples
+        {
+            get { return _options.IsAvgByNumSamples; }
+            set
+            {
+                _options.IsAvgByNumSamples = value;
+                
+                // This will turn the timer on or off
+                _avgTimer.Enabled = !value;
+            }
+        }
+
         /// <summary>
         /// Number of samples to accumulate before
         /// averaging the data.  The value cannot be less than or equal to 0.
@@ -169,40 +183,41 @@ using RTI.Average;
         /// </summary>
         public int NumSamples
         {
-            get { return _numSamples; }
+            get { return _options.NumSamples; }
             set
             {
                 if (value <= 0)
                 {
-                    _numSamples = DEFAULT_NUM_SAMPLES;
+                    _options.NumSamples = AverageManagerOptions.DEFAULT_NUM_SAMPLES;
                 }
                 else
                 {
-                    _numSamples = value;
+                    _options.NumSamples = value;
                 }
 
                 // Set the averagers
-                _correlationAverager.NumSamples = _numSamples;
-                _amplitudeAverager.NumSamples = _numSamples;
-                _refLayerAverager.NumSamples = _numSamples;
+                _correlationAverager.NumSamples = _options.NumSamples;
+                _amplitudeAverager.NumSamples = _options.NumSamples;
+                _refLayerAverager.NumSamples = _options.NumSamples;
+                _beamVelAverager.NumSamples = _options.NumSamples;
+                _instrumentVelAverager.NumSamples = _options.NumSamples;
+                _earthVelAverager.NumSamples = _options.NumSamples;
+                _bottomTrackAverager.NumSamples = _options.NumSamples;
             }
         }
 
         /// <summary>
-        /// Set wheter the average will be a running average or an
-        /// average with X number of samples have been received.
-        /// 
-        /// A running average will average together NumSamples together.
-        /// As a new ensemble is added, the last one is removed and the 
-        /// average is taken.  This will publish an averaged ensemble
-        /// for every ensemble received.
-        /// 
-        /// A non-running (block) average will wait for NumSamples to be received.
-        /// It will then take the average and clear the list of ensembles.
-        /// It will then wait again for NumSamples.  This will publish an
-        /// averaged ensemble after NumSamples have been received.
+        /// Number of milliseconds for the timer.
         /// </summary>
-        private bool _isRunningAverage;
+        public uint TimerMilliseconds
+        {
+            get { return _options.TimerMilliseconds; }
+            set
+            {
+                _options.TimerMilliseconds = value;
+            }
+        }
+
         /// <summary>
         /// Set wheter the average will be a running average or an
         /// average with X number of samples have been received.
@@ -219,39 +234,19 @@ using RTI.Average;
         /// </summary>
         public bool IsRunningAverage 
         {
-            get { return _isRunningAverage; }
+            get { return _options.IsRunningAverage; }
             set
             {
-                _isRunningAverage = value;
+                _options.IsRunningAverage = value;
 
                 // Set the averagers
-                _correlationAverager.IsRunningAverage = _isRunningAverage;
-                _amplitudeAverager.IsRunningAverage = _isRunningAverage;
-                _refLayerAverager.IsRunningAverage = _isRunningAverage;
-            }
-        }
-
-
-        /// <summary>
-        /// Get or set the scale for the average value.  This value should be
-        /// mulitplied to the averaged value.
-        /// </summary>
-        private float _scale;
-        /// <summary>
-        /// Get or set the scale for the average value.  This value should be
-        /// mulitplied to the averaged value.
-        /// </summary>
-        public float Scale 
-        {
-            get { return _scale; }
-            set
-            {
-                _scale = value;
-
-                // Set the averagers
-                _correlationAverager.Scale = _scale;
-                _amplitudeAverager.Scale = _scale;
-                
+                _correlationAverager.IsRunningAverage = _options.IsRunningAverage;
+                _amplitudeAverager.IsRunningAverage = _options.IsRunningAverage;
+                _refLayerAverager.IsRunningAverage = _options.IsRunningAverage;
+                _beamVelAverager.IsRunningAverage = _options.IsRunningAverage;
+                _instrumentVelAverager.IsRunningAverage = _options.IsRunningAverage;
+                _earthVelAverager.IsRunningAverage = _options.IsRunningAverage;
+                _bottomTrackAverager.IsRunningAverage = _options.IsRunningAverage;
             }
         }
 
@@ -264,41 +259,40 @@ using RTI.Average;
         /// <summary>
         /// Set a flag if we are going to reference layer average.
         /// </summary>
-        public bool IsReferenceLayerAveraging { get; set; }
-
-        /// <summary>
-        /// Minimum Reference layer for Reference layer averaging.
-        /// </summary>
-        private int _minRefLayer;
-        /// <summary>
-        /// Minimum Reference layer for Reference layer averaging.
-        /// </summary>
-        public int MinRefLayer
-        {
-            get { return _minRefLayer; }
+        public bool IsReferenceLayerAveraging 
+        { 
+            get { return _options.IsReferenceLayerAveraging; }
             set
             {
-                _minRefLayer = value;
+                _options.IsReferenceLayerAveraging = value;
+            }
+        }
 
-                _refLayerAverager.SetMinMaxReferenceLayer(_minRefLayer, _maxRefLayer);
+        /// <summary>
+        /// Minimum Reference layer for Reference layer averaging.
+        /// </summary>
+        public uint MinRefLayer
+        {
+            get { return _options.MinRefLayer; }
+            set
+            {
+                _options.MinRefLayer = value;
+
+                _refLayerAverager.SetMinMaxReferenceLayer(_options.MinRefLayer, _options.MaxRefLayer);
             }
         }
 
         /// <summary>
         /// Maximum Reference layer for Reference layer averaging.
         /// </summary>
-        private int _maxRefLayer;
-        /// <summary>
-        /// Maximum Reference layer for Reference layer averaging.
-        /// </summary>
-        public int MaxRefLayer
+        public uint MaxRefLayer
         {
-            get { return _maxRefLayer; }
+            get { return _options.MaxRefLayer; }
             set
             {
-                _maxRefLayer = value;
+                _options.MaxRefLayer = value;
 
-                _refLayerAverager.SetMinMaxReferenceLayer(_minRefLayer, _maxRefLayer);
+                _refLayerAverager.SetMinMaxReferenceLayer(_options.MinRefLayer, _options.MaxRefLayer);
             }
         }
 
@@ -309,8 +303,26 @@ using RTI.Average;
         /// <summary>
         /// Set flag if wer are going to average correlation data.
         /// </summary>
-        public bool IsCorrelationAveraging { get; set; }
-        
+        public bool IsCorrelationAveraging 
+        {
+            get { return _options.IsCorrelationAveraging; } 
+            set
+            {
+                _options.IsCorrelationAveraging = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Correlation averaging.
+        /// </summary>
+        public float CorrelationScale
+        {
+            get { return _options.CorrelationScale; }
+            set
+            {
+                _options.CorrelationScale = value;
+            }
+        }
 
         #endregion
 
@@ -319,8 +331,210 @@ using RTI.Average;
         /// <summary>
         /// Set flag if wer are going to average Amplitude data.
         /// </summary>
-        public bool IsAmplitudeAveraging { get; set; }
+        public bool IsAmplitudeAveraging
+        {
+            get { return _options.IsAmplitudeAveraging; }
+            set
+            {
+                _options.IsAmplitudeAveraging = value;
+            }
+        }
 
+        /// <summary>
+        /// Scale value for the Amplitude averaging.
+        /// </summary>
+        public float AmplitudeScale
+        {
+            get { return _options.AmplitudeScale; }
+            set
+            {
+                _options.AmplitudeScale = value;
+            }
+        }
+
+        #endregion
+
+        #region Beam Velocity Averaging
+
+        /// <summary>
+        /// Set flag if wer are going to average Beam Velocity data.
+        /// </summary>
+        public bool IsBeamVelocityAveraging
+        {
+            get { return _options.IsBeamVelocityAveraging; }
+            set
+            {
+                _options.IsBeamVelocityAveraging = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Beam Velocity averaging.
+        /// </summary>
+        public float BeamVelocityScale
+        {
+            get { return _options.BeamVelocityScale; }
+            set
+            {
+                _options.BeamVelocityScale = value;
+            }
+        }
+
+        #endregion
+
+        #region Earth Velocity Averaging
+
+        /// <summary>
+        /// Set flag if wer are going to average Earth Velocity data.
+        /// </summary>
+        public bool IsEarthVelocityAveraging
+        {
+            get { return _options.IsEarthVelocityAveraging; }
+            set
+            {
+                _options.IsEarthVelocityAveraging = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Earth Velocity averaging.
+        /// </summary>
+        public float EarthVelocityScale
+        {
+            get { return _options.EarthVelocityScale; }
+            set
+            {
+                _options.EarthVelocityScale = value;
+            }
+        }
+
+        #endregion
+
+        #region Instrument Velocity Averaging
+
+        /// <summary>
+        /// Set flag if wer are going to average Instrument Velocity data.
+        /// </summary>
+        public bool IsInstrumentVelocityAveraging
+        {
+            get { return _options.IsInstrumentVelocityAveraging; }
+            set
+            {
+                _options.IsInstrumentVelocityAveraging = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Instrument Velocity averaging.
+        /// </summary>
+        public float InstrumentVelocityScale
+        {
+            get { return _options.InstrumentVelocityScale; }
+            set
+            {
+                _options.InstrumentVelocityScale = value;
+            }
+        }
+
+        #endregion
+
+        #region Bottom Track Averaging
+
+        /// <summary>
+        /// Set flag if we are going to average Bottom Track data.
+        /// </summary>
+        public bool IsBottomTrackAveraging
+        {
+            get { return _options.IsBottomTrackAveraging; }
+            set
+            {
+                _options.IsBottomTrackAveraging = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track Range averaging.
+        /// </summary>
+        public float BottomTrackRangeScale
+        {
+            get { return _options.BottomTrackRangeScale; }
+            set
+            {
+                _options.BottomTrackRangeScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track SNR averaging.
+        /// </summary>
+        public float BottomTrackSnrScale
+        {
+            get { return _options.BottomTrackSnrScale; }
+            set
+            {
+                _options.BottomTrackSnrScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track Correlation averaging.
+        /// </summary>
+        public float BottomTrackCorrelationScale
+        {
+            get { return _options.BottomTrackCorrelationScale; }
+            set
+            {
+                _options.BottomTrackCorrelationScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track Amplitude averaging.
+        /// </summary>
+        public float BottomTrackAmplitudeScale
+        {
+            get { return _options.BottomTrackAmplitudeScale; }
+            set
+            {
+                _options.BottomTrackAmplitudeScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track Beam Velocity averaging.
+        /// </summary>
+        public float BottomTrackBeamVelocityScale
+        {
+            get { return _options.BottomTrackBeamVelocityScale; }
+            set
+            {
+                _options.BottomTrackBeamVelocityScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track Instrument Velocity averaging.
+        /// </summary>
+        public float BottomTrackInstrumentVelocityScale
+        {
+            get { return _options.BottomTrackInstrumentVelocityScale; }
+            set
+            {
+                _options.BottomTrackInstrumentVelocityScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Scale value for the Bottom Track Earth Velocity averaging.
+        /// </summary>
+        public float BottomTrackEarthVelocityScale
+        {
+            get { return _options.BottomTrackEarthVelocityScale; }
+            set
+            {
+                _options.BottomTrackEarthVelocityScale = value;
+            }
+        }
 
         #endregion
 
@@ -331,34 +545,22 @@ using RTI.Average;
         /// <summary>
         /// Initialize the values
         /// </summary>
-        public AverageManager()
+        public AverageManager(AverageManagerOptions options)
         {
+            // Set the options
+            _options = options;
+
+            _avgTimer = new Timer(_options.TimerMilliseconds);
+            _avgTimer.Elapsed += new ElapsedEventHandler(_avgTimer_Elapsed);
+
             // Initialize values
-            _refLayerAverager = new ReferenceLayerAverage(DEFAULT_NUM_SAMPLES, DEFAULT_MIN_REF_LAYER, DEFAULT_MAX_REF_LAYER, DEFAULT_IS_RUNNING_AVG);
+            _refLayerAverager = new ReferenceLayerAverage(_options.NumSamples, _options.MinRefLayer, _options.MaxRefLayer, _options.IsRunningAverage);
             _correlationAverager = new AverageCorrelation();
             _amplitudeAverager = new AverageAmplitude();
-
-            // Set Defaults
-            SetDefaults();
-
-        }
-
-        /// <summary>
-        ///  Set the default values.
-        /// </summary>
-        public void SetDefaults()
-        {
-            // These must be set after the averagers are created
-            _ensCount = DEFAULT_ENS_COUNT;
-            _firstPingTime = DEFAULT_FIRST_PING_TIME;
-            IsReferenceLayerAveraging = DEFAULT_IS_REF_LAYER_AVG;
-            IsCorrelationAveraging = DEFAULT_IS_CORR_AVG;
-            IsAmplitudeAveraging = DEFAULT_IS_AMP_AVG;
-            _isRunningAverage = DEFAULT_IS_RUNNING_AVG;
-            _scale = DEFAULT_SCALE;
-            _numSamples = DEFAULT_NUM_SAMPLES;
-            _minRefLayer = DEFAULT_MIN_REF_LAYER;
-            _maxRefLayer = DEFAULT_MAX_REF_LAYER;
+            _beamVelAverager = new AverageBeamVelocity();
+            _instrumentVelAverager = new AverageInstrumentVelocity();
+            _earthVelAverager = new AverageEarthVelocity();
+            _bottomTrackAverager = new AverageBottomTrack();
         }
 
         /// <summary>
@@ -381,10 +583,34 @@ using RTI.Average;
                 _amplitudeAverager.AddEnsemble(ensemble);
             }
 
+            // Beam Velocity Averager
+            if (IsBeamVelocityAveraging)
+            {
+                _beamVelAverager.AddEnsemble(ensemble);
+            }
+
+            // Instrument Velocity Averager
+            if (IsInstrumentVelocityAveraging)
+            {
+                _instrumentVelAverager.AddEnsemble(ensemble);
+            }
+
+            // Earth Velocity Averager
+            if (IsEarthVelocityAveraging)
+            {
+                _earthVelAverager.AddEnsemble(ensemble);
+            }
+
             // Reference layer averaging
             if (IsReferenceLayerAveraging)
             {
                 _refLayerAverager.AddEnsemble(ensemble);
+            }
+
+            // Bottom Track averaging
+            if (IsBottomTrackAveraging)
+            {
+                _bottomTrackAverager.AddEnsemble(ensemble);
             }
 
             // Set the first ping time if it has not been set
@@ -393,12 +619,15 @@ using RTI.Average;
                 _firstPingTime = ensemble.AncillaryData.FirstPingTime;
             }
 
+            // Set the previous ensemble
+            _lastEnsemble = ensemble;
+
             // Increment the ensemble count
             _ensCount++;
 
             // If we have met the number of samples
             // Publish the number of samples
-            if (_ensCount >= NumSamples)
+            if (IsAvgByNumSamples && _ensCount >= NumSamples)
             {
                 // Publish the averaged data
                 PublishAverage(ensemble);
@@ -406,7 +635,7 @@ using RTI.Average;
                 // If we are not doing a running average
                 // Then clear the ensemble count so we 
                 // can start over counting
-                if (!_isRunningAverage)
+                if (!IsRunningAverage)
                 {
                     ClearCount();
                 }
@@ -418,23 +647,30 @@ using RTI.Average;
                     // Keep the _ensCount the same as the NumSamples so the
                     // number does not overflow
                     _ensCount = NumSamples;
+
+                    // Remove the first ensemble
+                    RemoveFirstEnsemble();
                 }
             }
         }
 
-        /// <summary>
-        /// This will reset the number of ensembles that have been
-        /// accumulated.
-        /// </summary>
-        public void ClearCount()
-        {
-            _ensCount = 0;
-            _firstPingTime = DEFAULT_FIRST_PING_TIME;
-        }
-
-        #region Methods
 
         #region Average
+
+        /// <summary>
+        /// If the timer is enabled and it goes off, this method will be called.
+        /// Publish the accumulated averaged data.
+        /// </summary>
+        /// <param name="sender">Not used.</param>
+        /// <param name="e">Not used.</param>
+        void _avgTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (_lastEnsemble != null)
+            {
+                // Publish the averaged data
+                PublishAverage(_lastEnsemble);
+            }
+        }
 
         /// <summary>
         /// Take the last ensemble as the parameter.  Fill in 
@@ -453,23 +689,56 @@ using RTI.Average;
             // Correlation Averaging
             if (IsCorrelationAveraging)
             {
-                _correlationAverager.SetAverage(ref avgEnsemble);
+                _correlationAverager.SetAverage(ref avgEnsemble, _options.CorrelationScale);
             }
 
             // Amplitude averaging
             if (IsAmplitudeAveraging)
             {
-                _amplitudeAverager.SetAverage(ref avgEnsemble);
+                _amplitudeAverager.SetAverage(ref avgEnsemble, _options.AmplitudeScale);
+            }
+
+            // Beam Velocity Averging
+            if (IsBeamVelocityAveraging)
+            {
+                _beamVelAverager.SetAverage(ref avgEnsemble, _options.BeamVelocityScale);
+            }
+
+            // Instrument Velocity Averging
+            if (IsInstrumentVelocityAveraging)
+            {
+                _instrumentVelAverager.SetAverage(ref avgEnsemble, _options.InstrumentVelocityScale);
+            }
+
+            // Earth Velocity Averging
+            if (IsEarthVelocityAveraging)
+            {
+                _earthVelAverager.SetAverage(ref avgEnsemble, _options.EarthVelocityScale);
+            }
+
+            // Bottom Track Averging
+            if (IsBottomTrackAveraging)
+            {
+                _bottomTrackAverager.SetAverage(ref avgEnsemble, _options.BottomTrackRangeScale, _options.BottomTrackSnrScale, 
+                    _options.BottomTrackAmplitudeScale, _options.BottomTrackCorrelationScale, 
+                    _options.BottomTrackBeamVelocityScale, _options.BottomTrackInstrumentVelocityScale, _options.BottomTrackEarthVelocityScale);
             }
 
             // Reference Layer Averaging
             if (IsReferenceLayerAveraging)
             {
-                _refLayerAverager.SetAverage(ref avgEnsemble);
+                _refLayerAverager.SetAverage(ref avgEnsemble, 1.0f);
             }
 
             // Publish the ensemble to all the subscribers
             PublishAveragedEnsemble(avgEnsemble);
+
+            // Clear the accumulated data if not a running average
+            if (!IsRunningAverage)
+            {
+                // Clear the accumulated data
+                ClearAccumulatedData();
+            }
         }
 
         /// <summary>
@@ -484,7 +753,7 @@ using RTI.Average;
             if (ensemble.IsEnsembleAvail)
             {
                 // Update the ensemble with the number of samples
-                ensemble.EnsembleData.UpdateAverageEnsemble(_numSamples);
+                ensemble.EnsembleData.UpdateAverageEnsemble(NumSamples);
             }
 
             if (ensemble.IsAncillaryAvail)
@@ -495,6 +764,48 @@ using RTI.Average;
         }
 
         #endregion
+
+        #region Clear
+
+        /// <summary>
+        /// This will reset the number of ensembles that have been
+        /// accumulated.
+        /// </summary>
+        private void ClearCount()
+        {
+            _ensCount = 0;
+            _firstPingTime = DEFAULT_FIRST_PING_TIME;
+        }
+
+        /// <summary>
+        /// Clear the accumulated data from all the
+        /// averagers.
+        /// </summary>
+        private void ClearAccumulatedData()
+        {
+            _correlationAverager.ClearAllEnsembles();
+            _amplitudeAverager.ClearAllEnsembles();
+            _beamVelAverager.ClearAllEnsembles();
+            _instrumentVelAverager.ClearAllEnsembles();
+            _earthVelAverager.ClearAllEnsembles();
+            _refLayerAverager.ClearAllEnsembles();
+            _bottomTrackAverager.ClearAllEnsembles();
+        }
+
+        /// <summary>
+        /// Remove the first ensemble accumulated from all
+        /// the averagers.
+        /// </summary>
+        private void RemoveFirstEnsemble()
+        {
+            _correlationAverager.RemoveFirstEnsemble();
+            _amplitudeAverager.RemoveFirstEnsemble();
+            _beamVelAverager.RemoveFirstEnsemble();
+            _instrumentVelAverager.RemoveFirstEnsemble();
+            _earthVelAverager.RemoveFirstEnsemble();
+            _refLayerAverager.RemoveFirstEnsemble();
+            _bottomTrackAverager.RemoveFirstEnsemble();
+        }
 
         #endregion
 

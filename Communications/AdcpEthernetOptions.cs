@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/14/2013      RC          2.19       Initial coding
+ * 07/22/2014      RC          2.23.0     Added Port property.
  * 
  */
 
@@ -42,9 +43,10 @@ namespace RTI
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using Newtonsoft.Json;
 
     /// <summary>
-    /// TODO: Update summary.
+    /// Ethernet options.
     /// </summary>
     public class AdcpEthernetOptions
     {
@@ -75,9 +77,15 @@ namespace RTI
         public int IpAddrD { get; set; }
 
         /// <summary>
+        /// Port number.
+        /// </summary>
+        public int Port { get; set; }
+
+        /// <summary>
         /// Return the address as a string.
         /// A.B.C.D
         /// </summary>
+        [JsonIgnore]
         public string IpAddr
         {
             get
@@ -98,6 +106,7 @@ namespace RTI
             IpAddrB = 168;
             IpAddrC = 1;
             IpAddrD = 130;
+            Port = 100;
         }
 
         #endregion

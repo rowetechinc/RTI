@@ -73,6 +73,8 @@
  * 02/10/2014      RC          2.21.3     Added AdcpGpsData, Gps1Data, Gps2Data, Nmea1Data and Nmea2Data.
  * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().   
  * 06/19/2014      RC          2.22.1     Added DvlDataSet.
+ * 07/16/2014      RC          2.23.0     Added EncodeJSON().
+ * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet
  * 
  */
 
@@ -1296,15 +1298,17 @@ namespace RTI
             /// This will add the Ensemble data and take no data.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Elements.</param>
+            /// <param name="elementMulitplier">Element Mulitplier.</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            public void AddEnsembleData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            public void AddEnsembleData(int valueType, int numElements, int elementMulitplier, int imag, int nameLength, string name, int numBins, int numBeams)
             {
                 IsEnsembleAvail = true;
-                EnsembleData = new EnsembleDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+                EnsembleData = new EnsembleDataSet(valueType, numElements, elementMulitplier, imag, nameLength, name, numBins, numBeams);
             }
 
             /// <summary>
@@ -1313,16 +1317,16 @@ namespace RTI
             /// for all the Ensemble data.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Elements</param>
+            /// <param name="elementMulitplier">Element Multiplier.</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="ensembleData">Byte array containing Ensemble data</param>
-            public void AddEnsembleData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ensembleData)
+            public void AddEnsembleData(int valueType, int numElements, int elementMulitplier, int imag, int nameLength, string name, byte[] ensembleData)
             {
                 IsEnsembleAvail = true;
-                EnsembleData = new EnsembleDataSet(valueType, numBins, numBeams, imag, nameLength, name, ensembleData);
+                EnsembleData = new EnsembleDataSet(valueType, numElements, elementMulitplier, imag, nameLength, name, ensembleData);
             }
 
             /// <summary>
@@ -1368,15 +1372,15 @@ namespace RTI
             /// for all the Ancillary data.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Elements.</param>
+            /// <param name="elementMulitplier">Element Multiplier.</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            public void AddAncillaryData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            public void AddAncillaryData(int valueType, int numElements, int elementMulitplier, int imag, int nameLength, string name)
             {
                 IsAncillaryAvail = true;
-                AncillaryData = new AncillaryDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+                AncillaryData = new AncillaryDataSet(valueType, numElements, elementMulitplier, imag, nameLength, name);
             }
 
             /// <summary>
@@ -1385,16 +1389,16 @@ namespace RTI
             /// for all the Ancillary data.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Elements.</param>
+            /// <param name="elementMulitplier">Element Multiplier.</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="ancillaryData">Byte array containing Ancillary data</param>
-            public void AddAncillaryData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ancillaryData)
+            public void AddAncillaryData(int valueType, int numElements, int elementMulitplier, int imag, int nameLength, string name, byte[] ancillaryData)
             {
                 IsAncillaryAvail = true;
-                AncillaryData = new AncillaryDataSet(valueType, numBins, numBeams, imag, nameLength, name, ancillaryData);
+                AncillaryData = new AncillaryDataSet(valueType, numElements, elementMulitplier, imag, nameLength, name, ancillaryData);
             }
 
             /// <summary>
@@ -1895,75 +1899,6 @@ namespace RTI
             /// <returns>A new object identical to this object.  Deep Copy.</returns>
             public Ensemble Clone()
             {
-                //Ensemble ensemble = new Ensemble();
-
-                //if (IsBeamVelocityAvail)
-                //{
-                //    ensemble.AddBeamVelocityData(BeamVelocityData.ValueType, BeamVelocityData.NumElements, BeamVelocityData.ElementsMultiplier, BeamVelocityData.Imag, BeamVelocityData.NameLength, BeamVelocityData.Name, BeamVelocityData.Encode());
-                //}
-
-                //if (IsInstrumentVelocityAvail)
-                //{
-                //    ensemble.AddInstrumentVelocityData(InstrumentVelocityData.ValueType, InstrumentVelocityData.NumElements, InstrumentVelocityData.ElementsMultiplier, InstrumentVelocityData.Imag, InstrumentVelocityData.NameLength, InstrumentVelocityData.Name, InstrumentVelocityData.Encode());
-                //}
-
-                //if (IsEarthVelocityAvail)
-                //{
-                //    ensemble.AddEarthVelocityData(EarthVelocityData.ValueType, EarthVelocityData.NumElements, EarthVelocityData.ElementsMultiplier, EarthVelocityData.Imag, EarthVelocityData.NameLength, EarthVelocityData.Name, EarthVelocityData.Encode());
-                //}
-
-                //if (IsAmplitudeAvail)
-                //{
-                //    ensemble.AddAmplitudeData(AmplitudeData.ValueType, AmplitudeData.NumElements, AmplitudeData.ElementsMultiplier, AmplitudeData.Imag, AmplitudeData.NameLength, AmplitudeData.Name, AmplitudeData.Encode());
-                //}
-
-                //if (IsCorrelationAvail)
-                //{
-                //    ensemble.AddCorrelationData(CorrelationData.ValueType, CorrelationData.NumElements, CorrelationData.ElementsMultiplier, CorrelationData.Imag, CorrelationData.NameLength, CorrelationData.Name, CorrelationData.Encode());
-                //}
-
-                //if (IsGoodBeamAvail)
-                //{
-                //    ensemble.AddGoodBeamData(GoodBeamData.ValueType, GoodBeamData.NumElements, GoodBeamData.ElementsMultiplier, GoodBeamData.Imag, GoodBeamData.NameLength, GoodBeamData.Name, GoodBeamData.Encode());
-                //}
-
-                //if (IsGoodEarthAvail)
-                //{
-                //    ensemble.AddGoodEarthData(GoodEarthData.ValueType, GoodEarthData.NumElements, GoodEarthData.ElementsMultiplier, GoodEarthData.Imag, GoodEarthData.NameLength, GoodEarthData.Name, GoodEarthData.Encode());
-                //}
-
-                //if (IsEnsembleAvail && EnsembleData != null)
-                //{
-                //    ensemble.AddEnsembleData(EnsembleData.ValueType, EnsembleData.NumElements, EnsembleData.ElementsMultiplier, EnsembleData.Imag, EnsembleData.NameLength, EnsembleData.Name, EnsembleData.Encode());
-                //}
-
-                //if (IsAncillaryAvail)
-                //{
-                //    ensemble.AddAncillaryData(AncillaryData.ValueType, AncillaryData.NumElements, AncillaryData.ElementsMultiplier, AncillaryData.Imag, AncillaryData.NameLength, AncillaryData.Name, AncillaryData.Encode());
-                //}
-
-                //if (IsBottomTrackAvail)
-                //{
-                //    ensemble.AddBottomTrackData(BottomTrackData.ValueType, BottomTrackData.NumElements, BottomTrackData.ElementsMultiplier, BottomTrackData.Imag, BottomTrackData.NameLength, BottomTrackData.Name, BottomTrackData.Encode());
-                //}
-
-                //if (IsEarthWaterMassAvail)
-                //{
-                //    ensemble.AddEarthWaterMassData(EarthWaterMassData.ValueType, EarthWaterMassData.NumElements, EarthWaterMassData.ElementsMultiplier, EarthWaterMassData.Imag, EarthWaterMassData.NameLength, EarthWaterMassData.Name, EarthWaterMassData.VelocityEast, EarthWaterMassData.VelocityNorth, EarthWaterMassData.VelocityVertical, EarthWaterMassData.WaterMassDepthLayer);
-                //}
-
-                //if (IsInstrumentWaterMassAvail)
-                //{
-                //    ensemble.AddInstrumentWaterMassData(InstrumentWaterMassData.ValueType, InstrumentWaterMassData.NumElements, InstrumentWaterMassData.ElementsMultiplier, InstrumentWaterMassData.Imag, InstrumentWaterMassData.NameLength, InstrumentWaterMassData.Name, InstrumentWaterMassData.VelocityX, InstrumentWaterMassData.VelocityY, InstrumentWaterMassData.VelocityZ, InstrumentWaterMassData.WaterMassDepthLayer);
-                //}
-
-                //if(IsNmeaAvail)
-                //{
-                //    ensemble.AddNmeaData(NmeaData.ValueType, NmeaData.NumElements, NmeaData.ElementsMultiplier, NmeaData.Imag, NmeaData.NameLength, NmeaData.Name, NmeaData.Encode());
-                //}
-
-                //return ensemble;
-
                 string json = Newtonsoft.Json.JsonConvert.SerializeObject(this);
                 return Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.Ensemble>(json);
             }
@@ -2210,7 +2145,7 @@ namespace RTI
 
             #endregion
 
-            #region Encode
+            #region Encode Binary
 
             /// <summary>
             /// Create a byte array of the ensemble.
@@ -2250,17 +2185,6 @@ namespace RTI
                 System.Buffer.BlockCopy(checksumByte, 0, result, result.Length - BYTES_IN_INT32, BYTES_IN_INT32);
 
                 return result;
-            }
-
-            /// <summary>
-            /// This will give only the datasets in Matlab format.  To specify only 1 or more datasets, set all the IsXXXAvail
-            /// methods to TRUE or FALSE.  Then call this method.
-            /// This will not include the RTI header and checksum to the data.
-            /// </summary>
-            /// <returns>A byte array of all the datasets in the ensemble in Matlab format.</returns>
-            public byte[] EncodeMatlab()
-            {
-                return GetAllDataSets();
             }
 
             /// <summary>
@@ -2478,6 +2402,94 @@ namespace RTI
 
             #endregion
 
+            #region Encode Matlab
+
+            /// <summary>
+            /// This will give only the datasets in Matlab format.  To specify only 1 or more datasets, set all the IsXXXAvail
+            /// methods to TRUE or FALSE.  Then call this method.
+            /// This will not include the RTI header and checksum to the data.
+            /// </summary>
+            /// <returns>A byte array of all the datasets in the ensemble in Matlab format.</returns>
+            public byte[] EncodeMatlab()
+            {
+                return GetAllDataSets();
+            }
+
+            #endregion
+
+            #region Encode JSON
+
+            /// <summary>
+            /// Encode this object to a JSON string.
+            /// </summary>
+            /// <returns>A JSON string of this object.</returns>
+            public string EncodeJSON()
+            {
+                return Newtonsoft.Json.JsonConvert.SerializeObject(this, Formatting.Indented);
+            }
+
+            #endregion
+
+            #region Encode CSV
+
+            /// <summary>
+            /// The CSV header based off the options given.
+            /// </summary>
+            /// <param name="options">Options to encode.</param>
+            /// <returns>Header for the CSV format.</returns>
+            public string CSVHeader(ExportOptions options = null)
+            {
+                // If you can determine the max bin and no options
+                // were given, then set the max bin.
+                // Subtract 1 because it is 0 based.
+                if (this.IsEnsembleAvail && options == null)
+                {
+                    // Set max bins
+                    options = new ExportOptions();
+                    options.SetMaxBin(this.EnsembleData.NumBins-1); 
+                }
+
+                if(options == null)
+                {
+                    // Default settings
+                    options = new ExportOptions();
+                }
+
+
+                return CsvExporterWriter.GetHeader(options);
+            }
+
+            /// <summary>
+            /// The user must first get the header from the CSVHeader().
+            /// Then the user can get each encoded CSV ensemble.
+            /// This will convert the given ensemble to a CSV format, 
+            /// based off the options given.
+            /// </summary>
+            /// <param name="options">Options to encode.</param>
+            /// <returns>A string of the ensemble in CSV format.</returns>
+            public string EncodeCSV(ExportOptions options = null)
+            {
+                // If you can determine the max bin and no options
+                // were given, then set the max bin.
+                // Subtract 1 because it is 0 based.
+                if (this.IsEnsembleAvail && options == null)
+                {
+                    // Set max bins
+                    options = new ExportOptions();
+                    options.SetMaxBin(this.EnsembleData.NumBins - 1);
+                }
+
+                if (options == null)
+                {
+                    // Default settings
+                    options = new ExportOptions();
+                }
+
+                return CsvExporterWriter.EncodeCSV(this, options);
+            }
+
+            #endregion
+
             #region PD0 Ensemble
 
             #region Decode
@@ -2490,12 +2502,12 @@ namespace RTI
             {
                 // Add Ensemble Data Set
                 this.IsEnsembleAvail = true;
-                this.EnsembleData = new EnsembleDataSet(ensemble.FixedLeader.NumberOfCells);
+                this.EnsembleData = new EnsembleDataSet();
                 this.EnsembleData.DecodePd0Ensemble(ensemble.FixedLeader, ensemble.VariableLeader);
 
                 // Add Ancillary Data Set
                 this.IsAncillaryAvail = true;
-                this.AncillaryData = new AncillaryDataSet(ensemble.FixedLeader.NumberOfCells);
+                this.AncillaryData = new AncillaryDataSet();
                 this.AncillaryData.DecodePd0Ensemble(ensemble.FixedLeader, ensemble.VariableLeader);
 
                 // Add Bottom Track Data Set

@@ -276,9 +276,12 @@ namespace RTI
                 _eventWaitData.Set();
             }
 
-            // Publish the Ensemble ID that was written to the database
-            // This ID is the ensemble number
-            PublishEnsembleWrite(adcpData.EnsembleData.EnsembleNumber);
+            if (adcpData.IsEnsembleAvail)
+            {
+                // Publish the Ensemble ID that was written to the database
+                // This ID is the ensemble number
+                PublishEnsembleWrite(adcpData.EnsembleData.EnsembleNumber);
+            }
         }
 
         #region AdcpConfiguration

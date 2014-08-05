@@ -168,7 +168,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.EnsembleDataID);               // Dataset ID
+                                            DataSet.Ensemble.EnsembleDataID, 30, 4);               // Dataset ID
 
             Assert.IsTrue(adcpData.IsEnsembleAvail, "IsEnsembleAvail is incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DATATYPE_INT, adcpData.EnsembleData.ValueType, "DataType is incorrect.");
@@ -210,7 +210,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.EnsembleDataID);               // Dataset ID
+                                            DataSet.Ensemble.EnsembleDataID, 30, 4);               // Dataset ID
 
             Assert.IsTrue(ensemble.IsEnsembleAvail, "IsEnsembleAvail is incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DATATYPE_INT, ensemble.EnsembleData.ValueType, "DataType is incorrect.");
@@ -289,7 +289,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.EnsembleDataID);               // Dataset ID
+                                            DataSet.Ensemble.EnsembleDataID, 30, 4);               // Dataset ID
 
             Assert.IsTrue(adcpData.IsEnsembleAvail, "IsEnsembleAvail is incorrect.");
             Assert.AreEqual(DataSet.Ensemble.DATATYPE_INT, adcpData.EnsembleData.ValueType, "DataType is incorrect.");
@@ -365,7 +365,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.EnsembleDataID);               // Dataset ID
+                                            DataSet.Ensemble.EnsembleDataID, 30, 4);               // Dataset ID
 
             adcpData.EnsembleData.SysSerialNumber = new SerialNumber("01300000000000000000000000000001");
             adcpData.EnsembleData.SysFirmware = new Firmware(Subsystem.EMPTY_CODE, 0, 2, 3);                                     // SubsystemCode is SubsystemIndex because of firmware version
@@ -415,7 +415,7 @@ namespace RTI
                                             4,                                              // Number of beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                            DataSet.Ensemble.EnsembleDataID);               // Dataset ID
+                                            DataSet.Ensemble.EnsembleDataID, 30, 4);               // Dataset ID
 
             adcpData.EnsembleData.SysSerialNumber = new SerialNumber("01300000000000000000000000000001");
             adcpData.EnsembleData.SysFirmware = new Firmware(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3, 0, 2, 3);
@@ -576,7 +576,12 @@ namespace RTI
             vl.RtcSecond = 2;
             vl.RtcHundredths = 3;
 
-            DataSet.EnsembleDataSet ens = new DataSet.EnsembleDataSet(30);
+            DataSet.EnsembleDataSet ens = new DataSet.EnsembleDataSet(DataSet.Ensemble.DATATYPE_INT,                         // Type of data stored (Float or Int)
+                                            30,                                             // Number of bins
+                                            4,                                              // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
+                                            DataSet.Ensemble.EnsembleDataID, 30, 4);               // Dataset ID
             ens.DecodePd0Ensemble(fl, vl);
 
             Assert.AreEqual(345, ens.EnsembleNumber, "Ensemble Number is incorrect.");

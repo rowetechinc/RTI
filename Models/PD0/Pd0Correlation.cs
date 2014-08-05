@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 03/12/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
+ * 07/24/2014      RC          2.23.0     Fixed bug in DecodeRtiEnsemble() if numCodeRepeats is 0 or N is 0.
  * 
  * 
  * 
@@ -134,10 +135,12 @@ namespace RTI
         /// <summary>
         /// Initialize the object.
         /// </summary>
-        public Pd0Correlation(DataSet.CorrelationDataSet corr)
+        /// <param name="corr">Correlation data set.</param>
+        /// <param name="numCodeRepeats">Number of code repeats.  Found in SystemSetupDataSet.</param>
+        public Pd0Correlation(DataSet.CorrelationDataSet corr, float numCodeRepeats)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Correlation)
         {
-            DecodeRtiEnsemble(corr);
+            DecodeRtiEnsemble(corr, numCodeRepeats);
         }
 
         /// <summary>
@@ -253,7 +256,8 @@ namespace RTI
         /// Convert the RTI Correlation data set to the PD0 Correlation data type.
         /// </summary>
         /// <param name="corr">RTI Correlation data set.</param>
-        public void DecodeRtiEnsemble(DataSet.CorrelationDataSet corr)
+        /// <param name="numRepeats">Number of code repeats.  Found in SystemSetupDataSet.</param>
+        public void DecodeRtiEnsemble(DataSet.CorrelationDataSet corr, float numRepeats)
         {
             if (corr.CorrelationData != null)
             {
@@ -273,25 +277,36 @@ namespace RTI
                     {
                         for (int beam = 0; beam < corr.CorrelationData.GetLength(1); beam++)
                         {
-                                // beam order 3,2,0,1
-                                int newBeam = 0;
-                                switch (beam)
-                                {
-                                    case 0:
-                                        newBeam = 3;
-                                        break;
-                                    case 1:
-                                        newBeam = 2;
-                                        break;
-                                    case 2:
-                                        newBeam = 0;
-                                        break;
-                                    case 3:
-                                        newBeam = 1;
-                                        break;
-                                }
+                            // beam order 3,2,0,1
+                            int newBeam = 0;
+                            switch (beam)
+                            {
+                                case 0:
+                                    newBeam = 3;
+                                    break;
+                                case 1:
+                                    newBeam = 2;
+                                    break;
+                                case 2:
+                                    newBeam = 0;
+                                    break;
+                                case 3:
+                                    newBeam = 1;
+                                    break;
+                            }
 
-                                Correlation[bin, beam] = (byte)(Math.Round(corr.CorrelationData[bin, newBeam] * 255));
+                            // Check if numRepeats = 0    
+                            if (numRepeats == 0) { numRepeats = 1.0f; }
+
+                            float n = ((numRepeats - 1.0f) / numRepeats);
+                                
+                            // Check if n = 0    
+                            if (n == 0) { n = 1.0f; }
+                            
+                            float val = corr.CorrelationData[bin, newBeam] * 128.0f;
+                            Correlation[bin, beam] = (byte)(Math.Round(val / n));
+
+                            //Correlation[bin, beam] = (byte)(Math.Round(corr.CorrelationData[bin, newBeam] * 255));
                         }
                     }
                     // Vertical beam

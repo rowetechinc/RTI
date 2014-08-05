@@ -321,6 +321,11 @@ namespace RTI
         public static readonly int DVL_SYSTEM_SERIALNUMBER = 999999;
 
         /// <summary>
+        /// DVL Subsystem.
+        /// </summary>
+        public static readonly Subsystem DVL_Subsystem = new Subsystem(Subsystem.SUB_SPARE_H);
+
+        /// <summary>
         /// This constructor creates a blank serial number with nothing set.
         /// </summary>
         public SerialNumber()

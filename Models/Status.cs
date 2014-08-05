@@ -41,6 +41,7 @@
  *                                         Fixed bug with ERR_RCVR_DATA code.  Was 0x400 should have been 0x4000.
  * 12/27/2013      RC          2.21.1     Give the hex value error code with the error string.
  *                                         Updated the error codes.
+ * 07/24/2014      RC          2.23.0     Added a comma to the status errors.
  * 
  */
 
@@ -104,6 +105,9 @@ namespace RTI
     /// Receiver Timeout                                    = 0x8000
     ///    The receiver hardware did not respond to 
     ///    the ping request
+    /// 
+    /// Low Voltage                                         = 0xFFFF
+    ///    The voltage was to low to preform a ping.
     /// 
     /// </summary>
     public class Status
@@ -215,6 +219,12 @@ namespace RTI
         /// </summary>
         public const int ERR_RCVR_TIMEOUT = 0x8000;
 
+        /// <summary>
+        /// Low Voltage.
+        /// The voltage has fallen below the threshold.
+        /// </summary>
+        public const int ERR_LOW_VOLTAGE = 0xFFFF;
+
         #endregion
 
         #region Strings
@@ -303,6 +313,11 @@ namespace RTI
         /// Receiver Timeout Error string.
         /// </summary>
         public static readonly string STR_RCVR_TIMEOUT_ERR = "Receiver Timeout";
+
+        /// <summary>
+        /// Low Voltage Error string.
+        /// </summary>
+        public static readonly string STR_LOW_VOLTAGE_ERR = "Low Voltage";
 
         #endregion
 
@@ -489,6 +504,16 @@ namespace RTI
         }
 
         /// <summary>
+        /// Check whether status bit set for
+        /// Low Voltage.
+        /// </summary>
+        /// <returns>TRUE = Low Voltage.</returns>
+        public bool IsLowVoltage()
+        {
+            return Value == ERR_LOW_VOLTAGE;
+        }
+
+        /// <summary>
         /// Return a string representing the
         /// status.  This could be multiple statuses
         /// values in the string.
@@ -501,75 +526,85 @@ namespace RTI
             {
                 return STR_GOOD;
             }
-            else
-            { 
+            // This error message is 0xFFFF and would include all the
+            // other bits, so seperate this
+            else if (IsLowVoltage())
+            {
                 string result = "0x" + Value.ToString("X4") + " ";
+                return result + STR_LOW_VOLTAGE_ERR;
+            }
+            else
+            {
+                string result = "0x" + Value.ToString("X4") + ", ";
 
                 // Check for all warnings.
                 if (IsWaterTrack3BeamSolution())
                 {
-                    result += STR_WT_3_BEAM_SOLUTION + " ";
+                    result += STR_WT_3_BEAM_SOLUTION + ", ";
                 }
                 if (IsBottomTrack3BeamSolution())
                 {
-                    result += STR_BT_3_BEAM_SOLUTION + " ";
+                    result += STR_BT_3_BEAM_SOLUTION + ", ";
                 }
                 if (IsBottomTrackHold())
                 {
-                    result += STR_BT_HOLD + " ";
+                    result += STR_BT_HOLD + ", ";
                 }
                 if (IsBottomTrackSearching())
                 {
-                    result += STR_BT_SEARCHING + " ";
+                    result += STR_BT_SEARCHING + ", ";
                 }
                 if (IsBottomTrackLR())
                 {
-                    result += STR_BT_LR + " ";
+                    result += STR_BT_LR + ", ";
                 }
                 if (IsOverTemperature())
                 {
-                    result += STR_OVERTEMP + " ";
+                    result += STR_OVERTEMP + ", ";
                 }
                 if (IsBottomTrackProof())
                 {
-                    result += STR_BT_PROOF + " ";
+                    result += STR_BT_PROOF + ", ";
                 }
                 if (IsBottomTrackLowGain())
                 {
-                    result += STR_BT_LOWGAIN + " ";
+                    result += STR_BT_LOWGAIN + ", ";
                 }
                 if (IsHeadingSensorError())
                 {
-                    result += STR_HDG_SENSOR_ERR + " ";
+                    result += STR_HDG_SENSOR_ERR + ", ";
                 }
                 if (IsPressureSensorError())
                 {
-                    result += STR_PRESSURE_SENSOR_ERR + " ";
+                    result += STR_PRESSURE_SENSOR_ERR + ", ";
                 }
                 if (IsPowerDownFailure())
                 {
-                    result += STR_PWR_DOWN_ERR + " ";
+                    result += STR_PWR_DOWN_ERR + ", ";
                 }
                 if (IsNonVolatileDataError())
                 {
-                    result += STR_NONVOLATILE_STORAGE_ERR + " ";
+                    result += STR_NONVOLATILE_STORAGE_ERR + ", ";
                 }
                 if (IsRealTimeClockError())
                 {
-                    result += STR_RTC_ERR + " ";
+                    result += STR_RTC_ERR + ", ";
                 }
                 if (IsTemperatureError())
                 {
-                    result += STR_TEMP_ERR + " ";
+                    result += STR_TEMP_ERR + ", ";
                 }
                 if (IsReceiverDataError())
                 {
-                    result += STR_RCVR_DATA_ERR + " ";
+                    result += STR_RCVR_DATA_ERR + ", ";
                 }
                 if (IsReceiverTimeout())
                 {
-                    result += STR_RCVR_TIMEOUT_ERR + " ";
+                    result += STR_RCVR_TIMEOUT_ERR + ", ";
                 }
+
+                // Remove the last comma and space
+                result = result.Remove(result.Length - 2);
 
                 //return Value.ToString();
                 return result;

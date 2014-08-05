@@ -25,10 +25,11 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/10/2014      RC          3.2.3      Initial coding
+ * 07/31/2014      RC          2.23.0     Added SRC_STR_ADCP_GPS for ADCP GPS data.
  * 
  * 
  * 
- */ 
+ */
 namespace RTI
 {
     using System;
@@ -52,6 +53,11 @@ namespace RTI
         /// ADCP string.
         /// </summary>
         public const string SRC_STR_ADCP = "ADCP";
+
+        /// <summary>
+        /// ADCP GPS string.
+        /// </summary>
+        public const string SRC_STR_ADCP_GPS = "ADCP GPS";
 
         /// <summary>
         /// GPS 1 string.
@@ -207,6 +213,7 @@ namespace RTI
             // Heading sources
             HeadingSourceList = new List<string>();
             HeadingSourceList.Add(SRC_STR_ADCP);
+            HeadingSourceList.Add(SRC_STR_ADCP_GPS);
             HeadingSourceList.Add(SRC_STR_GPS1);
             HeadingSourceList.Add(SRC_STR_GPS2);
             HeadingSourceList.Add(SRC_STR_NMEA1);

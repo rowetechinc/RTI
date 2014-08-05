@@ -47,6 +47,7 @@
  * 07/26/2013      RC          2.19.3     Added CEPO index JSON string and renamed SubsystemConfigurationNumber to SubsystemConfigurationIndex.  
  * 01/09/2014      RC          2.21.3     Added SystemSetupDataSet.
  * 02/06/2014      RC          2.21.3     Added Q value to Water Mass DataSet.
+ * 07/28/2014      RC          2.23.0     Changed the name of numBins and numBeams to NumElements and ElementMutiplier.
  * 
  */
 
@@ -1133,16 +1134,16 @@ namespace RTI
             /// Set all the initial ranges for the base data set.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of elements</param>
+            /// <param name="elementMultiplier">Element Multiplier.</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            public BaseDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            public BaseDataSet(int valueType, int numElements, int elementMultiplier, int imag, int nameLength, string name)
             {
                 ValueType = valueType;
-                NumElements = numBins;
-                ElementsMultiplier = numBeams;
+                NumElements = numElements;
+                ElementsMultiplier = elementMultiplier;
                 Imag = imag;
                 NameLength = nameLength;
                 Name = name;

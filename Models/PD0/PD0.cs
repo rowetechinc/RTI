@@ -578,13 +578,19 @@ namespace RTI
         public void DecodeRtiEnsemble(DataSet.Ensemble ensemble, CoordinateTransforms xform)
         {
             // Add Fixed Leader and Variable Leader
-            FixedLeader.DecodeRtiEnsemble(ensemble.EnsembleData, ensemble.AncillaryData, xform);
+            FixedLeader.DecodeRtiEnsemble(ensemble.EnsembleData, ensemble.AncillaryData, ensemble.SystemSetupData, xform);
             VariableLeader.DecodeRtiEnsemble(ensemble.EnsembleData, ensemble.AncillaryData);
 
             // Correlation
             if (ensemble.IsCorrelationAvail)
             {
-                this.AddDataType(new Pd0Correlation(ensemble.CorrelationData));
+                float numCodeRepeats = 1.0f;
+                if (ensemble.IsSystemSetupAvail)
+                {
+                    numCodeRepeats = ensemble.SystemSetupData.WpRepeatN;
+                }
+
+                this.AddDataType(new Pd0Correlation(ensemble.CorrelationData, numCodeRepeats));
             }
 
             // Amplitude

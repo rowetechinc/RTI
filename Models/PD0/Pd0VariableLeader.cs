@@ -33,6 +33,8 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/03/2014      RC          2.21.4     Initial coding
+ * 07/16/2014      RC          2.23.0     Check if the values are given in DecodeRtiEnsemble().
+ * 07/24/2014      RC          2.23.0     Fixed ensemble number to start with 1 in DecodeRtiEnsemble().
  * 
  * 
  * 
@@ -2233,8 +2235,18 @@ namespace RTI
         /// <param name="anc">RTI Ancillary data set.</param>
         public void DecodeRtiEnsemble(DataSet.EnsembleDataSet ens, DataSet.AncillaryDataSet anc)
         {
+            // Ensure the values were given, or create default values
+            if (ens == null)
+            {
+                ens = new DataSet.EnsembleDataSet();
+            }
+            if (anc == null)
+            {
+                anc = new DataSet.AncillaryDataSet();
+            }
+
             int rolloverEnsNum = ens.EnsembleNumber / ushort.MaxValue;
-            int ensNum = ens.EnsembleNumber - (rolloverEnsNum * ushort.MaxValue) - 1;
+            int ensNum = ens.EnsembleNumber - (rolloverEnsNum * ushort.MaxValue);
 
             EnsembleNumber = (ushort)ensNum;
             RtcYear = (byte)(ens.Year - 2000);

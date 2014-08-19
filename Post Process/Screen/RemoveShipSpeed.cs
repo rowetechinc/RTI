@@ -40,6 +40,7 @@
  * 05/23/2012      RC          2.11       Fixed bug checking if bottom track data is available before trying to use it in RemoveVelocity().
  * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
  * 08/16/2013      RC          2.19.4     Added gpsHeadingOffset to account for the GPS not aligned with the ADCP.
+ * 08/19/2014      RC          3.0.0      Get the heading from the GPS before using the bottom track heading to remove the ship speed when using GPS speed.
  * 
  */
 
@@ -130,7 +131,18 @@ namespace RTI
                         // Use GPS speed
                         if (isGpsVelGood && !isBTVelGood)
                         {
+                            // Heading defaults from ADCP
                             double heading = ensemble.AncillaryData.Heading + gpsHeadingOffset;
+                            // Heading from GPS if its available
+                            if (ensemble.NmeaData.IsGpvtgAvail())
+                            {
+                                heading = ensemble.NmeaData.GPVTG.Bearing.DecimalDegrees + gpsHeadingOffset;
+                            }
+                            else if(ensemble.NmeaData.IsGphdtAvail())
+                            {
+                                heading = ensemble.NmeaData.GPHDT.Heading.DecimalDegrees + gpsHeadingOffset;
+                            }
+                            // Speed from the GPS
                             double speed = ensemble.NmeaData.GPVTG.Speed.ToMetersPerSecond().Value;
 
                             // Calculate the East and North component of the GPS speed

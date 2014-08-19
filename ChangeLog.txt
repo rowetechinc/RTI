@@ -1,5 +1,16 @@
 RTI Changelog
 
+RTI-3.0.0
+ - Changed the version number.
+ - Updated .NET to version 4.5.1.
+ - Updated Newtonsoft.JSON.
+ - Removed the error message for the Thread Abort Exception.
+ - Updated SQLite to 1.0.93.0.
+ - Updated NUnit and NUnit.Runners to 2.6.3.
+ - Updated EntityFramework to 6.1.1.
+ - CsvExporterWriter, fixed the spacing for missing datasets.
+ - In RemoveShipSpeed, get the heading from the GPS before using the bottom track heading to remove the ship speed when using GPS speed.
+
 RTI-2.23.0
  - Changed the version number.
  - Added Averagers for Bottom Track, Earth Vel, Instrument Vel and Beam vel.

@@ -34,7 +34,7 @@
  * -----------------------------------------------------------------
  * 08/26/2013      RC          2.20.2     Initial coding
  * 05/01/2014      RC          2.21.4     Select which datasets to export to the CSV file.
- * 
+ * 08/13/2014      RC          3.0.0      Fixed the spacing for missing datasets.
  * 
  * 
  */
@@ -417,7 +417,7 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.EnsembleData.SubsystemConfig.SubSystem.Index);
                 sb.Append(",");
-                sb.Append(ensemble.EnsembleData.Status.Value);
+                sb.Append(ensemble.EnsembleData.Status.ToString().Replace(",", ";"));        // Replace the , with ; so it does not mess up the seperation);
 
                 return sb.ToString();
             }
@@ -1139,7 +1139,7 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.BottomTrackData.SpeedOfSound);
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Status);
+                sb.Append(ensemble.BottomTrackData.Status.ToString().Replace(",", ";"));        // Replace the , with ; so it does not mess up the seperation
                 sb.Append(",");
                 sb.Append(ensemble.BottomTrackData.NumBeams);
                 sb.Append(",");
@@ -1354,7 +1354,7 @@ namespace RTI
             }
             else
             {
-                sb.Append(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+                sb.Append(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
             }
 
             return sb.ToString();
@@ -1527,12 +1527,10 @@ namespace RTI
                 sb.Append(ensemble.SystemSetupData.WpLagSamples);
                 sb.Append(",");
                 sb.Append(ensemble.SystemSetupData.Voltage);
-                
-
             }
             else
             {
-                sb.Append(",,,,,,,,,,,,");
+                sb.Append(",,,,,,,,,,,");
             }
 
             return sb.ToString();

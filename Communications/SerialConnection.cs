@@ -636,10 +636,9 @@ namespace RTI
                             Disconnect();
                         }
                     }
-                    catch (ThreadAbortException etax)
+                    catch (ThreadAbortException)
                     {
                         // Do nothing, forcing the thread to stop if it does not stop at shutdown
-                        log.Error("Thread aborted" + _serialOptions.ToString(), etax);
                     }
                     catch (Exception ex)
                     {
@@ -656,10 +655,9 @@ namespace RTI
                     }
                 }
             }
-            catch (ThreadAbortException ex)
+            catch (ThreadAbortException)
             {
                 // Do nothing, forcing the thread to stop if it does not stop at shutdown
-                log.Error("Error with serial port read thread. {0}" + _serialOptions.ToString(), ex);
             }
             catch (Exception e)
             {

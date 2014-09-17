@@ -265,9 +265,14 @@ namespace RTI
             public const int CHECKSUM_SIZE = 4;
 
             /// <summary>
-            /// Number of 0x80 for header.
+            /// Number of bytes for header.
             /// </summary>
             public const int HEADER_START_COUNT = 16;
+
+            /// <summary>
+            /// Number of bytes for header, ensemble number and inverse, and payload number and inverse.
+            /// </summary>
+            public const int HEADER_START_ENSNUM_PAYLOAD_COUNT = HEADER_START_COUNT + 16;
 
             /// <summary>
             /// Each payload contains a header with DataType, 

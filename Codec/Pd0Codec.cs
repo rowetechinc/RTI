@@ -34,6 +34,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/27/2014      RC          2.21.4     Initial coding
+ * 09/17/2014      RC          3.0.1      Abort and Join the processing thread on StopThread.
  * 
  * 
  */ 
@@ -52,6 +53,11 @@ namespace RTI
     public class Pd0Codec : ICodec, IDisposable
     {
         #region Variable
+
+        /// <summary>
+        /// Setup logger to report errors.
+        /// </summary>
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Timeout of a loop.
@@ -155,6 +161,10 @@ namespace RTI
 
             // Wake up the thread to stop thread
             _eventWaitData.Set();
+
+            // Force the thread to stop
+            _processDataThread.Abort();
+            _processDataThread.Join(1000);
         }
 
         #region Process Data
@@ -168,25 +178,37 @@ namespace RTI
         {
             while (_continue)
             {
-                // Block until awoken when data is received
-                _eventWaitData.WaitOne();
-
-                // If wakeup was called to kill thread
-                if (!_continue)
+                try
                 {
+                    // Block until awoken when data is received
+                    _eventWaitData.WaitOne();
+
+                    // If wakeup was called to kill thread
+                    if (!_continue)
+                    {
+                        return;
+                    }
+
+                    // Process all data in the buffer
+                    // If the buffer cannot be processed, the timeout will break out
+                    // of the loop
+                    int timeout = 0;
+                    while (_incomingDataBuffer.Count > DataSet.Ensemble.ENSEMBLE_HEADER_LEN && timeout <= TIMEOUT_MAX)
+                    {
+                        // Decode the data sent to the codec
+                        DecodeIncomingData();
+
+                        timeout++;
+                    }
+                }
+                catch (ThreadAbortException)
+                {
+                    // Thread is aborted to stop processing
                     return;
                 }
-
-                // Process all data in the buffer
-                // If the buffer cannot be processed, the timeout will break out
-                // of the loop
-                int timeout = 0;
-                while (_incomingDataBuffer.Count > DataSet.Ensemble.ENSEMBLE_HEADER_LEN && timeout <= TIMEOUT_MAX)
+                catch (Exception e)
                 {
-                    // Decode the data sent to the codec
-                    DecodeIncomingData();
-
-                    timeout++;
+                    log.Error("Error processing PD0 codec data.", e);
                 }
             }
         }

@@ -60,6 +60,7 @@
  * 02/07/2014      RC          2.21.3     Added COL_ADCPGPS.
  * 02/13/2014      RC          2.21.3     Added COL_ENS_POSITION.
  * 06/19/2014      RC          2.22.1     Added COL_DVL.
+ * 09/02/2014      RC          3.0.1      Removed DataTransaction from GetDataTableFromProjectDb(cnn,...) and RunQueryOnProjectDb(cnn,...) and RunQueryOnProjectDb().
  * 
  */
 
@@ -416,20 +417,16 @@ namespace RTI
                         return -1;
                     }
 
-                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    using (DbCommand cmd = cnn.CreateCommand())
                     {
-                        using (DbCommand cmd = cnn.CreateCommand())
-                        {
-                            cmd.CommandText = query;
+                        cmd.CommandText = query;
 
-                            // Get Result
-                            object resultValue = cmd.ExecuteScalar();
-                            result = Convert.ToInt32(resultValue.ToString());
+                        // Get Result
+                        object resultValue = cmd.ExecuteScalar();
+                        result = Convert.ToInt32(resultValue.ToString());
 
-                        }
-                        // Add all the data
-                        dbTrans.Commit();
                     }
+
                     // Close the connection to the database
                     cnn.Close();
                 }
@@ -464,32 +461,22 @@ namespace RTI
 
             try
             {
-                // Open a connection to the database
-                //using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
-                //{
-                    // Ensure a connection can be made
-                    if (cnn == null)
-                    {
-                        return -1;
-                    }
+                // Ensure a connection can be made
+                if (cnn == null)
+                {
+                    return -1;
+                }
 
-                    using (DbTransaction dbTrans = cnn.BeginTransaction())
-                    {
-                        using (DbCommand cmd = cnn.CreateCommand())
-                        {
-                            cmd.CommandText = query;
+                // Create command
+                using (DbCommand cmd = cnn.CreateCommand())
+                {
+                    cmd.CommandText = query;
 
-                            // Get Result
-                            object resultValue = cmd.ExecuteScalar();
-                            result = Convert.ToInt32(resultValue.ToString());
+                    // Get Result
+                    object resultValue = cmd.ExecuteScalar();
+                    result = Convert.ToInt32(resultValue.ToString());
 
-                        }
-                        // Add all the data
-                        dbTrans.Commit();
-                    }
-                    // Close the connection to the database
-                    //cnn.Close();
-                //}
+                }
             }
             catch (SQLiteException e)
             {
@@ -628,31 +615,24 @@ namespace RTI
             DataTable dt = new DataTable();
             try
             {
-                // Open a connection to the database
-                //using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
-                //{
-                    // Ensure a connection can be made
-                    if (cnn == null)
-                    {
-                        return dt;
-                    }
+                // Ensure a connection can be made
+                if (cnn == null)
+                {
+                    return dt;
+                }
 
-                    using (DbTransaction dbTrans = cnn.BeginTransaction())
-                    {
-                        using (DbCommand cmd = cnn.CreateCommand())
-                        {
-                            cmd.CommandText = query;
-                            DbDataReader reader = cmd.ExecuteReader();
+                // Create the command
+                using (DbCommand cmd = cnn.CreateCommand())
+                {
+                    cmd.CommandText = query;
+                    DbDataReader reader = cmd.ExecuteReader();
 
-                            // Load the datatable with query result
-                            dt.Load(reader);
+                    // Load the datatable with query result
+                    dt.Load(reader);
 
-                            // Close the connection
-                            reader.Close();
-                            //cnn.Close();
-                        }
-                    }
-                //}
+                    // Close the connection
+                    reader.Close();
+                }
 
             }
             catch (Exception e)

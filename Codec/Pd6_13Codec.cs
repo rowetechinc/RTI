@@ -36,6 +36,9 @@
  * 06/16/2014      RC          2.22.1     Initial coding
  * 06/23/2014      RC          2.22.1     Fixed setting the time for the ensemble.
  * 07/01/2014      RC          2.23.0     Fixed bug in SetBS() and FindSentence().
+ * 09/16/2014      RC          3.0.1      Fixed bug in FindSentence() looking for the next start location.
+ *                                         Fixed bug in SetBE() setting the earth bottom track velocities.
+ * 
  * 
  * 
  */
@@ -304,7 +307,7 @@ namespace RTI
 
                     // Find the next start sentence
                     int nextSentLoc = 0;
-                    if (begin > 0 && _buffer.Length > begin + 1 )
+                    if (begin >= 0 && _buffer.Length > begin + 1 )
                     {
                         nextSentLoc = _buffer.IndexOf(":", begin + 1);
                     }
@@ -377,7 +380,7 @@ namespace RTI
 
             // Add Ensemble DataSet
             _prevEns.EnsembleData.EnsembleNumber = _count++;
-            _prevEns.EnsembleData.SetTime();
+            //_prevEns.EnsembleData.SetTime();
             _prevEns.EnsembleData.SysSerialNumber = SerialNumber.DVL;
 
             // SA
@@ -561,7 +564,12 @@ namespace RTI
         {
             _prevSA = new SA(sentence);
 
-            // Add DVL DataSet
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
             _prevEns.DvlData.Heading = _prevSA.Heading;
             _prevEns.DvlData.Pitch = _prevSA.Pitch;
             _prevEns.DvlData.Roll = _prevSA.Roll;
@@ -595,7 +603,13 @@ namespace RTI
         {
             _prevTS = new TS(sentence);
 
-            // Add DVL DataSet
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.DateAndTime = _prevTS.DateAndTime;
             _prevEns.DvlData.Salinity = _prevTS.Salinity;
             _prevEns.DvlData.Temperature = _prevTS.Temperature;
             _prevEns.DvlData.DepthOfTransducer = _prevTS.DepthOfTransducer;
@@ -623,6 +637,15 @@ namespace RTI
             _prevEns.BottomTrackData.WaterTemp = _prevTS.Temperature;
             _prevEns.BottomTrackData.TransducerDepth = _prevTS.DepthOfTransducer;
             _prevEns.BottomTrackData.SpeedOfSound = _prevTS.SpeedOfSound;
+
+            // Add Ensemble DataSet
+            if (!_prevEns.IsEnsembleAvail)
+            {
+                _prevEns.EnsembleData = new DataSet.EnsembleDataSet();
+                _prevEns.IsEnsembleAvail = true;
+            }
+            _prevEns.EnsembleData.SetTime(_prevTS.DateAndTime);
+
         }
 
         /// <summary>
@@ -633,7 +656,12 @@ namespace RTI
         {
             _prevRA = new RA(sentence);
 
-            // Add DVL DataSet
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
             _prevEns.DvlData.Pressure = _prevRA.Pressure;
             _prevEns.DvlData.RangeBeam0 = _prevRA.RangeToBottomB0;
             _prevEns.DvlData.RangeBeam1 = _prevRA.RangeToBottomB1;
@@ -669,11 +697,16 @@ namespace RTI
         {
             _prevWI = new WI(sentence);
 
-            // Add DVL DataSet
-            _prevEns.DvlData.WmXVelocity = _prevWI.X;
-            _prevEns.DvlData.WmYVelocity = _prevWI.Y;
-            _prevEns.DvlData.WmZVelocity = _prevWI.Z;
-            _prevEns.DvlData.WmErrorVelocity = _prevWI.Q;
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.WmXVelocity = _prevWI.X * 0.001f;
+            _prevEns.DvlData.WmYVelocity = _prevWI.Y * 0.001f;
+            _prevEns.DvlData.WmZVelocity = _prevWI.Z * 0.001f;
+            _prevEns.DvlData.WmErrorVelocity = _prevWI.Q * 0.001f;
             _prevEns.DvlData.WmInstrumentIsGoodVelocity = _prevWI.IsGood;
 
             // Add Instrument Water Mass DataSet
@@ -682,10 +715,10 @@ namespace RTI
                 _prevEns.InstrumentWaterMassData = new DataSet.InstrumentWaterMassDataSet();
                 _prevEns.IsInstrumentWaterMassAvail = true;
             }
-            _prevEns.InstrumentWaterMassData.VelocityX = _prevWI.X;
-            _prevEns.InstrumentWaterMassData.VelocityY = _prevWI.Y;
-            _prevEns.InstrumentWaterMassData.VelocityZ = _prevWI.Z;
-            _prevEns.InstrumentWaterMassData.VelocityQ = _prevWI.Q;
+            _prevEns.InstrumentWaterMassData.VelocityX = _prevWI.X * 0.001f;
+            _prevEns.InstrumentWaterMassData.VelocityY = _prevWI.Y * 0.001f;
+            _prevEns.InstrumentWaterMassData.VelocityZ = _prevWI.Z * 0.001f;
+            _prevEns.InstrumentWaterMassData.VelocityQ = _prevWI.Q * 0.001f;
         }
 
         /// <summary>
@@ -696,9 +729,15 @@ namespace RTI
         {
             _prevWS = new WS(sentence);
 
-            _prevEns.DvlData.WmTransverseVelocity = _prevWS.T;
-            _prevEns.DvlData.WmLongitudinalVelocity = _prevWS.L;
-            _prevEns.DvlData.WmNormalVelocity = _prevWS.N;
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.WmTransverseVelocity = _prevWS.T * 0.001f;
+            _prevEns.DvlData.WmLongitudinalVelocity = _prevWS.L * 0.001f;
+            _prevEns.DvlData.WmNormalVelocity = _prevWS.N * 0.001f;
             _prevEns.DvlData.WmShipIsGoodVelocity = _prevWS.IsGood;
         }
 
@@ -710,10 +749,15 @@ namespace RTI
         {
             _prevWE = new WE(sentence);
 
-            // Set DVL DataSet
-            _prevEns.DvlData.WmEastVelocity = _prevWE.E;
-            _prevEns.DvlData.WmNorthVelocity = _prevWE.N;
-            _prevEns.DvlData.WmUpwardVelocity = _prevWE.U;
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.WmEastVelocity = _prevWE.E * 0.001f;
+            _prevEns.DvlData.WmNorthVelocity = _prevWE.N * 0.001f;
+            _prevEns.DvlData.WmUpwardVelocity = _prevWE.U * 0.001f;
             _prevEns.DvlData.WmEarthIsGoodVelocity = _prevWE.IsGood;
 
             // Add Earth Water Mass DataSet
@@ -722,9 +766,9 @@ namespace RTI
                 _prevEns.EarthWaterMassData = new DataSet.EarthWaterMassDataSet();
                 _prevEns.IsEarthWaterMassAvail = true;
             }
-            _prevEns.EarthWaterMassData.VelocityEast = _prevWE.E;
-            _prevEns.EarthWaterMassData.VelocityNorth = _prevWE.N;
-            _prevEns.EarthWaterMassData.VelocityVertical = _prevWE.U;
+            _prevEns.EarthWaterMassData.VelocityEast = _prevWE.E * 0.001f;
+            _prevEns.EarthWaterMassData.VelocityNorth = _prevWE.N * 0.001f;
+            _prevEns.EarthWaterMassData.VelocityVertical = _prevWE.U * 0.001f;
         }
 
         /// <summary>
@@ -735,7 +779,12 @@ namespace RTI
         {
             _prevWD = new WD(sentence);
 
-            // Set DVL DataSet
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
             _prevEns.DvlData.WmEastDistance = _prevWD.E;
             _prevEns.DvlData.WmNorthDistance = _prevWD.N;
             _prevEns.DvlData.WmUpwardDistance = _prevWD.U;
@@ -767,11 +816,16 @@ namespace RTI
         {
             _prevBI = new BI(sentence);
 
-            // Set DVL DataSet
-            _prevEns.DvlData.BtXVelocity = _prevBI.X;
-            _prevEns.DvlData.BtYVelocity = _prevBI.Y;
-            _prevEns.DvlData.BtZVelocity = _prevBI.Z;
-            _prevEns.DvlData.BtErrorVelocity = _prevBI.Q;
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.BtXVelocity = _prevBI.X * 0.001f;
+            _prevEns.DvlData.BtYVelocity = _prevBI.Y * 0.001f;
+            _prevEns.DvlData.BtZVelocity = _prevBI.Z * 0.001f;
+            _prevEns.DvlData.BtErrorVelocity = _prevBI.Q * 0.001f;
             _prevEns.DvlData.BtInstrumentIsGoodVelocity = _prevBI.IsGood;
 
             // Add Bottom Track DataSet
@@ -780,10 +834,10 @@ namespace RTI
                 _prevEns.BottomTrackData = new DataSet.BottomTrackDataSet();
                 _prevEns.IsBottomTrackAvail = true;
             }
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] = _prevBI.X;
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] = _prevBI.Y;
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] = _prevBI.Z;
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Q_INDEX] = _prevBI.Q;
+            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] = _prevBI.X * 0.001f;
+            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] = _prevBI.Y * 0.001f;
+            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] = _prevBI.Z * 0.001f;
+            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Q_INDEX] = _prevBI.Q * 0.001f;
         }
 
         /// <summary>
@@ -794,10 +848,15 @@ namespace RTI
         {
             _prevBS = new BS(sentence);
 
-            // Set DVL DataSet
-            _prevEns.DvlData.BtTransverseVelocity = _prevBS.T;
-            _prevEns.DvlData.BtLongitudinalVelocity = _prevBS.L;
-            _prevEns.DvlData.BtNormalVelocity = _prevBS.N;
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.BtTransverseVelocity = _prevBS.T * 0.001f;
+            _prevEns.DvlData.BtLongitudinalVelocity = _prevBS.L * 0.001f;
+            _prevEns.DvlData.BtNormalVelocity = _prevBS.N * 0.001f;
             _prevEns.DvlData.BtShipIsGoodVelocity = _prevBS.IsGood;
         }
 
@@ -809,10 +868,15 @@ namespace RTI
         {
             _prevBE = new BE(sentence);
 
-            // Set DVL DataSet
-            _prevEns.DvlData.BtEastVelocity = _prevBE.E;
-            _prevEns.DvlData.BtNorthVelocity = _prevBE.N;
-            _prevEns.DvlData.BtUpwardVelocity = _prevBE.U;
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
+            _prevEns.DvlData.BtEastVelocity = _prevBE.E * 0.001f;
+            _prevEns.DvlData.BtNorthVelocity = _prevBE.N * 0.001f;
+            _prevEns.DvlData.BtUpwardVelocity = _prevBE.U * 0.001f;
             _prevEns.DvlData.BtEarthIsGoodVelocity = _prevBE.IsGood;
 
             // Add Bottom Track DataSet
@@ -821,9 +885,9 @@ namespace RTI
                 _prevEns.BottomTrackData = new DataSet.BottomTrackDataSet();
                 _prevEns.IsBottomTrackAvail = true;
             }
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = _prevBE.E;
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = _prevBE.N;
-            _prevEns.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = _prevBE.U;
+            _prevEns.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = _prevBE.E * 0.001f;
+            _prevEns.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = _prevBE.N * 0.001f;
+            _prevEns.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = _prevBE.U * 0.001f;
         }
 
         /// <summary>
@@ -834,11 +898,16 @@ namespace RTI
         {
             _prevBD = new BD(sentence);
 
-            // Set DVL DataSet
+            // Add DVL dataset
+            if (_prevEns.DvlData == null)
+            {
+                _prevEns.DvlData = new DataSet.DvlDataSet();
+                _prevEns.IsDvlDataAvail = true;
+            }
             _prevEns.DvlData.BtEastDistance = _prevBD.E;
             _prevEns.DvlData.BtNorthDistance = _prevBD.N;
             _prevEns.DvlData.BtUpwardDistance = _prevBD.U;
-            _prevEns.DvlData.BtEarthRangeToWaterMassCenter = _prevBD.RangeToBottom;
+            _prevEns.DvlData.BtRangeToBottom = _prevBD.RangeToBottom;
             _prevEns.DvlData.BtEarthTimeLastGoodVel = _prevBD.Time;
         }
 

@@ -41,6 +41,7 @@
  * 03/08/2013      RC          2.18       Removed cache and added an SQLiteConnection to improve performance.
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 12/09/2013      RC          2.21.0     Added GetLastEnsemble().
+ * 09/02/2014      RC          3.0.1      In ReadEnsemble(), make the query take the connection so new connections will not need to be made with each call.
  * 
  */
 namespace RTI

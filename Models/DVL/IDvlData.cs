@@ -36,6 +36,7 @@
  * 06/18/2014      RC          2.22.1     Initial coding
  * 06/23/2014      RC          2.22.1     Added Sentence property and ToByteArray() in IDvlData.
  * 07/02/2014      RC          2.23.0     Changed Convert() to TryParse() and initialized the values.
+ * 09/16/2014      RC          3.0.1      Fixed bug with TS not setting the Date and Time.
  * 
  * 
  */
@@ -148,7 +149,17 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 6;
+        public int NUM_ELEM = 7;
+
+        /// <summary>
+        /// Date and time.
+        /// </summary>
+        public DateTime DateAndTime;
+
+        /// <summary>
+        /// Store the hundredth of a second.
+        /// </summary>
+        public byte HundredthSec;
 
         /// <summary>
         /// Salinity in parts per thousand (ppt).
@@ -193,18 +204,37 @@ namespace RTI
                 result[2].Replace("+", String.Empty);
                 result[3].Replace("+", String.Empty);
                 result[4].Replace("+", String.Empty);
+                result[5].Replace("+", String.Empty);
+                result[6].Replace("+", String.Empty);
 
                 // Trim the results and convert to a float
+                DateAndTime = DateTime.Now;
                 Salinity = 0.0f;
                 Temperature = 0.0f;
                 DepthOfTransducer = 0.0f;
                 SpeedOfSound = 0.0f;
                 BIT = 0;
-                Single.TryParse(result[1].Trim(), out Salinity);
-                Single.TryParse(result[2].Trim(), out Temperature);
-                Single.TryParse(result[3].Trim(), out DepthOfTransducer);
-                Single.TryParse(result[4].Trim(), out SpeedOfSound);
-                Int32.TryParse(result[5].Trim(), out BIT);
+
+                // Pattern for the date and time
+                string pattern = "yyMMddHHmmss";
+
+                // DateTime cannot hold the hundredth of a second
+                string dt = result[1].Trim();
+                if(dt.Length >= 14)
+                {
+                    // Store the hundredth of second
+                    HundredthSec = Convert.ToByte(dt.Substring(12, 2));
+
+                    // Remove the hundredth of second from the string
+                    dt = dt.Substring(0, 12);
+                }
+
+                DateTime.TryParseExact(dt, pattern, null, System.Globalization.DateTimeStyles.None, out DateAndTime);
+                Single.TryParse(result[2].Trim(), out Salinity);
+                Single.TryParse(result[3].Trim(), out Temperature);
+                Single.TryParse(result[4].Trim(), out DepthOfTransducer);
+                Single.TryParse(result[5].Trim(), out SpeedOfSound);
+                Int32.TryParse(result[6].Trim(), out BIT);
             }
         }
     }
@@ -585,7 +615,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 7;
+        public int NUM_ELEM = 6;
 
         /// <summary>
         /// + East (u-axis) distance data in meters.
@@ -611,12 +641,6 @@ namespace RTI
         /// Time since last good-velocity estimate in seconds.
         /// </summary>
         public float Time;
-
-        /// <summary>
-        /// Status of velocity data.  
-        /// (A = good, V = bad)
-        /// </summary>
-        public bool IsGood;
 
         /// <summary>
         /// Decode the sentence given.
@@ -664,14 +688,6 @@ namespace RTI
                     U = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
-                if (result[6].Contains('A'))
-                {
-                    IsGood = true;
-                }
-                else
-                {
-                    IsGood = false;
-                }
             }
         }
     }
@@ -978,7 +994,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 7;
+        public int NUM_ELEM = 6;
 
         /// <summary>
         /// +/- East (u-axis) distance data in mm/s.
@@ -1007,12 +1023,6 @@ namespace RTI
         /// Time since last good-velocity estimate in seconds.
         /// </summary>
         public float Time;
-
-        /// <summary>
-        /// Status of velocity data.  
-        /// (A = good, V = bad)
-        /// </summary>
-        public bool IsGood;
 
         /// <summary>
         /// Decode the sentence given.
@@ -1058,15 +1068,6 @@ namespace RTI
                 if (U == PD0.BAD_VELOCITY)
                 {
                     U = DataSet.Ensemble.BAD_VELOCITY;
-                }
-
-                if (result[6].Contains('A'))
-                {
-                    IsGood = true;
-                }
-                else
-                {
-                    IsGood = false;
                 }
             }
         }

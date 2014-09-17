@@ -397,9 +397,9 @@ namespace RTI
             public float BtUpwardDistance { get; set; }
 
             /// <summary>
-            /// Range to Bottom Track center in meters. 
+            /// Bottom Track range to bottom in meters. 
             /// </summary>
-            public float BtEarthRangeToWaterMassCenter { get; set; }
+            public float BtRangeToBottom { get; set; }
 
             /// <summary>
             /// Bottom Track Earth Time since last good velocity estimate
@@ -626,7 +626,7 @@ namespace RTI
                 this.BtEastDistance = BtEastDistance;
                 this.BtNorthDistance = BtNorthDistance;
                 this.BtUpwardDistance = BtUpwardDistance;
-                this.BtEarthRangeToWaterMassCenter = BtEarthRangeToWaterMassCenter;
+                this.BtRangeToBottom = BtEarthRangeToWaterMassCenter;
                 this.BtEarthTimeLastGoodVel = BtEarthTimeLastGoodVel;
 
                 this.Pressure = Pressure;
@@ -709,7 +709,7 @@ namespace RTI
                 BtEastDistance = 0.0f;
                 BtNorthDistance = 0.0f;
                 BtUpwardDistance = 0.0f;
-                BtEarthRangeToWaterMassCenter = 0.0f;
+                BtRangeToBottom = 0.0f;
                 BtEarthTimeLastGoodVel = 0.0f;
 
                 Pressure = 0.0f;
@@ -831,7 +831,7 @@ namespace RTI
                 sb.AppendLine(string.Format("BtEastDistance = {0}", BtEastDistance));
                 sb.AppendLine(string.Format("BtNorthDistance = {0}", BtNorthDistance));
                 sb.AppendLine(string.Format("BtUpwardDistance = {0}", BtUpwardDistance));
-                sb.AppendLine(string.Format("BtEarthRangeToWaterMassCenter = {0}", BtEarthRangeToWaterMassCenter));
+                sb.AppendLine(string.Format("BtEarthRangeToWaterMassCenter = {0}", BtRangeToBottom));
                 sb.AppendLine(string.Format("BtEarthTimeLastGoodVel = {0}", BtEarthTimeLastGoodVel));
 
                 sb.AppendLine();
@@ -1149,7 +1149,7 @@ namespace RTI
 
                 // Bottom Track Earth Range to WM Center
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DVL_BT_EARTH_RANGE_TO_WM_CENTER);
-                writer.WriteValue(data.BtEarthRangeToWaterMassCenter);
+                writer.WriteValue(data.BtRangeToBottom);
 
                 // Bottom Track Earth Is Good Vel
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DVL_BT_EARTH_TIME_LAST_GOOD_VEL);

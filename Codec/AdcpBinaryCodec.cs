@@ -59,6 +59,8 @@
  * 09/12/2013      RC          2.20.0     Added buffer lock to AddIncomingData().
  * 12/31/2013      RC          2.21.2     Added ProfileEngineeringData and BottomTrackEngineeringData to parser.
  * 01/09/2014      RC          2.21.3     Added SystemSetupData to parser.
+ * 09/09/2014      RC          3.0.1      Changed the incoming buffer to BlockingCollection to remove the locks.  Optimized searching for the start of an ensemble.
+ * 09/17/2014      RC          3.0.1      Abort and Join the processing thread on StopThread.
  * 
  */
 
@@ -71,6 +73,7 @@ using RTI.DataSet;
 using System.Threading;
 using System.Collections;
 using System.Text;
+using System.Collections.Concurrent;
 
 namespace RTI
 {
@@ -83,6 +86,11 @@ namespace RTI
     {
 
         #region Variables 
+
+        /// <summary>
+        /// Setup logger to report errors.
+        /// </summary>
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Size of the NMEA buffer.
@@ -103,12 +111,13 @@ namespace RTI
         /// Buffer for the incoming data.
         /// This buffer holds all the individual bytes to be processed.
         /// </summary>
-        private List<Byte> _incomingDataBuffer;
+        private BlockingCollection<Byte> _incomingDataBuffer;
 
         /// <summary>
-        /// Lock for the buffer.
+        /// List containing the beginning of the ensemble.
+        /// This will contain the header start, ensemble number and payload.
         /// </summary>
-        private readonly object _bufferLock = new object();
+        private List<byte> _headerStart;
 
         /// <summary>
         /// Lock for the NMEA buffer.
@@ -149,8 +158,8 @@ namespace RTI
             _nmeaBuffer = new LinkedList<string>();
 
             // Initialize buffer
-            //_incomingDataQueue = new Queue<byte[]>();
-            _incomingDataBuffer = new List<Byte>();
+            _incomingDataBuffer = new BlockingCollection<Byte>();
+            _headerStart = new List<byte>();
 
             // Initialize the ensemble size to at least the HDRLEN
             _currentEnsembleSize = DataSet.Ensemble.ENSEMBLE_HEADER_LEN;
@@ -160,6 +169,17 @@ namespace RTI
             _eventWaitData = new EventWaitHandle(false, EventResetMode.AutoReset);
             _processDataThread = new Thread(ProcessDataThread);
             _processDataThread.Start();
+        }
+
+        /// <summary>
+        /// Shutdown this object.
+        /// </summary>
+        public void Dispose()
+        {
+            StopThread();
+
+            ClearIncomingData();
+            _incomingDataBuffer.Dispose();
         }
 
 
@@ -172,12 +192,12 @@ namespace RTI
         /// <param name="data">Data to add to incoming buffer.</param>
         public void AddIncomingData(byte[] data)
         {
-            if (data != null && data.Length > 0)
+            if (data != null)
             {
-                // Lock the buffer while clearing
-                lock (_bufferLock)
+                // Add all the data to the buffer
+                for (int x = 0; x < data.Length; x++)
                 {
-                    _incomingDataBuffer.AddRange(data);
+                    _incomingDataBuffer.Add(data[x]);
                 }
             }
 
@@ -211,25 +231,14 @@ namespace RTI
         /// </summary>
         public void ClearIncomingData()
         {
-            // Lock the buffer while clearing
-            lock (_bufferLock)
-            {
-                // Clear the buffer
-                _incomingDataBuffer.Clear();
-            }
+            // Clear the buffer
+            _incomingDataBuffer = new BlockingCollection<Byte>();
+            _headerStart.Clear();
 
             lock (_nmeaBufferLock)
             {
                 _nmeaBuffer.Clear();
             }
-        }
-
-        /// <summary>
-        /// Shutdown this object.
-        /// </summary>
-        public void Dispose()
-        {
-            StopThread();
         }
 
         #region Parse Data
@@ -243,25 +252,33 @@ namespace RTI
         {
             while (_continue)
             {
-                // Block until awoken when data is received
-                _eventWaitData.WaitOne();
-
-                // If wakeup was called to kill thread
-                if (!_continue)
+                try
                 {
+                    // Block until awoken when data is received
+                    _eventWaitData.WaitOne();
+
+                    // If wakeup was called to kill thread
+                    if (!_continue)
+                    {
+                        return;
+                    }
+
+                    // Process all data in the buffer
+                    // If the buffer cannot be processed
+                    while (_incomingDataBuffer.Count > DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
+                    {
+                        // Decode the data sent to the codec
+                        DecodeIncomingData();
+                    }
+                }
+                catch(ThreadAbortException)
+                {
+                    // Thread is aborted to stop processing
                     return;
                 }
-
-                // Process all data in the buffer
-                // If the buffer cannot be processed, the timeout will break out
-                // of the loop
-                int timeout = 0;
-                while (_incomingDataBuffer.Count > DataSet.Ensemble.ENSEMBLE_HEADER_LEN && timeout <= TIMEOUT_MAX)
+                catch(Exception e)
                 {
-                    // Decode the data sent to the codec
-                    DecodeIncomingData();
-
-                    timeout++;
+                    log.Error("Error processing binary codec data.", e);
                 }
             }
         }
@@ -275,6 +292,10 @@ namespace RTI
 
             // Wake up the thread to stop thread
             _eventWaitData.Set();
+
+            // Force the thread to stop
+            _processDataThread.Abort();
+            _processDataThread.Join(1000);
         }
 
         /// <summary>
@@ -313,17 +334,17 @@ namespace RTI
                             // Create an array to hold the ensemble
                             byte[] ensemble = new byte[_currentEnsembleSize];
 
-                            // Lock the buffer, to ensure the same data is copied
-                            lock (_bufferLock)
+                            // Check one more time just in case the buffer was modified
+                            if (_incomingDataBuffer.Count >= _currentEnsembleSize)
                             {
-                                // Check one more time just in case the buffer was modified
-                                if (_incomingDataBuffer.Count >= _currentEnsembleSize)
-                                {
-                                    // Copy the ensemble to a byte array
-                                    _incomingDataBuffer.CopyTo(0, ensemble, 0, _currentEnsembleSize);
+                                // Copy the header start to the ensemble
+                                Buffer.BlockCopy(_headerStart.ToArray(), 0, ensemble, 0, DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT);
+                                _headerStart.Clear();
 
-                                    // Remove ensemble from buffer
-                                    _incomingDataBuffer.RemoveRange(0, _currentEnsembleSize);
+                                // Copy the remainder of the ensemble 
+                                for (int x = DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT; x < _currentEnsembleSize; x++)
+                                {
+                                    ensemble[x] = _incomingDataBuffer.Take();
                                 }
                             }
 
@@ -347,23 +368,17 @@ namespace RTI
                     // Checksum or Ensemble failed
                     else
                     {
-                        // Lock the buffer while removing
-                        lock (_bufferLock)
-                        {
-                            // Remove the first element to continue searching
-                            _incomingDataBuffer.RemoveAt(0);
-                        }
+                        // Remove the first element to continue searching
+                        //_incomingDataBuffer.Take();
+                        _headerStart.RemoveAt(0);
                     }
                 }
                 // Not a good header start
                 else
                 {
-                    // Lock the buffer while removing
-                    lock (_bufferLock)
-                    {
-                        // Remove the first element to continue searching
-                        _incomingDataBuffer.RemoveAt(0);
-                    }
+                    // Remove the first element to continue searching
+                    //_incomingDataBuffer.Take();
+                    _headerStart.RemoveAt(0);
                 }
             }
         }
@@ -672,23 +687,31 @@ namespace RTI
         /// </summary>
         private void SearchForHeaderStart()
         {
-            lock (_bufferLock)
+            // Find the beginning of an ensemble
+            // It will contain 16 0x80 at the start
+            while (_incomingDataBuffer.Count > DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT)
             {
-                // Find the beginning of an ensemble
-                // It will contain 16 0x80 at the start
-                while (_incomingDataBuffer.Count > 2)
+                // Populate the buffer if its empty
+                if (_headerStart.Count < DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT)
                 {
-                    // Find a start
-                    if (_incomingDataBuffer[0] == 0x80 && _incomingDataBuffer[1] == 0x80)
+                    // Get the header start from the buffer
+                    for (int x = 0; x < DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT; x++)
                     {
-                        break;
+                        // Store the value to the header start array
+                        _headerStart.Add(_incomingDataBuffer.Take());
                     }
-                    // Remove the first byte until you find the start
-                    else
-                    {
-                        // Lock the buffer while removing
-                        _incomingDataBuffer.RemoveAt(0);
-                    }
+                }
+
+                // Find a start
+                if (_headerStart[0] == 0x80 && _headerStart[15] == 0x80)
+                {
+                    break;
+                }
+                // Remove the first byte until you find the start
+                else
+                {
+                    _headerStart.RemoveAt(0);
+                    _headerStart.Add(_incomingDataBuffer.Take());
                 }
             }
         }
@@ -702,23 +725,22 @@ namespace RTI
         /// <returns>True = MAX_HEADER_COUNT of 0x80</returns>
         private bool VerifyHeaderStart()
         {
-            int countHdrStart = 0;
-
-            lock (_bufferLock)
+            if (_headerStart.Count >= DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT)
             {
                 // Verify 16 bytes of 0x80
+                int countHdrStart = 0;
                 for (int x = 0; x < DataSet.Ensemble.HEADER_START_COUNT; x++)
                 {
-                    if (_incomingDataBuffer[x] == 0x80)
+                    if (_headerStart[x] == 0x80)
                     {
                         countHdrStart++;
                     }
                 }
-            }
 
-            if (countHdrStart == DataSet.Ensemble.HEADER_START_COUNT)
-            {
-                return true;
+                if (countHdrStart == DataSet.Ensemble.HEADER_START_COUNT)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -742,30 +764,29 @@ namespace RTI
             long NotEnsSiz = 1;
             int i = DataSet.Ensemble.HEADER_START_COUNT;
 
-            lock (_bufferLock)
-            {
-                EnsNum = _incomingDataBuffer[i++];
-                EnsNum += _incomingDataBuffer[i++] << 8;
-                EnsNum += _incomingDataBuffer[i++] << 16;
-                EnsNum += _incomingDataBuffer[i++] << 24;
+            // Get Ensemble number and inverse
+            EnsNum = _headerStart[i++];
+            EnsNum += _headerStart[i++] << 8;
+            EnsNum += _headerStart[i++] << 16;
+            EnsNum += _headerStart[i++] << 24;
 
-                NotEnsNum = _incomingDataBuffer[i++];
-                NotEnsNum += _incomingDataBuffer[i++] << 8;
-                NotEnsNum += _incomingDataBuffer[i++] << 16;
-                NotEnsNum += _incomingDataBuffer[i++] << 24;
-                NotEnsNum = ~NotEnsNum;
+            NotEnsNum = _headerStart[i++];
+            NotEnsNum += _headerStart[i++] << 8;
+            NotEnsNum += _headerStart[i++] << 16;
+            NotEnsNum += _headerStart[i++] << 24;
+            NotEnsNum = ~NotEnsNum;
 
-                payloadSize = _incomingDataBuffer[i++];
-                payloadSize += _incomingDataBuffer[i++] << 8;
-                payloadSize += _incomingDataBuffer[i++] << 16;
-                payloadSize += _incomingDataBuffer[i++] << 24;
+            // Get payload and inverse
+            payloadSize = _headerStart[i++];
+            payloadSize += _headerStart[i++] << 8;
+            payloadSize += _headerStart[i++] << 16;
+            payloadSize += _headerStart[i++] << 24;
 
-                NotEnsSiz = _incomingDataBuffer[i++];
-                NotEnsSiz += _incomingDataBuffer[i++] << 8;
-                NotEnsSiz += _incomingDataBuffer[i++] << 16;
-                NotEnsSiz += _incomingDataBuffer[i++] << 24;
-                NotEnsSiz = ~NotEnsSiz;
-            }
+            NotEnsSiz = _headerStart[i++];
+            NotEnsSiz += _headerStart[i++] << 8;
+            NotEnsSiz += _headerStart[i++] << 16;
+            NotEnsSiz += _headerStart[i++] << 24;
+            NotEnsSiz = ~NotEnsSiz;
 
             // Determine if the inverted 1's compliment matches
             // the actual value

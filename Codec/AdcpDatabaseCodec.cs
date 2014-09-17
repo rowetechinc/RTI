@@ -177,7 +177,7 @@ namespace RTI
         {
             // Query for the ensemble
             string queryEns = String.Format("SELECT * FROM {0} WHERE ID={1} LIMIT 1;", DbCommon.TBL_ENS_ENSEMBLE, index.ToString());
-            DataTable data = DbCommon.GetDataTableFromProjectDb(project, queryEns);
+            DataTable data = DbCommon.GetDataTableFromProjectDb(cnn, project, queryEns);
             if (data.Rows.Count > 0)
             {
                 DataSet.Ensemble dataset = ParseDataTables(project, data.Rows[0]);

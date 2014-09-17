@@ -1,5 +1,19 @@
 RTI Changelog
 
+RTI-3.0.1
+ - Changed the version number.
+ - In DbCommon, removed DataTransaction from GetDataTableFromProjectDb(cnn,...) and RunQueryOnProjectDb(cnn,...) and RunQueryOnProjectDb().
+ - In AdcpDatabaseReader, in ReadEnsemble(), make the query take the connection so new connections will not need to be made with each call.
+ - Added ProjectPlayback.
+ - Added PlaybackArgs.
+ - In AdcpBinaryCodec, changed the incoming buffer to BlockingCollection to remove the locks.  Optimized searching for the start of an ensemble.
+ - Added FlilePlayback.
+ - In FilePlayback, allow multiple files to be selected to import.
+ - In Pd6_13, fixed bug in FindSentence() looking for the next start location.
+ - In IDvlData, fixed bug with TS not setting the Date and Time.
+ - In Pd6_13, fixed bug in SetBE() setting the earth bottom track velocities.
+ - In AdcpBinaryCodec and Pd0Codec, Abort and Join the processing thread on StopThread.
+
 RTI-3.0.0
  - Changed the version number.
  - Updated .NET to version 4.5.1.

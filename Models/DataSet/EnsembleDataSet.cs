@@ -245,7 +245,7 @@ namespace RTI
             /// return the current date and time.
             /// 
             /// Do not set this value directly.
-            /// Use UpdateAverageEnsemble(1) to set
+            /// Use SetTime(dt) or SetTime() to set
             /// all proper values.
             /// </summary>
             [JsonIgnore]

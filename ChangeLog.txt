@@ -1,0 +1,765 @@
+RTI Changelog
+
+RTI-3.0.2
+ - Changed the version number.
+ - In AdcpCommands, added CTRIG and GetDvlCommandList().
+ - In DecodeCSHOW, added DecodeCTRIG().
+ - In Commons, added ship coordinate transform to Transform.
+ - In AdcpConfiguration, added EngPort.
+ - In AdcpSubsystemCommands, added CBTFILT.
+ - In AdcpCommands, added C232OUT, C422OUT, C485OUT and CWSSC.
+ - In AdcpCommands, changed CERECORD_EnsemblePing from a bool to a AdcpRecordOptions.
+ - Added PD4_5Codec to decode PD4 and PD5 data.
+ - In DvlDataSet, added DMG data.
+ - In AdcpEthernetOptions, changed values to unit.
+ - In AdcpCommand, added DecodeCommandSet() to decode a command set.
+ - In PniPrimeCompassBinaryCodec, fixed bug with SetAllDataComponentsCommand() adding missing IZAligned.
+ - In Pd6_13Codec, Fixed bug in FindSentence() when bad data is given.
+ - In IDvlData, added Leak Detection to TS.
+ - In Ensemble, fixed bug with JSON_STR_ISDVLAVAIL value.
+ - In MathHelper, added milliseconds in TimeSpanPrettyFormat().
+ - In Pd6_13, fixed SetTS() to set the first and last ping time.
+ - In AdcpConfiguration, added flags if GPS and NMEA ports enabled.
+ - In PD4_5Codec, verified the _currentEnsembleSize was at least greater than the header size in DecodeIncomingData().
+ - In PD6_13Codec, fixed bug in FindSentence() removing bad characters.
+ - In AdcpBinaryCodec, Pd0Codec, PD4_5Codec, fixed bug to check if the buffer is empty.
+ - In MathHelper, added DoubleToByteArray().
+ - In ProfileEngineeringDataSet, fixed a bug in WriteJson() using the right array length.
+ - In BaseDataSet, added Range Tracking values.
+ - In AdcpBinaryCodec, added Range Tracking DataSet.
+ - In DbCommons, added COL_RANGETRACKING_DS and RangeTracking.
+ - In AdcpDatabaseCodec, added Range Tracking DataSet.
+ - In ExportOptions, added IsRangeTrackingDataSetOn.
+ - In CsvExporterWriter, added Range Tracking dataset.
+ - In Ensemble, added RangeTrackingDataSet.
+ - In ExportOptions, added PressureOffset and CorrelationThreshold.
+ - In FilePlayback, changed FindEnsembles() to load the file in one block.
+ - In Pd4_5, added header lock.
+ - In RangeTrackingDataSet added NumBeams.
+ - In Playback, Fixed loading the files to wait for all the data to be decoded.
+ - In AdcpImportBinaryFile, use the FilePlayback to read in the ensemble data.
+ - In FilePlayback, close the ProcessDataCompleteEvent in Dispose.
+ - In Pd0Codec, lock the buffer in VerifyHeaderStart().
+ - In AdcpBinaryCodec, in DecodeIncomingData() i need to wait for the buffer to have enough bytes to decode an ensemble.
+ - In FilePlayback, fixed waiting for the file to be loaded into the codec before moving on.
+ - In CsvExporterWriter, added NMEA dataset.
+ - In PniPrimeCompassBinaryCodec, added ToString for PniDataResponse.
+ - In FilePlayback, add constructor that takes only a single file.
+
+RTI-3.0.1
+ - Changed the version number.
+ - In DbCommon, removed DataTransaction from GetDataTableFromProjectDb(cnn,...) and RunQueryOnProjectDb(cnn,...) and RunQueryOnProjectDb().
+ - In AdcpDatabaseReader, in ReadEnsemble(), make the query take the connection so new connections will not need to be made with each call.
+ - Added ProjectPlayback.
+ - Added PlaybackArgs.
+ - In AdcpBinaryCodec, changed the incoming buffer to BlockingCollection to remove the locks.  Optimized searching for the start of an ensemble.
+ - Added FlilePlayback.
+ - In FilePlayback, allow multiple files to be selected to import.
+ - In Pd6_13, fixed bug in FindSentence() looking for the next start location.
+ - In IDvlData, fixed bug with TS not setting the Date and Time.
+ - In Pd6_13, fixed bug in SetBE() setting the earth bottom track velocities.
+ - In AdcpBinaryCodec and Pd0Codec, Abort and Join the processing thread on StopThread.
+
+RTI-3.0.0
+ - Changed the version number.
+ - Updated .NET to version 4.5.1.
+ - Updated Newtonsoft.JSON.
+ - Removed the error message for the Thread Abort Exception.
+ - Updated SQLite to 1.0.93.0.
+ - Updated NUnit and NUnit.Runners to 2.6.3.
+ - Updated EntityFramework to 6.1.1.
+ - CsvExporterWriter, fixed the spacing for missing datasets.
+ - In RemoveShipSpeed, get the heading from the GPS before using the bottom track heading to remove the ship speed when using GPS speed.
+
+RTI-2.23.0
+ - Changed the version number.
+ - Added Averagers for Bottom Track, Earth Vel, Instrument Vel and Beam vel.
+ - In AverageManager, added Bottom Track, Earth Vel, Instrument Vel and Beam vel to average.
+ - In Pd6_13Codec, fixed bug in SetBS() and FindSentence().
+ - In AverageBottomTrack, fixed a bug in SetTimeAndCount().
+ - In IDvlData, changed Convert() to TryParse() and initialized the values.
+ - In AverageManager, moved the logic for removing accumulated data from the averager to the manager.
+ - In Ensemble, added EncodeJSON().
+ - In Pd0VariableLeader and Pd0FixedLeader, check if the values are given in DecodeRtiEnsemble().
+ - In ExportOptions, added SetMaxBin() set all the max bin values.
+ - In SystemSetupDataSet, fixed checking if the voltage existed in Decode().
+ - In AdcpEthernetOption, added Port property.
+ - In MathHelper, added functions to set and get byte arrays for strings.
+ - In AdcpDvlCodec, fixed a bug if AddIncomingData() received a null byte array.
+ - In Status, added a comma to the status errors.
+ - In AdcpDvlCodec, when adding PRTI30 and PRTI31 messages, replace the serialnumber subsystem with the correct value.
+ - In SystemSetupDataSet, added and empty constructor.
+ - In CorrelationDataSet, fixed bug in DecodePd0Ensemble() if numCodeRepeats is 0 or N is 0.
+ - In Pd0Correlatoin, fixed bug in DecodeRtiEnsemble() if numCodeRepeats is 0 or N is 0.
+ - In Pd0VariableLeader, fixed ensemble number to start with 1 in DecodeRtiEnsemble().
+ - Added AdcpTcpIp.cs.
+ - In AverageManagerOptions, added the IsRecording property.
+ - In Common, added AVG_LTA_ENSEMBLE_FILE_EXT and AVG_STA_ENSEMBLE_FILE_EXT.
+ - In MathHelper, added a try/catch block in SubArray().
+ - In AncillaryDataSet, fixed a bug setting the ElementMulitplier and NumElements.
+ - In EnsembleHelper, fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
+ - In BaseDataSet, changed the name of numBins and numBeams to NumElements and ElementMutiplier.
+ - In Ensemble, fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
+ - In VelocityVector, added Instrument Velocity Vectors.  Made specific Earth and Instrument functions.
+ - In EarthVelocityData, changed the name of the VelocityVector functions.
+ - In InstrumentVelocityData, added VelocityVector.
+ - In AdcpDvlCodec, removed trimming the sentence in FindSentence().
+ - In VesselMountOptions, added SRC_STR_ADCP_GPS for ADCP GPS data.
+ - In VmHeadingSource, set the heading based off the ADCP GPS data also.
+ - In SerialConnection, force the thread to shutdown by sending an abort in Dispose().
+
+
+RTI-2-22.1
+ - Changed the version number.
+ - In AdcpSerialPort, check every baud rate in TestSerialBaudConnection().
+ - In Ensemble, added DvlDataSet.
+ - Created Pd6_13Codec to decode PD6 and PD13 messages.
+ - In Project, added DVL column to CreateProjectTables().  Bump rev to D8.
+ - In DbCommon, added COL_DVL.
+ - In AdcpDatabaseWriter, added writing the DVL dataset in WriteEnsembleDataToDatabase().
+ - In Pd6_13Codec, fixed setting the time for the ensemble.
+ - In IDvlData, added Sentence property and ToByteArray() in IDvlData.
+
+RTI-2.22.0
+ - Changed the version number.
+ - In AdcpCommands, fixed finding the Hardware in DecodeBREAK().
+
+RTI-2.21.4
+ - Changed the version number.
+ - In AdcpConfiguration, in AddConfiguration() checkc for a DVL serial number.
+ - In AdcpDatabaseWriter, in ProcessDataThread(), check for a DVL serial number.
+ - Added PD0.cs.
+ - Added Pd0FixedLeader.cs.
+ - Added Pd0Header.cs.
+ - In AdcpEthernet, sped up the download process.
+ - Added Pd0VariableLeader.cs.
+ - In AmplitudeDataSet, added a simpler constructor and added DecodePd0Ensemble().
+ - In CorrelationDataSet, added a simpler constructor and added DecodePd0Ensemble().
+ - In BeamVelocityDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In InstrumentVelocityDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In EarthVelocityDataSet, added a simpler constructor and added DecodePd0Ensemble().
+ - In GoodEarthDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In GoodBeamDataSet, added a simper constructor.
+ - In Ensemble, BottomTrackDataSet, EnsembleDataSet and AncillaryDataSet, added a simpler constructor and added DecodePd0Ensemble(). 
+ - In PD0, added constructor that data binary data.
+ - Added Pd0Codec.
+ - In Pd0ID, added unknown data type.  Added GetType().  Added Default IDs.
+ - In AdcpBinaryWriter, changed _writeBuffer from a list to ConcurrentQueue.
+ - In BottomTrackDataSet, in GetVelocityMagnitude() check for 4 beams.
+ - In Pd0EchoIntensity, fixed code to handle vertical beams.
+ - In Pd0Correlation, fixed code to handle vertical beams.
+ - In Pd0BottomTrack, fixed code to handle vertical beams.
+ - In Pd0PercentGood, fixed code to handle vertical beams.
+ - In Pd0Velocity, fixed code to handle vertical beams.
+ - Updated CsvExporter to select which datasets to export to the CSV file.
+ - Updated Pd0Exporter to select which datasets to export to the PD0 file.
+ - In Transform, added Correlation and SNR threshold.
+ - In InstrumentVelocityDataSet, fixed bug in DecodePd0Ensemble() looking for bad velocity.
+ - In BeamVelocityDataSet, fixed bug in DecodePd0Ensemble() looking for bad velocity.
+ - In CorrelationDataSet, in DecodePd0Ensemble(), changed the conversion to match WH correlation values.
+ - In AdcpSubsystemConfig, removed the IPredictor.
+
+RTI-2.21.3
+ - Changed the version number.
+ - Added SystemSetupDataSet.
+ - In Ensemble, added SystemSetupDataSet.
+ - In AdcpBinaryCodec, added SystemSetupData to parser.
+ - In Project, added SystemSetupDS column to CreateProjectTables().  Bump rev to D5.
+ - In AdcpDatabaseWriter, added SystemSetupDataSet to project db file.
+ - In DbCommon, added COL_SYSTEMSETUP_DS.
+ - In Cache, changed dictionary to ConcurrentDictionary.
+ - In Commons, added NMEA_FILE_EXT to file extensions.
+ - In Project, added Gps and NMEA writers.
+ - In AdcpDatabaseCodec, read in ProfileEngineering, BottomTrackEngineering and SystemSetup datasets.
+ - In Project, added GPS1, GPS2, NMEA1, NMEA2 columns to CreateProjectTables().  Bump rev to D6.
+ - In AdcpDatabaseCodec, added GPS1, GPS2, NMEA1 and NMEA2 column to the project db file.
+ - In all the GPS sentences, put all parsing in a try block or used TryParse.
+ - In AdcpDatabaseCodec, read in GPS1, GPS2, NMEA1 and NMEA2 data.
+ - In AdcpDatabaseCodec, check if the column exist when parsing the data in ParseDataTables().
+ - In Prti01Sentence and Prti02Sentence, fixed parsing the status value from hex to int in OnSentenceChanged().
+ - In AdcpBinaryWriter, added filetype to know what type of binary file is being created.  This will set the file name and extension.
+ - In EnsembleDataSet, added constructor that takes a PRTI03 sentence.
+ - In AncillaryDataSet, added constructor that takes a PRTI03 sentence.
+ - In BottomTrackDataSet, added constructor that takes a PRTI03 sentence.
+ - In InstrumentWaterMassDataSet, added constructor that takes a PRTI03 sentence.  Added Q value.
+ - In BaseDataSet, added Q value to Water Mass DataSet.
+ - In Ensemble, added ability to decode PRIT03 sentence.
+ - In AdcpDvlCodec, added ability to decode PRIT03 sentence.
+ - In PRTI01Sentence and PRTI02Sentence, added Subsystem Configuration.
+ - Added PRTI03Sentence.
+ - Added PRTI30Sentence and PRTI31Sentence.
+ - In DbCommons, Added COL_ADCPGPS.
+ - In AdcpDatabaseWriter, added AdcpGps Column to the project to store the GPS data within the ADCP.
+ - In Project, added AdcpGps column to CreateProjectTables().  Bump rev to D7.
+ - In AdcpConfiguration, added VesselMountOptions to store vessel mount options.
+ - In AdcpDatabaseWriter, removed the EnsembleNmea object and put the NMEA data in the ensemble.
+ - In GpggaSentence, fixed a bug when parsing the Latitude and longitude.
+ - In NmeaDataSet, added GPHDT.
+ - Added VmHeadingSource.cs and VmHeadingOffset.cs.
+ - In AdcpDatabaseWriter, write the position if the GPGGA message is given.
+ - In DbCommons, Added COL_ENS_POSITION.
+ - In AdcpDvlCodec, pass all the DVL data to as binary data to be recorded in SendData().
+ - In PRTIXXXSentence, set the SubsystemConfig number as the same as the CEPO index in OnSentenceChanged(). 
+ - In Firmware, in ToString(), display the SubSystemCode as a char.
+ - In AdcpDatabaseCodec, fixed bug in WriteEnsembleDataToDatabase() where if GPS data was not present, the @position value was not set.
+ - In PRTIXXXSentence, fixed constructor to take subsystem CEPO index.
+
+RTI-2.21.2
+ - Changed the version number.
+ - Create ProfileEngineeringDataSet.
+ - In Ensemble, added ProfileEngineeringDataSet.
+ - In Ensemble, added BottomTrackEngineeringDataSet.
+ - In AdcpBinaryCodec, added ProfileEngineeringData and BottomTrackEngineeringData to parser.
+ - In AdcpDatabaseWriter, added ProfileEngineeringDataSet and BottomTrackEngineeringDataSet to the project db file.
+ - In DbCommon, added COL_PROFILEENGINEERING_DS and COL_BOTTOMTRACKENGINEERING_DS.
+ - In Project, added ProfileEngineeringDS and BottomTrackEngineeringDS columns to CreateProjectTables().  Bump rev to D4.
+
+RTI-2.21.1
+ - Changed the version number.
+ - In Status, give the hex value error code with the error string and updated the error codes.
+
+RTI-2.21.0
+ - Changed the version number.
+ - In SerialNumber, changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().
+ - In DeploymentOptions, added DeploymentMode.
+ - In AdcpConfiguration, changed SerialOptions to AdcpSerialOptions.  Added Gps1/2SerialOptions and Nmea1/2SerialOptions.
+ - In Project, added EnableBackupBinaryWriter and _binaryWriterBackup to have a backup binary writer.
+ - In AdcpBinaryWriter, made MaxFileSize a public property.
+ - In AdcpBinaryWriter, changed contructor to take individual name, folder and serial number to a project will not be needed.
+ - In DeploymentOptions, added InternalMemoryCardUsed and InternalMemoryCardTotal.
+ - In DbCommon, added COL_CMD_PROJECT_OPTIONS.
+ - In AdcpDatabaseWriter, read and write the Project options to the project db file.
+ - In AdcpCommands, added TimeZone property to know how to set STIME.
+ - In MathHelper, added TimeSpanPrettyFormat() to give the time span as a string with plurization.
+ - In PniPrimeCompassBinaryCodec, added MagTiltCalibrationPosition() and made MagCalibrationPosition() a simpler output of just heading.
+ - In AdcpEthernet, added send and receive methods to match the ADCP serial ports commands.
+ - In AdcpConfiguration, added EthernetOptions() to store the Ethernet options.
+ - In PniPrimeCompassBinaryCodec, added Pitch to MagCalibrationPosition().
+ - In MathHelper, added seconds to TimeSpanPrettyFormat().
+ - In Project, added GetLastEnsemble().
+ - In AdcpDatabaseReader, added GetLastEnsemble().
+ - In Project, added Position column and change rev to D3.
+
+RTI-2.20.0
+ - Changed the version number.
+ - In AdcpBinaryCodec, added buffer lock to AddIncomingData().
+ - In AdcpSubsystemCommands, updated CWPBB_TransmitPulseType options to user guide rev N.
+ - In AdcpCommands, removed giving the STIME in GetDeploymentCommandList().
+ - In AdcpSerialPort, added another StartPinging() that does not set the time also.
+ - In AdcpSubsystemCommands, removed the CBI command from the GetDeploymentCommandList().
+ - In AdcpCommands, added CERECORD command to GetDeploymentCommandList().
+ - In AdcpCommands, updated CERECORD to include SinglePing parameter.
+ - In DecodeCSHOW, updated DecodeCERECORD() with the new CERECORD command.
+ - Changed to version 2.20.1.
+ - In AdcpCommands, added DEFAULT_SAN_DIEGO_DECLINATION for CHO command.
+ - In AdcpCommands, added CHO command to GetDeploymentCommandList().
+ - In AdcpCommands, added DecodeSPOS(). 
+ - In SerialConnection, in SendDataWaitReply() check the response if it is a BREAK and handle differently.
+ - In AdcpSerialPort, in TestSerialBaudConnection(), check if the serial port is open and disconnect if it is to prevent exception.  Change the timeout for the response.
+ - In AdcpSerialPort, fixed bug in GetAdcpConfiguration() where the serial options were not set and lost by the constructor.
+ - Changed to version 2.20.2.
+ - In AdcpConfiguration, fixed bug in AddConfig() when setting the Configuration Index and the CEPO index.
+ - In Ensemble, Added EncodeMatlab() to get just the ensemble as Matlab datasets with the RTI header or checksum.
+ - Added the Exporter folder with the CSV and Matlab exporters.
+ - In EnsembleDataSet, fixed bug where i was not consistent in Encode() in setting the number of elements.
+ - In EnsembleHelper, fixed bug in AddNmea() where the datatype was not set correctly.  It is a byte type.
+ - In NmeaDataSet, fixed bug in constructor where the data type was not set correctly.  It is a byte type.
+
+RTI-2.19
+ - Changed the version number.
+ - Added AdcpEthernet.cs and AdcpEthernetOptions.cs.
+ - In AdcpBinaryCodec, if VerifyEnsembleNumberAndSize() fails in DecodingIncomingData(), i remove a byte from the buffer and try again.
+ - In VelocityVector, fixed bug in GenerateAmplitudeVectors() where the VelociytVector was not created. 
+ - In Project.cs, fixed bug where GetAdcpConfigurationFromDb() was commented out.  
+ - Changed namespace from Screen to ScreenData.  
+ - In SerialConnection, fixed IsAvailable() if the port is not open, it would get a null for BreakState.
+ - In SerialConnection, set the initial port and baud rate given in the constuctor to the serial port.
+ - In AdcpSerialPort, added ability to scan for serial ports with an ADCP connected.
+ - Updated README to give instructions how to start to use the code.
+ - Define default values in SerialOptions.
+ - Added ability to handle a single beam system.
+ - In SerialConnection, fixed connecting multiple times to a serial port.  Threads were left running when multiple connections were attempted.
+ - In AdcpSerialPort, fixed BUG in ScanSerialConnection() where the serial connection was not shutdown after scanning and cause the read thread to remain alive.
+ - In AdcpSerialPort, added the class AdcpSerialOptions.  Make the ScanSerialConnection() return a list of AdcpSerialOptions.
+ - In SerialNumber, added SerialNumberDescString and GetSerialNumberDescString().
+ - In SerialConnection, make a public property for SerialPortOptions to allow others to see the settings.
+ - Added ToString() to AdcpSerialPort and SerialConnection.
+ - In AdcpCommands, added GetUtcTimeCommand() to set the time to UTC time and changed GetSystemTimeCommand() to GetLocalSystemTimeCommand().
+ - In AdcpSerialPort, changed SetSystemDateTime() to SetLocalSystemDateTime().  Added SetUtcSystemDateTime().
+ - In AdcpCommands, changed the name of Time_CmdStr() to LocalTime_CmdStr().  Added UtcTime_CmdStr().
+ - Added MaintenceLog.
+ - In SerialConnection, check for empty or null string in SendDataWaitReply().  MAX_DISPLAY_BUFFER increased to ensure the entire HELP message can be displayed.
+ - In AdcpCommands, check for empty buffer in DecodeBREAK().
+ - In AdcpCommands, added TimeValue constructor that takes seconds.  Added TimeValue.ToStringD() to give the time i seconds as a double.
+ - In AdcpSubsystemCommands, replaced Subsystem and CepoIndex with SubsystemConfig which contains this information.
+ - Removed the redudant CepoIndex in SubsystemConfig and AdcpSubsystemConfig.  Made AdcpSubsystemConfig take a SubsystemConfig for its constructor.
+ - In Subsystem, added CodedDescString() and Display to display the Subsystem as a string.
+ - In Subsystem, added CodeToChar() to convert the code to a char.
+ - In AdcpSubsystemCommands, added CBI_BurstPairFlag.
+ - In AdcpCommands, added SPOS.
+ - In AdcpCommands, added DecodeENGCONF().
+ - In MathHelper, added HUNSEC_TO_MILLISEC.
+ - In AdcpCommands, updated GetDeploymentCommandList().
+ - In AdcpSubystemCommands, added GetDeploymentCommandList().
+ - In AdcpBinaryWriter, set a default MaxFileSize.  Added a constructor that takes a project.  Added serialnumber to the file name.
+ - In Project, added BinaryWriter to the write binary data to the project.
+ - In Project, Added Database reader and writer to the project.
+ - Replaced Shutdown() with IDisposable.
+ - Added a class to decode and add NMEA data from a text file to the project.
+ - Changed version to 2.19.1.
+ - In MaintenceLog, added AddEntry() and ClearLog().
+ - In Subsystem, Added SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c, SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d and SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e
+ - In SubsystemConfiguration, Added IndexCodeString().
+ - Changed version to 2.19.2.
+ - In Transform, Updated how Pitch and Roll are used per SM and transform to Instrument also.
+ - In Project, added Flush() to flush the files.
+ - Changed version to 2.19.3.
+ - In EnsembleDataSet, added SubsystemConfigurationIndex to SubsystemConfiguration for output for JSON.
+ - In BaseDataSet, added CEPO index JSON string and renamed SubsystemConfigurationNumber to SubsystemConfigurationIndex. 
+ - In AdcpConfiguration, in SubsystemConfiguration constructor, i give the CEPO index now.
+ - In SubsystemConfiguration, added SubsystemConfigIndex property.  This is to differentiate between CepoIndex and SubsystemConfigIndex.
+ - In AdcpDatabaseWriter, added EnsembleWriteEvent event to send when an ensemble has been written to the database.
+ - In Project, added ProjectEnsembleWriteEvent to send event when an ensemble has been written to the project.
+ - In Project, subscribe to dbWriter to know when an ensemble has been written to the project.
+ - In Project, subscribe to binaryWriter to know when an ensemble has been written to the binary file.
+ - In MaitenceLog, fixed bug setting the date and time to string.  Minutes and Month were swapped.
+ - In AdcpSerialPort, add flag properties to know what mode the ADCP connection is in.
+ - In MathHelper, added BoolToTrueFalseStr() and BoolToOnOffStr().
+ - In PniPrimeCompassBinaryCodec, renamed Parameter and Configuration to PniParamater and PniConfiguration.    Added more responses and decoded them.
+ - Changed version to 2.19.4.
+ - In AdcpDvlCodec, have ProcessDataEventHandler match AdcpBinaryCodec and give both binary and ensemble.  Removed BinaryRecordEvent.
+ - In SerialConnection, added a soft BREAK in SendBreak() for connections that can not handle hard BREAKs.
+ - In DbCommons, added COL_CMD_APP_CONFIGURATION.
+ - In Project, added the column AppConfiguration to tblOptions to hold application specific options.  Changed Project DB rev to D2.
+ - In Project, added WriteAppConfiguration().
+ - In AdcpDatabaseWriter, added AppConfiguration.
+ - In SubsystemConfiguration, convert to and from JSON.
+ - In BottomTrackDataSet, fixed a bug with the GetAverageRange() using ElementMulitplier instead of Range.Length.
+ - In ScreenMarkBadBelowBottom, use BottomTrackDataSet's GetAverageRange().
+ - In EnsembleHelper, in SetVelocitiesBad(), also set the VelocityVector to bad velocity if it exist.
+ - In AdcpSerialPort, added a wait state in TestSerialBaudConnection() to allow the BREAK response get received.
+ - In Subsystem, Encode and Decode to JSON.
+ - In RemoveShipSpeed, added gpsHeadingOffset to account for the GPS not aligned with the ADCP.
+ - In BottomTrackDataSet, added IsBeamVelocityGood.  A good way to check for 3 beam solutions or any bad values.
+ - In AdcpBinaryWriter, moved the PublishEnsembleWrite() to AddIncomingData() so that it will display updates everytime it receives data.
+ - In AdcpDatabaseWriter, put PublishEnsembleWrite() in AddIncomingData() to know when an ensemble is received to write.
+ - In Longitude and Latitude,  made a constructor the JSON constructor.
+ - In AdcpConfiguration, added StringDesc property.
+ - In AdcpCommand, added DEFAULT_SALINITY_VALUE_ESTUARY.
+ - Changed version to 2.19.5.
+ - In AdcpSerialPort, in TestSerialBaudConnection(), limited the baud rates to test.
+
+
+RTI-2.18
+ - Changed the version number.
+ - In AdcpBinaryWriter, made FileSize a public property to monitor the recording.
+ - In Project, changed the database revision to C1 because we added a new table, tblOptions.
+ - In DbCommons, changed TBL_ENS_CMDS to TBL_ENS_OPTIONS.
+ - In EnsembleDataSet::Decode(), set SubsystemConfig with the subsystem if the revision is old and no SubsystemConfig is given.  Before it would not give the subsystem.
+ - In Project, added VerifyDatabase() to verify a database when copying a new project database.
+ - In DbCommon, added CheckIfColumnExist() and CheckIfTableIsEmpty().
+ - In Ensemble, added static methods XXXBeamName() to convert the beam number to a string of the beam description for the coordinate transform.
+ - In BaseDataSet, make all properties Setter public for converting to JSON.
+ - In EnsembleHelper, added Beam and Instrument Velocity, Good Beam and Earth and Water Mass.
+ - In NmeaDataSet, added an empty constructor.  Made the properties' Setter public for JSON coding.
+ - In Ensemble, added AddNmeaData() that takes no data.
+ - In EnsembleDataSet, fixed setting the time for PRTI sentences with SetPRTITime().
+ - In EnsembleDataSet, in constructors for PRTI messages, set the serial number to SubsystemConfiguration().  This will use the DVL serial number to create the SubsystemConfiguration.
+ - In Firmware, in GetSubsystemCode() and GetSubsystem(), check if the serial number given is a DVL serial number.  If so, handle differently.
+ - In EnsembleDataSet, made the time for PRTI be the current time.  Set the start time to AncillaryDataSet.LastPingTime.
+ - In AncillaryDataSet, for PRTI messages, made LastPingTime the PRTI start time.
+ - In BottomTrackDataSet, set FirstPingTime when decoding the PRTI sentences.
+ - In Ensemble, removed the private set from all the properties so the object can be convert to a from JSON.
+ - In BaseDataSet, added ToJsonBaseStub() to create a JSON stub for the base dataset properties.
+ - In AmplitudeDataSet, added ToJson() and ToJsonStub() to convert this object to a JSON string.
+ - In all the DataSets and Ensemble, removed Orientation from all the datasets.  Replaced with SubsystemConfiguration.
+ - In all the DataSets added encoding and decoding of the object as a JSON string.
+ - Changed name and file name from InstrVelocityData to InstrumentVelocityData.
+ - In EarthVelocityDataSet, changed name of VV to VelocityVectors.
+ - In Firmware, maded SubsystemCode public so it can be decoded for JSON.
+ - In UniqueID::== do not check milliseconds.
+ - In AncillaryDataSet, fixed FirstPingTime for PRTI sentences.
+ - In EnsembleHelper, maded AddNmea() only take an ensemble.
+ - In the JSON strings for the BaseData, only stores the NumElements and ElementMultipliers.
+ - Changed the format of the database in the Project file.  Now stores JSON strings for each dataset.
+ - In AdcpDatabaseReader, Removed cache and added an SQLiteConnection to improve performance.
+ - In DbCommon and AdcpDatabaseCodec, for each method call, created a new one with the SQLiteConnection to prevent opening and closing connection for each call.
+ - In DbCommon, added RunQueryOnProjectDbObj() to return an object instead of an int.
+ - In VelocityVectors::CreateVelocityVector(), create the VelocityVector before setting the values.
+ - In Project, added ValidateVersion() to validate which version of the Project file.
+ - In AdcpDatabaseCodec, added GetProjectVersion() to get the project version.
+ - In Ensemble, improved the Ensemble.Clone() by using JSON to clone.
+ - Check for null when parsing the JSON string for all the datasets. 
+
+RTI-2.17
+ - Changed the version number.
+ - In Subsystem and AdcpSubsystemConfig, added a note about the subsystem code being EMPTY.
+ - In AdcpSubsystemConfig, changed ToString() and GetString() to [Config] SSDesc.
+ - In SerialNumber, Replaced SerialNumber.Empty with IsEmpty().
+ - In SystemTest, added 5 second wait to SysTest_RtcTime() to ensure the time has been set to the ADCP.
+ - In AdcpSerialPort:SetSystemDateTime(), wait about 5 seconds after setting the ADCP time.
+ - In AdcpCommands and AdcpSubsystemCommands, updated comments to ADCP User Guide Rev H.
+ - In AdcpSubsystemCommands, added 2 new WP broadband pulse types based off ADCP User Guide Rev H.
+ - Added ScreenErrorVelocityThreshold and ScreenVerticalVelocityThreshold to screen the data.
+ - Added EnsembleHelper to create ensemble stubs.
+ - In ScreenMarkBadBelowBottom, moved SetVelocitiesBad() to EnsembleHelper.
+ - In Subsystem, removed Subsystem.Empty.  It was not readonly.
+ - In EnsembleDataSet::Decode(), check for Firmware revision 0.2.13.  This will fix the SubsystemIndex to SubsystemCode change.
+ - Removed SubsystemConfiguration.Empty and replaced is IsEmpty().
+ - In Firmware, added GetSubsystem() to get the subsystem for this firmware.
+ - In AdcpSubsystemConfig, moved AdcpSubsystemConfig.Subsystem into AdcpSubsystemConfig.SubsystemConfig.Subsystem.
+ - Make AdcpConfiguration::AdcpSubsystemConfigExist(), AdcpConfiguration::RemoveAdcpSubsystemConfig() and AdcpConfiguration::GetAdcpSubsystemConfig()  take only 1 argument.
+ - Made a Post Process folder and put Screen and Average folder within.
+ - Set a default CEPO when a serial number is give in the constructor.
+ - Added AverageCorrelation and use AverageBase.
+ - In AdcpCommands, added list functions for all the commands that have a list of options. 
+ - Added AverageBase and AverageCorrelation.
+ - In EnsembleDataSet, created a constructor that take no data.
+ - Added Ensemble::AddEnsembleData() that takes no data.
+ - In Firmware, added equal, == and != to the object.
+ - In Firmware, fixed ToString() for the subsystem code.
+ - In Status, added equal, == and != to the object.
+ - In Status, fixed bug with ERR_RCVR_DATA code.  Was 0x400 should have been 0x4000.
+ - In EnsembleDataSet, fixed BACKWARDS COMPATITBILITY in Decode where it did not check the Major number and it did not convert the subsystem to a byte correctly.
+ - Put more average logic into AverageBase to reduce redundant code.
+ - Added AverageAmplitude and use AverageBase.
+ - In AverageManager, set the parameters of the averaging to the averaged ensemble (num samples, first/last ping time).
+ - In Firmware, made SubsystemCode private and you now must get the code using the function GetSubsystemCode().
+ - In EnsembleDataSet, moved the backwards compatibility for Firmware SubsystemCode to the Firmware object.
+ - In Firmware, in GetSubsystemCode() and GetSubsystem() converted the code to a byte correctly.
+ - In AverageManager, fixed setting the first and last ping time.
+ - In EnsembleDataSet::UpdateAverageEnsemble(), set the ping count based off the number of samples and the number of pings per ensemble.
+ - In AdcpConfiguration::DecodeCepo() fixed converting the subsystem code from a char to a decimal using Subsystem.ConvertSubsystemCode().
+ - In Firmware and Subsystem, convert the subsystem char to a decimal using Subsystem.ConvertSubsystemCode().
+ - In Commons, added list for Transform types and Measurement standard types.
+ - In ScreenBottomTrackRange, fixed bug in how the screening for bad ranges was done.
+ - In ScreenBottomTrackRange, made it return an object with all the screening details.
+ - In Firmware, added DEBUG_MAJOR_VER for a debug firmware flag.
+ - Added AddBottomTrack that takes no data to BottomTrackDataSet, and EnsembleHelper. 
+ - In AdcpCommands, made CEPO command the first command in the list because CEPO will change all values to defaults.
+ - In AdcpSerialPort, added the Reboot() command.
+ - In SerialNumber, changed IsEmpty() to only check if a Subsystem is set for the serial number.
+
+RTI-2.16
+ - Changed the version number.
+ - In SerialConnection, added a check for IO exception in Connect(), to see if the port exist.
+ - In PniPrimeCompassBinaryCodec, updated the pitch and roll values to display to use when compass cal is done.
+ - In SerialNumber, allow the public strings to be changed and update all the values.
+ - In SerialNumber, added AddSubsystem() to add a subsystem properly to the serial number.
+ - In SerialNumber, added RemoveSubsystem() to remove a subsystem properly from the serial number.
+ - In Subsystem, when checking if subsystems are equal, only check if the codes are equal.
+ - In Subsystem, added == and != for SubsystemCodeDesc.
+ - In SerialNumber, added BASE_ELEC_TYPE_ADCP1.
+ - In Subsystems, updated the SubsystemList.
+ - In Subsystems, set a default value of 0 for the index in the Subsystem Constructor.
+ - In Subsystems, add a SubsystemCodeDesc constructor that only takes the code.
+ - In AdcpSubsystemCommands, created CmdStr to output the command string for reach command with the command, CEPO index and the values.
+ - In AdcpCommands, changed CEOUTPUT from a ushort to AdcpCommands.AdcpOutputMode.
+ - In AdcpCommands, added command strings for each command.
+ - In Status, Added new Error codes from ADCP User Guide Rev H.
+
+RTI-2.15
+ - Changed the version number.
+ - In AdcpSubsystemCommands, changed how defaults are set to allow outside users to set the defaults with and without a subsystem set.
+ - In AdcpCommands, fixed bug with DEFAULT_CEI.  Reference could change the value.  Removed DEFAULT_CEI and added DEFAULT_CEI_HOUR/MINUTE/SECOND/HUNSEC.
+ - In SerialConnection, changed the serial port ReadBufferSize to handle faster download speeds.
+ - In AdcpSerialPort::SysTestFirmwareFiles(), made it check for all capitals for the file MAINT.txt and ENGHELP.txt.
+ - Update AdcpCommands and AdcpSubsystemCommands to the ADCP manual Revision G.
+ - Added system frequency information to Commons.cs.
+ - In AdcpCommands, removed EnableDisable enum and changed DEFAULT_ENGMACON to a bool. 
+ - In AdcpCommands, added the command CETFP to GetCommandList().  This sets the time of first ping.
+ - Updated the the UnitTest for the BB commands for WP and BT in AdcpSubsystemCommandsTest.cs.
+ - In AdcpSubsystemCommands.cs, make 300kHz the default frequency if no frequency is set.
+ - In AdcpCommands.cs, added DEFAULT_SALINITY_VALUE_SALT and DEFAULT_SALINITY_VALUE_FRESH.
+ - Bug in CBTMX command firmware.  AdcpSubsystemCommands.cs commented out so the user cannot send the setting for now.
+ - In Commons.cs, made version number get retrieved from AssemblyInfo.cs.
+ - In AdcpCommands.cs, changed the DecodeBoardValues() to handle board IDs with and without a frequency.
+ - Store the Adcp Commands, Adcp Subsystem Commands and Deployment options to the project database file.
+ - Created Deployment Option to save with the Project database.
+ - In Project.cs, Get and Set Adcp Commands and Options to the project database.
+ - In Subsystem.cs, removed Private Set for Index and Code to allow JSON encode and decode.
+ - Changed to version 2.15.1.
+ - Updated Status.cs to ADCP User Guide Rev H.
+ - In Project.cs, added SubsystemConfig column to tblEnsemble for the subsystem configuration.
+ - In DbCommon.cs, added COL_ENS_SUBSYS_CONFIG column to the Project database in tblEnsemble.
+ - In AdcpDatabaseWriter::WriteEnsembleDataToDatabase(), added SubsystemConfig to the database.
+ - Added SerialConnection::SendDataGetReply() to send data and get the response back.
+ - Added AdcpSubystemConfig and AdcpConfiguration.
+ - Added AdcpCommands::DecodeCSHOW() to decode the CSHOW command.
+ - Added DecodeCSHOW.cs to decode the CSHOW command.
+ - Added Subsystem::IsEmpty() to check if the Subsystem is an empty subsystem.
+ - Added CEOUTPUT command to AdcpCommands.
+ - Added TimeValue test to AdcpCommandsTest.cs.
+ - Fixed TimeValue to rollover values when exceed there minutes, seconds and HunSec range in AdcpCommands.cs.
+ - In DecodeCSHOW, fixed bug in Decoding Indexed values.  It did not handle spaces correctly.
+ - Created DecodeCSHOWTest.cs.
+ - In AdcpCommands, added the command CVSF.  Check ranges for values when setting the value if ranges exist.
+ - Added DeploymentOptions to AdcpConfiguration.
+ - In AdcpCommands, removed requiring the serial number for the constructor.  It was only needed for CEPO, but that was incorrectly created with the serial number.
+ - Added AdcpConfiguration:ValidateCEPO() to verify the given CEPO is correct for the serial number.
+ - In SerialNumber, Needed to remove all private Set so that the object can be Serialized and Deserialized to JSON.
+ - Added COL_CMD_REV column to the Project database in tblOptions.
+ - In Project.cs, removed AdcpCommands, DeploymentOptions and AdcpSubsystemCommadns and replaced with AdcpConfiguration.
+ - In AdcpConfiguration.cs, added methods AdcpSubsystemConfigExist() and GetAdcpSubsystemConfig().
+ - In AdcpConfiguration.cs, added method AddConfiguration().
+ - In AdcpDatabaseWriter.cs, added UpdateAdcpConfiguration() to write the AdcpConfiguration to the database.
+ - In AdcpSubsystemCommands.cs, added CEPO Index property.  Give the CEPO index in the constructor.
+ - Fixed bug in AdcpConfiguration::SetCepo() when setting the serial number, the CEPO was being reset.
+ - In Validator, fixed misspelling of ValidateNumericMinMax() and rounding numbers in error message.
+ - Added Validator::ValidatePositiveNumeric() to check for positive numbers.
+ - Added CBI command to AdcpSubsystemCommands.
+ - Added CBI command to DecodeCSHOW.cs.
+ - Added AdcpConfiguration::RemoveConfiguration().
+ - In AdcpSubsystemConfig, set the Command's CEPO index when CEPO index is set.
+ - In DeploymentOptions, added new Battery Types.
+ - In SubsystemConfiguration, changed the COMMAND_SETUP_START.
+ - In Firmware, changed SubsystemIndex to SubsystemCode.
+ - In EnsembleDataSet::Decode(), changed SubsystemIndex to SubsystemCode and changed from an UInt16 to a byte.    
+ - In SerialNumber, changed the SubSystemsDict to have the key as the Code and not the index.
+ - In DeploymentOptions, changed Ints to UInt32.  Add Min values.
+ - Added Validator::ValidateMin(int value, int min, out bool isGood).
+ - In DeploymentOptions, added GetBatteryList().
+ - In AdcpCommands and AdcpSubsystemCommands, when creating the command list, ensure the string is set to United States English format.  This is to prevent commas from being used for decimal points.
+ - In AdcpCommands, added Minimum values for CWS, CTD and CWSS command.
+ - In AdcpSubsystemConfig, made ToString() only use Subsystem and SubystemConfiguration.
+ - In AdcpSubsystemConfig, added static GetString() to generate a string for a AdcpSubsystemConfig based off a Subsystem and SubsystemConfiguration given.
+ - In AdcpConfiguration, improved performance in GetAdcpSubsystemConfig() and AdcpSubsystemConfigExist().
+ - In Project and DbCommons, in tblEnsemble changed column SubsystemIndex to SubsystemCode.
+ - In AdcpSubsystemCommands, validate the min and max values for the commands.
+ - In Validator, fixed showing all the decimal places for the result in ValidateMinMax().
+ - In AdcpSubsystemCommands, added Min/Max values for the CWPAP commands.
+ - In SerialConnection::SendDataWaitReply(), when checking if the reponse matches the command, make the command and response both lower case so they will match in case.
+ - In AdcpSerialPort, when canceling or stopping a download, send the D command to stop the current download.
+ - In AdcpSerialPort, remove the Download watchdog.
+ - In AdcpDataWriter, when writing the ensemble data to the database, try to get the ADCP Configurtation to also write to the project.
+
+RTI-2.14
+ - Changed the version number.
+
+RTI-2.13
+ - Changed the version number.
+ - Created AdcpDirListing and AdcpEnsFileInfo in AdcpCommands.cs to capture the file information on the ADCP.
+ - Created DecodeDSDIR in AdcpCommands.
+ - Created a unittest to for DecodeDSDIR.
+ - Added ToSeconds() to TimeValue object.
+ - In MathHelper, added MemorySizeString() to display file memory sizes with the highest scale factor.
+ - In AdcpSerialPort, reduced the timeout in DownloadDirectoryListing().
+ - In AdcpCommands, added CommandPayload object to pass commands as an object in events.
+ - In AdcpCommands, changed DEFAULT_CWSS (Speed of Sound) to 1490 m/s.
+ - In GpsSerialPort, added to constructor IsEnabled with a default value.
+ - In AdcpCommands, changed parsing the DateTime in DecodeSTIME() to TryParse.  If bad value, then it will use the default time.
+ - In SerialConnections, used IsAvailable() instead of checking each time for isOpen and !breakState when using the serial port.
+ - In SerialConnections, made Connect() and Reconnect return a bool if a connection could be made.
+ - Added SerialOptions::IsPortAvailable() to check if a port is usable.
+ - In ScreenVelocity.cs, added 3 beam solution check.  Also fixed bug in earth and instrument when not check if velocity is bad when threshold checking.
+ - Added test to check for maint.txt and EngHelp.txt in AdcpSerialPort::SysTestFirmwareFiles().
+ - Added FIRMWARE_ENGHELP_MISSING and FIRMWARE_MAINT_MISSING to SystemTestResult.
+
+RTI-2.12
+ - Changed the version number.
+ - Added IsInstrumentVelocityGood() to BottomTrackDataSet.cs.
+ - Added IsBinGood() to EarthVelocityDataSet and InstrVelocityDataSet.
+ - Add 3 beam solution option in IsBinGood() in EarthVelocityDataSet and InstrVelocityDataSet.
+ - Add 3 beam solution option in IsInstrumentVelocityGood() and IsEarthVelocityGood() in BottomTrackDataSet.
+ - In AdcpBinaryCodec, remove the queue and put the data in the buffer when received.
+ - When processing data, fixed bug where the final buffer of data read in was not processed in AdcpImportBinaryFile.
+ - Added PercentError() and PercentDifference() methods in MathHelper.cs.
+ - Created AdcpSerialPort::SendCommands() to send a list of commands.
+ - Added RTI.AdcpCommands.CMD_BREAK to have a command for the command list in AdcpSerialPort::SendCommands().
+ - Made the SerialOptions object smaller.  Make the options static.
+ - Create AdcpSerialPort::SysTestFirmwareFiles() to test for missing firmware files.
+ - Added MathHelper::ByteArrayToDouble() and MathHelper::ByteArrayToFloat64().
+ - Check if the command given is null in AdcpSerialPort::SendCompassCommand().
+ - Created AdcpSerialPort::SysTestCompass() to test is compass is giving data.
+ - Added to PniPrimveCompassBinaryCodec, SIZE_OF_FLOAT64, GetParamCommand(), SetTaps0Commands(), SetTaps4Commands() and DecodeKParamResp() to get and set Compass Taps.
+ - Added locks to read and write methods for multithreading in SerialConnection.
+ - In AdcpCommands, Decode ENGI2CSHOW, added classes for board serial number and revisions and register information for ENGI2CSHOW decoding, made decode BREAK statement save the firmware as an object.
+ - Add SystemTestResults::Results to hold an object to pass with results.
+ - Added AdcpCommands::DecodeSTIME() to decode the command STIME result.
+ - Added SystemTestErrorCodes::INCORRECT_RTC_TIME.
+ - Added AdcpSerialPort::SetSystemTime() to set the system time.  Used in StartPinging().
+ - Made AdcpBinaryCodec::DecodeAdcpData() public so it can decode anytime.
+ - Added AdcpSerialPort::SysTestSingleWaterProfilePing() and AdcpSerialPort::SysTestSingleBottomTrackPing() to test the Status of the system.
+ - Updated UnitTest to test decoding ENGI2CSHOW and STIME within AdcpCommands.
+ - In MathHelper, When parsing the byte arrays, verify the byte arrays given are the correct size.
+ - Updated UnitTest with converting byte arrays to Float64 and doubles.
+ - Added Firmware::FirmwareVersionList() to get a list of all possible firmware major, minor and revision values.
+
+RTI-2.11
+ - Changed the version number.
+ - Changed AdcpSerialPort::TIMEOUT value.
+ - Added PRAGMA to database creation in Project.cs.
+ - Added AdcpDatabaseReader.cs to read a project using a cache.
+ - Added AdcpSerialPort::CancelUpload() to cancel uploading data.
+ - Added AdcpDatabaseCodec::QueryForDataSet() that returns a cache of data.
+ - Added AdcpDatabaseReader::GetAllEnsembles() to get all the ensembles for a project at once.
+ - Changed how AdcpDatabaseReader::PopulateCache() query for the data.
+ - Fixed bug checking if bottom track data is available before trying to use it in RemoveShipSpeed::RemoveVelocity().
+ - Made AdcpDatabaseCodec::GetNumberOfEnsembles() a static method.
+ - In VelocityPlot, fixed how the plot is resized based off MaxEnsemble and number of ensembles in the list.
+ - Added AdcpDatabaseReader::GetEnsembles() to read in a set of ensembles.
+ - Added Added Cache::GetFirst() to get the first entry in the cache.
+ - Added MathHelper::ParseDouble().
+ - Added VelocityVectorHelper::GenerateVelocityVectors() and VelocityVectorHelper::GenerateAmplitudeVectors().
+ - Added AdcpDatabaseReader::GetFirstEnsemble().
+ - Added variable MAX_NUM_BINS to DataSet.Ensemble.
+
+RTI-2.10
+ - Changed the version number.
+ - Removed from Pulse project.
+ - Check if bottom track data exist in TextOutputViewModel before displaying.
+ - Changed AdcpSerialPort::GetDirectoryListing() to return a list of files.
+ - Make AdcpSerialPort::GetDirectoryListing() wait for all the lines before parsing the data.
+ - Make AdcpSerialPort::XModemDownload return true if file was downloaded.
+ - Added a default value to SerialConnection::SendDataWaitReply() of 1 second.
+ - Fix cancel AdcpSerialPort:CancelDownload to actually cancel download all the time.
+ - Added a sleep in the SerialConnection::SendData() commands.
+
+RTI-2.09
+ - Changed the version number.
+ - Added SerialConnection::ReadData() to manually read data from the serial port.
+ - Added SerialConnection::PauseReadThread() to pause reading data from the serial port.
+ - Added CMD_DS_CANCEL to AdcpCommands.
+ - Added ADCP Upload and modified Download in AdcpSerialPort.
+ - Changed name of AdcpSerialPort::FileSizeEvent to AdcpSerialPort::DownloadFileSizeEvent.
+ - Added AdcpSerialPort Upload events.
+
+RTI-2.08
+ - Changed the version number.
+ - Added XMODEM-CRC download from the ADCP.
+ - Check if serial is open and the break state when sending a command.
+ - Added WAIT_STATE to SerialConnection to have a uniform time to wait for serial port.
+ - Added AdcpSerialPort::DownloadCancel() to reset setting if a download is canceled.
+ - In PniPrimeCompassBinaryCodec, changed serial port read thread, so make the codec decode in a while loop again.
+ - Changed the SerialConnection Reading data from an event handler to a read thread.
+ - Stop the Compass Calibration after a score is received.
+ - Changed MathHelper::ByteArrayToInt() to MathHelper::ByteArrayToInt8() and MathHelper::ByteArrayToInt32().
+ - Changed the file extensions for recorded files to match the ADCP. ENS.
+
+RTI-2.07
+ - Changed the version number.
+ - Changed how the incoming data is added to the buffer in PniPrimeCompassBinaryCodec.
+ - Add the incoming data to the buffer not using a for loop in Compass and AdcpBinary codecs.  Use AddRange().
+ - Added a 100 ms delay after sending the command to set in Compass mode in AdcpSerialPort.  This fixes starting calibration.
+ - In PniPrimeCompassBinaryCodec, added classes to store results from the commands.
+ - Added PniPrimeCompassBinaryCodec::GetUInt16() to convert array value to UInt16.
+ - Added PniPrimeCompassBinaryCodec::DecodekSaveDone() to decode the kSaveDone message.
+ - Added PniPrimeCompassBinaryCodec::GetDefaultCompassCalMagCommand() to get the command for the Factory defaults for Mag.
+ - Moved PniPrimeCompassBinaryCodec convertion methods to MathHelper.
+ - Combined MatherHelper.cs and Converters.cs together in MathHelper.cs.
+
+RTI-2.06
+ - Changed the version number.
+ - Updated GIT instructions.
+ - Set the magnitude to absolute value in VelocityVector.  No negatives.
+
+RTI-2.05
+ - Changed the version number.
+ - Created ScreenVelocity.cs to screen the velocity data of bad velocity and against a threshold for the error value.
+ - Fixed bug in ReferenceLayerAverage::AverageEnsemblesAccum() where i check for a bad node.
+ - Fixed BottomTrackDataSet::GetAverageRange() to look for bad averages.
+ - Added the Screening Mark Bad Below Bottom.
+
+RTI-2.04
+ - Changed the version number.
+ - Added try/catch in ReferenceLayerAverage::AverageEnsembles() to prevent exception when jumping around in ensembles.
+ - In ReferenceLayerAverage, update FirstPingTime with first ensemble in average when averaging.
+ - Return 0 in AdcpDatabaseCodec::GetNumberOfEnsembles() if no project is given.
+ - In EnsembleDataSet, set the Status for the constructor that take PRTI01 or PRTI02 sentences.
+ - Set any empty serial number string to all 0's (32 digits).
+ - Created a special serial number for DVL ensembles.
+ - Added a try/catch block in AdcpSerialPort::ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
+ - Added a try/catch block in GpsSerialPort::ReceiveDataHandler() to catch any issues so the serial port will not disconnect on issues.
+
+RTI-2.03
+ - Changed the version number.
+ - Create the method clone in Ensemble.cs to make a deep copy of the ensemble.
+ - Moved file extension defination from AdcpBinaryWriter to Commons.cs.
+ - Add SerialNumber comparators and hashcode.
+ - Added BAD_RANGE for Bottom Track Range.
+ - Added ScreenBottomTrackRange.cs to screen Bottom Track range.
+ - Fixed standard deviation equation.
+ - Renamed RemoveShipSpeed to RemoveBottomTrackVelocity.
+ - Added EnsembleDataSet::UpdateAverageEnsemble() to update averaged ensembles.
+ - Set the file size to zero when getting a new file name in AdcpBinaryWriter.
+ - Changed Status in Ensemble DataSet and Bottom Track DataSet to a Status object.
+ - Added logic to remove ship speed to RemoveShipSpeed.  Fixed issue with using GPS speed to remove ship speed.
+ - Renamed RemoveBottomTrackVelocity back to RemoveShipSpeed.
+ - Put method to create velocity vector in from RemoveShipSpeed.cs to VelocityVector.cs.
+ - Added DegreeToRadian to MathHelper.
+
+RTI-2.02
+ - Changed the version number.
+ - Added Break command to the serial port.
+ - Added Start and Stop ping command to the ADCP serial port.
+ - Added Compass and Compass calibration commands to the ADCP serial port.
+ - Added Save Configuration to the ADCP serial port.
+ - Removed "Time of First Ping" from the AdcpCommands::GetCommandList().
+ - Added GetDeploymentCommandList() to AdcpCommands to send deployment commands.
+ - Changed default command values to match Adcp User Guide Rev F and CDEFAULT in firmware v0.2.04.
+
+RTI-2.00
+ - Changed version number
+ - Added additional baudrate options.
+ - Fix bug in Setting View by improving the performance of limiting the size of a serial port ReceiveBufferString.
+ - Set defaults for AdcpCommands and AdcpSubsystemCommands.
+ - Changed to a while loop in the process thread in AdcpBinaryCodec to parse the data.
+
+RTI-1.14
+ - Changed version number.
+ - Added dependencies to the README.txt file.
+ - Removed "private set" to all the properties in the datasets.
+ - Added Encode() to create byte array of the ensemble.
+ - Changed name of MAX_HEADER_COUNT to HEADER_START_COUNT in Ensemble.
+ - Changed name of DATASET_HEADER_LEN to ENSEMBLE_HEADER_LEN in Ensemble.
+ - Added EnsembleNumber property to Ensemble.
+ - Added Rev E changes to EnsembleDataSet (Firmware size).
+ - Changed BottomTrackData.Beams to NumBeams.
+ - Fix bug in BaseDataSet::GenerateHeader() where ValueType was hard coded to Byte.
+ - Fix bug in BaseDataSet::GetDataSetSize() where Float case statement used wrong variable.
+ - Created Subsystem, SerialNumber and Firmware objects.
+ - Write and read subsystem and firmware version to databases.
+ - Removed Rounded properties in Ancillary to methods to reduce memory footprint.
+ - Fixed bug in Subsystem converting a string to hex byte.
+ - Put try/catch in AdcpDatabaseCodec::ParseDataTables() if error parsing.
+ - Used variables to create query strings.
+ - Fixed bug with SysSerialNumber being written to the database.
+ - Store the Subsystem in the database as a byte.
+ - Added Serial number to the project properties.
+ - Changed the list in SerialNumber to a dictioanry to keep track of index of subsystem.
+ - Changed subsystem in firmware to subsystem index.
+ - Added a method EnsembleDataSet::GetSubSystem() to get the subsystem for the ensemble.
+ - SerialNumber changed the size of the spare and subsystem.
+ - Added AdcpSubsystemCommands to handle commands based off each subsystem.
+
+RTI-1.13
+ - Changed version number.
+ - Added README.txt.
+ - Changed License to FreeBSD to all files.
+ - Removed Cache, LruCache and MagDir.
+
+RTI-1.12
+ - Changed version number.
+ - Fixed bug in NmeaDataSet where a negative ChecksumLoc could be used as index to remove bad NMEA strings.
+ - Removed Pulse Database stuff from DbCommon.
+ - Added indexes to Project database.
+ - Merged Ensemble table and Bottom Track table in database.
+ - Use GPS speed if Bottom Track speed not good to remove ship speed.
+
+RTI-1.11
+ - Changed version number
+ - Added version number for RTI and a version number for Pulse.
+ - Remove ErrorLog added log4net.dll.
+ - Check if a project is selected before trying to buffer incoming data in AdcpBinaryWriter.
+ - Added Commons for RTI to set version number.
+ - Added events to DVL Codec.
+ - Broke unit test for DVL codec when changing to events.  RecorderManager's constructor is not being called to create event.
+ - Changed name of AdcpDataSet to Ensemble.
+ - Added creating the project database file in the Project constructor.
+ - Fixed DVL Codec test using DVL Codec events.
+ - In DVL Codec, added _prevBuffer to prevent StackOverflowException.
+ - Create the project directory in the Project constructor.  ID is gotten later when passed as reference.
+ - Added method in BottomTrackDataSet to determine if Earth Velocity is good.
+ - Added method in Project for project image path.
+ - Added MathHelper class.
+ - Added Documentation project that creates a SandCastle help file.

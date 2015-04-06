@@ -1,0 +1,42 @@
+Update GitHub
+-----------------------
+Use Git Bash
+ - Change directory to TRUNK/RTI
+ - git add .
+ - git commit
+ - git push origin master (it will ask for password)
+ - git tag -a vX.X -m 'Version X.XX'  (replace X with the version number)
+ - git push --tags
+
+
+
+Create a Git Repository
+------------------------
+git init
+git add .
+git remote add origin git@github.com:rowetechinc/RTI.git
+ - this will create a repository on github.  
+ - origin is the local repository.  
+ - RTI.git is the repository git file for the remote repository.
+git config --global user.name "Firstname Lastname"
+ - Sets the name of the user for all git instances on the system
+git config --global user.email "your_email@youremail.com"
+
+If lose .git directory
+------------------------
+git init
+git remote add origin git@github.com:rowetechinc/RTI.git
+ - this will create a repository on github.  
+ - origin is the local repository.  
+ - RTI.git is the repository git file for the remote repository.
+git config --global user.name "username"
+git config --global user.email "your_email@youremail.com"
+git config --global github.user username
+git config --global github.token "75046587e3304265be9e90af4479f270"  (GitHub account setting)
+git pull origin master
+FIX ANY MERGE issues
+Update Github (above)
+
+TroubleShooting
+------------------------
+Look at the file .git/config

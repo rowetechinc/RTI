@@ -49,6 +49,7 @@
  * 02/06/2014      RC          2.21.3     Added Q value to Water Mass DataSet.
  * 07/28/2014      RC          2.23.0     Changed the name of numBins and numBeams to NumElements and ElementMutiplier.
  * 10/31/2014      RC          3.0.2      Added Range Tracking values.
+ * 03/09/2015      RC          3.0.3      Added Gage Height.
  * 
  */
 
@@ -790,6 +791,80 @@ namespace RTI
             /// String for Voltage.
             /// </summary>
             public const string JSON_STR_SS_VOLTAGE = "Voltage";
+
+            #endregion
+
+            #region Gage Height
+
+            /// <summary>
+            /// String for Status.
+            /// </summary>
+            public const string JSON_STR_GH_STATUS = "Status";
+
+            /// <summary>
+            /// String for AvgRange.
+            /// </summary>
+            public const string JSON_STR_GH_AVGRANGE = "AvgRange";
+
+            /// <summary>
+            /// String for Standard Deviation.
+            /// </summary>
+            public const string JSON_STR_GH_SD = "SD";
+
+            /// <summary>
+            /// String for AvgSN.
+            /// </summary>
+            public const string JSON_STR_GH_AVGSN = "AvgSN";
+
+            /// <summary>
+            /// String for N.
+            /// </summary>
+            public const string JSON_STR_GH_N = "N";
+
+            /// <summary>
+            /// String for Salinity.
+            /// </summary>
+            public const string JSON_STR_GH_SALINITY = "Salinity";
+
+            /// <summary>
+            /// String for Pressure.
+            /// </summary>
+            public const string JSON_STR_GH_PRESSURE = "Pressure";
+
+            /// <summary>
+            /// String for Depth.
+            /// </summary>
+            public const string JSON_STR_GH_DEPTH = "Depth";
+
+            /// <summary>
+            /// String for Water Temperatrue.
+            /// </summary>
+            public const string JSON_STR_GH_WATERTEMP = "WaterTemp";
+
+            /// <summary>
+            /// String for System Temperature.
+            /// </summary>
+            public const string JSON_STR_GH_SYSTEMTEMP = "SystemTemp";
+
+            /// <summary>
+            /// String for Speed of Sound.
+            /// </summary>
+            public const string JSON_STR_GH_SOS = "SoS";
+
+            /// <summary>
+            /// String for Heading.
+            /// </summary>
+            public const string JSON_STR_GH_HEADING = "Heading";
+
+            /// <summary>
+            /// String for Pitch.
+            /// </summary>
+            public const string JSON_STR_GH_PITCH = "Pitch";
+
+            /// <summary>
+            /// String for Roll.
+            /// </summary>
+            public const string JSON_STR_GH_ROLL = "Roll";
 
             #endregion
 

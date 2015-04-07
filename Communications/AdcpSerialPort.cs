@@ -562,6 +562,72 @@ namespace RTI
             }
         }
 
+        #region Force Break
+
+        /// <summary>
+        /// Send a long BREAK on the serial port.
+        /// This will take at least 20 seconds to complete.
+        /// The serial port turns on the break state, waits
+        /// 20 seconds then turns off the break state.
+        /// This will force the ADCP to set it baud rate to 115200.
+        /// Set the terminal connection to 115200 and verfiy the connection is good.
+        /// </summary>
+        public void SendForceBreak()
+        {
+            if (IsAvailable())
+            {
+                // Clear the buffer
+                _receiveBufferString = string.Empty;
+
+                // CHANGE THE BAUD RATE TO 115200 BEFORE DOING THIS
+
+                // Send a break to the serial port
+                SetBreakState(true);
+
+                // Wait 20 seconds for a long BREAK
+                System.Threading.Thread.Sleep(20 * 1000);       // 20 Seconds
+
+                // Change state back
+                SetBreakState(false);
+
+                // Wait for state to change back
+                System.Threading.Thread.Sleep(1000);
+
+                // Send Stop Pinging
+                SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_STOP_PINGING, TIMEOUT);
+
+                // Wait for state to change back
+                System.Threading.Thread.Sleep(1000);
+
+                // Send Stop Pinging
+                SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_STOP_PINGING, TIMEOUT);
+
+                // Wait for state to change back
+                System.Threading.Thread.Sleep(1000);
+
+                // Send Stop Pinging
+                SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_STOP_PINGING, TIMEOUT);
+
+                // Wait for state to change back
+                System.Threading.Thread.Sleep(1000);
+
+                // Send ENGPORT
+                SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_ENGPORT, TIMEOUT);
+
+
+                // Check if something is in the buffer
+                if (string.IsNullOrEmpty(_receiveBufferString))
+                {
+                    // Send a Text BREAK just incase the instrument cannot take a break
+                    // This is the case if using wireless serial communication or
+                    // ethernet
+                    SendDataWaitReply(Commands.AdcpCommands.CMD_BREAK, 2000);
+                }
+            }
+        }
+
+        #endregion
+
         #region Reboot
 
         /// <summary>

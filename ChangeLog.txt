@@ -1,5 +1,11 @@
 RTI Changelog
 
+RTI-3.0.3
+ - Changed the version number.
+ - In CsvExporterWriter, added GageHeight dataset.
+ - In SystemSetupDataSet, fixed bug with Encode().
+ - In BottomTrackDataSet, fixed bug with Encode().
+
 RTI-3.0.2
  - Changed the version number.
  - In AdcpCommands, added CTRIG and GetDvlCommandList().

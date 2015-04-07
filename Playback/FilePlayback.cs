@@ -242,15 +242,24 @@ namespace RTI
         /// </summary>
         public void Dispose()
         {
-            _fileStream.Close();
-            _fileStream.Dispose();
+            if (_fileStream != null)
+            {
+                _fileStream.Close();
+                _fileStream.Dispose();
+            }
 
-            _adcpCodec.ProcessDataCompleteEvent -= _adcpCodec_ProcessDataCompleteEvent;
-            _adcpCodec.ProcessDataEvent -= _adcpCodec_ProcessDataEvent;
-            _adcpCodec.Dispose();
+            if (_adcpCodec != null)
+            {
+                _adcpCodec.ProcessDataCompleteEvent -= _adcpCodec_ProcessDataCompleteEvent;
+                _adcpCodec.ProcessDataEvent -= _adcpCodec_ProcessDataEvent;
+                _adcpCodec.Dispose();
+            }
 
-            _eventWaitDecode.Set();
-            _eventWaitDecode.Dispose();
+            if (_eventWaitDecode != null)
+            {
+                _eventWaitDecode.Set();
+                _eventWaitDecode.Dispose();
+            }
         }
 
         /// <summary>

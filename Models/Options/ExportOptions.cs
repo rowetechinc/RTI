@@ -153,7 +153,11 @@ namespace RTI
         /// Turn on or off the Range Tracking dataset.
         /// </summary>
         public bool IsRangeTrackingDataSetOn { get; set; }
-        
+
+        /// <summary>
+        /// Turn on or off the Gage Height dataset.
+        /// </summary>
+        public bool IsGageHeightDataSetOn { get; set; }
 
         /// <summary>
         /// Turn on or off the ADCP GPS dataset.
@@ -305,6 +309,7 @@ namespace RTI
             IsBottomTrackEngineeringDataSetOn = true;
             IsSystemSetupDataSetOn = true;
             IsRangeTrackingDataSetOn = true;
+            IsGageHeightDataSetOn = true;
             IsAdcpGpsDataSetOn = true;
             IsGps1DataSetOn = true;
             IsGps2DataSetOn = true;

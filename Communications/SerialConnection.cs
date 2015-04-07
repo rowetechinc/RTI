@@ -443,6 +443,15 @@ namespace RTI
         }
 
         /// <summary>
+        /// Set the BREAK state.
+        /// </summary>
+        /// <param name="breakState">Break state.</param>
+        public void SetBreakState(bool breakState)
+        {
+            _serialPort.BreakState = breakState;
+        }
+
+        /// <summary>
         /// Check if the serial port is in a break state.
         /// </summary>
         /// <returns>True = Break / False = No Break.</returns>

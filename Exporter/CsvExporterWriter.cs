@@ -37,7 +37,7 @@
  * 08/13/2014      RC          3.0.0      Fixed the spacing for missing datasets.
  * 10/31/2014      RC          3.0.2      Added Range Tracking dataset.
  * 02/13/2015      RC          3.0.2      Added NMEA dataset.
- * 
+ * 03/18/2015      RC          3.0.3      Added GageHeight dataset.
  * 
  */
 
@@ -215,6 +215,20 @@ namespace RTI
                 sb.Append(",");
             }
 
+            // Range Tracking DataSet
+            if (options.IsRangeTrackingDataSetOn)
+            {
+                sb.Append(CreateRangeTrackingHeader());
+                sb.Append(",");
+            }
+
+            // Gage Height DataSet
+            if (options.IsGageHeightDataSetOn)
+            {
+                sb.Append(CreateGageHeightHeader());
+                sb.Append(",");
+            }
+
             // Bottom Track Engineering DataSet
             if (options.IsBottomTrackEngineeringDataSetOn)
             {
@@ -236,7 +250,7 @@ namespace RTI
                 sb.Append(",");
             }
 
-            // System Setup DataSet
+            // NMEA DataSet
             if (options.IsNmeaDataSetOn)
             {
                 sb.Append(CreateNmeaHeader());
@@ -338,6 +352,20 @@ namespace RTI
                 if (options.IsBottomTrackDataSetOn)
                 {
                     sb.Append(WriteBottomTrackData(ensemble));
+                    sb.Append(",");
+                }
+
+                // Range Tracking Data
+                if (options.IsRangeTrackingDataSetOn)
+                {
+                    sb.Append(WriteRangeTrackingData(ensemble));
+                    sb.Append(",");
+                }
+
+                // Gage Height Data
+                if (options.IsGageHeightDataSetOn)
+                {
+                    sb.Append(WriteGageHeightData(ensemble));
                     sb.Append(",");
                 }
 
@@ -1648,6 +1676,83 @@ namespace RTI
             else
             {
                 sb.Append(",,,,,,,,,,,");
+            }
+
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region Gage Height DataSet
+
+        /// <summary>
+        /// Create the Gage Height header based off the options selected.
+        /// </summary>
+        /// <returns>Gage Height Header.</returns>
+        public static string CreateGageHeightHeader()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("Status,");
+            sb.Append("AvgRange,");
+            sb.Append("StdDev,");
+            sb.Append("AvgSN,");
+            sb.Append("N,");
+            sb.Append("Salinity,");
+            sb.Append("Pressure,");
+            sb.Append("Depth,");
+            sb.Append("WaterTemp,");
+            sb.Append("SystemTemp,");
+            sb.Append("SoS,");
+            sb.Append("Heading,");
+            sb.Append("Pitch,");
+            sb.Append("Roll");
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Output the Gage Height dataset to CSV format.
+        /// </summary>
+        /// <param name="ensemble">Data.</param>
+        /// <returns>Gage Height DataSet data in CSV format.</returns>
+        public static string WriteGageHeightData(Ensemble ensemble)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (ensemble.IsGageHeightAvail)
+            {
+                sb.Append(ensemble.GageHeightData.Status);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.AvgRange);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.StdDev);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.AvgSN);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.N);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.Salinity);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.Pressure);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.Depth);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.WaterTemp);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.SystemTemp);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.SoS);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.Heading);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.Pitch);
+                sb.Append(",");
+                sb.Append(ensemble.GageHeightData.Roll);
+            }
+            else
+            {
+                sb.Append(",,,,,,,,,,,,,");
             }
 
             return sb.ToString();

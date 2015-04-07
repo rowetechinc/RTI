@@ -1782,6 +1782,85 @@ namespace RTI
 
             #endregion
 
+            #region Diagnostic Commands
+
+            /// <summary>
+            /// Diagnostic Command: Read Pressure sensor
+            /// Parameter: 
+            /// Shows the Keller30 pressure sensor info. The first part of the response 
+            /// shows the serial number and the version of firmware. The next portion 
+            /// of the response contains the pressure sensor “Coefficients”. The third 
+            /// line of which indicates the maximum pressure the sensor can measure. The 
+            /// last portion of the response contains the pressure sensor “Configuration”. 
+            /// These values can be programmed using Keller software when the pressure 
+            /// sensor is disconnected from the ADCP.
+            /// 
+            /// DIAGPRESSURE+
+            /// 
+            /// PS SN: 157896
+            /// Address: 250
+            /// Hardware Ver: 5.20
+            /// Firmware Ver: 5.50
+            /// Buffer Size: 10
+            /// Status: 1
+            /// 
+            /// Keller30 Read Coefficients:
+            /// 64, offset   -1.01360321, bar,  0
+            /// 80, min       0.20000000, bar,  0
+            /// 81, max       3.00000000, bar,  0
+            /// 84, min     -10.00000000, C,  0
+            /// 85, max      80.00000000, C,  0
+            /// 
+            /// Keller30 Read Configuration:
+            /// Nr, Conf, err
+            ///  0,   02,   0
+            ///  1,   10,   0
+            ///  2,   00,   0
+            ///  3,   02,   0
+            ///  4,   05,   0
+            ///  5,   00,   0
+            ///  6,   02,   0
+            ///  7,   35,   0
+            ///  8,   13,   0
+            ///  9,   00,   0
+            /// 10,   00,   0
+            /// 11,   35,   0
+            /// 12,   00,   0
+            /// 13,   FF,   0
+            /// </summary>
+            public const string CMD_DIAGPRESSURE = "DIAGPRESSURE";
+
+            /// <summary>
+            /// Diagnostic Command: Rub Beam Test
+            /// Parameter: 
+            /// Shows the results of the beam continuity 
+            /// test where the user rubs each beam in 
+            /// sequence to determine whether the transducer 
+            /// cup is functional. The test collects statistics 
+            /// for 10 samples then prompts the user to rub 
+            /// the selected beam. PASS will be displayed when 
+            /// the test detects the correct amplitude change 
+            /// associated with rubbing a transducer. Up to 4 beams 
+            /// will be tested per test. For systems with additional 
+            /// beams use the CEPO command to select additional sub systems.
+            /// 
+            /// DIAGRUB+
+            /// DP600 Rub Test:
+            ///  10  9  8  7  6  5  4  3  2  1 Vigorously Rub Beam 0 ............
+            /// Beam 0 PASS 58 - 41 >= 3
+            ///  10  9  8  7  6  5  4  3  2  1 Vigorously Rub Beam 1 ..
+            /// Beam 1 PASS 46 - 43 >= 3
+            ///  10  9  8  7  6  5  4  3  2  1 Vigorously Rub Beam 2 ...
+            /// Beam 2 PASS 64 - 42 >= 3
+            ///  10  9  8  7  6  5  4  3  2  1 Vigorously Rub Beam 3 ..
+            /// Beam 3 PASS 62 - 43 >= 3
+            /// DP600 Rub Test Complete
+            /// 
+            /// </summary>
+            public const string CMD_DIAGRUB = "DIAGRUB";
+
+            #endregion
+
             #endregion
 
             #region Default Values
@@ -4738,6 +4817,63 @@ namespace RTI
                 sb.AppendLine("");
                 sb.AppendLine("Note: all digits including the space following CETFP and the ");
                 sb.AppendLine("separators must be part of the command or the system will reject the command.");
+
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region DIAGPRESSURE
+
+            /// <summary>
+            /// DIAGPRESSURE description string.
+            /// </summary>
+            /// <returns>Description string.</returns>
+            public static string GetDiagPressureDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("DIAGPRESSURE<CR> ");
+                sb.AppendLine("Rub Beam Test");
+                sb.AppendLine("Test the functionality of pressure sensor.");
+                sb.AppendLine("");
+                sb.AppendLine("Shows the Keller30 pressure sensor info. The first part of the response ");
+                sb.AppendLine("shows the serial number and the version of firmware. The next portion ");
+                sb.AppendLine("of the response contains the pressure sensor “Coefficients”. The third ");
+                sb.AppendLine("line of which indicates the maximum pressure the sensor can measure. The ");
+                sb.AppendLine("last portion of the response contains the pressure sensor “Configuration”. ");
+                sb.AppendLine("These values can be programmed using Keller software when the pressure ");
+                sb.AppendLine("sensor is disconnected from the ADCP.");
+
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region DIAGRUB
+
+            /// <summary>
+            /// DIAGRUB description string.
+            /// </summary>
+            /// <returns>Description string.</returns>
+            public static string GetDiagRubDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("DIAGRUB<CR> ");
+                sb.AppendLine("Rub Beam Test");
+                sb.AppendLine("Test the functionality of each beam.");
+                sb.AppendLine("");
+                sb.AppendLine("Shows the results of the beam continuity");
+                sb.AppendLine("test where the user rubs each beam in ");
+                sb.AppendLine("sequence to determine whether the transducer ");
+                sb.AppendLine("cup is functional. The test collects statistics ");
+                sb.AppendLine("for 10 samples then prompts the user to rub ");
+                sb.AppendLine("the selected beam. PASS will be displayed when ");
+                sb.AppendLine("the test detects the correct amplitude change ");
+                sb.AppendLine("associated with rubbing a transducer. Up to 4 beams ");
+                sb.AppendLine("will be tested per test. For systems with additional ");
+                sb.AppendLine("beams use the CEPO command to select additional sub systems.");
 
                 return sb.ToString();
             }

@@ -373,191 +373,198 @@ namespace RTI
             bool isBE = false;
             bool isBD = false;
 
-            // Create the DVL dataset if it does not exist
-            if (!_prevEns.IsDvlDataAvail)
+            try
             {
-                _prevEns.IsDvlDataAvail = true;
-                _prevEns.DvlData = new DataSet.DvlDataSet();
+                // Create the DVL dataset if it does not exist
+                if (!_prevEns.IsDvlDataAvail)
+                {
+                    _prevEns.IsDvlDataAvail = true;
+                    _prevEns.DvlData = new DataSet.DvlDataSet();
+                }
+
+                // Create the Ensemble dataset if it does not exist
+                if (!_prevEns.IsEnsembleAvail)
+                {
+                    _prevEns.IsEnsembleAvail = true;
+                    _prevEns.EnsembleData = new DataSet.EnsembleDataSet();
+                }
+
+                // Add Ensemble DataSet
+                _prevEns.EnsembleData.EnsembleNumber = _count++;
+                //_prevEns.EnsembleData.SetTime();
+                _prevEns.EnsembleData.SysSerialNumber = SerialNumber.DVL;
+                _prevEns.EnsembleData.NumBeams = 4;
+
+                // SA
+                if (sentence.Contains(SA.ID))
+                {
+                    // Set SA
+                    SetSA(sentence);
+
+                    // Set flag that this data type was found
+                    isSA = true;
+                }
+
+                // TS
+                if (sentence.Contains(TS.ID))
+                {
+                    // Set TS
+                    SetTS(sentence);
+
+                    // Set flag that this data type was found
+                    isTS = true;
+                }
+
+                // RA
+                if (sentence.Contains(RA.ID))
+                {
+                    // Set RA
+                    SetRA(sentence);
+
+                    // Set flag that this data type was found
+                    isRA = true;
+                }
+
+                // WI
+                if (sentence.Contains(WI.ID))
+                {
+                    // Set WI
+                    SetWI(sentence);
+
+                    // Set flag that this data type was found
+                    isWI = true;
+                }
+
+                // WS
+                if (sentence.Contains(WS.ID))
+                {
+                    // Set WS
+                    SetWS(sentence);
+
+                    // Set flag that this data type was found
+                    isWS = true;
+                }
+
+                // WE
+                if (sentence.Contains(WE.ID))
+                {
+                    // Set WE
+                    SetWE(sentence);
+
+                    // Set flag that this data type was found
+                    isWE = true;
+                }
+
+                // WD
+                if (sentence.Contains(WD.ID))
+                {
+                    // Set WD
+                    SetWD(sentence);
+
+                    // Set flag that this data type was found
+                    isWD = true;
+                }
+
+                // BI
+                if (sentence.Contains(BI.ID))
+                {
+                    // Set BI
+                    SetBI(sentence);
+
+                    // Set flag that this data type was found
+                    isBI = true;
+                }
+
+                // BS
+                if (sentence.Contains(BS.ID))
+                {
+                    // Set BS
+                    SetBS(sentence);
+
+                    // Set flag that this data type was found
+                    isBS = true;
+                }
+
+                // BE
+                if (sentence.Contains(BE.ID))
+                {
+                    // Set BE
+                    SetBE(sentence);
+
+                    // Set flag that this data type was found
+                    isBE = true;
+                }
+
+                // BD
+                if (sentence.Contains(BD.ID))
+                {
+                    // Set BD
+                    SetBD(sentence);
+
+                    // Set flag that this data type was found
+                    isBD = true;
+                }
+
+                // Send data to subscriber
+                // SA
+                if (isSA)
+                {
+                    SendData(_prevSA);
+                }
+                // TS
+                if (isTS)
+                {
+                    SendData(_prevTS);
+                }
+                // RA
+                if (isRA)
+                {
+                    SendData(_prevRA);
+                }
+                // WI
+                if (isWI)
+                {
+                    SendData(_prevWI);
+                }
+                // WS
+                if (isWS)
+                {
+                    SendData(_prevWS);
+                }
+                // WE
+                if (isWE)
+                {
+                    SendData(_prevWE);
+                }
+                // WD
+                if (isWD)
+                {
+                    SendData(_prevWD);
+                }
+                // BI
+                if (isBI)
+                {
+                    SendData(_prevBI);
+                }
+                // BS
+                if (isBS)
+                {
+                    SendData(_prevBS);
+                }
+                // BE
+                if (isBE)
+                {
+                    SendData(_prevBE);
+                }
+                // BD
+                if (isBD)
+                {
+                    SendData(_prevBD);
+                }
             }
-
-            // Create the Ensemble dataset if it does not exist
-            if(!_prevEns.IsEnsembleAvail)
+            catch(Exception e)
             {
-                _prevEns.IsEnsembleAvail = true;
-                _prevEns.EnsembleData = new DataSet.EnsembleDataSet();
-            }
-
-            // Add Ensemble DataSet
-            _prevEns.EnsembleData.EnsembleNumber = _count++;
-            //_prevEns.EnsembleData.SetTime();
-            _prevEns.EnsembleData.SysSerialNumber = SerialNumber.DVL;
-            _prevEns.EnsembleData.NumBeams = 4;
-
-            // SA
-            if (sentence.Contains(SA.ID))
-            {
-                // Set SA
-                SetSA(sentence);
-
-                // Set flag that this data type was found
-                isSA = true;
-            }
-
-            // TS
-            if (sentence.Contains(TS.ID))
-            {
-                // Set TS
-                SetTS(sentence);
-
-                // Set flag that this data type was found
-                isTS = true;
-            }
-
-            // RA
-            if (sentence.Contains(RA.ID))
-            {
-                // Set RA
-                SetRA(sentence);
-
-                // Set flag that this data type was found
-                isRA = true;
-            }
-
-            // WI
-            if (sentence.Contains(WI.ID))
-            {
-                // Set WI
-                SetWI(sentence);
-
-                // Set flag that this data type was found
-                isWI = true;
-            }
-
-            // WS
-            if (sentence.Contains(WS.ID))
-            {
-                // Set WS
-                SetWS(sentence);
-
-                // Set flag that this data type was found
-                isWS = true;
-            }
-
-            // WE
-            if (sentence.Contains(WE.ID))
-            {
-                // Set WE
-                SetWE(sentence);
-
-                // Set flag that this data type was found
-                isWE = true;
-            }
-
-            // WD
-            if (sentence.Contains(WD.ID))
-            {
-                // Set WD
-                SetWD(sentence);
-
-                // Set flag that this data type was found
-                isWD = true;
-            }
-
-            // BI
-            if (sentence.Contains(BI.ID))
-            {
-                // Set BI
-                SetBI(sentence);
-
-                // Set flag that this data type was found
-                isBI = true;
-            }
-
-            // BS
-            if (sentence.Contains(BS.ID))
-            {
-                // Set BS
-                SetBS(sentence);
-
-                // Set flag that this data type was found
-                isBS = true;
-            }
-
-            // BE
-            if (sentence.Contains(BE.ID))
-            {
-                // Set BE
-                SetBE(sentence);
-
-                // Set flag that this data type was found
-                isBE = true;
-            }
-
-            // BD
-            if (sentence.Contains(BD.ID))
-            {
-                // Set BD
-                SetBD(sentence);
-
-                // Set flag that this data type was found
-                isBD = true;
-            }
-
-            // Send data to subscriber
-            // SA
-            if (isSA)
-            {
-                SendData(_prevSA);
-            }
-            // TS
-            if (isTS)
-            {
-                SendData(_prevTS);
-            }
-            // RA
-            if (isRA)
-            {
-                SendData(_prevRA);
-            }
-            // WI
-            if (isWI)
-            {
-                SendData(_prevWI);
-            }
-            // WS
-            if (isWS)
-            {
-                SendData(_prevWS);
-            }
-            // WE
-            if (isWE)
-            {
-                SendData(_prevWE);
-            }
-            // WD
-            if (isWD)
-            {
-                SendData(_prevWD);
-            }
-            // BI
-            if (isBI)
-            {
-                SendData(_prevBI);
-            }
-            // BS
-            if (isBS)
-            {
-                SendData(_prevBS);
-            }
-            // BE
-            if (isBE)
-            {
-                SendData(_prevBE);
-            }
-            // BD
-            if (isBD)
-            {
-                SendData(_prevBD);
+                log.Error("Error processing data.", e);
             }
 
         }

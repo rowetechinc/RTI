@@ -65,6 +65,7 @@
  * 10/31/2014      RC          3.0.2      Added Range Tracking DataSet.
  * 11/17/2014      RC          3.0.2      Added File Complete event.
  * 01/22/2014      RC          3.0.2      In DecodeIncomingData() i need to wait for the buffer to have enough bytes to decode an ensemble.
+ * 03/10/2015      RC          3.0.3      Added Gage Height Data.
  * 
  */
 
@@ -643,6 +644,18 @@ namespace RTI
                     // Add the data
                     ensemble.AddRangeTrackingData(type, numElements, elementMultiplier, imag, nameLen, name, rtData);
                     //Debug.WriteLine(adcpData.RangeTrackingData.ToString());
+
+                    // Advance the packet pointer
+                    packetPointer += dataSetSize;
+                }
+                else if (Ensemble.GageHeightID.Equals(name, StringComparison.Ordinal))
+                {
+                    // Create a sub array of just this data set data
+                    byte[] ghData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                    // Add the data
+                    ensemble.AddGageHeightData(type, numElements, elementMultiplier, imag, nameLen, name, ghData);
+                    //Debug.WriteLine(adcpData.GageHeightData.ToString());
 
                     // Advance the packet pointer
                     packetPointer += dataSetSize;

@@ -79,6 +79,7 @@ namespace RTI
 
             /// <summary>
             /// Store all the EarthVelocity velocity data for the ADCP.
+            /// [bin,beam]
             /// </summary>
             public float[,] EarthVelocityData { get; set; }
 

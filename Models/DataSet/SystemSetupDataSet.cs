@@ -35,6 +35,7 @@
  * 01/09/2014      RC          2.21.3     Initial coding
  * 07/21/2014      RC          2.23.0     Fixed checking if the voltage existed in Decode().
  * 07/24/2014      RC          2.23.0     Added and empty constructor.
+ * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
  * 
  */
 
@@ -354,7 +355,7 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Voltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
-                byte[] header = this.GenerateHeader(NumElements);
+                byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
 
                 // Create the array to hold the dataset
                 byte[] result = new byte[payload.Length + header.Length];

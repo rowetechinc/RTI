@@ -62,6 +62,7 @@
  * 01/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 04/15/2014      RC          2.21.4     In GetVelocityMagnitude() check for 4 beams.
+ * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
  * 
  */
 
@@ -731,7 +732,7 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
-                byte[] header = this.GenerateHeader(NumElements);
+                byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
 
                 // Create the array to hold the dataset
                 byte[] result = new byte[payload.Length + header.Length];

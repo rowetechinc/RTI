@@ -77,6 +77,7 @@
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet
  * 10/09/2014      RC          3.0.2      Fixed bug with JSON_STR_ISDVLAVAIL value.
  * 10/31/2014      RC          3.0.2      Added RangeTrackingDataSet.
+ * 03/09/2015      RC          3.0.3      Added GageHeightDataSet.
  * 
  */
 
@@ -178,7 +179,12 @@ namespace RTI
             /// <summary>
             /// Range Tracking ID for binary format.
             /// </summary>
-            public const string RangeTrackingID = "E000015\0"; 
+            public const string RangeTrackingID = "E000015\0";
+
+            /// <summary>
+            /// Gage Height ID for binary format.
+            /// </summary>
+            public const string GageHeightID = "E000016\0"; 
 
             /// <summary>
             /// PRTI02 ID for DVL mode format.
@@ -525,6 +531,11 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISDVLAVAIL = "IsDvlDataAvail";
 
+            /// <summary>
+            /// String for IsGageHeightAvail.
+            /// </summary>
+            public const string JSON_STR_ISGAGEHEIGHTAVAIL = "IsGageHeightDataAvail";
+
             #endregion
 
             #region DataSets
@@ -643,6 +654,11 @@ namespace RTI
             /// String for DvlData.
             /// </summary>
             public const string JSON_STR_DVLDATA = "DvlData";
+
+            /// <summary>
+            /// String for Gage Height Data.
+            /// </summary>
+            public const string JSON_STR_GAGEHEIGHTDATA = "GageHeightData";
 
             #endregion
 
@@ -769,6 +785,11 @@ namespace RTI
             /// </summary>
             public bool IsDvlDataAvail { get; set; }
 
+            /// <summary>
+            /// Set if the Gage Height data set is available to this ensemble.
+            /// </summary>
+            public bool IsGageHeightAvail { get; set; }
+
             #endregion
 
             #region Data Sets Properties
@@ -859,6 +880,11 @@ namespace RTI
             public RangeTrackingDataSet RangeTrackingData { get; set; }
 
             /// <summary>
+            /// Gage Height data set.
+            /// </summary>
+            public GageHeightDataSet GageHeightData { get; set; }
+
+            /// <summary>
             /// GPS data that came from the ADCP.
             /// </summary>
             public string AdcpGpsData { get; set; }
@@ -929,6 +955,7 @@ namespace RTI
                 IsNmea1DataAvail = false;
                 IsNmea2DataAvail = false;
                 IsDvlDataAvail = false;
+                IsGageHeightAvail = false;
             }
 
             /// <summary>
@@ -981,6 +1008,7 @@ namespace RTI
             /// <param name="IsNmea1DataAvail">Flag if NMEA 1 data is available.</param>
             /// <param name="IsNmea2DataAvail">Flag if NMEA 2 data is available.</param>
             /// <param name="IsDvlDataAvail">Flag if DVL data is available.</param>
+            /// <param name="IsGageHeightAvail">Flag if Gage Height data is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -1004,18 +1032,19 @@ namespace RTI
             /// <param name="Nmea1Data">NMEA 1 data.</param>
             /// <param name="Nmea2Data">NMEA 2 data.</param>
             /// <param name="DvlData">DVL data.</param>
+            /// <param name="GageHeightData">Gage Height data.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
                             bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
-                            bool IsSystemSetupAvail, bool IsRangeTrackingAvail,
+                            bool IsSystemSetupAvail, bool IsRangeTrackingAvail, bool IsGageHeightAvail,
                             bool IsAdcpGpsDataAvail, bool IsGps1DataAvail, bool IsGps2DataAvail, bool IsNmea1DataAvail, bool IsNmea2DataAvail,
                             bool IsDvlDataAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
                             InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
-                            SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData,
+                            SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData, GageHeightDataSet GageHeightData,
                             DvlDataSet DvlData,
                             string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
             {
@@ -1043,6 +1072,7 @@ namespace RTI
                 this.IsNmea1DataAvail = IsNmea1DataAvail;
                 this.IsNmea2DataAvail = IsNmea2DataAvail;
                 this.IsDvlDataAvail = IsDvlDataAvail;
+                this.IsGageHeightAvail = IsGageHeightAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -1067,6 +1097,7 @@ namespace RTI
                 this.Nmea1Data = Nmea2Data;
                 this.Nmea2Data = Nmea2Data;
                 this.DvlData = DvlData;
+                this.GageHeightData = GageHeightData;
             }
 
             #region Beam Velocity Data Set
@@ -1961,6 +1992,43 @@ namespace RTI
 
             #endregion
 
+            #region Gage Height Data Set
+
+            /// <summary>
+            /// Add the Gage Height data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddGageHeightData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsGageHeightAvail = true;
+                GageHeightData = new GageHeightDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Gage Height data set to the ensemble.
+            /// This will add the Gage Height data and decode the byte array
+            /// for all the Gage Height data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="gageHeightData">Byte array containing Gage Height data</param>
+            public void AddGageHeightData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] gageHeightData)
+            {
+                IsGageHeightAvail = true;
+                GageHeightData = new GageHeightDataSet(valueType, numBins, numBeams, imag, nameLength, name, gageHeightData);
+            }
+
+            #endregion
+
             #region Clone
 
             /// <summary>
@@ -2057,6 +2125,10 @@ namespace RTI
                 if (IsDvlDataAvail)
                 {
                     s += DvlData.ToString();
+                }
+                if(IsGageHeightAvail)
+                {
+                    s += GageHeightData.ToString();
                 }
 
 
@@ -2415,7 +2487,7 @@ namespace RTI
                 {
                     byte[] ensembleDataSet = EnsembleData.Encode();
                     datasetList.Add(ensembleDataSet);
-                    size += ensembleDataSet.Length; 
+                    size += ensembleDataSet.Length;
                 }
 
                 // Ancillary DataSet
@@ -2423,7 +2495,7 @@ namespace RTI
                 {
                     byte[] ancillaryDataSet = AncillaryData.Encode();
                     datasetList.Add(ancillaryDataSet);
-                    size += ancillaryDataSet.Length; 
+                    size += ancillaryDataSet.Length;
                 }
 
                 // Bottom Track DataSet
@@ -2431,7 +2503,7 @@ namespace RTI
                 {
                     byte[] btDataSet = BottomTrackData.Encode();
                     datasetList.Add(btDataSet);
-                    size += btDataSet.Length; 
+                    size += btDataSet.Length;
                 }
 
                 // NMEA dataset
@@ -2472,6 +2544,14 @@ namespace RTI
                     byte[] rtDataSet = RangeTrackingData.Encode();
                     datasetList.Add(rtDataSet);
                     size += rtDataSet.Length;
+                }
+
+                // Gage Height dataset
+                if (IsGageHeightAvail)
+                {
+                    byte[] ghDataSet = GageHeightData.Encode();
+                    datasetList.Add(ghDataSet);
+                    size += ghDataSet.Length;
                 }
 
                 return CombineDataSets(size, datasetList);
@@ -2840,7 +2920,6 @@ namespace RTI
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEA1AVAIL);
                 writer.WriteValue(ensemble.IsNmea1DataAvail);
 
-
                 // IsNmea2DataAvail
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISNMEA2AVAIL);
                 writer.WriteValue(ensemble.IsNmea2DataAvail);
@@ -2848,6 +2927,10 @@ namespace RTI
                 // IsDvlDataAvail
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISDVLAVAIL);
                 writer.WriteValue(ensemble.IsDvlDataAvail);
+
+                // IsGageHeightDataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISGAGEHEIGHTAVAIL);
+                writer.WriteValue(ensemble.IsGageHeightAvail);
 
                 #endregion
 
@@ -3089,6 +3172,17 @@ namespace RTI
                 if (ensemble.IsDvlDataAvail)
                 {
                     writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.DvlData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // Gage Height data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_GAGEHEIGHTDATA);
+                if (ensemble.IsGageHeightAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GageHeightData));
                 }
                 else
                 {

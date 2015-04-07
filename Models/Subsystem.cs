@@ -693,6 +693,15 @@ namespace RTI
         }
 
         /// <summary>
+        /// Get the system frequency value.
+        /// </summary>
+        /// <returns>System frequency value.</returns>
+        public float GetSystemFrequencyValue()
+        {
+            return Subsystem.GetSystemFrequencyValue(Code);
+        }
+
+        /// <summary>
         /// Get the system configuration based off the code given.
         /// </summary>
         /// <param name="code">Subsystem code.</param>
@@ -777,6 +786,37 @@ namespace RTI
                 default:
                     return SystemFrequency.Freq_300kHz;
             }
+        }
+
+        /// <summary>
+        /// Get the system frequency value based off the code given.
+        /// </summary>
+        /// <param name="code">Subsystem code.</param>
+        /// <returns>System frequency value.</returns>
+        public static float GetSystemFrequencyValue(byte code)
+        {
+            SystemFrequency freq = GetSystemFrequency(code);
+
+            switch (freq)
+            {
+                case SystemFrequency.Freq_38kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_38;
+                case SystemFrequency.Freq_75kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_75;
+                case SystemFrequency.Freq_150kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_150;
+                case SystemFrequency.Freq_300kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_300;
+                case SystemFrequency.Freq_600kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_600;
+                case SystemFrequency.Freq_1200kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_1200;
+                case SystemFrequency.Freq_2000kHz:
+                    return RTI.Core.Commons.FREQ_BASE * 2;
+            }
+
+            // Default to 300 kHz
+            return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_300; 
         }
 
         /// <summary>

@@ -161,8 +161,7 @@ using RTI.Average;
         }
 
         /// <summary>
-        /// Set flag if the averaging is done by number of samples
-        /// or timer.
+        /// Set flag if the averaging is done by number of samples.
         /// </summary>
         public bool IsAvgByNumSamples
         {
@@ -170,9 +169,42 @@ using RTI.Average;
             set
             {
                 _options.IsAvgByNumSamples = value;
-                
+            }
+        }
+
+        /// <summary>
+        /// Set flag if the averaging is done by timer.
+        /// </summary>
+        public bool IsAvgByTimer
+        {
+            get { return _options.IsAvgByTimer; }
+            set
+            {
+                _options.IsAvgByTimer = value;
+
                 // This will turn the timer on or off
-                _avgTimer.Enabled = !value;
+                _avgTimer.Enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Set flag if the average is a running average.
+        /// </summary>
+        public bool IsAvgRunning
+        {
+            get { return _options.IsAvgRunning; }
+            set
+            {
+                _options.IsAvgRunning = value;
+
+                // Set the averagers
+                _correlationAverager.IsRunningAverage = _options.IsAvgRunning;
+                _amplitudeAverager.IsRunningAverage = _options.IsAvgRunning;
+                _refLayerAverager.IsRunningAverage = _options.IsAvgRunning;
+                _beamVelAverager.IsRunningAverage = _options.IsAvgRunning;
+                _instrumentVelAverager.IsRunningAverage = _options.IsAvgRunning;
+                _earthVelAverager.IsRunningAverage = _options.IsAvgRunning;
+                _bottomTrackAverager.IsRunningAverage = _options.IsAvgRunning;
             }
         }
 
@@ -232,21 +264,21 @@ using RTI.Average;
         /// It will then wait again for NumSamples.  This will publish an
         /// averaged ensemble after NumSamples have been received.
         /// </summary>
-        public bool IsRunningAverage 
+        public bool IsSampleRunningAverage
         {
-            get { return _options.IsRunningAverage; }
+            get { return _options.IsSampleRunningAverage; }
             set
             {
-                _options.IsRunningAverage = value;
+                _options.IsSampleRunningAverage = value;
 
                 // Set the averagers
-                _correlationAverager.IsRunningAverage = _options.IsRunningAverage;
-                _amplitudeAverager.IsRunningAverage = _options.IsRunningAverage;
-                _refLayerAverager.IsRunningAverage = _options.IsRunningAverage;
-                _beamVelAverager.IsRunningAverage = _options.IsRunningAverage;
-                _instrumentVelAverager.IsRunningAverage = _options.IsRunningAverage;
-                _earthVelAverager.IsRunningAverage = _options.IsRunningAverage;
-                _bottomTrackAverager.IsRunningAverage = _options.IsRunningAverage;
+                _correlationAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
+                _amplitudeAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
+                _refLayerAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
+                _beamVelAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
+                _instrumentVelAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
+                _earthVelAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
+                _bottomTrackAverager.IsSampleRunningAverage = _options.IsSampleRunningAverage;
             }
         }
 
@@ -550,11 +582,11 @@ using RTI.Average;
             // Set the options
             _options = options;
 
-            _avgTimer = new Timer(_options.TimerMilliseconds);
-            _avgTimer.Elapsed += new ElapsedEventHandler(_avgTimer_Elapsed);
+            // Set the timer
+            SetTimer();
 
             // Initialize values
-            _refLayerAverager = new ReferenceLayerAverage(_options.NumSamples, _options.MinRefLayer, _options.MaxRefLayer, _options.IsRunningAverage);
+            _refLayerAverager = new ReferenceLayerAverage(_options.NumSamples, _options.MinRefLayer, _options.MaxRefLayer, _options.IsAvgRunning);
             _correlationAverager = new AverageCorrelation();
             _amplitudeAverager = new AverageAmplitude();
             _beamVelAverager = new AverageBeamVelocity();
@@ -568,8 +600,7 @@ using RTI.Average;
         /// </summary>
         public void Dispose()
         {
-            _avgTimer.Elapsed -= _avgTimer_Elapsed;
-            _avgTimer.Dispose();
+            StopTimer();
         }
 
         /// <summary>
@@ -634,9 +665,16 @@ using RTI.Average;
             // Increment the ensemble count
             _ensCount++;
 
+            // Running average
+            // This will continously average the incoming data
+            if(IsAvgRunning)
+            {
+                // Publish the averaged data
+                PublishAverage(ensemble);
+            }
             // If we have met the number of samples
             // Publish the number of samples
-            if (IsAvgByNumSamples && _ensCount >= NumSamples)
+            else if (IsAvgByNumSamples && _ensCount >= NumSamples)
             {
                 // Publish the averaged data
                 PublishAverage(ensemble);
@@ -644,7 +682,7 @@ using RTI.Average;
                 // If we are not doing a running average
                 // Then clear the ensemble count so we 
                 // can start over counting
-                if (!IsRunningAverage)
+                if (!IsSampleRunningAverage)
                 {
                     ClearCount();
                 }
@@ -664,7 +702,28 @@ using RTI.Average;
         }
 
 
-        #region Average
+        #region Timer
+
+        /// <summary>
+        /// Set the timer to do timed average.
+        /// </summary>
+        private void SetTimer()
+        {
+            if (_avgTimer == null)
+            {
+                _avgTimer = new Timer(_options.TimerMilliseconds);
+                _avgTimer.Elapsed += new ElapsedEventHandler(_avgTimer_Elapsed);
+            }
+        }
+
+        private void StopTimer()
+        {
+            if (_avgTimer != null)
+            {
+                _avgTimer.Elapsed -= _avgTimer_Elapsed;
+                _avgTimer.Dispose();
+            }
+        }
 
         /// <summary>
         /// If the timer is enabled and it goes off, this method will be called.
@@ -680,6 +739,10 @@ using RTI.Average;
                 PublishAverage(_lastEnsemble);
             }
         }
+
+        #endregion
+
+        #region Average
 
         /// <summary>
         /// Take the last ensemble as the parameter.  Fill in 
@@ -743,7 +806,7 @@ using RTI.Average;
             PublishAveragedEnsemble(avgEnsemble);
 
             // Clear the accumulated data if not a running average
-            if (!IsRunningAverage)
+            if (!IsSampleRunningAverage)
             {
                 // Clear the accumulated data
                 ClearAccumulatedData();
@@ -775,6 +838,17 @@ using RTI.Average;
         #endregion
 
         #region Clear
+
+        /// <summary>
+        /// Clear the accumulated data.
+        /// This will start over the accumulation.
+        /// </summary>
+        public void Clear()
+        {
+            ClearCount();
+            ClearAccumulatedData();
+            RemoveFirstEnsemble();
+        }
 
         /// <summary>
         /// This will reset the number of ensembles that have been

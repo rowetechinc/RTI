@@ -63,6 +63,7 @@
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 04/15/2014      RC          2.21.4     In GetVelocityMagnitude() check for 4 beams.
  * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
+ * 04/10/2015      RC          3.0.4      Added GetRangeBin().
  * 
  */
 
@@ -1102,6 +1103,30 @@ namespace RTI
                 }
 
                 return result / count;
+            }
+
+            /// <summary>
+            /// Get the bottom Track Bin.  This is based off the bin size
+            /// and the range measured in the bottom track.
+            /// Return a negative number if it is not good.
+            /// </summary>
+            /// <param name="binSize">Bins size.</param>
+            /// <returns>Bottom Track bin.</returns>
+            public int GetRangeBin(float binSize)
+            {
+                int bin = -1;
+
+                // Get the bottom track depth
+                double depth = GetAverageRange();
+
+                // Ensure a depth is given
+                if (depth > 0.0)
+                {
+                    double binDepth = depth / binSize;
+                    bin = (int)Math.Round(binDepth);
+                }
+
+                return bin;
             }
 
             /// <summary>

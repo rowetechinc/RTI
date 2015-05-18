@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/09/2015      RC          3.0.3      Initial coding
+ * 04/16/2015      RC          3.0.4      Fixed WriteJson() Status.
  * 
  * 
  * 
@@ -442,7 +443,7 @@ namespace RTI
 
                 // Status
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_GH_STATUS);
-                writer.WriteValue(data.Status);
+                writer.WriteValue(data.Status.Value);
 
                 // AvgRange
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_GH_AVGRANGE);

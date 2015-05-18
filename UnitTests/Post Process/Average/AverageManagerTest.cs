@@ -53,7 +53,7 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(AverageAmplitudeTest_AveragedEnsemble);
 
             // Create an ensemble
@@ -106,7 +106,7 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(AverageCorrelationTest_AveragedEnsemble);
 
             // Create an ensemble
@@ -162,7 +162,7 @@ namespace RTI
             // Not running average
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsReferenceLayerAveraging = true;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.MinRefLayer = 1;
             avgMgr.MaxRefLayer = 3;
             avgMgr.NumSamples = 5;
@@ -303,7 +303,7 @@ namespace RTI
             avgMgr.IsReferenceLayerAveraging = true;
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 5;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(AverageAll_AveragedEnsemble);
 
             // Create an ensemble
@@ -509,7 +509,9 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = true;
+            avgMgr.IsAvgRunning = false;
+            avgMgr.IsAvgByTimer = false;
+            avgMgr.IsAvgByNumSamples = true;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(RunningAvgTest_AveragedEnsemble1);
 
             // Create an ensemble
@@ -609,7 +611,9 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = true;
+            avgMgr.IsAvgRunning = false;
+            avgMgr.IsAvgByTimer = false;
+            avgMgr.IsAvgByNumSamples = true;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(RunningAvgAmpTest_AveragedEnsemble1);
 
             // Create an ensemble
@@ -707,11 +711,14 @@ namespace RTI
         public void RunningAverageReferencelayerTest()
         {
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
-            avgMgr.IsRunningAverage = true;
+            avgMgr.IsAvgRunning = true;
             avgMgr.NumSamples = 3;
             avgMgr.IsReferenceLayerAveraging = true;
             avgMgr.MinRefLayer = 1;
             avgMgr.MaxRefLayer = 3;
+            avgMgr.IsAvgRunning = false;
+            avgMgr.IsAvgByTimer = false;
+            avgMgr.IsAvgByNumSamples = true;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(RunningAvgRefLayerTest_AveragedEnsemble1);
 
             // Create an ensemble
@@ -903,6 +910,9 @@ namespace RTI
             avgMgr.NumSamples = 3;
             avgMgr.MinRefLayer = 1;
             avgMgr.MaxRefLayer = 3;
+            avgMgr.IsAvgRunning = false;
+            avgMgr.IsAvgByTimer = false;
+            avgMgr.IsAvgByNumSamples = true;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(RunningAvgAllTest_AveragedEnsemble1);
 
             // Create an ensemble
@@ -1189,7 +1199,7 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(AverageParametersTest_AveragedEnsemble);
 
             // Create an ensemble
@@ -1262,7 +1272,7 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(AverageParameters2PingCountTest_AveragedEnsemble);
 
             // Create an ensemble
@@ -1336,7 +1346,9 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsAmplitudeAveraging = true;
             avgMgr.NumSamples = 3;
-            avgMgr.IsRunningAverage = true;
+            avgMgr.IsAvgByNumSamples = true;
+            avgMgr.IsAvgRunning = false;
+            avgMgr.IsAvgByTimer = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(AverageParameters2PingCountRunningAvgTest_AveragedEnsemble);
 
             // Create an ensemble
@@ -1491,7 +1503,7 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 2;
-            avgMgr.IsRunningAverage = false;
+            avgMgr.IsAvgRunning = false;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(FirstLastPingNotRunningTest_AveragedEnsemble);
 
             // Create an ensemble
@@ -1570,7 +1582,9 @@ namespace RTI
             AverageManager avgMgr = new AverageManager(new AverageManagerOptions());
             avgMgr.IsCorrelationAveraging = true;
             avgMgr.NumSamples = 5;
-            avgMgr.IsRunningAverage = true;
+            avgMgr.IsAvgRunning = false;
+            avgMgr.IsAvgByTimer = false;
+            avgMgr.IsAvgByNumSamples = true;
             avgMgr.AveragedEnsemble += new AverageManager.AveragedEnsembleEventHandler(FirstLastPingRunningTest_AveragedEnsemble);
 
             // Create an ensemble

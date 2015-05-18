@@ -42,6 +42,7 @@
  * 12/27/2013      RC          2.21.1     Give the hex value error code with the error string.
  *                                         Updated the error codes.
  * 07/24/2014      RC          2.23.0     Added a comma to the status errors.
+ * 05/14/2015      RC          3.0.4      Added more status options.
  * 
  */
 
@@ -72,10 +73,18 @@ namespace RTI
     ///    Indicates Bottom Track is actively changing the ping
     ///    settings to attempt bottom detection
     ///    
-    /// Bottom Track Proof                                  = 0x0010
+    /// Bottom track coast                                  = 0x0020
+    ///    Indicates the bottom track output filter is in use but no 
+    ///    new data is available for output.
+    /// 
+    /// Bottom Track Proof                                  = 0x0040
     ///    Indicates Bottom Track is waiting for the next
     ///    valid Bottom Track ping before allowing
     ///    velocity to be output.
+    ///    
+    /// Bottom track low gain                               = 0x0080
+    ///    Indicates bottom track has reduced the 
+    ///    receiver gain below the selected switch range.
     ///    
     /// Heading Sensor Error                                = 0x0100
     ///    Heading Sensor Error.
@@ -151,9 +160,22 @@ namespace RTI
         public const int BT_SEARCHING = 0x0008;
 
         /// <summary>
-        /// Bottom Track LR STATUS value.
+        /// 0x0010 Bottom Track long range narrow band processing is being used. 
+        /// Indicates bottom track is using the narrow band processing for long range bottom detection.
         /// </summary>
         public const int BT_LR = 0x0010;
+
+        /// <summary>
+        /// 0x0020 Bottom track coast.
+        /// Indicates the bottom track output filter is in use but no new data is available for output.
+        /// </summary>
+        public const int BT_COAST = 0x0020;
+
+        /// <summary>
+        /// 0x0040 Bottom track proof.
+        /// Indicates bottom track is waiting for the next valid bottom track ping before allowing velocity data to be output.
+        /// </summary>
+        public const int BT_PROOF = 0x0040;
 
         /// <summary>
         /// Over temperature STATUS value.
@@ -161,12 +183,8 @@ namespace RTI
         public const int OVERTEMP = 0x0020;
 
         /// <summary>
-        /// Bottom Track PROOF STATUS value.
-        /// </summary>
-        public const int BT_PROOF = 0x0020;
-
-        /// <summary>
-        /// Bottom Track LOWGAIN STATUS value.
+        /// 0x0080 Bottom track low gain.
+        /// Indicates bottom track has reduced the receiver gain below the selected switch range.
         /// </summary>
         public const int BT_LOWGAIN = 0x0080;
 
@@ -268,6 +286,11 @@ namespace RTI
         /// Bottom Track Proof string.
         /// </summary>
         public static readonly string STR_BT_PROOF = "Proof";
+
+        /// <summary>
+        /// Bottom Track Coast string.
+        /// </summary>
+        public static readonly string STR_BT_COAST = "Coast";
 
         /// <summary>
         /// Bottom Track Low Gain string.
@@ -411,6 +434,16 @@ namespace RTI
         public bool IsBottomTrackProof()
         {
             return (Value & BT_PROOF) > 0;
+        }
+
+        /// <summary>
+        /// Check whether status bit set for 
+        /// Bottom Track Coast.
+        /// </summary>
+        /// <returns>TRUE = Bottom Track Coast.</returns>
+        public bool IsBottomTrackCoast()
+        {
+            return (Value & BT_COAST) > 0;
         }
 
         /// <summary>
@@ -565,6 +598,10 @@ namespace RTI
                 if (IsBottomTrackProof())
                 {
                     result += STR_BT_PROOF + ", ";
+                }
+                if (IsBottomTrackCoast())
+                {
+                    result += STR_BT_COAST + ", ";
                 }
                 if (IsBottomTrackLowGain())
                 {

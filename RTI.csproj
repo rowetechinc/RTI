@@ -214,8 +214,8 @@
     <Compile Include="Post Process\Average\AverageCorrelation.cs" />
     <Compile Include="Post Process\Average\AverageManager.cs" />
     <Compile Include="Post Process\Average\AverageAmplitude.cs" />
-    <Compile Include="Post Process\Average\AverageEarthVelocity.cs" />
     <Compile Include="Post Process\Average\AverageInstrumentVelocity.cs" />
+    <Compile Include="Post Process\Average\AverageEarthVelocity.cs" />
     <Compile Include="Post Process\Average\AverageBeamVelocity.cs" />
     <Compile Include="Post Process\Average\AverageBottomTrack.cs" />
     <Compile Include="Post Process\Average\ReferenceLayerAverage.cs" />

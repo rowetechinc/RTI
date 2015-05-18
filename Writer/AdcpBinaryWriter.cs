@@ -59,6 +59,7 @@
  * 10/14/2013      RC          2.21.0     Changed contructor to take individual name, folder and serial number to a project will not be needed.
  * 01/31/2014      RC          2.21.3     Added filetype to know what type of binary file is being created.  This will set the file name and extension.
  * 04/09/2014      RC          2.21.4     Changed _writeBuffer from a list to ConcurrentQueue.
+ * 04/16/2015      RC          3.0.4      Improved processing large files and fast data.
  *       
  * 
  */
@@ -184,6 +185,16 @@ namespace RTI
         /// </summary>
         BinaryWriter _binWriter = null;
 
+        /// <summary>
+        /// A lock for the file when writing.
+        /// </summary>
+        public object _FileLock = new object();
+
+        /// <summary>
+        /// Flag if we are processing the data.
+        /// </summary>
+        public bool _isProcessingFile;
+
         #endregion
 
         #region Properties
@@ -298,6 +309,8 @@ namespace RTI
             MaxFileSize = maxFileSize;
             _fileType = fileType;
 
+            _isProcessingFile = false;
+
             // Write buffer
             _writeBuffer = new ConcurrentQueue<byte[]>();
             _writeBufferIndex = 0;
@@ -318,6 +331,8 @@ namespace RTI
             SerialNumber = project.SerialNumber.SerialNumberString;
             MaxFileSize = maxFileSize;
             _fileType = fileType;
+
+            _isProcessingFile = false;
 
             // Write buffer
             _writeBuffer = new ConcurrentQueue<byte[]>();
@@ -354,7 +369,10 @@ namespace RTI
                 // If not, write the current buffer to the file
                 if (data.Length + _writeBufferIndex >= MAX_BUFFER_SIZE)
                 {
-                    WriteBuffer();
+                    if (!_isProcessingFile)
+                    {
+                        WriteBuffer();
+                    }
                 }
 
                 // Write the data to the buffer
@@ -426,7 +444,10 @@ namespace RTI
         private void Reopen()
         {
             // Write the remaining data in the buffer to the file
-            WriteBuffer();
+            if (!_isProcessingFile)
+            {
+                WriteBuffer();
+            }
 
             // Reset the file name xAxis
             _fileNameIndex = 0;
@@ -448,48 +469,57 @@ namespace RTI
         {
             try
             {
-                // Open the writer
-                Open();
-
-                // Make a copy of the buffer just in case new data is being added to the
-                // buffer while we are writing
-                //List<byte[]> buffer = new List<byte[]>(_writeBuffer);
-
-                // Clear the buffer
-                //_writeBuffer.Clear();
-                //_writeBufferIndex = 0;
-
-                // Go through the list writing the data
-                //for (int x = 0; x < buffer.Count; x++ )
-                //{
-                // Write the data to the file
-                //    Write(buffer[x]);
-                //}
-                while (!_writeBuffer.IsEmpty)
+                // Lock so only one write operation can occur
+                lock (_FileLock)
                 {
-                    byte[] data = null;
-                    _writeBuffer.TryDequeue(out data);
-                    if (data != null)
+                    _isProcessingFile = true;
+
+                    // Open the writer
+                    Open();
+
+                    // Make a copy of the buffer just in case new data is being added to the
+                    // buffer while we are writing
+                    //List<byte[]> buffer = new List<byte[]>(_writeBuffer);
+
+                    // Clear the buffer
+                    //_writeBuffer.Clear();
+                    //_writeBufferIndex = 0;
+
+                    // Go through the list writing the data
+                    //for (int x = 0; x < buffer.Count; x++ )
+                    //{
+                    // Write the data to the file
+                    //    Write(buffer[x]);
+                    //}
+                    while (!_writeBuffer.IsEmpty)
                     {
-                        Write(data);
+                        byte[] data = null;
+                        _writeBuffer.TryDequeue(out data);
+                        if (data != null)
+                        {
+                            Write(data);
+                        }
                     }
-                }
 
-                // Clear the buffer index
-                _writeBufferIndex = 0;
+                    // Clear the buffer index
+                    _writeBufferIndex = 0;
 
 
-                // Flush the data to the file
-                if (_binWriter != null)
-                {
-                    _binWriter.Flush();
+                    // Flush the data to the file
+                    if (_binWriter != null)
+                    {
+                        _binWriter.Flush();
 
-                    // Close the writer
-                    _binWriter.Close();
+                        // Close the writer
+                        _binWriter.Close();
+                    }
+
+                    _isProcessingFile = false;
                 }
             }
             catch (Exception e)
             {
+                _isProcessingFile = false;
                 log.Error(string.Format("Error writing data to file. {0}", _fileName), e);
             }
         }
@@ -542,7 +572,10 @@ namespace RTI
             // the file.
             if (this._writeBuffer.Count > 0)
             {
-                WriteBuffer();
+                if (!_isProcessingFile)
+                {
+                    WriteBuffer();
+                }
             }
         }
 

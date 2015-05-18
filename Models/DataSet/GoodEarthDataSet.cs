@@ -373,7 +373,7 @@ namespace RTI
                     int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
 
                     // Create the object
-                    var data = new GoodEarthDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.AmplitudeID);
+                    var data = new GoodEarthDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.GoodEarthID);
                     data.GoodEarthData = new int[NumElements, ElementsMultiplier];
 
                     // Decode the 2D array 

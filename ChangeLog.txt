@@ -1,5 +1,20 @@
 RTI Changelog
 
+RTI-3.0.4
+ - Changed the version number.
+ - In BottomTrackDataSet, added GetRangeBin().
+ - In AverageEarthVelocity, average Velocity Vectors.
+ - In AverageBase, set the average velocity to bad if nothing is accumulated.
+ - In GageHeightDataSet, fixed WriteJson() Status.
+ - In VelocityVector, check how many beams in GenerateInstrumentVectors().
+ - In InstrumentVelocityDataSet, check for the number of beams in IsBinGood().
+ - In AdcpEthernet, added a timer to allow pinging through ethernet.
+ - In AdcpEthernetOptions, added TimerInterval for the ping timing.
+ - In AdcpBinaryWriter, improved processing large files and fast data.
+ - In MathHelper, in CalculateDirection(), make the value between 0 and 360.
+ - In AdcpBinaryCodec, added a try catch block in DecodeIncomingData().
+ - In Status, added more status options.
+
 RTI-3.0.3
  - Changed the version number.
  - In CsvExporterWriter, added GageHeight dataset.

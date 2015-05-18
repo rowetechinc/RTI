@@ -106,7 +106,7 @@ namespace RTI
                                 numBeams,                                       // Number of beams
                                 DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                                 DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
-                                DataSet.Ensemble.CorrelationID)                 // Dataset ID) 
+                                DataSet.Ensemble.AmplitudeID)                 // Dataset ID) 
             {
                 // Initialize data
                 AmplitudeData = new float[NumElements, ElementsMultiplier];

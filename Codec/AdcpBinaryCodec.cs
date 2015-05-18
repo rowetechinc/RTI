@@ -66,6 +66,7 @@
  * 11/17/2014      RC          3.0.2      Added File Complete event.
  * 01/22/2014      RC          3.0.2      In DecodeIncomingData() i need to wait for the buffer to have enough bytes to decode an ensemble.
  * 03/10/2015      RC          3.0.3      Added Gage Height Data.
+ * 04/29/2015      RC          3.0.4      Added a try catch block in DecodeIncomingData().
  * 
  */
 
@@ -364,9 +365,19 @@ namespace RTI
                         {
                             lock (_headerStartLock)
                             {
-                                // Copy the header start to the ensemble
-                                Buffer.BlockCopy(_headerStart.ToArray(), 0, ensemble, 0, DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT);
-                                _headerStart.Clear();
+                                try
+                                {
+                                    if (_headerStart.Count > 0 && ensemble.Length > 0)
+                                    {
+                                        // Copy the header start to the ensemble
+                                        Buffer.BlockCopy(_headerStart.ToArray(), 0, ensemble, 0, DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT);
+                                        _headerStart.Clear();
+                                    }
+                                }
+                                catch(Exception e)
+                                {
+                                    log.Error("Error copying the header start.", e);
+                                }
                             }
 
                             // Copy the remainder of the ensemble 

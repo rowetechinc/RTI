@@ -36,6 +36,7 @@
  * 06/28/2013      RC          2.19       Replaced Shutdown() with IDisposable.
  * 11/21/2013      RC          2.21.0     Added send and receive methods to match the ADCP serial ports commands.
  * 03/17/2014      RC          2.21.4     Sped up the download process.
+ * 04/16/2015      RC          3.0.4      Added a timer to allow pinging through ethernet.
  * 
  */
 
@@ -49,9 +50,10 @@ namespace RTI
     using System.Diagnostics;
     using System.IO;
     using System.Threading;
-using System.Collections.Concurrent;
+    using System.Collections.Concurrent;
     using System.ComponentModel;
     using System.Net.Sockets;
+    using System.Timers;
 
     /// <summary>
     /// Send commands and receive data from the ADCP using
@@ -148,6 +150,11 @@ using System.Collections.Concurrent;
         /// </summary>
         private bool _isWritingDownloadedData;
 
+        /// <summary>
+        /// If timing based off time, enable this timer.
+        /// </summary>
+        private System.Timers.Timer _pingTimer;
+
         #endregion
 
         #region Properties
@@ -194,6 +201,9 @@ using System.Collections.Concurrent;
             _cancelDownload = false;
             _isWritingDownloadedData = false;
             _downloadWriterQueue = new ConcurrentQueue<byte[]>();
+
+            // Create the timer to ping
+            SetTimer(options.TimerInterval);
         }
 
         /// <summary>
@@ -203,6 +213,9 @@ using System.Collections.Concurrent;
         {
             // Close the binary writer if it is still open
             CloseBinaryWriter();
+
+            // Stop the timer
+            StopTimer();
         }
 
         #region Pinging
@@ -261,6 +274,9 @@ using System.Collections.Concurrent;
                 pingResult = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_START_PINGING, TIMEOUT);
             }
 
+            // Enable the timer to start calling the  ping command to get a ensemble response
+            _pingTimer.Enabled = true;
+
             // Return if either failed
             return timeResult & pingResult;
         }
@@ -274,6 +290,9 @@ using System.Collections.Concurrent;
         public bool StopPinging()
         {
             byte[] replyBuffer = null;
+
+            // Stop the ping timer
+            _pingTimer.Enabled = false;
 
             // Check the result to make the command was accepted
             if (SendData(Commands.AdcpCommands.CMD_STOP_PINGING, ref replyBuffer) == BAD_PACKET)
@@ -491,8 +510,9 @@ using System.Collections.Concurrent;
         /// <param name="replyBuffer">Reply Buffer.  This is the data from the reponse.</param>
         /// <param name="showResults">Flag if the results should be published.</param>
         /// <param name="timeout">Timeout value to wait in milliseconds.</param>
+        /// <param name="showStatus">Show the status of the ping response.</param>
         /// <returns>Number of bytes read back from the ADCP.</returns>
-        public int SendData(string cmd, ref byte[] replyBuffer, bool showResults = false, int timeout = 2000)
+        public int SendData(string cmd, ref byte[] replyBuffer, bool showResults = false, int timeout = 2000, bool showStatus = false)
         {
             int i;
             int result = 0;
@@ -534,18 +554,18 @@ using System.Collections.Concurrent;
                     // Verify the reply
                     if (reply.Status == IPStatus.Success)
                     {
-                        //if (showResults)
-                        //{
-                        //    // Form the reply response
-                        //    ReceiveBufferString += string.Format("\r\n");
-                        //    ReceiveBufferString += string.Format("* Status:         {0}\n", reply.Status.ToString());
-                        //    ReceiveBufferString += string.Format("* Address:        {0}\n", reply.Address.ToString());
-                        //    ReceiveBufferString += string.Format("* RoundTrip time: {0}\n", reply.RoundtripTime.ToString());
-                        //    ReceiveBufferString += string.Format("* Time to live:   {0}\n", reply.Options.Ttl.ToString());
-                        //    ReceiveBufferString += string.Format("* Don't fragment: {0}\n", reply.Options.DontFragment.ToString());
-                        //    ReceiveBufferString += string.Format("* Buffer size:    {0}\n", reply.Buffer.Length.ToString());
-                        //    ReceiveBufferString += string.Format("\r\n");
-                        //}
+                        if (showStatus)
+                        {
+                            // Form the reply response
+                            ReceiveBufferString += string.Format("\r\n");
+                            ReceiveBufferString += string.Format("* Status:         {0}\n", reply.Status.ToString());
+                            ReceiveBufferString += string.Format("* Address:        {0}\n", reply.Address.ToString());
+                            ReceiveBufferString += string.Format("* RoundTrip time: {0}\n", reply.RoundtripTime.ToString());
+                            ReceiveBufferString += string.Format("* Time to live:   {0}\n", reply.Options.Ttl.ToString());
+                            ReceiveBufferString += string.Format("* Don't fragment: {0}\n", reply.Options.DontFragment.ToString());
+                            ReceiveBufferString += string.Format("* Buffer size:    {0}\n", reply.Buffer.Length.ToString());
+                            ReceiveBufferString += string.Format("\r\n");
+                        }
 
                         // Check if the IP for the reply matched the one sent
                         if (reply.Buffer[0] == Convert.ToByte(Options.IpAddrA) &&
@@ -601,7 +621,7 @@ using System.Collections.Concurrent;
                         result = BAD_PACKET;
 
                         // The reply IP did not match the IP for the data sent
-                        ReceiveBufferString += "...No Connection...";
+                        ReceiveBufferString += "...No Connection... " + reply.Status.ToString();
                         PublishEthernetData(ReceiveBufferString);
                     }
                 }
@@ -1156,6 +1176,55 @@ using System.Collections.Concurrent;
             DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
 
             return adcpDt;
+        }
+
+        #endregion
+
+        #region Timer
+
+        /// <summary>
+        /// Set the timer to get the next ping.
+        /// By default it will check every second for a ping from the ADCP.
+        /// 
+        /// <param name="timer">Time between waiting for the next ping in milliseconds.</param>
+        /// </summary>
+        private void SetTimer(double timer = 1000)
+        {
+            if (_pingTimer == null)
+            {
+                _pingTimer = new System.Timers.Timer(timer);
+                _pingTimer.Elapsed += new ElapsedEventHandler(_avgTimer_Elapsed);
+            }
+        }
+
+        /// <summary>
+        /// Stop the timer.  This will dispose of the timer.
+        /// </summary>
+        private void StopTimer()
+        {
+            if (_pingTimer != null)
+            {
+                _pingTimer.Elapsed -= _avgTimer_Elapsed;
+                _pingTimer.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// If the timer is enabled and it goes off, this method will be called.
+        /// Send no command to get the next ensemble from the ADCP.
+        /// </summary>
+        /// <param name="sender">Not used.</param>
+        /// <param name="e">Not used.</param>
+        void _avgTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // Send no command to get the next ping
+
+            byte[] buffer = null;
+            int count = ReadData(ref buffer);
+            while (count > 0)
+            {
+                count = ReadData(ref buffer);
+            }
         }
 
         #endregion

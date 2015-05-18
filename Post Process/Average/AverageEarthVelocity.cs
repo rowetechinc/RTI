@@ -32,7 +32,8 @@
  * -----------------------------------------------------------------
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 06/27/2013      RC          2.23.0     Initial coding
+ * 06/25/2013      RC          2.23.0     Initial coding
+ * 04/15/2015      RC          3.0.4      Average Velocity Vectors.
  * 
  */
 
@@ -47,38 +48,53 @@ namespace RTI
         using System.Text;
 
         /// <summary>
-        /// Average the Instrument Velocity data.  This will take the Earth Velocity data
+        /// Average the Earth Velocity data.  This will take the Earth Velocity data
         /// and continuously average the data.  
         /// </summary>
-        public class AverageInstrumentVelocity : AverageBase
+        public class AverageEarthVelocity : AverageBase
         {
+
+            #region Variable
+
+            /// <summary>
+            /// Accumulate the Earth velocity vector data.
+            /// </summary>
+            protected List<DataSet.VelocityVector[]> _accumVV;
+
+            #endregion
 
             /// <summary>
             /// Initialize the values.
             /// </summary>
-            public AverageInstrumentVelocity() :
+            public AverageEarthVelocity() :
                 base()
             {
-
+                _accumVV = new List<DataSet.VelocityVector[]>();
             }
 
             /// <summary>
             /// Add the ensemble data to the accumulator.  This will accumulate all the
-            /// Instrument Velocity data into a list.  If it is a running average, it will remove
+            /// Earth Velocity data into a list.  If it is a running average, it will remove
             /// the first item in the list as needed.
             /// </summary>
             /// <param name="ensemble">Ensemble to accumulate.</param>
             public override void AddEnsemble(DataSet.Ensemble ensemble)
             {
                 // Accumulate the data
-                if (ensemble.IsInstrumentVelocityAvail)
+                if (ensemble.IsEarthVelocityAvail)
                 {
-                    _accumData.Add(ensemble.InstrumentVelocityData.InstrumentVelocityData);
+                    _accumData.Add(ensemble.EarthVelocityData.EarthVelocityData);
+
+                    // Accumulate the velocity vector
+                    if(ensemble.EarthVelocityData.IsVelocityVectorAvail)
+                    {
+                        _accumVV.Add(ensemble.EarthVelocityData.VelocityVectors);
+                    }
                 }
             }
 
             /// <summary>
-            /// Set the average Instrument Velocity data to the Instrument Velocity data set array.
+            /// Set the average Earth Velocity data to the Earth Velocity data set array.
             /// This will replace the array with an averaged array for the accumulated data.
             /// If this is not a running average, it will clear the accumulator.
             /// </summary>
@@ -86,9 +102,100 @@ namespace RTI
             /// <param name="scale">Scale value to multiply to the averaged value.</param>
             public override void SetAverage(ref DataSet.Ensemble ensemble, float scale)
             {
-                if (ensemble.IsInstrumentVelocityAvail)
+                if (ensemble.IsEarthVelocityAvail)
                 {
-                    ensemble.InstrumentVelocityData.InstrumentVelocityData = GetAverage(scale);
+                    ensemble.EarthVelocityData.EarthVelocityData = GetAverage(scale);
+
+                    // Average the velocity vector
+                    if (ensemble.EarthVelocityData.IsVelocityVectorAvail)
+                    {
+                        AverageVelocityVector(ref ensemble);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Clear the base and also the velocity vector 
+            /// list.
+            /// </summary>
+            public override void ClearAllEnsembles()
+            {
+                base.ClearAllEnsembles();
+
+                _accumVV.Clear();
+            }
+
+            /// <summary>
+            /// Average the velocity vector data.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to set the average to.</param>
+            private void AverageVelocityVector(ref DataSet.Ensemble ensemble)
+            {
+                int count = ensemble.EarthVelocityData.VelocityVectors.Length;
+
+                // Accumulate all the bin data
+                var accumMag = new double[count];
+                var magCount = new int[count];
+                var accumDirXNorth = new double[count];
+                var dirCountXNorth = new int[count];
+                var accumDirYNorth = new double[count];
+                var dirCountYNorth = new int[count];
+                foreach(var vv in _accumVV)
+                {
+                    for(int bin = 0; bin < vv.Length; bin++)
+                    {
+                        if(vv.Length <= count)
+                        {
+                            if(vv[bin].Magnitude != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                accumMag[bin] += vv[bin].Magnitude;
+                                magCount[bin]++;
+                            }
+
+                            if(vv[bin].DirectionXNorth != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                accumDirXNorth[bin] += vv[bin].DirectionXNorth;
+                                dirCountXNorth[bin]++;
+                            }
+
+                            if(vv[bin].DirectionYNorth != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                accumDirYNorth[bin] += vv[bin].DirectionYNorth;
+                                dirCountYNorth[bin]++;
+                            }
+                        }
+                    }
+                }
+
+                // Average the accumulated data
+                for(int x = 0; x < count; x++)
+                {
+                    if (magCount[x] == 0)
+                    {
+                        ensemble.EarthVelocityData.VelocityVectors[x].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
+                    }
+                    else
+                    {
+                        ensemble.EarthVelocityData.VelocityVectors[x].Magnitude = accumMag[x] / magCount[x];
+                    }
+
+                    if (dirCountXNorth[x] == 0)
+                    {
+                        ensemble.EarthVelocityData.VelocityVectors[x].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
+                    }
+                    else
+                    {
+                        ensemble.EarthVelocityData.VelocityVectors[x].DirectionXNorth = accumDirXNorth[x] / dirCountXNorth[x];
+                    }
+
+                    if (dirCountYNorth[x] == 0)
+                    {
+                        ensemble.EarthVelocityData.VelocityVectors[x].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
+                    }
+                    else
+                    {
+                        ensemble.EarthVelocityData.VelocityVectors[x].DirectionYNorth = accumDirYNorth[x] / dirCountYNorth[x];
+                    }
                 }
             }
 

@@ -35,6 +35,7 @@
  * 03/14/2013      RC          2.19       Initial coding
  * 07/22/2014      RC          2.23.0     Added Port property.
  * 09/26/2014      RC          3.0.2      Changed values to unit.
+ * 04/16/2015      RC          3.0.4      Added TimerInterval for the ping timing.
  * 
  */
 
@@ -83,6 +84,11 @@ namespace RTI
         public uint Port { get; set; }
 
         /// <summary>
+        /// The timing interval for checking for ensembles.
+        /// </summary>
+        public double TimerInterval { get; set; }
+
+        /// <summary>
         /// Return the address as a string.
         /// A.B.C.D
         /// </summary>
@@ -108,6 +114,7 @@ namespace RTI
             IpAddrC = 1;
             IpAddrD = 130;
             Port = 257;
+            TimerInterval = 1000;
         }
 
         #endregion

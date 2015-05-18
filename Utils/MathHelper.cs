@@ -54,6 +54,7 @@
  * 07/28/2014      RC          2.23.0     Added a try/catch block in SubArray().
  * 10/17/2014      RC          3.0.2      Added milliseconds in TimeSpanPrettyFormat().
  * 10/31/2014      RC          3.0.2      Added DoubleToByteArray().
+ * 04/29/2015      RC          3.0.4      In CalculateDirection(), make the value between 0 and 360.
  * 
  * 
  */
@@ -248,13 +249,23 @@ namespace RTI
         /// <summary>
         /// Calculate the Direction of the velocities given.
         /// Value will be returned in degrees.  Give the Y axis as the first parameter.
+        /// Make the value between 0 and 360.
         /// </summary>
         /// <param name="y">Y axis velocity value.</param>
         /// <param name="x">X axis velocity value.</param>
         /// <returns>Direction of the velocity return in degrees.</returns>
         public static double CalculateDirection(double y, double x)
         {
-            return (Math.Atan2(y, x)) * (180.0 / Math.PI);
+            double dir = (Math.Atan2(y, x)) * (180.0 / Math.PI);
+
+            // The range is -180 to 180
+            // This moves it to 0 to 360
+            if (dir < 0.0)
+            {
+                dir = 360.0 + dir;
+            }
+
+            return dir;
         }
 
         /// <summary>

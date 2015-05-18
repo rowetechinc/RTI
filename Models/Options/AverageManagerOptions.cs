@@ -59,9 +59,19 @@ namespace RTI
         public const bool DEFAULT_IS_RECORDING = false;
 
         /// <summary>
-        /// Default value if averaging by number of samples or a timer.
+        /// Default value if averaging by number of samples.
         /// </summary>
-        public const bool DEFAULT_IS_AVG_BY_NUM_SAMPLES = true;
+        public const bool DEFAULT_IS_AVG_BY_NUM_SAMPLES = false;
+
+        /// <summary>
+        /// Default value if averaging by timer.
+        /// </summary>
+        public const bool DEFAULT_IS_AVG_BY_TIME = false;
+
+        /// <summary>
+        /// Default value if running averaging.
+        /// </summary>
+        public const bool DEFAULT_IS_AVG_RUNNING = true;
 
         /// <summary>
         /// Default number of samples if a bad number
@@ -208,6 +218,16 @@ namespace RTI
         public bool IsAvgByNumSamples { get; set; }
 
         /// <summary>
+        /// If this is set to true, then it will average based off timed event.  
+        /// </summary>
+        public bool IsAvgByTimer { get; set; }
+
+        /// <summary>
+        /// Flag if a running average.
+        /// </summary>
+        public bool IsAvgRunning { get; set; }
+
+        /// <summary>
         /// Number of samples averaged together.
         /// </summary>
         public int NumSamples { get; set; }
@@ -219,9 +239,9 @@ namespace RTI
         public uint TimerMilliseconds { get; set; }
 
         /// <summary>
-        /// Flag if a running average.
+        /// Flag if the sample averaging is running average.
         /// </summary>
-        public bool IsRunningAverage { get; set; }
+        public bool IsSampleRunningAverage { get; set; }
 
         /// <summary>
         /// Set flag if reference layer averaging.
@@ -346,11 +366,13 @@ namespace RTI
         {
             // These must be set after the averagers are created
             IsRecording = DEFAULT_IS_RECORDING;
-            IsRunningAverage = DEFAULT_IS_RUNNING_AVG;
+            IsAvgRunning = DEFAULT_IS_AVG_RUNNING;
+            IsAvgByNumSamples = DEFAULT_IS_AVG_BY_NUM_SAMPLES;
+            IsAvgByTimer = DEFAULT_IS_AVG_BY_TIME;
+            IsSampleRunningAverage = DEFAULT_IS_RUNNING_AVG;
             NumSamples = DEFAULT_NUM_SAMPLES;
             MinRefLayer = DEFAULT_MIN_REF_LAYER;
             MaxRefLayer = DEFAULT_MAX_REF_LAYER;
-            IsAvgByNumSamples = DEFAULT_IS_AVG_BY_NUM_SAMPLES;
             TimerMilliseconds = DEFAULT_TIMER_MILLISEC;
             IsReferenceLayerAveraging = DEFAULT_IS_REF_LAYER_AVG;
             IsCorrelationAveraging = DEFAULT_IS_CORR_AVG;

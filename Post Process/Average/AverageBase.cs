@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 01/04/2013      RC          2.17       Initial coding
  * 01/07/2013      RC          2.17       Added duplicate functions calls here.
+ * 04/16/2015      RC          3.0.4      Set the average velocity to bad if nothing is accumulated.
  * 
  */
 
@@ -128,6 +129,15 @@ namespace RTI
             /// Set wheter the average will be a running average or an
             /// average with X number of samples have been received.
             /// 
+            /// A running average will continously average the data until it is cleared.
+            /// 
+            /// </summary>
+            public bool IsRunningAverage { get; set; }
+
+            /// <summary>
+            /// Set wheter the sample averaging average will be a running average or an
+            /// average with X number of samples have been received.
+            /// 
             /// A running average will average together NumSamples together.
             /// As a new ensemble is added, the last one is removed and the 
             /// average is taken.  This will publish an averaged ensemble
@@ -138,7 +148,7 @@ namespace RTI
             /// It will then wait again for NumSamples.  This will publish an
             /// averaged ensemble after NumSamples have been received.
             /// </summary>
-            public bool IsRunningAverage { get; set; }
+            public bool IsSampleRunningAverage { get; set; }
 
             /// <summary>
             /// Get or set the scale for the average value.  This value should be
@@ -348,11 +358,14 @@ namespace RTI
                             if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_0_INDEX] > 0)
                             {
                                 B0 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_0_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_0_INDEX];       // Beam 0 Average
+                                // Set results
+                                B0 *= scale;
+                                result[bin, DataSet.Ensemble.BEAM_0_INDEX] = B0;
                             }
-
-                            // Set results
-                            B0 *= scale;
-                            result[bin, DataSet.Ensemble.BEAM_0_INDEX] = B0;
+                            else
+                            {
+                                result[bin, DataSet.Ensemble.BEAM_0_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
                         }
 
                         // Check if it has at least 2 beams
@@ -362,11 +375,15 @@ namespace RTI
                             if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_1_INDEX] > 0)
                             {
                                 B1 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_1_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_1_INDEX];       // Beam 1 Average
-                            }
 
-                            // Set Results
-                            B1 *= scale;
-                            result[bin, DataSet.Ensemble.BEAM_1_INDEX] = B1;
+                                // Set Results
+                                B1 *= scale;
+                                result[bin, DataSet.Ensemble.BEAM_1_INDEX] = B1;
+                            }
+                            else
+                            {
+                                result[bin, DataSet.Ensemble.BEAM_1_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
                         }
 
                         // Check if it has a least 3 beams
@@ -376,11 +393,15 @@ namespace RTI
                             if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_2_INDEX] > 0)
                             {
                                 B2 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_2_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_2_INDEX];       // Beam 2 Average
+                                
+                                // Set Results
+                                B2 *= scale;
+                                result[bin, DataSet.Ensemble.BEAM_2_INDEX] = B2;
                             }
-
-                            // Set Results
-                            B2 *= scale;
-                            result[bin, DataSet.Ensemble.BEAM_2_INDEX] = B2;
+                            else
+                            {
+                                result[bin, DataSet.Ensemble.BEAM_2_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
                         }
 
                         // Check if it has a least 4 beams
@@ -390,11 +411,15 @@ namespace RTI
                             if (accumData.AvgCount[bin, DataSet.Ensemble.BEAM_3_INDEX] > 0)
                             {
                                 B3 = accumData.AvgAccum[bin, DataSet.Ensemble.BEAM_3_INDEX] / accumData.AvgCount[bin, DataSet.Ensemble.BEAM_3_INDEX];       // Beam 3 Average
-                            }
 
-                            // Set Result
-                            B3 *= scale;
-                            result[bin, DataSet.Ensemble.BEAM_3_INDEX] = B3;
+                                // Set Result
+                                B3 *= scale;
+                                result[bin, DataSet.Ensemble.BEAM_3_INDEX] = B3;
+                            }
+                            else
+                            {
+                                result[bin, DataSet.Ensemble.BEAM_3_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
                         }
                     }
                 }

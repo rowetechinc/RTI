@@ -32,7 +32,7 @@
  * -----------------------------------------------------------------
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 06/25/2013      RC          2.23.0     Initial coding
+ * 06/27/2013      RC          2.23.0     Initial coding
  * 
  */
 
@@ -47,16 +47,16 @@ namespace RTI
         using System.Text;
 
         /// <summary>
-        /// Average the Earth Velocity data.  This will take the Earth Velocity data
+        /// Average the Instrument Velocity data.  This will take the Earth Velocity data
         /// and continuously average the data.  
         /// </summary>
-        public class AverageEarthVelocity : AverageBase
+        public class AverageInstrumentVelocity : AverageBase
         {
 
             /// <summary>
             /// Initialize the values.
             /// </summary>
-            public AverageEarthVelocity() :
+            public AverageInstrumentVelocity() :
                 base()
             {
 
@@ -64,21 +64,21 @@ namespace RTI
 
             /// <summary>
             /// Add the ensemble data to the accumulator.  This will accumulate all the
-            /// Earth Velocity data into a list.  If it is a running average, it will remove
+            /// Instrument Velocity data into a list.  If it is a running average, it will remove
             /// the first item in the list as needed.
             /// </summary>
             /// <param name="ensemble">Ensemble to accumulate.</param>
             public override void AddEnsemble(DataSet.Ensemble ensemble)
             {
                 // Accumulate the data
-                if (ensemble.IsEarthVelocityAvail)
+                if (ensemble.IsInstrumentVelocityAvail)
                 {
-                    _accumData.Add(ensemble.EarthVelocityData.EarthVelocityData);
+                    _accumData.Add(ensemble.InstrumentVelocityData.InstrumentVelocityData);
                 }
             }
 
             /// <summary>
-            /// Set the average Earth Velocity data to the Earth Velocity data set array.
+            /// Set the average Instrument Velocity data to the Instrument Velocity data set array.
             /// This will replace the array with an averaged array for the accumulated data.
             /// If this is not a running average, it will clear the accumulator.
             /// </summary>
@@ -86,9 +86,9 @@ namespace RTI
             /// <param name="scale">Scale value to multiply to the averaged value.</param>
             public override void SetAverage(ref DataSet.Ensemble ensemble, float scale)
             {
-                if (ensemble.IsEarthVelocityAvail)
+                if (ensemble.IsInstrumentVelocityAvail)
                 {
-                    ensemble.EarthVelocityData.EarthVelocityData = GetAverage(scale);
+                    ensemble.InstrumentVelocityData.InstrumentVelocityData = GetAverage(scale);
                 }
             }
 

@@ -39,6 +39,7 @@
  * 03/07/2013      RC          2.18       In CreateVelocityVector(), create the VelocityVector before setting the values.
  * 03/22/2013      RC          2.19       Fixed bug in GenerateAmplitudeVectors() where the VelociytVector was not created.      
  * 07/29/2014      RC          2.23.0     Added Instrument Velocity Vectors.  Made specific Earth and Instrument functions.
+ * 04/16/2015      RC          3.0.4      Check how many beams in GenerateInstrumentVectors().
  * 
  */
 
@@ -315,15 +316,29 @@ namespace RTI
                         // Create the object
                         ensemble.InstrumentVelocityData.VelocityVectors[bin] = new VelocityVector();
 
+                        float east = DataSet.Ensemble.BAD_VELOCITY;
+                        float north = DataSet.Ensemble.BAD_VELOCITY;
+                        float vertical = DataSet.Ensemble.BAD_VELOCITY;
+
                         // Get the velocity values
-                        float east = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX];
-                        float north = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX];
-                        float vertical = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX];
+                        if (ensemble.EnsembleData.NumBeams > 0)
+                        {
+                            east = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX];
+                        }
+
+                        if (ensemble.EnsembleData.NumBeams > 1)
+                        {
+                            north = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX];
+                        }
+
+                        if (ensemble.EnsembleData.NumBeams > 2)
+                        {
+                            vertical = ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX];
+                        }
 
                         // If any of the velocities are bad, then set bad velocities for all the velocities and move to the next bin
                         if (east == DataSet.Ensemble.BAD_VELOCITY ||
-                            north == DataSet.Ensemble.BAD_VELOCITY ||
-                            vertical == DataSet.Ensemble.BAD_VELOCITY)
+                            north == DataSet.Ensemble.BAD_VELOCITY)
                         {
                             ensemble.InstrumentVelocityData.VelocityVectors[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
                             ensemble.InstrumentVelocityData.VelocityVectors[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;

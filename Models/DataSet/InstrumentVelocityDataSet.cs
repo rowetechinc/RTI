@@ -51,6 +51,7 @@
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 05/07/2014      RC          2.21.4     Fixed bug in DecodePd0Ensemble() looking for bad velocity.
  * 07/29/2014      RC          2.23.0     Added VelocityVector.
+ * 04/16/2015      RC          3.0.4      Check for the number of beams in IsBinGood().
  * 
  */
 
@@ -251,14 +252,22 @@ namespace RTI
             public bool IsBinGood(int bin, bool allow3BeamSolution = true)
             {
                 // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
-                if (InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                if (InstrumentVelocityData.GetLength(1) > 3 && InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
                 {
                     return false;
                 }
 
-                if (InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                // Check if any of the beam are bad
+                if (InstrumentVelocityData.GetLength(1) > 0 && InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                {
+                    return false;
+                }
+
+                if (InstrumentVelocityData.GetLength(1) > 1 && InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                {
+                    return false;
+                }
+                if (InstrumentVelocityData.GetLength(1) > 2 && InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                 {
                     return false;
                 }

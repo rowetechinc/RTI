@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 08/29/2014      RC          3.0.1      Initial coding
+ * 07/27/2015      RC          3.0.5      Set the project name.
  *       
  * 
  */
@@ -81,6 +82,11 @@ namespace RTI
         /// </summary>
         public bool IsLooping { get; set; }
 
+        /// <summary>
+        /// Project name.
+        /// </summary>
+        public string Name { get; set; }
+
         #endregion
 
         /// <summary>
@@ -92,6 +98,8 @@ namespace RTI
             _project = project;
             PlaybackIndex = MIN_INDEX;
             IsLooping = false;
+
+            Name = project.ProjectName;
 
             // Set the number of ensembles from the project.
             GetNumberOfEnsembles();

@@ -39,6 +39,7 @@
  * 08/13/2013      RC          2.19.4     In SetVelocitiesBad(), also set the VelocityVector to bad velocity if it exist.
  * 10/03/2013      RC          2.20.2     Fixed bug in AddNmea() where the datatype was not set correctly.  It is a byte type.
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
+ * 08/13/2015      RC          3.0.5      In SetVelocitiesBad(), check the VelocityVectors size.
  * 
  */
 
@@ -476,7 +477,7 @@ namespace RTI
                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
 
                 // Velocity Vectors
-                if (ensemble.EarthVelocityData.IsVelocityVectorAvail)
+                if (ensemble.EarthVelocityData.IsVelocityVectorAvail && bin < ensemble.EarthVelocityData.VelocityVectors.Length)
                 {
                     ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
                 }

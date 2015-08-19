@@ -1044,6 +1044,8 @@ namespace RTI
         /// Download the file from the serial device using XMODE-CRC.
         /// Set parseData to determine what to do with the downloaded data.
         /// 
+        /// About 3.5mb per minute download speed at 921600 baud rate.
+        /// 
         /// If parseData is TRUE:
         /// The data will be published to the event: ReceiveAdcpSerialDataEvent.
         /// If parseData is FALSE:

@@ -77,6 +77,7 @@
  * 08/09/2013      RC          2.19.4     Added a soft BREAK in SendBreak() for connections that can not handle hard BREAKs.
  * 09/25/2013      RC          2.20.1     In SendDataWaitReply() check the response if it is a BREAK and handle differently.
  * 08/05/2014      RC          2.23.0     Force the thread to shutdown by sending an abort in Dispose().
+ * 05/29/2015      RC          3.0.5      Moved displaying of the data to move the bottom.
  * 
  */
 
@@ -264,9 +265,9 @@ namespace RTI
                 _receiveBufferString = value;
 
                 // Then clear some of the buffer
-                if (_receiveBufferString.Length > MAX_DISPLAY_BUFFER)
+                if (_receiveBufferString.Length > 16000)
                 {
-                    _receiveBufferString = _receiveBufferString.Substring(0, MAX_DISPLAY_BUFFER);
+                    _receiveBufferString = _receiveBufferString.Remove(0, _receiveBufferString.Length - MAX_DISPLAY_BUFFER);
                 }
             }
         }
@@ -696,7 +697,8 @@ namespace RTI
         {
             //Debug.Write(data);
             // Add data to the buffer
-            ReceiveBufferString = data + ReceiveBufferString;
+            //ReceiveBufferString = data + ReceiveBufferString;
+            ReceiveBufferString += data;
 
             // Set the string received so if trying to
             // validate a message sent, this can check the response.
@@ -755,7 +757,10 @@ namespace RTI
 
                     _isSendingData = true;
                     _serialPort.Write(data);
-                    ReceiveBufferString = data + ReceiveBufferString;
+
+
+                    //ReceiveBufferString = data + ReceiveBufferString;
+                    ReceiveBufferString += data;
 
                     // Wait for 485 response and read thread to read response
                     Thread.Sleep(WAIT_STATE);
@@ -786,7 +791,9 @@ namespace RTI
                 {
                     _isSendingData = true;
                     _serialPort.Write(buffer, offset, count);
-                    ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
+                    
+                    //ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
+                    ReceiveBufferString += System.Text.ASCIIEncoding.ASCII.GetString(buffer);
 
                     // Wait for 485 response and read thread to read response
                     Thread.Sleep(WAIT_STATE);

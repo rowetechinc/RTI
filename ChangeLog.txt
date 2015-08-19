@@ -1,5 +1,37 @@
 RTI Changelog
 
+RTI-3.0.5
+ - Changed the version number.
+ - AdcpCommands, added DiagSamp.
+ - SerialConnection, moved displaying of the data to move the bottom.
+ - In PD4_5Codec, added WaitOne(60000) to wakeup and check if we should close.
+ - In FilePlayback, removed the file from the constructor and moved it to FindEnsembles().
+ - Redid AdcpBinaryCodec.  Currently calling it AdcpBinaryCodec1.  Made it not use a thread.
+ - In AdcpDvlCodec, removed the recusive call in ProcessData().
+ - In PD4_5Codec, ensure the codec is shutdown properly.
+ - In Pd0Codec, ensure the codec is shutdown properly.
+ - In AdcpCodec, made all the incoming data run in a task to seperate threads.
+ - In PD3Codec, PD4_5Codec and AdcpBinaryCodec, removed the thread.
+ - Made all the codecs there own threads.
+ - In PD4_5Codec, set the number of beams and the ensemble number.
+ - In PD6_13Codec, fixed codec to also do playback and use the NMEA data.
+ - In PD4_5Codec, fixed setting the beam numbers.
+ - In IPlayback, added Name of file playing back.
+ - In PlaybackFile, set the file name playing back.  
+ - In ProjectPlayback, set the project name.
+ - In AdcpCodec, check when to clear the codecs based on how many ensembles found.
+ - In CsvExporterWriter, make the number format for decimal place US so decimals are not commas.
+ - In SerialNumber, added a base hardware list.
+ - In PD6_13Codec, verfiy the sentences are correct before processing them.
+ - In IDvlData, set the NUM_ELEM as const.
+ - In FilePlayback, read the file with a smaller buffer so large files will not take all the RAM in FindEnsembles().
+ - In EnsembleDataSet, added Try/Catch block in Decode().
+ - In PD4_5Codec, added _headerStartLock in ClearIncomingData().
+ - In EnsembleHelper, in SetVelocitiesBad(), check the VelocityVectors size.
+ - In PD4/5, PD0, DVL codec, added complete event.
+ - In AdcpCodec, check for complete event for all the codec.
+
+
 RTI-3.0.4
  - Changed the version number.
  - In BottomTrackDataSet, added GetRangeBin().

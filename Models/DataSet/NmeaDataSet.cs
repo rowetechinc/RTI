@@ -434,6 +434,41 @@ namespace RTI
             }
 
             /// <summary>
+            /// If there is existing NMEA data, this will combine the 
+            /// data.  This will take the existing data and add it to a
+            /// buffer.  It will then add the new data to the buffer and
+            /// parse the buffer.
+            /// </summary>
+            /// <param name="nmeaData">New data to combine to this dataset.</param>
+            /// <param name="maxSentences">Maximum number of sentences to have in the data set.</param>
+            public void MergeNmeaData(string nmeaData, int maxSentences)
+            {
+                StringBuilder builder = new StringBuilder();
+
+                if (NmeaStrings != null)
+                {
+                    // Remove the oldest messages
+                    // Plus 1 to include the new message that will be added
+                    while(NmeaStrings.Count > maxSentences + 1)
+                    {
+                        NmeaStrings.RemoveAt(0);
+                    }
+
+                    // Append all the NMEA data to a string
+                    for (int x = 0; x < NmeaStrings.Count; x++)
+                    {
+                        builder.Append(NmeaStrings[x]);
+                    }
+                }
+
+                // Add the incoming NMEA data to existing data
+                builder.Append(nmeaData);
+
+                // Parse the data
+                SetNmeaStringArray(builder.ToString());
+            }
+
+            /// <summary>
             /// Find all the NMEA strings in the data.
             /// </summary>
             /// <param name="nmeaData">Byte array containing NMEA information.</param>

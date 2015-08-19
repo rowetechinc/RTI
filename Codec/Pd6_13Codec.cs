@@ -40,6 +40,9 @@
  *                                         Fixed bug in SetBE() setting the earth bottom track velocities.
  * 10/02/2014      RC          3.0.2      Fixed bug in FindSentence() when bad data is given.
  * 10/27/2014      RC          3.0.2      Fixed bug in FindSentence() removing bad characters.
+ * 07/09/2015      RC          3.0.5      Mode the codec a thread.
+ * 07/20/2015      RC          3.0.5      Fixed codec to also do playback and use the NMEA data.
+ * 08/11/2015      RC          3.0.5      Verfiy the sentences are correct before processing them.
  * 
  * 
  * 
@@ -110,6 +113,22 @@ namespace RTI
         /// </summary>
         private string _buffer;
 
+        /// <summary>
+        /// Thread to decode incoming data.
+        /// </summary>
+        private Thread _processDataThread;
+
+        /// <summary>
+        /// Flag used to stop the thread.
+        /// </summary>
+        private bool _continue;
+
+        /// <summary>
+        /// Event to cause the thread
+        /// to go to sleep or wakeup.
+        /// </summary>
+        private EventWaitHandle _eventWaitData;
+
         #region Previous Values
 
         /// <summary>
@@ -173,6 +192,18 @@ namespace RTI
         private DataSet.Ensemble _prevEns;
 
         /// <summary>
+        /// Flag if the previous sentence was a NMEA sentence.
+        /// This is used to keep track of new ensembles.
+        /// </summary>
+        private bool _prevNMEA = false;
+
+        /// <summary>
+        /// Previous Date and time.  This is used to
+        /// keep track of the ping time.
+        /// </summary>
+        private DateTime _prevDateAndTime;
+
+        /// <summary>
         /// Data count.
         /// </summary>
         private int _count;
@@ -190,6 +221,12 @@ namespace RTI
 
             // Clear the values
             Clear();
+
+            // Initialize the thread
+            _continue = true;
+            _eventWaitData = new EventWaitHandle(false, EventResetMode.AutoReset);
+            _processDataThread = new Thread(ProcessDataThread);
+            _processDataThread.Start();
         }
 
         /// <summary>
@@ -197,7 +234,11 @@ namespace RTI
         /// </summary>
         public void Dispose()
         {
+            StopThread();
+
             ClearIncomingData();
+
+            _eventWaitData.Dispose();
         }
 
         #region Incomming Data
@@ -220,8 +261,8 @@ namespace RTI
                     _buffer += rcvData;
                 }
 
-                // Start to process the data
-                ProcessData();
+                // Wake up the thread to process data
+                _eventWaitData.Set();
             }
         }
 
@@ -270,86 +311,80 @@ namespace RTI
         /// of a sentence.  Remove the string of a complete
         /// sentence.
         /// </summary>
-        private void ProcessData()
+        private void ProcessDataThread()
         {
-            // Find a sentence in the buffer
-            string sent = FindSentence();
-
-            // If one is found, process the data
-            if (!string.IsNullOrEmpty(sent))
+            while (_continue)
             {
-                // Process sentence
-                ProcessSentence(sent);
-            }
+                try
+                {
+                    // Block until awoken when data is received
+                    // Timeout every 60 seconds to see if shutdown occured
+                    _eventWaitData.WaitOne();
 
-            // Check if we should continue processing data
-            if (_buffer.Length > PD6_MIN && _buffer.Contains(":"))
-            {
-                ProcessData();
+                    // If wakeup was called to kill thread
+                    if (!_continue)
+                    {
+                        return;
+                    }
+
+
+                    string bufferCopy;
+                    lock (_bufferLock)
+                    {
+                        // Copy the buffer and clear it
+                        bufferCopy = _buffer;
+                        _buffer = "";
+                    }
+                    if (bufferCopy.Length > 0)
+                    {
+                        using (var reader = new System.IO.StringReader(bufferCopy))
+                        {
+                            string line;
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                ProcessSentence(line);
+                            }
+                        }
+                    }
+
+                }
+                catch (ThreadAbortException)
+                {
+                    // Thread is aborted to stop processing
+                    return;
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error processing binary codec data.", e);
+                    return;
+                }
+
+                // Send an event that processing is complete
+                if (ProcessDataCompleteEvent != null)
+                {
+                    ProcessDataCompleteEvent();
+                }
             }
         }
 
         /// <summary>
-        /// Find a sentence in 
-        /// the buffer.  The sentence will start with a colon.
-        /// If one is found return it as a string.
+        /// Stop the thread.
         /// </summary>
-        /// <returns>Sentence found in buffer.</returns>
-        private string FindSentence()
+        private void StopThread()
         {
+            _continue = false;
 
-            string sent = "";
-            lock (_bufferLock)
+            // Wake up the thread to stop thread
+            _eventWaitData.Set();
+            //_eventWaitData.Dispose();
+
+            try
             {
-                try
-                {
-                    // Remove everything to first ID
-                    int begin = _buffer.IndexOf(":");
-                    if (begin > 0)
-                    {
-                        _buffer = _buffer.Remove(0, begin);
-                    }
-
-                    // Find the next start sentence
-                    int nextSentLoc = 0;
-                    if (begin >= 0 && _buffer.Length > begin + 1)
-                    {
-                        nextSentLoc = _buffer.IndexOf("\r", begin + 1);
-                    }
-
-                    // If another sentence is found, process the current sentence
-                    if (nextSentLoc > 0)
-                    {
-                        sent = _buffer.Substring(0, nextSentLoc);           // Get the sentence
-
-                        if (sent.Length > 0)
-                        {
-                            _buffer = _buffer.Remove(0, sent.Length);      // Remove it from the buffer
-                        }
-
-                        // Remove any trailing new lines
-                        sent = sent.TrimEnd(REMOVE_END);
-                    }
-
-                    // Ensure buffer does not overflow
-                    if (_buffer.Length > MAX_BUFFER_SIZE)
-                    {
-                        _buffer = _buffer.Substring(_buffer.Length - MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
-                    }
-
-                    // Sentence not found so remove the first char
-                    if (string.IsNullOrEmpty(sent) && _buffer.Length > 0)
-                    {
-                        _buffer = _buffer.Remove(0);
-                    }
-                }
-                catch (Exception e)
-                {
-                    log.Error("Error finding a sentence", e);
-                }
+                // Force the thread to stop
+                //_processDataThread.Abort();
+                _processDataThread.Join(1000);
             }
-
-            return sent;
+            catch (Exception) { }
         }
 
         /// <summary>
@@ -372,9 +407,24 @@ namespace RTI
             bool isBS = false;
             bool isBE = false;
             bool isBD = false;
+            bool isNMEA = false;
 
             try
             {
+                // If the previous was a NMEA and the new sentence is not
+                // NMEA data, then a new ensemble will need to be created.
+                if (sentence.Contains("$"))
+                {
+                    isNMEA = true;
+                }
+                // previous was NMEA and current one is not NMEA
+                if (_prevNMEA && !isNMEA)
+                {
+                    _prevEns = new DataSet.Ensemble();
+                }
+                // Reset the values
+                _prevNMEA = isNMEA;
+
                 // Create the DVL dataset if it does not exist
                 if (!_prevEns.IsDvlDataAvail)
                 {
@@ -390,7 +440,7 @@ namespace RTI
                 }
 
                 // Add Ensemble DataSet
-                _prevEns.EnsembleData.EnsembleNumber = _count++;
+                //_prevEns.EnsembleData.EnsembleNumber = _count++;
                 //_prevEns.EnsembleData.SetTime();
                 _prevEns.EnsembleData.SysSerialNumber = SerialNumber.DVL;
                 _prevEns.EnsembleData.NumBeams = 4;
@@ -505,6 +555,16 @@ namespace RTI
                     isBD = true;
                 }
 
+                // NMEA
+                if(sentence.Contains('$'))
+                {
+                    // Set NMEA
+                    SetNmea(sentence);
+
+                    // Set flag that this data type was found
+                    isNMEA = true;
+                }
+
                 // Send data to subscriber
                 // SA
                 if (isSA)
@@ -561,6 +621,11 @@ namespace RTI
                 {
                     SendData(_prevBD);
                 }
+                // NMEA
+                if(isNMEA)
+                {
+                    //SendData(_prevNMEA);
+                }
             }
             catch(Exception e)
             {
@@ -579,6 +644,12 @@ namespace RTI
         /// <param name="sentence">Message with the SA data.</param>
         private void SetSA(string sentence)
         {
+            // Verify byte count
+            if(sentence.Count(x => x == ',') != SA.NUM_ELEM-1)
+            {
+                return;
+            }
+
             var sa = new SA(sentence);
 
             if(sa != null)
@@ -624,6 +695,12 @@ namespace RTI
         /// <param name="sentence">Message with the TS data.</param>
         private void SetTS(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != TS.NUM_ELEM-1)
+            {
+                return;
+            }
+
             var ts = new TS(sentence);
 
             if (ts != null)
@@ -635,10 +712,11 @@ namespace RTI
                     _prevEns.IsDvlDataAvail = true;
                 }
                 // Get the first and last date and time to determine the ping time
-                var diffTime = ts.DateAndTime - _prevEns.DvlData.DateAndTime;
+                var diffTime = ts.DateAndTime - _prevDateAndTime;
                 float pingTime = (float)diffTime.TotalSeconds;
 
                 _prevEns.DvlData.DateAndTime = ts.DateAndTime;
+                _prevDateAndTime = ts.DateAndTime;
                 _prevEns.DvlData.Salinity = ts.Salinity;
                 _prevEns.DvlData.WaterTemp = ts.Temperature;
                 _prevEns.DvlData.TransducerDepth = ts.DepthOfTransducer;
@@ -679,6 +757,7 @@ namespace RTI
                     _prevEns.IsEnsembleAvail = true;
                 }
                 _prevEns.EnsembleData.SetTime(ts.DateAndTime);
+                _prevEns.EnsembleData.EnsembleNumber = _count++;
             }
 
             _prevTS = ts;
@@ -690,6 +769,12 @@ namespace RTI
         /// <param name="sentence">Message with the RA data.</param>
         private void SetRA(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != RA.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var ra = new RA(sentence);
 
             if (ra != null)
@@ -736,6 +821,12 @@ namespace RTI
         /// <param name="sentence">Message with the WI data.</param>
         private void SetWI(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != WI.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var wi = new WI(sentence);
 
             if (wi != null)
@@ -811,6 +902,12 @@ namespace RTI
         /// <param name="sentence">Message with the WS data.</param>
         private void SetWS(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != WS.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var ws = new WS(sentence);
 
             if (ws != null)
@@ -865,6 +962,12 @@ namespace RTI
         /// <param name="sentence">Message with the WE data.</param>
         private void SetWE(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != WE.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var we = new WE(sentence);
 
             if (we != null)
@@ -929,6 +1032,12 @@ namespace RTI
         /// <param name="sentence">Message with the WD data.</param>
         private void SetWD(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != WD.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var wd = new WD(sentence);
 
             if (wd != null)
@@ -971,6 +1080,12 @@ namespace RTI
         /// <param name="sentence">Message with the BI data.</param>
         private void SetBI(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != BI.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var bi = new BI(sentence);
 
             if (bi != null)
@@ -1047,6 +1162,12 @@ namespace RTI
         /// <param name="sentence">Message with the BS data.</param>
         private void SetBS(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != BS.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var bs = new BS(sentence);
 
             if (bs != null)
@@ -1101,6 +1222,12 @@ namespace RTI
         /// <param name="sentence">Message with the BE data.</param>
         private void SetBE(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != BE.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var be = new BE(sentence);
 
             if (be != null)
@@ -1166,6 +1293,12 @@ namespace RTI
         /// <param name="sentence">Message with the BD data.</param>
         private void SetBD(string sentence)
         {
+            // Verify byte count
+            if (sentence.Count(x => x == ',') != BD.NUM_ELEM - 1)
+            {
+                return;
+            }
+
             var bd = new BD(sentence);
 
             if (bd != null)
@@ -1184,6 +1317,26 @@ namespace RTI
             }
 
             _prevBD = bd;
+        }
+
+        /// <summary>
+        /// Add the NMEA data to the dataset.
+        /// </summary>
+        /// <param name="sentence">NMEA data to add to the dataset.</param>
+        private void SetNmea(string sentence)
+        {
+            if (_prevEns.NmeaData == null)
+            {
+                _prevEns.NmeaData = new DataSet.NmeaDataSet(sentence);
+                _prevEns.IsNmeaAvail = true;
+            }
+            else
+            {
+                // Add NMEA data
+                // Max of 15 NMEA messages per ensemble
+                // This will remove out the old data
+                _prevEns.NmeaData.MergeNmeaData(sentence, 15);
+            }
         }
 
         #endregion
@@ -1229,6 +1382,25 @@ namespace RTI
         /// adcpBinaryCodec.ProcessDataEvent -= (method to call)
         /// </summary>
         public event ProcessDataEventHandler ProcessDataEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void ProcessDataCompleteEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when the entire file has been processed.
+        /// This event will be fired when there is no more data in the 
+        /// buffer to decode.
+        /// 
+        /// To subscribe:
+        /// adcpBinaryCodec.ProcessDataCompleteEvent += new adcpBinaryCodec.ProcessDataCompleteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// adcpBinaryCodec.ProcessDataCompleteEvent -= (method to call)
+        /// </summary>
+        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
 
         #endregion
 

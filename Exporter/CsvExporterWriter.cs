@@ -38,6 +38,7 @@
  * 10/31/2014      RC          3.0.2      Added Range Tracking dataset.
  * 02/13/2015      RC          3.0.2      Added NMEA dataset.
  * 03/18/2015      RC          3.0.3      Added GageHeight dataset.
+ * 07/27/2015      RC          3.0.5      Make the number format for decimal place US so decimals are not commas.
  * 
  */
 
@@ -45,6 +46,7 @@
 using System.IO;
 using RTI.DataSet;
 using System.Text;
+using System.Globalization;
 namespace RTI
 {
     /// <summary>
@@ -450,7 +452,7 @@ namespace RTI
 
                 sb.Append(ensemble.EnsembleData.EnsembleNumber);
                 sb.Append(",");
-                sb.Append(ensemble.EnsembleData.EnsDateTime.ToString());
+                sb.Append(ensemble.EnsembleData.EnsDateTime.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.EnsembleData.NumBins);
                 sb.Append(",");
@@ -516,31 +518,31 @@ namespace RTI
             {
                 StringBuilder sb = new StringBuilder();
 
-                sb.Append(ensemble.AncillaryData.FirstBinRange);
+                sb.Append(ensemble.AncillaryData.FirstBinRange.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.BinSize);
+                sb.Append(ensemble.AncillaryData.BinSize.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.FirstPingTime);
+                sb.Append(ensemble.AncillaryData.FirstPingTime.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.LastPingTime);
+                sb.Append(ensemble.AncillaryData.LastPingTime.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.Heading);
+                sb.Append(ensemble.AncillaryData.Heading.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.Pitch);
+                sb.Append(ensemble.AncillaryData.Pitch.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.Roll);
+                sb.Append(ensemble.AncillaryData.Roll.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.WaterTemp);
+                sb.Append(ensemble.AncillaryData.WaterTemp.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.SystemTemp);
+                sb.Append(ensemble.AncillaryData.SystemTemp.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.Salinity);
+                sb.Append(ensemble.AncillaryData.Salinity.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.Pressure);
+                sb.Append(ensemble.AncillaryData.Pressure.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.TransducerDepth);
+                sb.Append(ensemble.AncillaryData.TransducerDepth.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.AncillaryData.SpeedOfSound);
+                sb.Append(ensemble.AncillaryData.SpeedOfSound.ToString(new CultureInfo("en-US")));
 
                 return sb.ToString();
             }
@@ -588,7 +590,7 @@ namespace RTI
                 {
                     for (int beam = 0; beam < ensemble.BeamVelocityData.BeamVelocityData.GetLength(1); beam++)
                     {
-                        sb.Append(string.Format("{0},", ensemble.BeamVelocityData.BeamVelocityData[bin, beam]));
+                        sb.Append(string.Format("{0},", ensemble.BeamVelocityData.BeamVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
                     // If a vertical beam
@@ -653,7 +655,7 @@ namespace RTI
                 {
                     for (int beam = 0; beam < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(1); beam++)
                     {
-                        sb.Append(string.Format("{0},", ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, beam]));
+                        sb.Append(string.Format("{0},", ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
                     // If a vertical beam
@@ -715,7 +717,7 @@ namespace RTI
                 {
                     for (int beam = 0; beam < ensemble.EarthVelocityData.EarthVelocityData.GetLength(1); beam++)
                     {
-                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.EarthVelocityData[bin, beam]));
+                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.EarthVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
                     // If a vertical beam
@@ -780,7 +782,7 @@ namespace RTI
                 {
                     for (int beam = 0; beam < ensemble.CorrelationData.CorrelationData.GetLength(1); beam++)
                     {
-                        sb.Append(string.Format("{0},", ensemble.CorrelationData.CorrelationData[bin, beam]));
+                        sb.Append(string.Format("{0},", ensemble.CorrelationData.CorrelationData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
                     // If a vertical beam
@@ -842,7 +844,7 @@ namespace RTI
                 {
                     for (int beam = 0; beam < ensemble.AmplitudeData.AmplitudeData.GetLength(1); beam++)
                     {
-                        sb.Append(string.Format("{0},", ensemble.AmplitudeData.AmplitudeData[bin, beam]));
+                        sb.Append(string.Format("{0},", ensemble.AmplitudeData.AmplitudeData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
                     // If a vertical beam
@@ -895,13 +897,13 @@ namespace RTI
 
             if (ensemble.IsEarthWaterMassAvail)
             {
-                sb.Append(ensemble.EarthWaterMassData.WaterMassDepthLayer);
+                sb.Append(ensemble.EarthWaterMassData.WaterMassDepthLayer.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.EarthWaterMassData.VelocityEast);
+                sb.Append(ensemble.EarthWaterMassData.VelocityEast.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.EarthWaterMassData.VelocityNorth);
+                sb.Append(ensemble.EarthWaterMassData.VelocityNorth.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.EarthWaterMassData.VelocityVertical);
+                sb.Append(ensemble.EarthWaterMassData.VelocityVertical.ToString(new CultureInfo("en-US")));
             }
             else
             {
@@ -943,13 +945,13 @@ namespace RTI
 
             if (ensemble.IsInstrumentWaterMassAvail)
             {
-                sb.Append(ensemble.InstrumentWaterMassData.WaterMassDepthLayer);
+                sb.Append(ensemble.InstrumentWaterMassData.WaterMassDepthLayer.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.InstrumentWaterMassData.VelocityX);
+                sb.Append(ensemble.InstrumentWaterMassData.VelocityX.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.InstrumentWaterMassData.VelocityY);
+                sb.Append(ensemble.InstrumentWaterMassData.VelocityY.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.InstrumentWaterMassData.VelocityZ);
+                sb.Append(ensemble.InstrumentWaterMassData.VelocityZ.ToString(new CultureInfo("en-US")));
             }
             else
             {
@@ -1168,113 +1170,113 @@ namespace RTI
 
             if (ensemble.IsBottomTrackAvail)
             {
-                sb.Append(ensemble.BottomTrackData.FirstPingTime);
+                sb.Append(ensemble.BottomTrackData.FirstPingTime.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.LastPingTime);
+                sb.Append(ensemble.BottomTrackData.LastPingTime.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Heading);
+                sb.Append(ensemble.BottomTrackData.Heading.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Pitch);
+                sb.Append(ensemble.BottomTrackData.Pitch.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Roll);
+                sb.Append(ensemble.BottomTrackData.Roll.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.WaterTemp);
+                sb.Append(ensemble.BottomTrackData.WaterTemp.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.SystemTemp);
+                sb.Append(ensemble.BottomTrackData.SystemTemp.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Salinity);
+                sb.Append(ensemble.BottomTrackData.Salinity.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Pressure);
+                sb.Append(ensemble.BottomTrackData.Pressure.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.TransducerDepth);
+                sb.Append(ensemble.BottomTrackData.TransducerDepth.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.SpeedOfSound);
+                sb.Append(ensemble.BottomTrackData.SpeedOfSound.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.BottomTrackData.Status.ToString().Replace(",", ";"));        // Replace the , with ; so it does not mess up the seperation
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.NumBeams);
+                sb.Append(ensemble.BottomTrackData.NumBeams.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.ActualPingCount);
+                sb.Append(ensemble.BottomTrackData.ActualPingCount.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Range[0]);
+                sb.Append(ensemble.BottomTrackData.Range[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Range[1]);
+                sb.Append(ensemble.BottomTrackData.Range[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Range[2]);
+                sb.Append(ensemble.BottomTrackData.Range[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Range[3]);
+                sb.Append(ensemble.BottomTrackData.Range[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.SNR[0]);
+                sb.Append(ensemble.BottomTrackData.SNR[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.SNR[1]);
+                sb.Append(ensemble.BottomTrackData.SNR[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.SNR[2]);
+                sb.Append(ensemble.BottomTrackData.SNR[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.SNR[3]);
+                sb.Append(ensemble.BottomTrackData.SNR[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Amplitude[0]);
+                sb.Append(ensemble.BottomTrackData.Amplitude[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Amplitude[1]);
+                sb.Append(ensemble.BottomTrackData.Amplitude[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Amplitude[2]);
+                sb.Append(ensemble.BottomTrackData.Amplitude[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Amplitude[3]);
+                sb.Append(ensemble.BottomTrackData.Amplitude[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Correlation[0]);
+                sb.Append(ensemble.BottomTrackData.Correlation[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Correlation[1]);
+                sb.Append(ensemble.BottomTrackData.Correlation[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Correlation[2]);
+                sb.Append(ensemble.BottomTrackData.Correlation[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.Correlation[3]);
+                sb.Append(ensemble.BottomTrackData.Correlation[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamVelocity[0]);
+                sb.Append(ensemble.BottomTrackData.BeamVelocity[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamVelocity[1]);
+                sb.Append(ensemble.BottomTrackData.BeamVelocity[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamVelocity[2]);
+                sb.Append(ensemble.BottomTrackData.BeamVelocity[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamVelocity[3]);
+                sb.Append(ensemble.BottomTrackData.BeamVelocity[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamGood[0]);
+                sb.Append(ensemble.BottomTrackData.BeamGood[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamGood[1]);
+                sb.Append(ensemble.BottomTrackData.BeamGood[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamGood[2]);
+                sb.Append(ensemble.BottomTrackData.BeamGood[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.BeamGood[3]);
+                sb.Append(ensemble.BottomTrackData.BeamGood[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[0]);
+                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[1]);
+                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[2]);
+                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[3]);
+                sb.Append(ensemble.BottomTrackData.InstrumentVelocity[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentGood[0]);
+                sb.Append(ensemble.BottomTrackData.InstrumentGood[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentGood[1]);
+                sb.Append(ensemble.BottomTrackData.InstrumentGood[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentGood[2]);
+                sb.Append(ensemble.BottomTrackData.InstrumentGood[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.InstrumentGood[3]);
+                sb.Append(ensemble.BottomTrackData.InstrumentGood[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthVelocity[0]);
+                sb.Append(ensemble.BottomTrackData.EarthVelocity[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthVelocity[1]);
+                sb.Append(ensemble.BottomTrackData.EarthVelocity[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthVelocity[2]);
+                sb.Append(ensemble.BottomTrackData.EarthVelocity[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthVelocity[3]);
+                sb.Append(ensemble.BottomTrackData.EarthVelocity[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthGood[0]);
+                sb.Append(ensemble.BottomTrackData.EarthGood[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthGood[1]);
+                sb.Append(ensemble.BottomTrackData.EarthGood[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthGood[2]);
+                sb.Append(ensemble.BottomTrackData.EarthGood[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackData.EarthGood[3]);
+                sb.Append(ensemble.BottomTrackData.EarthGood[3].ToString(new CultureInfo("en-US")));
 
             }
             else
@@ -1342,65 +1344,65 @@ namespace RTI
 
             if (ensemble.IsBottomTrackEngineeringAvail)
             {
-                sb.Append(ensemble.BottomTrackEngineeringData.SamplesPerSecond);
+                sb.Append(ensemble.BottomTrackEngineeringData.SamplesPerSecond.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.SystemFreqHz);
+                sb.Append(ensemble.BottomTrackEngineeringData.SystemFreqHz.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.LagSamples);
+                sb.Append(ensemble.BottomTrackEngineeringData.LagSamples.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.CPCE);
+                sb.Append(ensemble.BottomTrackEngineeringData.CPCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.NCE);
+                sb.Append(ensemble.BottomTrackEngineeringData.NCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.RepeatN);
+                sb.Append(ensemble.BottomTrackEngineeringData.RepeatN.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[0]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[1]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[2]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[3]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbHz[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[0]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[1]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[2]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[3]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbVel[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[0]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[1]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[2]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[3]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbAmp[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[0]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[1]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[2]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[3]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbCor[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[0]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[1]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[2]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[3]);
+                sb.Append(ensemble.BottomTrackEngineeringData.AmbSNR[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[0]);
+                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[1]);
+                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[2]);
+                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[3]);
+                sb.Append(ensemble.BottomTrackEngineeringData.LagUsed[3].ToString(new CultureInfo("en-US")));
 
             }
             else
@@ -1461,63 +1463,63 @@ namespace RTI
 
             if (ensemble.IsProfileEngineeringAvail)
             {
-                sb.Append(ensemble.ProfileEngineeringData.SamplesPerSecond);
+                sb.Append(ensemble.ProfileEngineeringData.SamplesPerSecond.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.SystemFreqHz);
+                sb.Append(ensemble.ProfileEngineeringData.SystemFreqHz.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.LagSamples);
+                sb.Append(ensemble.ProfileEngineeringData.LagSamples.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.CPCE);
+                sb.Append(ensemble.ProfileEngineeringData.CPCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.NCE);
+                sb.Append(ensemble.ProfileEngineeringData.NCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.RepeatN);
+                sb.Append(ensemble.ProfileEngineeringData.RepeatN.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.PrePingGap);
+                sb.Append(ensemble.ProfileEngineeringData.PrePingGap.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.PrePingNCE);
+                sb.Append(ensemble.ProfileEngineeringData.PrePingNCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.PrePingRepeatN);
+                sb.Append(ensemble.ProfileEngineeringData.PrePingRepeatN.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.PrePingLagSamples);
+                sb.Append(ensemble.ProfileEngineeringData.PrePingLagSamples.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ProfileEngineeringData.TRHighGain);
+                sb.Append(ensemble.ProfileEngineeringData.TRHighGain.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingVel.Length > 0)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[0]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingVel.Length > 1)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[1]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingVel.Length > 2)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[2]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingVel.Length > 3)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[3]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingVel[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingCor.Length > 0)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[0]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingCor.Length > 1)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[1]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingCor.Length > 2)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[2]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingCor.Length > 3)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[3]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingCor[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingAmp.Length > 0)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[0]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingAmp.Length > 1)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[1]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingAmp.Length > 2)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[2]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.ProfileEngineeringData.PrePingAmp.Length > 3)
-                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[3]);
+                    sb.Append(ensemble.ProfileEngineeringData.PrePingAmp[3].ToString(new CultureInfo("en-US")));
             }
             else
             {
@@ -1566,29 +1568,29 @@ namespace RTI
 
             if (ensemble.IsSystemSetupAvail)
             {
-                sb.Append(ensemble.SystemSetupData.BtSamplesPerSecond);
+                sb.Append(ensemble.SystemSetupData.BtSamplesPerSecond.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.BtSystemFreqHz);
+                sb.Append(ensemble.SystemSetupData.BtSystemFreqHz.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.BtCPCE);
+                sb.Append(ensemble.SystemSetupData.BtCPCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.BtNCE);
+                sb.Append(ensemble.SystemSetupData.BtNCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.BtRepeatN);
+                sb.Append(ensemble.SystemSetupData.BtRepeatN.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.WpSamplesPerSecond);
+                sb.Append(ensemble.SystemSetupData.WpSamplesPerSecond.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.WpSystemFreqHz);
+                sb.Append(ensemble.SystemSetupData.WpSystemFreqHz.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.WpCPCE);
+                sb.Append(ensemble.SystemSetupData.WpCPCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.WpNCE);
+                sb.Append(ensemble.SystemSetupData.WpNCE.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.WpRepeatN);
+                sb.Append(ensemble.SystemSetupData.WpRepeatN.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.WpLagSamples);
+                sb.Append(ensemble.SystemSetupData.WpLagSamples.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.SystemSetupData.Voltage);
+                sb.Append(ensemble.SystemSetupData.Voltage.ToString(new CultureInfo("en-US")));
             }
             else
             {
@@ -1638,40 +1640,40 @@ namespace RTI
             if (ensemble.IsRangeTrackingAvail)
             {
                 if (ensemble.RangeTrackingData.SNR.Length > 0)
-                    sb.Append(ensemble.RangeTrackingData.SNR[0]);
+                    sb.Append(ensemble.RangeTrackingData.SNR[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.SNR.Length > 1)
-                    sb.Append(ensemble.RangeTrackingData.SNR[1]);
+                    sb.Append(ensemble.RangeTrackingData.SNR[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.SNR.Length > 2)
-                    sb.Append(ensemble.RangeTrackingData.SNR[2]);
+                    sb.Append(ensemble.RangeTrackingData.SNR[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.SNR.Length > 3)
-                    sb.Append(ensemble.RangeTrackingData.SNR[3]);
+                    sb.Append(ensemble.RangeTrackingData.SNR[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Range.Length > 0)
-                    sb.Append(ensemble.RangeTrackingData.Range[0]);
+                    sb.Append(ensemble.RangeTrackingData.Range[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Range.Length > 1)
-                    sb.Append(ensemble.RangeTrackingData.Range[1]);
+                    sb.Append(ensemble.RangeTrackingData.Range[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Range.Length > 2)
-                    sb.Append(ensemble.RangeTrackingData.Range[2]);
+                    sb.Append(ensemble.RangeTrackingData.Range[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Range.Length > 3)
-                    sb.Append(ensemble.RangeTrackingData.Range[3]);
+                    sb.Append(ensemble.RangeTrackingData.Range[3].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Pings.Length > 0)
-                    sb.Append(ensemble.RangeTrackingData.Pings[0]);
+                    sb.Append(ensemble.RangeTrackingData.Pings[0].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Pings.Length > 1)
-                    sb.Append(ensemble.RangeTrackingData.Pings[1]);
+                    sb.Append(ensemble.RangeTrackingData.Pings[1].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Pings.Length > 2)
-                    sb.Append(ensemble.RangeTrackingData.Pings[2]);
+                    sb.Append(ensemble.RangeTrackingData.Pings[2].ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 if (ensemble.RangeTrackingData.Pings.Length > 3)
-                    sb.Append(ensemble.RangeTrackingData.Pings[3]);
+                    sb.Append(ensemble.RangeTrackingData.Pings[3].ToString(new CultureInfo("en-US")));
             }
             else
             {
@@ -1724,31 +1726,31 @@ namespace RTI
             {
                 sb.Append(ensemble.GageHeightData.Status);
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.AvgRange);
+                sb.Append(ensemble.GageHeightData.AvgRange.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.StdDev);
+                sb.Append(ensemble.GageHeightData.StdDev.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.AvgSN);
+                sb.Append(ensemble.GageHeightData.AvgSN.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.N);
+                sb.Append(ensemble.GageHeightData.N.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.Salinity);
+                sb.Append(ensemble.GageHeightData.Salinity.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.Pressure);
+                sb.Append(ensemble.GageHeightData.Pressure.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.Depth);
+                sb.Append(ensemble.GageHeightData.Depth.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.WaterTemp);
+                sb.Append(ensemble.GageHeightData.WaterTemp.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.SystemTemp);
+                sb.Append(ensemble.GageHeightData.SystemTemp.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.SoS);
+                sb.Append(ensemble.GageHeightData.SoS.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.Heading);
+                sb.Append(ensemble.GageHeightData.Heading.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.Pitch);
+                sb.Append(ensemble.GageHeightData.Pitch.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.GageHeightData.Roll);
+                sb.Append(ensemble.GageHeightData.Roll.ToString(new CultureInfo("en-US")));
             }
             else
             {
@@ -1792,11 +1794,11 @@ namespace RTI
             {
                 if (ensemble.NmeaData.IsGpggaAvail())
                 {
-                    sb.Append(ensemble.NmeaData.GPGGA.Position.Latitude.DecimalDegrees);
+                    sb.Append(ensemble.NmeaData.GPGGA.Position.Latitude.DecimalDegrees.ToString(new CultureInfo("en-US")));
                     sb.Append(",");
-                    sb.Append(ensemble.NmeaData.GPGGA.Position.Longitude.DecimalDegrees);
+                    sb.Append(ensemble.NmeaData.GPGGA.Position.Longitude.DecimalDegrees.ToString(new CultureInfo("en-US")));
                     sb.Append(",");
-                    sb.Append(ensemble.NmeaData.GPGGA.Altitude.ToMeters());
+                    sb.Append(ensemble.NmeaData.GPGGA.Altitude.ToMeters().ToString("g", new CultureInfo("en-US")));
                     sb.Append(",");
                     sb.Append(ensemble.NmeaData.GPGGA.UtcTime);
                     sb.Append(",");
@@ -1807,7 +1809,7 @@ namespace RTI
                 }
                 if(ensemble.NmeaData.IsGphdtAvail())
                 {
-                    sb.Append(ensemble.NmeaData.GPHDT.Heading.DecimalDegrees);
+                    sb.Append(ensemble.NmeaData.GPHDT.Heading.DecimalDegrees.ToString(new CultureInfo("en-US")));
                     sb.Append(",");
                 }
                 else

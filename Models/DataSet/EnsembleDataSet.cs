@@ -74,6 +74,7 @@
  * 02/06/2013      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements.
+ * 08/13/2015      RC          3.0.5      Added Try/Catch block in Decode().
  * 
  */
 
@@ -96,6 +97,11 @@ namespace RTI
         public class EnsembleDataSet : BaseDataSet
         {
             #region Variables
+
+            /// <summary>
+            /// Setup logger to report errors.
+            /// </summary>
+            private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
             /// <summary>
             /// Default ensemble number if one is not given.
@@ -632,98 +638,105 @@ namespace RTI
             /// <param name="data">Byte array containing the Ensemble data type.</param>
             private void Decode(byte[] data)
             {
-                EnsembleNumber = MathHelper.ByteArrayToInt32(data, GenerateIndex(0));
-                NumBins = MathHelper.ByteArrayToInt32(data, GenerateIndex(1));
-                NumBeams = MathHelper.ByteArrayToInt32(data, GenerateIndex(2));
-                DesiredPingCount = MathHelper.ByteArrayToInt32(data, GenerateIndex(3));
-                ActualPingCount = MathHelper.ByteArrayToInt32(data, GenerateIndex(4));
-                Status = new Status(MathHelper.ByteArrayToInt32(data, GenerateIndex(5)));
-                Year = MathHelper.ByteArrayToInt32(data, GenerateIndex(6));
-                Month = MathHelper.ByteArrayToInt32(data, GenerateIndex(7));
-                Day = MathHelper.ByteArrayToInt32(data, GenerateIndex(8));
-                Hour = MathHelper.ByteArrayToInt32(data, GenerateIndex(9));
-                Minute = MathHelper.ByteArrayToInt32(data, GenerateIndex(10));
-                Second = MathHelper.ByteArrayToInt32(data, GenerateIndex(11));
-                HSec = MathHelper.ByteArrayToInt32(data, GenerateIndex(12));
-
-                // Revision D additions
-                if (NumElements >= NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D * Ensemble.BYTES_IN_INT32)
+                try
                 {
-                    // Get the System Serial Num
-                    // Start at index 13
-                    byte[] serial = new byte[SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32];
-                    System.Buffer.BlockCopy(data, GenerateIndex(13), serial, 0, SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32);
-                    SysSerialNumber = new SerialNumber(serial);
+                    EnsembleNumber = MathHelper.ByteArrayToInt32(data, GenerateIndex(0));
+                    NumBins = MathHelper.ByteArrayToInt32(data, GenerateIndex(1));
+                    NumBeams = MathHelper.ByteArrayToInt32(data, GenerateIndex(2));
+                    DesiredPingCount = MathHelper.ByteArrayToInt32(data, GenerateIndex(3));
+                    ActualPingCount = MathHelper.ByteArrayToInt32(data, GenerateIndex(4));
+                    Status = new Status(MathHelper.ByteArrayToInt32(data, GenerateIndex(5)));
+                    Year = MathHelper.ByteArrayToInt32(data, GenerateIndex(6));
+                    Month = MathHelper.ByteArrayToInt32(data, GenerateIndex(7));
+                    Day = MathHelper.ByteArrayToInt32(data, GenerateIndex(8));
+                    Hour = MathHelper.ByteArrayToInt32(data, GenerateIndex(9));
+                    Minute = MathHelper.ByteArrayToInt32(data, GenerateIndex(10));
+                    Second = MathHelper.ByteArrayToInt32(data, GenerateIndex(11));
+                    HSec = MathHelper.ByteArrayToInt32(data, GenerateIndex(12));
 
-                    // Get the firmware number 
-                    // Start at index 21
-                    byte[] firmware = new byte[FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32];
-                    System.Buffer.BlockCopy(data, GenerateIndex(21), firmware, 0, FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32);
-                    SysFirmware = new Firmware(firmware);
+                    // Revision D additions
+                    if (NumElements >= NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D * Ensemble.BYTES_IN_INT32)
+                    {
+                        // Get the System Serial Num
+                        // Start at index 13
+                        byte[] serial = new byte[SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32];
+                        System.Buffer.BlockCopy(data, GenerateIndex(13), serial, 0, SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32);
+                        SysSerialNumber = new SerialNumber(serial);
+
+                        // Get the firmware number 
+                        // Start at index 21
+                        byte[] firmware = new byte[FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32];
+                        System.Buffer.BlockCopy(data, GenerateIndex(21), firmware, 0, FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32);
+                        SysFirmware = new Firmware(firmware);
 
 
-                    // FOR BACKWARDS COMPATITBILITY
-                    // Old subsystems in the ensemble were set by the Subsystem Index in Firmware.
-                    // This means the that a subsystem code of 0 could be passed because
-                    // the index was 0 to designate the first subsystem index.  Firmware revision 0.2.13 changed
-                    // SubsystemIndex to SubsystemCode.  This will check which Firmware version this ensemble is
-                    // and convert to the new type using SubsystemCode.
-                    //
-                    // Get the correct subsystem by getting the index found in the firmware and getting
-                    // subsystem code from the serial number.
-                    //if (SysFirmware.FirmwareMajor <= 0 && SysFirmware.FirmwareMinor <= 2 && SysFirmware.FirmwareRevision <= 13 && GetSubSystem().IsEmpty())
-                    //{
-                    //    // Set the correct subsystem based off the serial number
-                    //    // Get the index for the subsystem
-                    //    byte index = SysFirmware.SubsystemCode;
+                        // FOR BACKWARDS COMPATITBILITY
+                        // Old subsystems in the ensemble were set by the Subsystem Index in Firmware.
+                        // This means the that a subsystem code of 0 could be passed because
+                        // the index was 0 to designate the first subsystem index.  Firmware revision 0.2.13 changed
+                        // SubsystemIndex to SubsystemCode.  This will check which Firmware version this ensemble is
+                        // and convert to the new type using SubsystemCode.
+                        //
+                        // Get the correct subsystem by getting the index found in the firmware and getting
+                        // subsystem code from the serial number.
+                        //if (SysFirmware.FirmwareMajor <= 0 && SysFirmware.FirmwareMinor <= 2 && SysFirmware.FirmwareRevision <= 13 && GetSubSystem().IsEmpty())
+                        //{
+                        //    // Set the correct subsystem based off the serial number
+                        //    // Get the index for the subsystem
+                        //    byte index = SysFirmware.SubsystemCode;
 
-                    //    // Ensure the index is not out of range of the subsystem string
-                    //    if (SysSerialNumber.SubSystems.Length > index)
-                    //    {
-                    //        // Get the Subsystem code from the serialnumber based off the index found
-                    //        string code = SysSerialNumber.SubSystems.Substring(index, 1);
+                        //    // Ensure the index is not out of range of the subsystem string
+                        //    if (SysSerialNumber.SubSystems.Length > index)
+                        //    {
+                        //        // Get the Subsystem code from the serialnumber based off the index found
+                        //        string code = SysSerialNumber.SubSystems.Substring(index, 1);
 
-                    //        // Create a subsystem with the code and index
-                    //        Subsystem ss = new Subsystem(Convert.ToByte(code), index);
+                        //        // Create a subsystem with the code and index
+                        //        Subsystem ss = new Subsystem(Convert.ToByte(code), index);
 
-                    //        // Set the new subsystem code to the firmware
-                    //        //SysFirmware.SubsystemCode = Convert.ToByte(code);
+                        //        // Set the new subsystem code to the firmware
+                        //        //SysFirmware.SubsystemCode = Convert.ToByte(code);
 
-                    //        // Remove the old subsystem and add the new one to the dictionary
-                    //        SysSerialNumber.SubSystemsDict.Remove(Convert.ToByte(index));
-                    //        SysSerialNumber.SubSystemsDict.Add(Convert.ToByte(index), ss);
+                        //        // Remove the old subsystem and add the new one to the dictionary
+                        //        SysSerialNumber.SubSystemsDict.Remove(Convert.ToByte(index));
+                        //        SysSerialNumber.SubSystemsDict.Add(Convert.ToByte(index), ss);
 
-                    //    }
-                    //}
+                        //    }
+                        //}
 
+                    }
+                    else
+                    {
+                        SysSerialNumber = new SerialNumber();
+                        SysFirmware = new Firmware();
+
+                    }
+
+                    // Revision H additions
+                    if (NumElements >= NUM_DATA_ELEMENTS_REV_H && data.Length >= NUM_DATA_ELEMENTS_REV_H * Ensemble.BYTES_IN_INT32)
+                    {
+                        // Get the Subsystem Configuration
+                        // Start at index 22
+                        byte[] subConfig = new byte[SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32];
+                        System.Buffer.BlockCopy(data, GenerateIndex(22), subConfig, 0, SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32);
+                        SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), subConfig);
+                    }
+                    else
+                    {
+                        // Create a default SubsystemConfig with a configuration of 0
+                        SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                    }
+
+                    // Set the time and date
+                    ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec / 10);
+
+                    // Create UniqueId
+                    UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
                 }
-                else
+                catch(Exception e)
                 {
-                    SysSerialNumber = new SerialNumber();
-                    SysFirmware = new Firmware();
-                    
+                    log.Error("Error decoding Ensemble DataSet", e);
                 }
-
-                // Revision H additions
-                if (NumElements >= NUM_DATA_ELEMENTS_REV_H && data.Length >= NUM_DATA_ELEMENTS_REV_H * Ensemble.BYTES_IN_INT32)
-                {
-                    // Get the Subsystem Configuration
-                    // Start at index 22
-                    byte[] subConfig = new byte[SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32];
-                    System.Buffer.BlockCopy(data, GenerateIndex(22), subConfig, 0, SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32);
-                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), subConfig);
-                }
-                else
-                {
-                    // Create a default SubsystemConfig with a configuration of 0
-                    SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
-                }
-
-                // Set the time and date
-                ValidateDateTime(Year, Month, Day, Hour, Minute, Second, HSec / 10);
-
-                // Create UniqueId
-                UniqueId = new UniqueID(EnsembleNumber, EnsDateTime);
             }
 
             /// <summary>

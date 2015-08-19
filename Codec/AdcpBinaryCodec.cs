@@ -67,6 +67,8 @@
  * 01/22/2014      RC          3.0.2      In DecodeIncomingData() i need to wait for the buffer to have enough bytes to decode an ensemble.
  * 03/10/2015      RC          3.0.3      Added Gage Height Data.
  * 04/29/2015      RC          3.0.4      Added a try catch block in DecodeIncomingData().
+ * 06/23/2015      RC          3.0.5      Removed the thread.
+ * 07/09/2015      RC          3.0.5      Made the codec its own thread.
  * 
  */
 
@@ -88,7 +90,7 @@ namespace RTI
     public class AdcpBinaryCodec : ICodec, IDisposable
     {
 
-        #region Variables 
+        #region Variables
 
         /// <summary>
         /// Setup logger to report errors.
@@ -265,7 +267,7 @@ namespace RTI
                 {
                     // Block until awoken when data is received
                     // Timeout every 60 seconds to see if shutdown occured
-                    _eventWaitData.WaitOne(60000);
+                    _eventWaitData.WaitOne();
 
                     // If wakeup was called to kill thread
                     if (!_continue)
@@ -279,20 +281,27 @@ namespace RTI
                     {
                         // Decode the data sent to the codec
                         DecodeIncomingData();
+
+                        // If wakeup was called to kill thread
+                        if (!_continue)
+                        {
+                            return;
+                        }
                     }
                 }
-                catch(ThreadAbortException)
+                catch (ThreadAbortException)
                 {
                     // Thread is aborted to stop processing
                     return;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     log.Error("Error processing binary codec data.", e);
+                    return;
                 }
-                
+
                 // Send an event that processing is complete
-                if(ProcessDataCompleteEvent != null)
+                if (ProcessDataCompleteEvent != null)
                 {
                     ProcessDataCompleteEvent();
                 }
@@ -353,7 +362,7 @@ namespace RTI
 
                         // Wait for all the data to buffer up 
                         int timeout = 20;
-                        while(_incomingDataBuffer.Count + _headerStart.Count < _currentEnsembleSize && timeout > 0)
+                        while (_incomingDataBuffer.Count + _headerStart.Count < _currentEnsembleSize && timeout > 0)
                         {
                             Thread.Sleep(500);
                             timeout--;
@@ -374,7 +383,7 @@ namespace RTI
                                         _headerStart.Clear();
                                     }
                                 }
-                                catch(Exception e)
+                                catch (Exception e)
                                 {
                                     log.Error("Error copying the header start.", e);
                                 }
@@ -599,10 +608,10 @@ namespace RTI
                 else if (Ensemble.NmeaID.Equals(name, StringComparison.Ordinal))
                 {
                     // List of all data read
-                    byte[] nmeaData = new byte[dataSetSize]; 
-                    
+                    byte[] nmeaData = new byte[dataSetSize];
+
                     // Scan through the data set and store all the data
-                    for(int x = 0; x < dataSetSize; x++)
+                    for (int x = 0; x < dataSetSize; x++)
                     {
                         nmeaData[x] = binaryEnsemble[packetPointer++];
                     }
@@ -679,7 +688,7 @@ namespace RTI
 
 
 
-                if (packetPointer+4 >= binaryEnsemble.Length)
+                if (packetPointer + 4 >= binaryEnsemble.Length)
                     break;
             }
 
@@ -696,7 +705,7 @@ namespace RTI
                     MergeNmeaBinary(ref binaryEnsemble, ensemble.NmeaData);
                 }
             }
-            
+
             // Send an event that data was processed
             // in this format
             if (ProcessDataEvent != null)
@@ -774,7 +783,7 @@ namespace RTI
             {
                 // Find the beginning of an ensemble
                 // It will contain 16 0x80 at the start
-                while (_incomingDataBuffer.Count > DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT)
+                while (_incomingDataBuffer.Count > DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT && _continue)
                 {
                     // Populate the buffer if its empty
                     if (_headerStart.Count < DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT)

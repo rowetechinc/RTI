@@ -37,6 +37,9 @@
  * 09/17/2014      RC          3.0.1      Abort and Join the processing thread on StopThread.
  * 10/28/2014      RC          3.0.2      Fixed bug to check if the buffer is empty.
  * 01/16/2015      RC          3.0.2      Lock the buffer in VerifyHeaderStart().
+ * 06/18/2015      RC          3.0.5      Ensure the codec is shutdown properly.
+ * 07/09/2015      RC          3.0.5      Mode the codec a thread.
+ * 08/13/2015      RC          3.0.5      Added complete event.
  * 
  * 
  */
@@ -211,7 +214,15 @@ namespace RTI
                 catch (Exception e)
                 {
                     log.Error("Error processing PD0 codec data.", e);
+                    return;
                 }
+
+                // Send an event that processing is complete
+                if (ProcessDataCompleteEvent != null)
+                {
+                    ProcessDataCompleteEvent();
+                }
+
             }
         }
 
@@ -331,6 +342,12 @@ namespace RTI
                 // It will contain 16 0x80 at the start
                 while (_incomingDataBuffer.Count > 2)
                 {
+                    // Check if shutting down
+                    if(!_continue)
+                    {
+                        return;
+                    }
+
                     // Find a start
                     if (_incomingDataBuffer[0] == 0x7F && _incomingDataBuffer[1] == 0x7F)
                     {
@@ -427,6 +444,25 @@ namespace RTI
         /// pd0Codec.ProcessDataEvent -= (method to call)
         /// </summary>
         public event ProcessDataEventHandler ProcessDataEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void ProcessDataCompleteEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when the entire file has been processed.
+        /// This event will be fired when there is no more data in the 
+        /// buffer to decode.
+        /// 
+        /// To subscribe:
+        /// codec.ProcessDataCompleteEvent += new codec.ProcessDataCompleteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.ProcessDataCompleteEvent -= (method to call)
+        /// </summary>
+        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
 
         #endregion
 

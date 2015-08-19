@@ -55,6 +55,7 @@
  * 01/23/2013      RC          2.17       Changed IsEmpty() to only check if a Subsystem is set for the serial number.
  * 05/06/2013      RC          2.19       Added SerialNumberDescString and GetSerialNumberDescString().
  * 10/04/2013      RC          2.21.0     Changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().
+ * 08/01/2015      RC          3.0.5      Added a base hardware list.
  *
  */
 
@@ -153,7 +154,22 @@ namespace RTI
         /// <summary>
         /// Base Electronic type for ADCP1.
         /// </summary>
+        public const string BASE_ELEC_TYPE_ADCP0 = "00";
+
+        /// <summary>
+        /// Base Electronic type for ADCP1.
+        /// </summary>
         public const string BASE_ELEC_TYPE_ADCP1 = "01";
+
+        /// <summary>
+        /// Base Electronic type for ADCP2.
+        /// </summary>
+        public const string BASE_ELEC_TYPE_ADCP2 = "02";
+
+        /// <summary>
+        /// Base Electronic type for HADCP.
+        /// </summary>
+        public const string BASE_ELEC_TYPE_ADCP3 = "03";
 
         #endregion
 
@@ -200,6 +216,11 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// List of all the Base Hardware.
+        /// </summary>
+        public static List<string> BaseHardwareList { get; set; }
 
         /// <summary>
         /// The Base Electronics hardware architecture.
@@ -335,6 +356,9 @@ namespace RTI
             BaseHardware = "";
             SubSystems = "";
             SubSystemsList = new List<Subsystem>();
+
+            // Generate List
+            GenerateLists();
         }
 
         /// <summary>
@@ -345,6 +369,9 @@ namespace RTI
         /// <param name="serialNum">Serial number as an ascii byte array.</param>
         public SerialNumber(byte[] serialNum)
         {
+            // Generate List
+            GenerateLists();
+
             // Decode the byte array
             Decode(serialNum);
         }
@@ -358,8 +385,26 @@ namespace RTI
         [JsonConstructor]
         public SerialNumber(string SerialNumberString)
         {
+            // Generate List
+            GenerateLists();
+
             // Set the serial number based off a string given
             SetSerialNumberString(SerialNumberString);
+        }
+
+        /// <summary>
+        /// Generate all the lists.
+        /// </summary>
+        private void GenerateLists()
+        {
+
+            // Base Hardware
+            BaseHardwareList = new List<string>();
+            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP0);
+            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP1);
+            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP2);
+            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP3);
+
         }
 
         /// <summary>

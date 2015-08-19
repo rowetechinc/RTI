@@ -38,6 +38,7 @@
  * 07/02/2014      RC          2.23.0     Changed Convert() to TryParse() and initialized the values.
  * 09/16/2014      RC          3.0.1      Fixed bug with TS not setting the Date and Time.
  * 10/09/2014      RC          3.0.2      Added Leak Detection to TS.
+ * 08/11/2015      RC          3.0.5      Set the NUM_ELEM as const.
  * 
  * 
  */
@@ -90,7 +91,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 4;
+        public const int NUM_ELEM = 4;
 
         /// <summary>
         /// Pitch in degrees.
@@ -172,7 +173,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 7;
+        public const int NUM_ELEM = 7;
 
         /// <summary>
         /// Date and time.
@@ -303,7 +304,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 6;
+        public const int NUM_ELEM = 6;
 
         /// <summary>
         /// Pressure in kPa.
@@ -379,7 +380,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 6;
+        public const int NUM_ELEM = 6;
 
         /// <summary>
         /// +/- X-axis velocity data in mm/s.
@@ -481,7 +482,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 5;
+        public const int NUM_ELEM = 5;
 
         /// <summary>
         /// +/- Transverse velocity data in mm/s.
@@ -573,7 +574,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 5;
+        public const int NUM_ELEM = 5;
 
         /// <summary>
         /// +/- East (u-axis) velocity data in mm/s.
@@ -665,7 +666,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 6;
+        public const int NUM_ELEM = 6;
 
         /// <summary>
         /// + East (u-axis) distance data in meters.
@@ -756,7 +757,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 6;
+        public const int NUM_ELEM = 6;
 
         /// <summary>
         /// +/- X-axis velocity data in mm/s.
@@ -860,7 +861,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 5;
+        public const int NUM_ELEM = 5;
 
         /// <summary>
         /// +/- Transverse velocity data in mm/s.
@@ -952,7 +953,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 5;
+        public const int NUM_ELEM = 5;
 
         /// <summary>
         /// +/- East (u-axis) velocity data in mm/s.
@@ -1044,7 +1045,7 @@ namespace RTI
         /// Number of elements.
         /// Includes the ID.
         /// </summary>
-        public int NUM_ELEM = 6;
+        public const int NUM_ELEM = 6;
 
         /// <summary>
         /// +/- East (u-axis) distance data in mm/s.

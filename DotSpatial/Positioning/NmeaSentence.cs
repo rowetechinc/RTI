@@ -23,6 +23,7 @@
 // | DonK                     |  5/25/2011 | Fixed the bug in parsing NMEA sentence (Dotspatial issue 295)
 // ********************************************************************************************************
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -216,10 +217,9 @@ namespace DotSpatial.Positioning
         private void CalculateChecksum()
         {
             /* Extract the data portion of the sentence. This portion is used to calculate the checksum
-             *
-             * $GPRMC, 11, 22, 33, 44, 55*CC    OR    $GPRMC, 11, 22, 33, 44, 55
-             */
-
+                *
+                * $GPRMC, 11, 22, 33, 44, 55*CC    OR    $GPRMC, 11, 22, 33, 44, 55
+                */
             // Get the location of the dollar sign
             int dollarSignIndex = _sentence.IndexOf("$", StringComparison.Ordinal);
 

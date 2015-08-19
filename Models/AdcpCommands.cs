@@ -103,6 +103,7 @@
  * 09/22/2014      RC          3.0.2      Added C232OUT, C422OUT, C485OUT and CWSSC.
  * 09/23/2014      RC          3.0.2      Changed CERECORD_EnsemblePing from a bool to a AdcpRecordOptions.
  * 09/30/2014      RC          3.0.2      Added DecodeCommandSet() to decode a command set.
+ * 05/28/2015      RC          3.0.5      Added DiagSamp.
  * 
  */
 
@@ -922,6 +923,11 @@ namespace RTI
             public List<AdcpEnsFileInfo> DirListing { get; set; }
 
             /// <summary>
+            /// Directory listing as a string.
+            /// </summary>
+            public string StrResult { get; set; }
+
+            /// <summary>
             /// Initialize the list and sizes.
             /// </summary>
             public AdcpDirListing()
@@ -929,6 +935,7 @@ namespace RTI
                 DirListing = new List<AdcpEnsFileInfo>();
                 TotalSpace = 0;
                 UsedSpace = 0;
+                StrResult = "";
             }
         }
 
@@ -1153,6 +1160,185 @@ namespace RTI
                 SPOS_Longitude = new Longitude();
                 SPOS_WaterDepth = AdcpCommands.DEFAULT_WATER_DEPTH;
                 SPOS_PsensHeight = AdcpCommands.DEFAULT_PSEN_HEIGHT;
+            }
+        }
+
+
+        #endregion
+
+        #region DIAGSAMP
+
+        /// <summary>
+        /// The DIAGSAMP results.
+        /// 
+        /// DP600
+        /// AutoGain:
+        ///           bm0      bm1      bm2      bm3
+        /// amp     39.05,   36.00,   40.52,   38.04
+        /// Hz    1984.41,  192.05,  831.30, 1180.32
+        /// cor      0.07,    0.01,    0.06,    0.02
+        /// Heading    240.90 deg
+        /// Pitch       -1.05 deg
+        /// Roll       179.71 deg
+        /// Water       22.91 deg
+        /// BackPlane   24.83 deg
+        /// Battery     19.62 V
+        /// Boost+      22.69 V
+        /// Boost-     -21.95 V
+        /// </summary>
+        public class DiagSamp
+        {
+            #region Properties
+
+            /// <summary>
+            /// System type.
+            /// </summary>
+            public string SystemType { get; set; }
+
+            /// <summary>
+            /// Amplitude data.
+            /// </summary>
+            public double[] Amp { get; set; }
+
+            /// <summary>
+            /// Hz data.
+            /// </summary>
+            public double[] Hz { get; set; }
+
+            /// <summary>
+            /// Correlation data.
+            /// </summary>
+            public double[] Cor { get; set; }
+
+            /// <summary>
+            /// Heading value in degrees.
+            /// </summary>
+            public double Heading { get; set; }
+
+            /// <summary>
+            /// Pitch value in degrees.
+            /// </summary>
+            public double Pitch { get; set; }
+
+            /// <summary>
+            /// Roll value in degrees.
+            /// </summary>
+            public double Roll { get; set; }
+
+            /// <summary>
+            /// Water temperature in degrees C.
+            /// </summary>
+            public double WaterTemp { get; set; }
+
+            /// <summary>
+            /// Backplane temperature in degrees C.
+            /// </summary>
+            public double BackPlaneTemp { get; set; }
+
+            /// <summary>
+            /// Battery voltage.
+            /// </summary>
+            public double Battery { get; set; }
+
+            /// <summary>
+            /// Boost Positive voltage.
+            /// </summary>
+            public double BoostPos { get; set; }
+
+            /// <summary>
+            /// Boost Negative voltage.
+            /// </summary>
+            public double BoostNeg { get; set; }
+
+            /// <summary>
+            /// String of the DiagSamp.
+            /// </summary>
+            public string DiagSampStr { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize with the given number of beams.
+            /// </summary>
+            /// <param name="beams">Number of the beams.</param>
+            public DiagSamp(int beams)
+            {
+                Init(beams);
+            }
+
+            /// <summary>
+            /// Initialize with a default number of beams of 4.
+            /// </summary>
+            public DiagSamp()
+            {
+                Init(4);
+            }
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            /// <param name="beams">Number of beams.</param>
+            public void Init(int beams)
+            {
+                SystemType = "";
+                Amp = new double[beams];
+                Cor = new double[beams];
+                Hz = new double[beams];
+                Heading = 0.0;
+                Pitch = 0.0;
+                Roll = 0.0;
+                WaterTemp = 0.0;
+                BackPlaneTemp = 0.0;
+                Battery = 0.0;
+                BoostPos = 0.0;
+                BoostNeg = 0.0;
+            }
+        }
+
+        #endregion
+
+        #region DiagPressure
+
+        /// <summary>
+        /// Pressure sensor properties.
+        /// </summary>
+        public class DiagPressure
+        {
+            #region Properties
+
+            /// <summary>
+            /// Flag if the pressure sensor is installed.
+            /// </summary>
+            public bool IsPressureSensorInstalled { get; set; }
+
+            /// <summary>
+            /// Pressure sensor rating.
+            /// </summary>
+            public string Rating { get; set; }
+
+            /// <summary>
+            /// Pressure sensor diagnostic string.
+            /// </summary>
+            public string DiagPressureStr { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            public DiagPressure()
+            {
+                Init();
+            }
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            public void Init()
+            {
+                IsPressureSensorInstalled = false;
+                Rating = "";
+                DiagPressureStr = "";
             }
         }
 
@@ -5329,6 +5515,9 @@ namespace RTI
             {
                 AdcpDirListing listing = new AdcpDirListing();
 
+                // Store the string result
+                listing.StrResult = buffer;
+
                 // Parse the directory listing string for all file info
                 // Each line should contain a piece of file info
                 string[] lines = buffer.Split('\n');
@@ -5600,6 +5789,296 @@ namespace RTI
 
                 return buffer;
             }
+
+            #endregion
+
+            #region DIAGSAMP
+
+            /// <summary>
+            /// DP600
+            /// AutoGain:
+            ///           bm0      bm1      bm2      bm3
+            /// amp     39.05,   36.00,   40.52,   38.04
+            /// Hz    1984.41,  192.05,  831.30, 1180.32
+            /// cor      0.07,    0.01,    0.06,    0.02
+            /// Heading    240.90 deg
+            /// Pitch       -1.05 deg
+            /// Roll       179.71 deg
+            /// Water       22.91 deg
+            /// BackPlane   24.83 deg
+            /// Battery     19.62 V
+            /// Boost+      22.69 V
+            /// Boost-     -21.95 V
+            /// </summary>
+            /// <param name="buffer">Decode the buffer.</param>
+            public static DiagSamp DecodeDiagSamp(string buffer)
+            {
+                // Initialize a sample
+                DiagSamp samp = new DiagSamp();
+
+                if(string.IsNullOrEmpty(buffer))
+                {
+                    return samp;
+                }
+
+                // Set the buffer
+                samp.DiagSampStr = buffer;
+
+                // Break up the lines
+                char[] newLines = new char[] { '\r', '\n' };
+                char[] spaces = new char[] { ' ' };
+                char[] spacesComma = new char[] { ' ', ',' };
+                string[] lines = buffer.Split(newLines, StringSplitOptions.RemoveEmptyEntries);
+
+                // Decode each line of data
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    // System type
+                    if(lines[x].Contains("DP") || lines[x].Contains("SC"))
+                    {
+                        samp.SystemType = lines[x].Trim();
+                    }
+
+                    // Amp
+                    if(lines[x].Contains("amp"))
+                    {
+                        var amp = lines[x].Split(spacesComma, StringSplitOptions.RemoveEmptyEntries);
+                        if(amp.Length >= 2)
+                        {
+                            for(int y = 1; y < amp.Length; y++)
+                            {
+                                double.TryParse(amp[y], out samp.Amp[y - 1]);
+                            }
+                        }
+                    }
+
+                    // Hz
+                    if (lines[x].Contains("Hz"))
+                    {
+                        var hz = lines[x].Split(spacesComma, StringSplitOptions.RemoveEmptyEntries);
+                        if (hz.Length >= 2)
+                        {
+                            for (int y = 1; y < hz.Length; y++)
+                            {
+                                double.TryParse(hz[y], out samp.Hz[y - 1]);
+                            }
+                        }
+                    }
+
+                    // Cor
+                    if (lines[x].Contains("cor"))
+                    {
+                        var cor = lines[x].Split(spacesComma, StringSplitOptions.RemoveEmptyEntries);
+                        if (cor.Length >= 2)
+                        {
+                            for (int y = 1; y < cor.Length; y++)
+                            {
+                                double.TryParse(cor[y], out samp.Cor[y - 1]);
+                            }
+                        }
+                    }
+
+                    // Heading
+                    if(lines[x].Contains("Heading"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if(val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if(double.TryParse(val[1], out result))
+                            {
+                                samp.Heading = result;
+                            }
+                        }
+                    }
+
+                    // Pitch
+                    if (lines[x].Contains("Pitch"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.Pitch = result;
+                            }
+                        }
+                    }
+
+                    // Roll
+                    if (lines[x].Contains("Roll"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.Roll = result;
+                            }
+                        }
+                    }
+
+                    // Water
+                    if (lines[x].Contains("Water"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.WaterTemp = result;
+                            }
+                        }
+                    }
+
+                    // BackPlane
+                    if (lines[x].Contains("BackPlane"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.BackPlaneTemp = result;
+                            }
+                        }
+                    }
+
+                    // Battery
+                    if (lines[x].Contains("Battery"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.Battery = result;
+                            }
+                        }
+                    }
+
+                    // Boost+
+                    if (lines[x].Contains("Boost+"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.BoostPos = result;
+                            }
+                        }
+                    }
+
+                    // Boost-
+                    if (lines[x].Contains("Boost-"))
+                    {
+                        var val = lines[x].Split(spaces, StringSplitOptions.RemoveEmptyEntries);
+                        if (val.Length >= 3)
+                        {
+                            double result = 0.0;
+                            if (double.TryParse(val[1], out result))
+                            {
+                                samp.BoostNeg = result;
+                            }
+                        }
+                    }
+                }
+
+                return samp;
+            }
+
+            #endregion
+
+            #region DIAGPRESSURE
+
+            /// <summary>
+            /// Check the pressure sensor
+            /// 
+            /// No Pressure Sensor
+            /// ===================
+            /// 
+            /// 
+            /// 
+            /// Pressure Sensor Installed
+            /// 
+            /// 
+            /// PS SN: 368389
+            /// Address: 250
+            /// Hardware Ver: 5.20
+            /// Firmware Ver: 12.28
+            /// Buffer Size: 13
+            /// Status: 1
+            /// Keller30 Read Coefficients:
+            /// 64, offset    0.01416564, bar,  0
+            /// 80, min       0.00000000, bar,  0
+            /// 81, max      30.00000000, bar,  0
+            /// 84, min             -nan, C,  0
+            /// 85, max             -nan, C,  0
+            /// Keller30 Read Configuration:
+            /// Nr, Conf, err
+            ///  0,   02,   0
+            ///  1,   10,   0
+            ///  2,   00,   0
+            ///  3,   01,   0
+            ///  4,   01,   0
+            ///  5,   00,   0
+            ///  6,   02,   0
+            ///  7,   35,   0
+            ///  8,   00,   0
+            ///  9,   00,   0
+            /// 10,   00,   0
+            /// 11,   35,   0
+            /// 12,   00,   0
+            /// 13,   01,   0
+            /// diagpressure
+            /// </summary>
+            /// <param name="buffer">Buffer of the message.</param>
+            /// <returns>Return the pressure sensor results.</returns>
+            public static DiagPressure DecodeDiagPressure(string buffer)
+            {
+                // Initialize a sample
+                DiagPressure pressureSensor = new DiagPressure();
+
+                if(string.IsNullOrEmpty(buffer))
+                {
+                    pressureSensor.IsPressureSensorInstalled = false;
+                    return pressureSensor;
+                }
+
+                // Set the buffer
+                pressureSensor.DiagPressureStr = buffer;
+                pressureSensor.IsPressureSensorInstalled = false;
+
+                // Break up the lines
+                char[] newLines = new char[] { '\r', '\n' };
+                char[] spaces = new char[] { ' ' };
+                char[] spacesComma = new char[] { ' ', ',' };
+                string[] lines = buffer.Split(newLines, StringSplitOptions.RemoveEmptyEntries);
+
+                // Decode each line of data
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    if (lines[x].Contains("max") && lines[x].Contains("bar"))
+                    {
+                        var vals = lines[x].Split(spacesComma, StringSplitOptions.RemoveEmptyEntries);
+                        if (vals.Length >= 4)
+                        {
+                            pressureSensor.Rating = vals[2];
+                            pressureSensor.IsPressureSensorInstalled = true;
+                        }
+                    }
+                }
+
+                return pressureSensor;
+            }
+
 
             #endregion
 

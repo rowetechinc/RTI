@@ -49,6 +49,7 @@ namespace RTI
     using log4net;
     using System.Diagnostics;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     
 
     /// <summary>
@@ -98,8 +99,10 @@ namespace RTI
             try
             {
                 // Read in all the information from the file
-                using (FilePlayback playback = new FilePlayback(filenames))
+                using (FilePlayback playback = new FilePlayback())
                 {
+                    Task.Run(() => playback.FindEnsembles(filenames));
+
                     // Send an event when complete
                     PublishCompleteEvent();
 

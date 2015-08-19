@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 09/03/2014      RC          3.0.1      Initial coding
+ * 07/27/2015      RC          3.0.5      Added Name of file playing back.
  *       
  * 
  */
@@ -66,6 +67,11 @@ namespace RTI
         /// Total number of ensembles that can be played back.
         /// </summary>
         int TotalEnsembles { get; set; }
+
+        /// <summary>
+        /// File or project name.
+        /// </summary>
+        string Name { get; set; }
 
         /// <summary>
         /// Step forward when playing the next ensemble.

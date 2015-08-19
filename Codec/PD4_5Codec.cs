@@ -37,6 +37,13 @@
  * 10/27/2014      RC          3.0.2      Verified the _currentEnsembleSize was at least greater than the header size in DecodeIncomingData().
  * 10/28/2014      RC          3.0.2      Fixed bug to check if the buffer is empty.
  * 12/04/2014      RC          3.0.2      Added header lock.
+ * 06/12/2015      RC          3.0.5      Added WaitOne(60000) to wakeup and check if we should close.
+ * 06/23/2015      RC          3.0.5      Removed the thread.
+ * 07/09/2015      RC          3.0.5      Mode the codec a thread.
+ * 07/17/2015      RC          3.0.5      Set the number of beams and the ensemble number.
+ * 07/20/2015      RC          3.0.5      Fixed setting the beam numbers.
+ * 08/13/2015      RC          3.0.5      Added _headerStartLock in ClearIncomingData().
+ * 08/13/2015      RC          3.0.5      Added complete event.
  * 
  */
 
@@ -147,6 +154,11 @@ namespace RTI
         private int _currentEnsembleSize;
 
         /// <summary>
+        /// Previous time in seconds.
+        /// </summary>
+        private float _prevTime;
+
+        /// <summary>
         /// Thread to decode incoming data.
         /// </summary>
         private Thread _processDataThread;
@@ -163,9 +175,9 @@ namespace RTI
         private EventWaitHandle _eventWaitData;
 
         /// <summary>
-        /// Previous time in seconds.
+        /// Ensemble index.
         /// </summary>
-        private float _prevTime;
+        private int _ensembleIndex;
 
         #endregion
 
@@ -215,6 +227,7 @@ namespace RTI
             _currentEnsembleSize = MIN_ENS_SIZE;
 
             _prevTime = 0.0f;
+            _ensembleIndex = 0;
 
             // Initialize the thread
             _continue = true;
@@ -264,7 +277,11 @@ namespace RTI
         {
             // Clear the buffer
             _incomingDataBuffer = new BlockingCollection<Byte>();
-            _headerStart.Clear();
+            
+            lock (_headerStartLock)
+            {
+                _headerStart.Clear();
+            }
 
         }
 
@@ -282,6 +299,7 @@ namespace RTI
                 try
                 {
                     // Block until awoken when data is received
+                    // Timeout every 60 seconds to see if shutdown occured
                     _eventWaitData.WaitOne();
 
                     // If wakeup was called to kill thread
@@ -296,16 +314,30 @@ namespace RTI
                     {
                         // Decode the data sent to the codec
                         DecodeIncomingData();
+
+                        // If wakeup was called to kill thread
+                        if (!_continue)
+                        {
+                            Thread.Sleep(1000);
+                            return;
+                        }
                     }
                 }
-                catch(ThreadAbortException)
+                catch (ThreadAbortException)
                 {
                     // Thread is aborted to stop processing
                     return;
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     log.Error("Error processing PD4/PD5 codec data.", e);
+                    return;
+                }
+
+                // Send an event that processing is complete
+                if (ProcessDataCompleteEvent != null)
+                {
+                    ProcessDataCompleteEvent();
                 }
             }
         }
@@ -451,6 +483,9 @@ namespace RTI
             ensemble.EnsembleData.SysSerialNumber.RemoveSubsystem(SerialNumber.DVL_Subsystem);
             ensemble.EnsembleData.SysSerialNumber.AddSubsystem(config.Frequency);
 
+            // ensemble number
+            ensemble.EnsembleData.EnsembleNumber = _ensembleIndex++;
+
             #endregion
 
             #region Speed of Sound
@@ -501,6 +536,11 @@ namespace RTI
 
             #region Bottom Track Velcocity
 
+            // Reset the number of beams values
+            // We will count the number of beams below
+            ensemble.EnsembleData.NumBeams = 0;       // Number of beams
+            ensemble.BottomTrackData.NumBeams = 0;    // Number of beams
+
             // X
             if (MathHelper.LsbMsbShort(binaryEnsemble[5], binaryEnsemble[6]) == PD0.BAD_VELOCITY)
             {
@@ -535,6 +575,9 @@ namespace RTI
 
                     ensemble.DvlData.BtEastVelocity = MathHelper.LsbMsbShort(binaryEnsemble[5], binaryEnsemble[6]) * 0.001f;        // mm/s to m/s
                     ensemble.DvlData.BtEarthIsGoodVelocity = true;
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Instrument velocity
@@ -545,6 +588,9 @@ namespace RTI
 
                     ensemble.DvlData.BtXVelocity = MathHelper.LsbMsbShort(binaryEnsemble[5], binaryEnsemble[6]) * 0.001f;        // mm/s to m/s
                     ensemble.DvlData.BtInstrumentIsGoodVelocity = true;
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Ship velocity
@@ -552,6 +598,9 @@ namespace RTI
                 {
                     ensemble.DvlData.BtTransverseVelocity = MathHelper.LsbMsbShort(binaryEnsemble[5], binaryEnsemble[6]) * 0.001f;        // mm/s to m/s
                     ensemble.DvlData.BtShipIsGoodVelocity = true;
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
             }
 
@@ -576,6 +625,9 @@ namespace RTI
                 {
                     ensemble.BottomTrackData.BeamVelocity[Ensemble.BEAM_1_INDEX] = MathHelper.LsbMsbShort(binaryEnsemble[7], binaryEnsemble[8]) * 0.001f;        // mm/s to m/s
                     ensemble.BottomTrackData.BeamGood[Ensemble.BEAM_1_INDEX] = 1.0f;
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Earth velocity
@@ -585,6 +637,9 @@ namespace RTI
                     ensemble.BottomTrackData.EarthGood[Ensemble.BEAM_NORTH_INDEX] = 1.0f;
 
                     ensemble.DvlData.BtNorthVelocity = MathHelper.LsbMsbShort(binaryEnsemble[7], binaryEnsemble[8]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Instrument velocity
@@ -594,12 +649,18 @@ namespace RTI
                     ensemble.BottomTrackData.InstrumentGood[Ensemble.BEAM_Y_INDEX] = 1.0f;
 
                     ensemble.DvlData.BtYVelocity = MathHelper.LsbMsbShort(binaryEnsemble[7], binaryEnsemble[8]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Ship velocity
                 if (config.VelTransform == Core.Commons.Transforms.SHIP)
                 {
                     ensemble.DvlData.BtLongitudinalVelocity = MathHelper.LsbMsbShort(binaryEnsemble[7], binaryEnsemble[8]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
             }
 
@@ -624,6 +685,9 @@ namespace RTI
                 {
                     ensemble.BottomTrackData.BeamVelocity[Ensemble.BEAM_2_INDEX] = MathHelper.LsbMsbShort(binaryEnsemble[9], binaryEnsemble[10]) * 0.001f;        // mm/s to m/s
                     ensemble.BottomTrackData.BeamGood[Ensemble.BEAM_2_INDEX] = 1.0f;
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Earth velocity
@@ -633,6 +697,9 @@ namespace RTI
                     ensemble.BottomTrackData.EarthGood[Ensemble.BEAM_VERTICAL_INDEX] = 1.0f;
 
                     ensemble.DvlData.BtUpwardVelocity = MathHelper.LsbMsbShort(binaryEnsemble[9], binaryEnsemble[10]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Instrument velocity
@@ -642,12 +709,18 @@ namespace RTI
                     ensemble.BottomTrackData.InstrumentGood[Ensemble.BEAM_Z_INDEX] = 1.0f;
 
                     ensemble.DvlData.BtZVelocity = MathHelper.LsbMsbShort(binaryEnsemble[9], binaryEnsemble[10]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Ship velocity
                 if (config.VelTransform == Core.Commons.Transforms.SHIP)
                 {
                     ensemble.DvlData.BtNormalVelocity = MathHelper.LsbMsbShort(binaryEnsemble[9], binaryEnsemble[10]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
             }
 
@@ -670,6 +743,9 @@ namespace RTI
                 {
                     ensemble.BottomTrackData.BeamVelocity[Ensemble.BEAM_3_INDEX] = MathHelper.LsbMsbShort(binaryEnsemble[11], binaryEnsemble[12]) * 0.001f;        // mm/s to m/s
                     ensemble.BottomTrackData.BeamGood[Ensemble.BEAM_3_INDEX] = 1.0f;
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Earth velocity
@@ -679,6 +755,9 @@ namespace RTI
                     ensemble.BottomTrackData.EarthGood[Ensemble.BEAM_Q_INDEX] = 1.0f;
 
                     ensemble.DvlData.BtErrorVelocity = MathHelper.LsbMsbShort(binaryEnsemble[11], binaryEnsemble[12]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Instrument velocity
@@ -688,6 +767,9 @@ namespace RTI
                     ensemble.BottomTrackData.InstrumentGood[Ensemble.BEAM_Q_INDEX] = 1.0f;
 
                     ensemble.DvlData.BtErrorVelocity = MathHelper.LsbMsbShort(binaryEnsemble[11], binaryEnsemble[12]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
 
                 // Ship velocity
@@ -734,6 +816,7 @@ namespace RTI
                 {
                     ensemble.EarthWaterMassData.VelocityEast = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;         // mm/s to m/s
                     ensemble.DvlData.WmEastVelocity = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;                  // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // North
@@ -746,6 +829,7 @@ namespace RTI
                 {
                     ensemble.EarthWaterMassData.VelocityNorth = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;        // mm/s to m/s
                     ensemble.DvlData.WmNorthVelocity = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;                 // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Vertical
@@ -758,6 +842,7 @@ namespace RTI
                 {
                     ensemble.EarthWaterMassData.VelocityVertical = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;     // mm/s to m/s
                     ensemble.DvlData.WmUpwardVelocity = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;                // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Depth layer
@@ -790,6 +875,7 @@ namespace RTI
                 {
                     ensemble.InstrumentWaterMassData.VelocityX = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;               // mm/s to m/s
                     ensemble.DvlData.WmXVelocity = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;                             // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Y
@@ -802,6 +888,7 @@ namespace RTI
                 {
                     ensemble.InstrumentWaterMassData.VelocityY = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;               // mm/s to m/s
                     ensemble.DvlData.WmYVelocity = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;                             // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Z
@@ -814,6 +901,7 @@ namespace RTI
                 {
                     ensemble.InstrumentWaterMassData.VelocityZ = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;               // mm/s to m/s
                     ensemble.DvlData.WmZVelocity = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;                             // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Error
@@ -824,6 +912,7 @@ namespace RTI
                 else
                 {
                     ensemble.InstrumentWaterMassData.VelocityQ = MathHelper.LsbMsbShort(binaryEnsemble[28], binaryEnsemble[29]) * 0.001f;               // mm/s to m/s
+                    ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Depth layer
@@ -908,11 +997,15 @@ namespace RTI
         {
             lock (_headerStartLock)
             {
+                if(!_continue)
+                {
+                    return;
+                }
+
                 // Clear the header
                 _headerStart.Clear();
 
                 // Find the beginning of an ensemble
-                // It will contain 16 0x80 at the start
                 while (_incomingDataBuffer.Count > ID_SIZE)
                 {
                     // Populate the buffer if its empty
@@ -927,7 +1020,7 @@ namespace RTI
                     }
 
                     // Find a start
-                    if (_headerStart.Count > ID_SIZE && (_headerStart[0] == ID && (_headerStart[1] == ID_PD4 || _headerStart[1] == ID_PD5)))
+                    if (_headerStart.Count >= ID_SIZE && (_headerStart[0] == ID && (_headerStart[1] == ID_PD4 || _headerStart[1] == ID_PD5)))
                     {
                         // Get the next 2 bytes for the ensemble size
                         _headerStart.Add(_incomingDataBuffer.Take());
@@ -938,11 +1031,11 @@ namespace RTI
                     // Remove the first byte until you find the start
                     else
                     {
-                        if (_headerStart.Count > 0)
+                        if (_headerStart.Count > 0 && _continue)
                         {
                             _headerStart.RemoveAt(0);
+                            _headerStart.Add(_incomingDataBuffer.Take());
                         }
-                        _headerStart.Add(_incomingDataBuffer.Take());
                     }
                 }
             }
@@ -1119,12 +1212,31 @@ namespace RTI
         /// Subscribe to this event.  This will hold all subscribers.
         /// 
         /// To subscribe:
-        /// adcpBinaryCodec.ProcessDataEvent += new adcpBinaryCodec.ProcessDataEventHandler(method to call);
+        /// codec.ProcessDataEvent += new codec.ProcessDataEventHandler(method to call);
         /// 
         /// To Unsubscribe:
-        /// adcpBinaryCodec.ProcessDataEvent -= (method to call)
+        /// codec.ProcessDataEvent -= (method to call)
         /// </summary>
         public event ProcessDataEventHandler ProcessDataEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void ProcessDataCompleteEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when the entire file has been processed.
+        /// This event will be fired when there is no more data in the 
+        /// buffer to decode.
+        /// 
+        /// To subscribe:
+        /// codec.ProcessDataCompleteEvent += new codec.ProcessDataCompleteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.ProcessDataCompleteEvent -= (method to call)
+        /// </summary>
+        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
 
         #endregion
     }

@@ -51,6 +51,9 @@
  * 07/24/2014      RC          2.23.0     Fixed a bug if AddIncomingData() received a null byte array.
  * 07/24/2014      RC          2.23.0     When adding PRTI30 and PRTI31 messages, replace the serialnumber subsystem with the correct value.
  * 07/31/2014      RC          2.23.0     Removed trimming the sentence in FindSentence().
+ * 06/17/2015      RC          3.0.5      Removed the recusive call in ProcessData().
+ * 07/09/2015      RC          3.0.5      Made the codec its own thread.
+ * 08/13/2015      RC          3.0.5      Added complete event.
  * 
  */
 
@@ -62,6 +65,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Diagnostics;
 using log4net;
+using System.Threading;
 namespace RTI
 {
     /// <summary>
@@ -123,16 +127,6 @@ namespace RTI
         private string _buffer;
 
         /// <summary>
-        /// This is used to prevent a buffer
-        /// StackOverflowException.  If the
-        /// sentence is not complete but contains
-        /// a $ and *, it will continue to evaluate
-        /// the sentence.  This will prevent it from
-        /// being called if its the same data.
-        /// </summary>
-        private string _prevBuffer;
-
-        /// <summary>
         /// Temporary variable to store a 
         /// PRTI01 Sentence so it can be
         /// combined with a PRTI02 Sentence.
@@ -157,6 +151,22 @@ namespace RTI
         /// A buffer to store the current NMEA data.
         /// </summary>
         private LinkedList<string> _nmeaBuffer;
+
+        /// <summary>
+        /// Thread to decode incoming data.
+        /// </summary>
+        private Thread _processDataThread;
+
+        /// <summary>
+        /// Flag used to stop the thread.
+        /// </summary>
+        private bool _continue;
+
+        /// <summary>
+        /// Event to cause the thread
+        /// to go to sleep or wakeup.
+        /// </summary>
+        private EventWaitHandle _eventWaitData;
 
         #endregion
 
@@ -185,6 +195,12 @@ namespace RTI
             IsUseBtHpr = true;
 
             _nmeaBuffer = new LinkedList<string>();
+
+            // Initialize the thread
+            _continue = true;
+            _eventWaitData = new EventWaitHandle(false, EventResetMode.AutoReset);
+            _processDataThread = new Thread(ProcessDataThread);
+            _processDataThread.Start();
         }
 
         /// <summary>
@@ -192,12 +208,15 @@ namespace RTI
         /// </summary>
         public void Dispose()
         {
+            StopThread();
+
             // Send any remaining data
             if (_prti01 != null)
             {
                 SendData(_prti01);
             }
 
+            _eventWaitData.Dispose();
         }
 
         #region Incomming Data
@@ -220,8 +239,8 @@ namespace RTI
                     _buffer += rcvData;
                 }
 
-                // Start to process the data
-                ProcessData();
+                // Wake up the thread to process data
+                _eventWaitData.Set();
             }
         }
 
@@ -404,29 +423,85 @@ namespace RTI
         /// NMEA sentence and check if its a valid sentence.
         /// If it is valid, process the sentence.
         /// </summary>
-        private void ProcessData( )
+        private void ProcessDataThread( )
         {
-            // Find a sentence in the buffer
-            string nmea = FindSentence();
-
-            // If one is found, process the data
-            if (nmea.Length > 0)
+            while (_continue)
             {
-                // Create a NMEA sentence and verify its valid
-                NmeaSentence sentence = new NmeaSentence(nmea);
-                if (sentence.IsValid)
+                try
                 {
-                    // Process sentence
-                    ProcessSentence(sentence);
+                    // Block until awoken when data is received
+                    // Timeout every 60 seconds to see if shutdown occured
+                    _eventWaitData.WaitOne();
+
+                    // If wakeup was called to kill thread
+                    if (!_continue)
+                    {
+                        return;
+                    }
+
+                    // Ensure the data can contain NMEA sentences
+                    while (_buffer.Length > 0 && _buffer.Contains("$") && _buffer.Contains("*"))
+                    {
+
+                        // Find a sentence in the buffer
+                        string nmea = FindSentence();
+
+                        // If one is found, process the data
+                        if (nmea.Length > 0)
+                        {
+                            // Create a NMEA sentence and verify its valid
+                            NmeaSentence sentence = new NmeaSentence(nmea);
+                            if (sentence.IsValid)
+                            {
+                                // Process sentence
+                                ProcessSentence(sentence);
+                            }
+                        }
+
+                        // If wakeup was called to kill thread
+                        if (!_continue)
+                        {
+                            return;
+                        }
+                    }
+                }
+                catch (ThreadAbortException)
+                {
+                    // Thread is aborted to stop processing
+                    return;
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error processing binary codec data.", e);
+                    return;
+                }
+
+                // Send an event that processing is complete
+                if (ProcessDataCompleteEvent != null)
+                {
+                    ProcessDataCompleteEvent();
                 }
             }
+        }
 
-            // Check if we should continue processing data
-            if (_buffer.Length > 0 && _buffer.Contains("$") && _buffer.Contains("*") && _buffer != _prevBuffer)
+        /// <summary>
+        /// Stop the thread.
+        /// </summary>
+        private void StopThread()
+        {
+            _continue = false;
+
+            // Wake up the thread to stop thread
+            _eventWaitData.Set();
+            //_eventWaitData.Dispose();
+
+            try
             {
-                _prevBuffer = _buffer;
-                ProcessData();
+                // Force the thread to stop
+                //_processDataThread.Abort();
+                _processDataThread.Join(1000);
             }
+            catch (Exception) { }
         }
 
         /// <summary>
@@ -445,6 +520,11 @@ namespace RTI
                 if (begin > 0)
                 {
                     _buffer = _buffer.Remove(0, begin);
+                }
+                else if(begin < 0)
+                {
+                    // No NMEA messages in the buffer
+                    return nmea;
                 }
 
                 // Check if a checksum exist in the data
@@ -749,6 +829,25 @@ namespace RTI
         /// adcpBinaryCodec.ProcessDataEvent -= (method to call)
         /// </summary>
         public event ProcessDataEventHandler ProcessDataEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void ProcessDataCompleteEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when the entire file has been processed.
+        /// This event will be fired when there is no more data in the 
+        /// buffer to decode.
+        /// 
+        /// To subscribe:
+        /// adcpBinaryCodec.ProcessDataCompleteEvent += new adcpBinaryCodec.ProcessDataCompleteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// adcpBinaryCodec.ProcessDataCompleteEvent -= (method to call)
+        /// </summary>
+        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
 
         #endregion
 

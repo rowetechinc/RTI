@@ -89,6 +89,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Codec\PD3Codec.cs" />
     <Compile Include="Codec\PD4_5Codec.cs" />
     <Compile Include="Codec\AdcpBinaryCodec.cs" />
     <Compile Include="Codec\AdcpCodec.cs" />

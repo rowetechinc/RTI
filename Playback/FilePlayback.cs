@@ -39,7 +39,9 @@
  * 01/16/2015      RC          3.0.2      Close the ProcessDataCompleteEvent in Dispose.
  * 01/29/2015      RC          3.0.2      Fixed waiting for the file to be loaded into the codec before moving on.
  * 02/09/2015      RC          3.0.2      Add constructor that takes only a single file.
- *       
+ * 06/12/2015      RC          3.0.5      Removed the file from the constructor and moved it to FindEnsembles().
+ * 07/27/2015      RC          3.0.5      Set the file name playing back. 
+ * 08/13/2015      RC          3.0.5      Read the file with a smaller buffer so large files will not take all the RAM in FindEnsembles().
  * 
  */
 
@@ -61,6 +63,11 @@ namespace RTI
     public class FilePlayback: IPlayback
     {
         #region Variables
+
+        /// <summary>
+        ///  Setup logger
+        /// </summary>
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Store the raw binary data and the ensemble data.
@@ -96,11 +103,6 @@ namespace RTI
         /// ensemble found.
         /// </summary>
         private const int DEFAULT_BYTES_PER_ENSEMBLE = 1028 * 10; //4096 1048576
-
-        /// <summary>
-        /// File stream to read in the file.
-        /// </summary>
-        private FileStream _fileStream;
 
         /// <summary>
         /// Size of the file.
@@ -157,19 +159,25 @@ namespace RTI
         /// </summary>
         public bool IsLooping { get; set; }
 
+        /// <summary>
+        /// File name.
+        /// </summary>
+        public string Name { get; set; }
+
         #endregion
 
         /// <summary>
         /// Playback the given file.
         /// </summary>
-        /// <param name="files">Files to playback.</param>
-        public FilePlayback(string[] files)
+        public FilePlayback()
         {
             // Initialize values
             BytesPerEnsemble = DEFAULT_BYTES_PER_ENSEMBLE;
             _fileOffset = 0;
             TotalEnsembles = 0;
             _ensembleList = new List<EnsembleData>();
+            Name = "";
+
 
             // Codecs
             _adcpCodec = new AdcpCodec();
@@ -178,63 +186,6 @@ namespace RTI
 
             // Wait for decoding to be complete
             _eventWaitDecode = new EventWaitHandle(false, EventResetMode.AutoReset);
-
-            // Add all the files
-            foreach (var filePath in files)
-            {
-                // Open the file
-                if (File.Exists(filePath))
-                {
-                    using (_fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                    {
-                        _fileSize = _fileStream.Length;
-
-                        // Find the ensembles in the file
-                        FindEnsembles();
-                    }
-                }
-            }
-
-            // Block until awoken when all the data is decoded
-            // Have a timeout of 60 seconds
-            _eventWaitDecode.WaitOne(60000);
-        }
-
-        /// <summary>
-        /// Playback the given file.
-        /// </summary>
-        /// <param name="file">File to playback.</param>
-        public FilePlayback(string file)
-        {
-            // Initialize values
-            BytesPerEnsemble = DEFAULT_BYTES_PER_ENSEMBLE;
-            _fileOffset = 0;
-            TotalEnsembles = 0;
-            _ensembleList = new List<EnsembleData>();
-
-            // Codecs
-            _adcpCodec = new AdcpCodec();
-            _adcpCodec.ProcessDataEvent += new AdcpCodec.ProcessDataEventHandler(_adcpCodec_ProcessDataEvent);
-            _adcpCodec.ProcessDataCompleteEvent += _adcpCodec_ProcessDataCompleteEvent;
-
-            // Wait for decoding to be complete
-            _eventWaitDecode = new EventWaitHandle(false, EventResetMode.AutoReset);
-
-                // Open the file
-            if (File.Exists(file))
-            {
-                using (_fileStream = new FileStream(file, FileMode.Open, FileAccess.Read))
-                {
-                    _fileSize = _fileStream.Length;
-
-                    // Find the ensembles in the file
-                    FindEnsembles();
-                }
-            }
-
-            // Block until awoken when all the data is decoded
-            // Have a timeout of 60 seconds
-            _eventWaitDecode.WaitOne(60000);
         }
 
         /// <summary>
@@ -242,12 +193,6 @@ namespace RTI
         /// </summary>
         public void Dispose()
         {
-            if (_fileStream != null)
-            {
-                _fileStream.Close();
-                _fileStream.Dispose();
-            }
-
             if (_adcpCodec != null)
             {
                 _adcpCodec.ProcessDataCompleteEvent -= _adcpCodec_ProcessDataCompleteEvent;
@@ -377,38 +322,67 @@ namespace RTI
 
         /// <summary>
         /// Find the ensembles in the file.
-        /// This will move through the file and
-        /// all the ensembles from the file.
         /// </summary>
-        private async void FindEnsembles()
+        /// <param name="files">Files to look for the ensembles.</param>
+        public void FindEnsembles(string[] files)
         {
-            if (_fileStream != null)
+            for (int x = 0; x < files.Length; x++)
             {
-                // Read in the data from file
-                byte[] buffer = new byte[_fileStream.Length];
-                int count = _fileStream.Read(buffer, 0, (int)_fileStream.Length);
-                
-                // Add the data to the codec
-                await Task.Run(() => AddDataToCodecs(buffer));
-
-                // Set the offset
-                _fileOffset = count;
+                FindEnsembles(files[x]);
             }
         }
 
-        #region Codecs
-
         /// <summary>
-        /// Add data to the codecs.
+        /// Find the ensembles in the file.
+        /// This will move through the file and
+        /// all the ensembles from the file.
         /// </summary>
-        /// <param name="data">Data to add to the codec.</param>
-        private void AddDataToCodecs(byte[] data)
+        /// <param name="file">File to get the ensembles.</param>
+        public void FindEnsembles(string file)
         {
-            // Binary Codec
-            _adcpCodec.AddIncomingData(data);
-        }
+            try
+            { 
 
-        #endregion
+                // Open the file
+                if (File.Exists(file))
+                {
+                    // Set the file name
+                    FileInfo finfo = new FileInfo(file);
+                    Name = finfo.Name;
+
+                    using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    {
+                        _fileSize = fileStream.Length;
+
+                        // Read in the data from file
+                        byte[] buffer = new byte[1024];
+                        int count = 0;
+                        while ((count = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            // Add the data to the codec
+                            _adcpCodec.AddIncomingData(buffer);
+
+                            // Set the offset
+                            _fileOffset += count;
+                        }
+
+                        fileStream.Close();
+                        fileStream.Dispose();
+                    }
+
+
+                    // Block until awoken when all the data is decoded
+                    _eventWaitDecode.WaitOne();
+                }
+            }
+            catch(Exception e)
+            {
+                log.Error("Error reading the file.", e);
+
+                // Set the block to not wait any longer for data
+                _eventWaitDecode.Set();
+            }
+        }
 
 
         #region EventHandler

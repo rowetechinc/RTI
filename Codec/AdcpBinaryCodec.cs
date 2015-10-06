@@ -69,6 +69,7 @@
  * 04/29/2015      RC          3.0.4      Added a try catch block in DecodeIncomingData().
  * 06/23/2015      RC          3.0.5      Removed the thread.
  * 07/09/2015      RC          3.0.5      Made the codec its own thread.
+ * 09/29/2015      RC          3.1.1      Fixed bug finding the header if a single 128 is found to early.
  * 
  */
 
@@ -178,6 +179,7 @@ namespace RTI
             _continue = true;
             _eventWaitData = new EventWaitHandle(false, EventResetMode.AutoReset);
             _processDataThread = new Thread(ProcessDataThread);
+            _processDataThread.Name = "ADCP Binary Codec";
             _processDataThread.Start();
         }
 
@@ -475,12 +477,23 @@ namespace RTI
 
             for (int i = 0; i < DataSet.Ensemble.MAX_NUM_DATA_SETS; i++)
             {
+                //Debug.Print("binaryEnsemble: " + binaryEnsemble.Length + " packetPointer: " + packetPointer + "\n");
                 type = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 0));
                 numElements = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 1));
                 elementMultiplier = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 2));
                 imag = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 3));
                 nameLen = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 4));
                 name = MathHelper.ByteArrayToString(binaryEnsemble, 8, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 5));
+
+                // Verify the data is good
+                if(string.IsNullOrEmpty(name))
+                {
+                    break;
+                }
+
+                //Debug.Print("name: " + name + "\n");
+                //Debug.Print("numElements: " + numElements + "\n");
+                //Debug.Print("elementMultiplier" + elementMultiplier + "\n");
 
                 // Get the size of this data set
                 dataSetSize = BaseDataSet.GetDataSetSize(type, nameLen, numElements, elementMultiplier);
@@ -680,6 +693,18 @@ namespace RTI
                     // Advance the packet pointer
                     packetPointer += dataSetSize;
                 }
+                else if (Ensemble.Adcp2InfoID.Equals(name, StringComparison.Ordinal))
+                {
+                    // Create a sub array of just this data set data
+                    byte[] adcp2InfoData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                    // Add the data
+                    ensemble.AddAdcp2InfoData(type, numElements, elementMultiplier, imag, nameLen, name, adcp2InfoData);
+                    //Debug.WriteLine(adcpData.GageHeightData.ToString());
+
+                    // Advance the packet pointer
+                    packetPointer += dataSetSize;
+                }
                 else
                 {
                     // Advance the packet pointer
@@ -687,8 +712,9 @@ namespace RTI
                 }
 
 
-
-                if (packetPointer + 4 >= binaryEnsemble.Length)
+                //Debug.Print("DataSetSize: " + dataSetSize + "\n");
+                //Debug.Print(" packetPointer: " + packetPointer + "\n");
+                if (packetPointer + 4 >= binaryEnsemble.Length || packetPointer < 0)
                     break;
             }
 
@@ -783,7 +809,7 @@ namespace RTI
             {
                 // Find the beginning of an ensemble
                 // It will contain 16 0x80 at the start
-                while (_incomingDataBuffer.Count > DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT && _continue)
+                while (_incomingDataBuffer.Count >= DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT && _continue)
                 {
                     // Populate the buffer if its empty
                     if (_headerStart.Count < DataSet.Ensemble.HEADER_START_ENSNUM_PAYLOAD_COUNT)
@@ -797,7 +823,7 @@ namespace RTI
                     }
 
                     // Find a start
-                    if (_headerStart.Count >= DataSet.Ensemble.HEADER_START_COUNT && (_headerStart[0] == 0x80 && _headerStart[15] == 0x80))
+                    if (_headerStart.Count >= DataSet.Ensemble.HEADER_START_COUNT && (_headerStart[0] == 0x80 && _headerStart[1] == 0x80 && _headerStart[2] == 0x80 && _headerStart[3] == 0x80 && _headerStart[15] == 0x80))
                     {
                         break;
                     }
@@ -806,6 +832,7 @@ namespace RTI
                     {
                         _headerStart.RemoveAt(0);
                         _headerStart.Add(_incomingDataBuffer.Take());
+                        Debug.WriteLine(_headerStart.Count);
                     }
                 }
             }

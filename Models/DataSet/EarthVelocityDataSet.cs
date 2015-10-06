@@ -319,15 +319,33 @@ namespace RTI
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
             public bool IsBinGood(int bin, bool allow3BeamSolution = true)
             {
-                // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
-                if (EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                if (ElementsMultiplier > DataSet.Ensemble.BEAM_Q_INDEX)
                 {
-                    return false;
+                    // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                    if (EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                    {
+                        return false;
+                    }
                 }
 
-                if (EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
-                    EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY )
+                bool b0 = false;
+                bool b1 = false;
+                bool b2 = false;
+                if (ElementsMultiplier > DataSet.Ensemble.BEAM_EAST_INDEX)
+                {
+                    b0 = EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY;
+                }
+                if (ElementsMultiplier > DataSet.Ensemble.BEAM_NORTH_INDEX)
+                {
+                    b1 = EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY;
+                }
+                if (ElementsMultiplier > DataSet.Ensemble.BEAM_VERTICAL_INDEX)
+                {
+                    b2 = EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY;
+                }
+
+                // Check if any of the beams are bad
+                if (b0 || b1 || b2 )
                 {
                     return false;
                 }
@@ -346,16 +364,17 @@ namespace RTI
                 try
                 {
                     // Ensure the velocities are good
-                    if ((EarthVelocityData[bin, 0] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocityData[bin, 1] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocityData[bin, 2] != Ensemble.BAD_VELOCITY))
+                    if (EarthVelocityData.GetLength(1) >= 3)
                     {
-                        return (MathHelper.CalculateMagnitude(EarthVelocityData[bin, 0], EarthVelocityData[bin, 1], EarthVelocityData[bin, 2]));
+                        if ((EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != Ensemble.BAD_VELOCITY) &&
+                            (EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != Ensemble.BAD_VELOCITY) &&
+                            (EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != Ensemble.BAD_VELOCITY))
+                        {
+                            return (MathHelper.CalculateMagnitude(EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX], EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX], EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]));
+                        }
                     }
-                    else
-                    {
-                        return DataSet.Ensemble.BAD_VELOCITY;
-                    }
+
+                    return DataSet.Ensemble.BAD_VELOCITY;
                 }
                 catch (System.IndexOutOfRangeException)
                 {
@@ -377,25 +396,26 @@ namespace RTI
                 try
                 {
                     // Ensure the velocities are good
-                    if ((EarthVelocityData[bin, 0] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocityData[bin, 1] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocityData[bin, 2] != Ensemble.BAD_VELOCITY))
+                    if (EarthVelocityData.GetLength(1) >= 3)
                     {
-                        if (isYNorth)
+                        if ((EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != Ensemble.BAD_VELOCITY) &&
+                            (EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != Ensemble.BAD_VELOCITY) &&
+                            (EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != Ensemble.BAD_VELOCITY))
                         {
-                            //return (Math.Atan2(EarthVelocityData[Bin, 1], EarthVelocityData[Bin, 0])) * (180 / Math.PI);
-                            return MathHelper.CalculateDirection(EarthVelocityData[bin, 1], EarthVelocityData[bin, 0]);
-                        }
-                        else
-                        {
-                            //return (Math.Atan2(EarthVelocityData[Bin, 0], EarthVelocityData[Bin, 1])) * (180 / Math.PI);
-                            return MathHelper.CalculateDirection(EarthVelocityData[bin, 0], EarthVelocityData[bin, 1]);
+                            if (isYNorth)
+                            {
+                                //return (Math.Atan2(EarthVelocityData[Bin, 1], EarthVelocityData[Bin, 0])) * (180 / Math.PI);
+                                return MathHelper.CalculateDirection(EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX], EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX]);
+                            }
+                            else
+                            {
+                                //return (Math.Atan2(EarthVelocityData[Bin, 0], EarthVelocityData[Bin, 1])) * (180 / Math.PI);
+                                return MathHelper.CalculateDirection(EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX], EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX]);
+                            }
                         }
                     }
-                    else
-                    {
-                        return -1;
-                    }
+
+                    return -1;
                 }
                 catch (System.IndexOutOfRangeException)
                 {

@@ -792,6 +792,51 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_SS_VOLTAGE = "Voltage";
 
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_XMTVOLTAGE = "XmtVoltage";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_BTBROADBAND = "BtBroadband";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_BTLAGLENGTH = "BtLagLength";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_BTNARROWBAND = "BtNarrowband";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_BTBEAMMUX = "BtBeamMux";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_WPBROADBAND = "WpBroadband";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_WPLAGLENGTH = "WpLagLength";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_WPBANDWIDTH = "WpBandWidth";
+
+            /// <summary>
+            /// String for Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_WPBANDWIDTH1 = "WpBandWidth1";
+
             #endregion
 
             #region Gage Height
@@ -1236,6 +1281,30 @@ namespace RTI
             /// String for Range Tracking Pings.
             /// </summary>
             public const string JSON_STR_RT_PINGS = "Pings";
+
+            #endregion
+
+            #region System Setup
+
+            /// <summary>
+            /// String for BT SamplesPerSecond.
+            /// </summary>
+            public const string JSON_STR_ADCP2INFO_VIPWR = "ViPwr";
+
+            /// <summary>
+            /// String for BT SystemFreqHz.
+            /// </summary>
+            public const string JSON_STR_ADCP2INFO_VINF= "ViNf";
+
+            /// <summary>
+            /// String for BT CPCE.
+            /// </summary>
+            public const string JSON_STR_ADCP2INFO_VINFL = "ViNfl";
+
+            /// <summary>
+            /// String for BT NCE.
+            /// </summary>
+            public const string JSON_STR_ADCP2INFO_VISLEEP = "ViSleep";
 
             #endregion
 

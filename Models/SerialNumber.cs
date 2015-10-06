@@ -56,6 +56,7 @@
  * 05/06/2013      RC          2.19       Added SerialNumberDescString and GetSerialNumberDescString().
  * 10/04/2013      RC          2.21.0     Changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().
  * 08/01/2015      RC          3.0.5      Added a base hardware list.
+ * 09/23/2015      RC          3.1.0      Moved generating BaseHardwareList to the object declaration.
  *
  */
 
@@ -220,7 +221,19 @@ namespace RTI
         /// <summary>
         /// List of all the Base Hardware.
         /// </summary>
-        public static List<string> BaseHardwareList { get; set; }
+        public static List<string> BaseHardwareList 
+        {
+            get
+            {
+                // Base Hardware
+                var list = new List<string>();
+                list.Add(BASE_ELEC_TYPE_ADCP0);
+                list.Add(BASE_ELEC_TYPE_ADCP1);
+                list.Add(BASE_ELEC_TYPE_ADCP2);
+                list.Add(BASE_ELEC_TYPE_ADCP3);
+                return list;
+            } 
+        }
 
         /// <summary>
         /// The Base Electronics hardware architecture.
@@ -356,9 +369,6 @@ namespace RTI
             BaseHardware = "";
             SubSystems = "";
             SubSystemsList = new List<Subsystem>();
-
-            // Generate List
-            GenerateLists();
         }
 
         /// <summary>
@@ -369,9 +379,6 @@ namespace RTI
         /// <param name="serialNum">Serial number as an ascii byte array.</param>
         public SerialNumber(byte[] serialNum)
         {
-            // Generate List
-            GenerateLists();
-
             // Decode the byte array
             Decode(serialNum);
         }
@@ -385,26 +392,8 @@ namespace RTI
         [JsonConstructor]
         public SerialNumber(string SerialNumberString)
         {
-            // Generate List
-            GenerateLists();
-
             // Set the serial number based off a string given
             SetSerialNumberString(SerialNumberString);
-        }
-
-        /// <summary>
-        /// Generate all the lists.
-        /// </summary>
-        private void GenerateLists()
-        {
-
-            // Base Hardware
-            BaseHardwareList = new List<string>();
-            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP0);
-            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP1);
-            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP2);
-            BaseHardwareList.Add(BASE_ELEC_TYPE_ADCP3);
-
         }
 
         /// <summary>

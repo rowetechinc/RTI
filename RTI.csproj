@@ -110,6 +110,7 @@
     <Compile Include="Communications\SerialConnection.cs" />
     <Compile Include="Communications\SerialOptions.cs" />
     <Compile Include="Models\DataSet\GageHeightDataSet.cs" />
+    <Compile Include="Models\DataSet\Adcp2InfoDataSet.cs" />
     <Compile Include="Writer\AdcpImporter.cs" />
     <Content Include="DotSpatial\License.txt" />
     <Content Include="GitHubUpdate.txt" />

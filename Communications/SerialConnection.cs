@@ -301,7 +301,9 @@ namespace RTI
             _pauseReadThread = false;
             _isSendingData = false;
             _readThread = new Thread(new ParameterizedThreadStart(ReadThreadMethod));
-            _readThread.Start();
+            _readThread.Priority = ThreadPriority.Normal;
+            _readThread.Name = "Serial Connection";
+            //_readThread.Start();
 
             _validateMsg = "";
         }
@@ -384,6 +386,12 @@ namespace RTI
                     {
                         _serialPort.Open();
 
+                        // If the connection is opened, start the thread
+                        if (_serialPort.IsOpen)
+                        {
+                            _readThread.Start();
+                        }
+
                         // Discard any old data in buffer
                         _serialPort.DiscardInBuffer();
                         Debug.WriteLine(_serialOptions.ToString());
@@ -433,8 +441,11 @@ namespace RTI
         public void Disconnect()
         {
             // Close and dispose the serial port
-            if (_serialPort != null)
+            if (_serialPort != null && _serialPort.IsOpen)
             {
+                // Stop the thread
+                _readThread.Abort();
+
                 // Close the port
                 _serialPort.Close();
 

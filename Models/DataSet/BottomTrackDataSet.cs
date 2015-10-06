@@ -64,6 +64,7 @@
  * 04/15/2014      RC          2.21.4     In GetVelocityMagnitude() check for 4 beams.
  * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
  * 04/10/2015      RC          3.0.4      Added GetRangeBin().
+ * 09/25/2015      RC          3.1.1      Allow BT to handle 3 beams.
  * 
  */
 
@@ -324,13 +325,13 @@ namespace RTI
             /// Create a Bottom Track data set.  This will create an empty dataset.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Bin</param>
+            /// <param name="elementMultiplier">Number of beams</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
-            public BottomTrackDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
+            public BottomTrackDataSet(int valueType, int numElements, int elementMultiplier, int imag, int nameLength, string name) :
+                base(valueType, numElements, elementMultiplier, imag, nameLength, name)
             {
                 // Initialize arrays
                 Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
@@ -349,7 +350,7 @@ namespace RTI
                         DataSet.Ensemble.BottomTrackID)                 // Dataset ID
             {
                 // Initialize arrays
-                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
+                Init(numBeams);
             }
 
             /// <summary>
@@ -357,18 +358,15 @@ namespace RTI
             /// about the current Bottom Track data.
             /// </summary>
             /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
-            /// <param name="numBins">Number of Bin</param>
-            /// <param name="numBeams">Number of beams</param>
+            /// <param name="numElements">Number of Bin</param>
+            /// <param name="elementMultiplier">Number of beams</param>
             /// <param name="imag"></param>
             /// <param name="nameLength">Length of name</param>
             /// <param name="name">Name of data type</param>
             /// <param name="ancData">Byte array containing Bottom Track data</param>
-            public BottomTrackDataSet(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] ancData) :
-                base(valueType, numBins, numBeams, imag, nameLength, name)
+            public BottomTrackDataSet(int valueType, int numElements, int elementMultiplier, int imag, int nameLength, string name, byte[] ancData) :
+                base(valueType, numElements, elementMultiplier, imag, nameLength, name)
             {
-                // Initialize arrays
-                Init(DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM);
-
                 // Decode the information
                 Decode(ancData);
             }
@@ -545,17 +543,6 @@ namespace RTI
             /// <param name="numBeams">Number of beams.</param>
             public void Init(int numBeams)
             {
-                Range = new float[numBeams];
-                SNR = new float[numBeams];
-                Amplitude = new float[numBeams];
-                Correlation = new float[numBeams];
-                BeamVelocity = new float[numBeams];
-                BeamGood = new float[numBeams];
-                InstrumentVelocity = new float[numBeams];
-                InstrumentGood = new float[numBeams];
-                EarthVelocity = new float[numBeams];
-                EarthGood = new float[numBeams];
-
                 FirstPingTime = 0.0f;
                 LastPingTime = 0.0f;
 
@@ -572,6 +559,26 @@ namespace RTI
                 Status = new Status(0);
                 NumBeams = numBeams;
                 ActualPingCount = 0.0f;
+
+                CreateArrays(numBeams);
+            }
+
+            /// <summary>
+            /// Create all the arrays with the number of beams.
+            /// </summary>
+            /// <param name="numBeams">Number of beams.</param>
+            private void CreateArrays(int numBeams)
+            {
+                Range = new float[numBeams];
+                SNR = new float[numBeams];
+                Amplitude = new float[numBeams];
+                Correlation = new float[numBeams];
+                BeamVelocity = new float[numBeams];
+                BeamGood = new float[numBeams];
+                InstrumentVelocity = new float[numBeams];
+                InstrumentGood = new float[numBeams];
+                EarthVelocity = new float[numBeams];
+                EarthGood = new float[numBeams];
             }
 
             /// <summary>
@@ -597,55 +604,60 @@ namespace RTI
                 NumBeams = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
                 ActualPingCount = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
 
-                Range[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
-                Range[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
-                Range[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
-                Range[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
+                // Init the arrays
+                CreateArrays((int)NumBeams);
 
-                SNR[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
-                SNR[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
-                SNR[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
-                SNR[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(21));
+                // Initialize the index
+                int index = 14;
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    Range[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(22));
-                Amplitude[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(23));
-                Amplitude[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(24));
-                Amplitude[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(25));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    SNR[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(26));
-                Correlation[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(27));
-                Correlation[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(28));
-                Correlation[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(29));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    Amplitude[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(30));
-                BeamVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(31));
-                BeamVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(32));
-                BeamVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(33));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    Correlation[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                BeamGood[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(34));
-                BeamGood[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(35));
-                BeamGood[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(36));
-                BeamGood[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(37));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    BeamVelocity[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(38));
-                InstrumentVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(39));
-                InstrumentVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(40));
-                InstrumentVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(41));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    BeamGood[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                InstrumentGood[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(42));
-                InstrumentGood[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(43));
-                InstrumentGood[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(44));
-                InstrumentGood[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(45));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    InstrumentVelocity[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(46));
-                EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(47));
-                EarthVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(48));
-                EarthVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(49));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    InstrumentGood[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
-                EarthGood[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(50));
-                EarthGood[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(51));
-                EarthGood[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(52));
-                EarthGood[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(53));
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    EarthVelocity[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
+
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    EarthGood[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
 
                 //CreateBindingList();
             }
@@ -682,55 +694,55 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ActualPingCount), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamGood[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentGood[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);

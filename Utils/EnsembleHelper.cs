@@ -40,6 +40,7 @@
  * 10/03/2013      RC          2.20.2     Fixed bug in AddNmea() where the datatype was not set correctly.  It is a byte type.
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
  * 08/13/2015      RC          3.0.5      In SetVelocitiesBad(), check the VelocityVectors size.
+ * 09/24/2015      RC          3.1.0      In SetVelocitiesBad(), work with any of number of beams.
  * 
  */
 
@@ -450,31 +451,29 @@ namespace RTI
         /// <param name="bin">Bin to modify.</param>
         public static void SetVelocitiesBad(ref DataSet.Ensemble ensemble, int bin)
         {
-            
-
             // Beam Velocities
             if (ensemble.IsBeamVelocityAvail && bin < ensemble.BeamVelocityData.BeamVelocityData.GetLength(0))
             {
-                ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_0_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_1_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_2_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_3_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                for (int beam = 0; beam < ensemble.BeamVelocityData.BeamVelocityData.GetLength(1); beam++)
+                {
+                    ensemble.BeamVelocityData.BeamVelocityData[bin, beam] = DataSet.Ensemble.BAD_VELOCITY;
+                }
             }
             if (ensemble.IsGoodBeamAvail && bin < ensemble.GoodBeamData.GoodBeamData.GetLength(0))
             {
-                ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_0_INDEX] = 0;
-                ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_1_INDEX] = 0;
-                ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_2_INDEX] = 0;
-                ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_3_INDEX] = 0;
+                for (int beam = 0; beam < ensemble.GoodBeamData.GoodBeamData.GetLength(1); beam++)
+                {
+                    ensemble.GoodBeamData.GoodBeamData[bin, beam] = 0;
+                }
             }
 
             // Earth Velocities
             if (ensemble.IsEarthVelocityAvail && bin < ensemble.EarthVelocityData.EarthVelocityData.GetLength(0))
             {
-                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                for (int beam = 0; beam < ensemble.EarthVelocityData.EarthVelocityData.GetLength(1); beam++)
+                {
+                    ensemble.EarthVelocityData.EarthVelocityData[bin, beam] = DataSet.Ensemble.BAD_VELOCITY;
+                }
 
                 // Velocity Vectors
                 if (ensemble.EarthVelocityData.IsVelocityVectorAvail && bin < ensemble.EarthVelocityData.VelocityVectors.Length)
@@ -484,19 +483,19 @@ namespace RTI
             }
             if (ensemble.IsGoodEarthAvail && bin < ensemble.GoodEarthData.GoodEarthData.GetLength(0))
             {
-                ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = 0;
-                ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = 0;
-                ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = 0;
-                ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = 0;
+                for (int beam = 0; beam < ensemble.GoodEarthData.GoodEarthData.GetLength(1); beam++)
+                {
+                    ensemble.GoodEarthData.GoodEarthData[bin, beam] = 0;
+                }
             }
 
             // Instrument Velocities
             if (ensemble.IsInstrumentVelocityAvail && bin < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(0))
             {
-                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
+                for (int beam = 0; beam < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(1); beam++)
+                {
+                    ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, beam] = DataSet.Ensemble.BAD_VELOCITY;
+                }
             }
 
         }

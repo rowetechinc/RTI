@@ -372,7 +372,8 @@ namespace RTI
 
 
                     // Block until awoken when all the data is decoded
-                    _eventWaitDecode.WaitOne();
+                    // Or wait 30 seconds for a timeout.
+                    _eventWaitDecode.WaitOne(30000);
                 }
             }
             catch(Exception e)
@@ -402,11 +403,16 @@ namespace RTI
             // quicker
             BytesPerEnsemble = ensembleRaw.Length;
 
+            // Copy the data
+            var ens = ensemble.Clone();
+            byte[] raw = new byte[ensembleRaw.Length];
+            Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
+
             // Create the velocity vectors for the ensemble
-            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ens);
 
             // Store the found ensemble
-            _ensembleList.Add(new EnsembleData(ensembleRaw, ensemble));
+            _ensembleList.Add(new EnsembleData(raw, ens));
 
             // Set total number of ensembles
             // Subtract because 0 based

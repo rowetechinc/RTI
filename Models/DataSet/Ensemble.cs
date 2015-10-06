@@ -78,6 +78,7 @@
  * 10/09/2014      RC          3.0.2      Fixed bug with JSON_STR_ISDVLAVAIL value.
  * 10/31/2014      RC          3.0.2      Added RangeTrackingDataSet.
  * 03/09/2015      RC          3.0.3      Added GageHeightDataSet.
+ * 09/25/2015      RC          3.1.1      Added Adcp2InfoDataSet.
  * 
  */
 
@@ -173,6 +174,7 @@ namespace RTI
 
             /// <summary>
             /// System Setup ID for binary format.
+            /// System Transmit Settings.
             /// </summary>
             public const string SystemSetupID = "E000014\0";
 
@@ -184,7 +186,12 @@ namespace RTI
             /// <summary>
             /// Gage Height ID for binary format.
             /// </summary>
-            public const string GageHeightID = "E000016\0"; 
+            public const string GageHeightID = "E000016\0";
+
+            /// <summary>
+            /// ADCP 2 Info ID for binary format.
+            /// </summary>
+            public const string Adcp2InfoID = "E000017\0"; 
 
             /// <summary>
             /// PRTI02 ID for DVL mode format.
@@ -536,6 +543,11 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISGAGEHEIGHTAVAIL = "IsGageHeightDataAvail";
 
+            /// <summary>
+            /// String for IsAdcp2InfoAvail.
+            /// </summary>
+            public const string JSON_STR_ISADCP2INFOAVAIL = "IsAdcp2InfoAvail";
+
             #endregion
 
             #region DataSets
@@ -659,6 +671,11 @@ namespace RTI
             /// String for Gage Height Data.
             /// </summary>
             public const string JSON_STR_GAGEHEIGHTDATA = "GageHeightData";
+
+            /// <summary>
+            /// String for ADCP 2 Info Data.
+            /// </summary>
+            public const string JSON_STR_ADCP2INFODATA = "Adcp2InfoData";
 
             #endregion
 
@@ -790,6 +807,11 @@ namespace RTI
             /// </summary>
             public bool IsGageHeightAvail { get; set; }
 
+            /// <summary>
+            /// Set if the ADCP 2 Info data set is available to this ensemble.
+            /// </summary>
+            public bool IsAdcp2InfoAvail { get; set; }
+
             #endregion
 
             #region Data Sets Properties
@@ -885,6 +907,11 @@ namespace RTI
             public GageHeightDataSet GageHeightData { get; set; }
 
             /// <summary>
+            /// Adcp 2 Info data set.
+            /// </summary>
+            public Adcp2InfoDataSet Adcp2InfoData { get; set; }
+
+            /// <summary>
             /// GPS data that came from the ADCP.
             /// </summary>
             public string AdcpGpsData { get; set; }
@@ -956,6 +983,7 @@ namespace RTI
                 IsNmea2DataAvail = false;
                 IsDvlDataAvail = false;
                 IsGageHeightAvail = false;
+                IsAdcp2InfoAvail = false;
             }
 
             /// <summary>
@@ -1009,6 +1037,7 @@ namespace RTI
             /// <param name="IsNmea2DataAvail">Flag if NMEA 2 data is available.</param>
             /// <param name="IsDvlDataAvail">Flag if DVL data is available.</param>
             /// <param name="IsGageHeightAvail">Flag if Gage Height data is available.</param>
+            /// <param name="IsAdcp2InfoAvail">Flag if ADCP 2 Info data is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -1033,18 +1062,19 @@ namespace RTI
             /// <param name="Nmea2Data">NMEA 2 data.</param>
             /// <param name="DvlData">DVL data.</param>
             /// <param name="GageHeightData">Gage Height data.</param>
+            /// <param name="Adcp2InfoDataSet">ADCP 2 Info data.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
                             bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
                             bool IsSystemSetupAvail, bool IsRangeTrackingAvail, bool IsGageHeightAvail,
                             bool IsAdcpGpsDataAvail, bool IsGps1DataAvail, bool IsGps2DataAvail, bool IsNmea1DataAvail, bool IsNmea2DataAvail,
-                            bool IsDvlDataAvail,
+                            bool IsDvlDataAvail, bool IsAdcp2InfoAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
                             InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
-                            SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData, GageHeightDataSet GageHeightData,
+                            SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData, GageHeightDataSet GageHeightData, Adcp2InfoDataSet Adcp2InfoDataSet,
                             DvlDataSet DvlData,
                             string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
             {
@@ -1073,6 +1103,7 @@ namespace RTI
                 this.IsNmea2DataAvail = IsNmea2DataAvail;
                 this.IsDvlDataAvail = IsDvlDataAvail;
                 this.IsGageHeightAvail = IsGageHeightAvail;
+                this.IsAdcp2InfoAvail = IsAdcp2InfoAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -1098,6 +1129,7 @@ namespace RTI
                 this.Nmea2Data = Nmea2Data;
                 this.DvlData = DvlData;
                 this.GageHeightData = GageHeightData;
+                this.Adcp2InfoData = Adcp2InfoData;
             }
 
             #region Beam Velocity Data Set
@@ -2029,6 +2061,43 @@ namespace RTI
 
             #endregion
 
+            #region ADCP 2 Info Data Set
+
+            /// <summary>
+            /// Add the ADCP 2 Info data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddAdcp2InfoData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsAdcp2InfoAvail = true;
+                Adcp2InfoData = new Adcp2InfoDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the ADCP 2 Info data set to the ensemble.
+            /// This will add the Gage Height data and decode the byte array
+            /// for all the Gage Height data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="data">Byte array containing data</param>
+            public void AddAdcp2InfoData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] data)
+            {
+                IsAdcp2InfoAvail = true;
+                Adcp2InfoData = new Adcp2InfoDataSet(valueType, numBins, numBeams, imag, nameLength, name, data);
+            }
+
+            #endregion
+
             #region Clone
 
             /// <summary>
@@ -2932,6 +3001,10 @@ namespace RTI
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISGAGEHEIGHTAVAIL);
                 writer.WriteValue(ensemble.IsGageHeightAvail);
 
+                // IsGageHeightDataAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISADCP2INFOAVAIL);
+                writer.WriteValue(ensemble.IsAdcp2InfoAvail);
+
                 #endregion
 
                 #region DataSet
@@ -3183,6 +3256,17 @@ namespace RTI
                 if (ensemble.IsGageHeightAvail)
                 {
                     writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.GageHeightData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // ADCP 2 Info data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ADCP2INFODATA);
+                if (ensemble.IsAdcp2InfoAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Adcp2InfoData));
                 }
                 else
                 {

@@ -1,5 +1,19 @@
 RTI Changelog
 
+RTI-3.1.1
+ - Changed the version number.
+ - BottomTrackDataSet allow BT to handle 3 beams.
+ - In SystemSetupDataSet, added missing variables.
+ - Added Adcp2InfoDataSet.
+ - In Ensemble, added Adcp2InfoDataSet.
+ - In AdcpBinaryCodec, fixed bug finding the header if a single 128 is found to early.
+
+RTI-3.1.0
+ - Changed the version number.
+ - In AdcpCommands, added BreakStmtToString().
+ - In SerialNumber, moved generating BaseHardwareList to the object declaration.
+ - In EnsembleHelper, In SetVelocitiesBad(), work with any of number of beams.
+
 RTI-3.0.5
  - Changed the version number.
  - AdcpCommands, added DiagSamp.

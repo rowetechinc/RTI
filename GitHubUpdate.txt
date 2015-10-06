@@ -40,3 +40,8 @@ Update Github (above)
 TroubleShooting
 ------------------------
 Look at the file .git/config
+
+Add a New User
+------------------------
+eval `ssh-agent`
+ssh-add ~/.ssh/id_rsa_...

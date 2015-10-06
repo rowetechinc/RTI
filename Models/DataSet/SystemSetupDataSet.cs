@@ -36,6 +36,7 @@
  * 07/21/2014      RC          2.23.0     Fixed checking if the voltage existed in Decode().
  * 07/24/2014      RC          2.23.0     Added and empty constructor.
  * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
+ * 09/25/2015      RC          3.1.1      Added missing variables.
  * 
  */
 
@@ -60,7 +61,7 @@ namespace RTI
             /// <summary>
             /// Number of elements in this data set.
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = 12;
+            public const int NUM_DATA_ELEMENTS = 21;
 
             #endregion
 
@@ -128,8 +129,54 @@ namespace RTI
 
             /// <summary>
             /// Voltage.
+            /// VI Power.
             /// </summary>
             public float Voltage { get; set; }
+
+            /// <summary>
+            /// Transmit Voltage.
+            /// </summary>
+            public float XmtVoltage { get; set; }
+
+            /// <summary>
+            /// BT Broadband.
+            /// </summary>
+            public float BtBroadband { get; set; }
+
+            /// <summary>
+            /// BT Lag Length.
+            /// </summary>
+            public float BtLagLength { get; set; }
+
+            /// <summary>
+            /// BT Narrowband.
+            /// </summary>
+            public float BtNarrowband { get; set; }
+
+            /// <summary>
+            /// Bottom Track Beam MUX.
+            /// </summary>
+            public float BtBeamMux { get; set; }
+
+            /// <summary>
+            /// WP Broadband.
+            /// </summary>
+            public float WpBroadband { get; set; }
+
+            /// <summary>
+            /// WP Lag Length.
+            /// </summary>
+            public float WpLagLength { get; set; }
+
+            /// <summary>
+            /// WP Bandwidth.
+            /// </summary>
+            public float WpBandWidth { get; set; }
+
+            /// <summary>
+            /// WP Bandwidth.
+            /// </summary>
+            public float WpBandWidth1 { get; set; }
 
             #endregion
 
@@ -316,9 +363,23 @@ namespace RTI
                 WpRepeatN = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
                 WpLagSamples = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
 
-                if (data.Length > 48)
+                if (NumElements >= 11)
                 {
                     Voltage = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
+                }
+
+                if (NumElements >= 21)
+                {
+                    XmtVoltage = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+                    BtBroadband = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
+                    BtLagLength = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
+                    BtNarrowband = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+                    BtBeamMux = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
+                    WpBroadband = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
+                    WpLagLength = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
+                    WpBandWidth = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
+                    WpBandWidth1 = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
+
                 }
 
 
@@ -353,6 +414,15 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpLagSamples), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Voltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(XmtVoltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtBroadband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtLagLength), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtNarrowband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtBeamMux), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBroadband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpLagLength), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBandWidth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBandWidth1), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
@@ -492,6 +562,42 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE);
                 writer.WriteValue(data.Voltage);
 
+                // XmtVoltage
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE);
+                writer.WriteValue(data.XmtVoltage);
+
+                // BtBroadband
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND);
+                writer.WriteValue(data.BtBroadband);
+
+                // BtLagLength
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTLAGLENGTH);
+                writer.WriteValue(data.BtLagLength);
+
+                // BtNarrowband
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND);
+                writer.WriteValue(data.BtNarrowband);
+
+                // BtBeamMux
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX);
+                writer.WriteValue(data.BtBeamMux);
+
+                // WpBroadband
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBROADBAND);
+                writer.WriteValue(data.WpBroadband);
+
+                // WpLagLength
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH);
+                writer.WriteValue(data.WpLagLength);
+
+                // WpBandWidth
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH);
+                writer.WriteValue(data.WpBandWidth);
+
+                // WpBandWidth1
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1);
+                writer.WriteValue(data.WpBandWidth1);
+
                 // End the object
                 writer.WriteEndObject();
             }
@@ -558,6 +664,33 @@ namespace RTI
 
                     // Voltage
                     data.Voltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE];
+
+                    // XmtVoltage
+                    data.XmtVoltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE];
+
+                    // BtBroadband
+                    data.BtBroadband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND];
+
+                    // BtLagLength
+                    data.BtLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTLAGLENGTH];
+
+                    // BtNarrowband
+                    data.BtNarrowband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND];
+
+                    // BtBeamMux
+                    data.BtBeamMux = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX];
+
+                    // WpBroadband
+                    data.WpBroadband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBROADBAND];
+
+                    // WpLagLength
+                    data.WpLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH];
+
+                    // WpBandWidth
+                    data.WpBandWidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH];
+
+                    // WpBandWidth1
+                    data.WpBandWidth1 = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1];
 
                     return data;
                 }

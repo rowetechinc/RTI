@@ -104,6 +104,7 @@
  * 09/23/2014      RC          3.0.2      Changed CERECORD_EnsemblePing from a bool to a AdcpRecordOptions.
  * 09/30/2014      RC          3.0.2      Added DecodeCommandSet() to decode a command set.
  * 05/28/2015      RC          3.0.5      Added DiagSamp.
+ * 08/28/2015      RC          3.2.0      Added BreakStmtToString().
  * 
  */
 
@@ -5220,6 +5221,23 @@ namespace RTI
 
                 // Return the break statement values
                 return new BreakStmt(){ SerialNum = new SerialNumber(serial), FirmwareVersion = firmware, Hardware = hw.Trim() };
+            }
+
+            /// <summary>
+            /// BREAK statement to string.
+            /// </summary>
+            /// <param name="brkStmt">Break Statement.</param>
+            /// <returns>Break Statement string.</returns>
+            public static string BreakStmtToString(BreakStmt brkStmt)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine(brkStmt.SerialNum.ToString());
+                sb.AppendLine(brkStmt.FirmwareVersion.ToString());
+                sb.AppendLine(brkStmt.Hardware);
+
+                return sb.ToString();
+            
             }
 
             #endregion

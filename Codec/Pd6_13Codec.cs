@@ -43,6 +43,7 @@
  * 07/09/2015      RC          3.0.5      Mode the codec a thread.
  * 07/20/2015      RC          3.0.5      Fixed codec to also do playback and use the NMEA data.
  * 08/11/2015      RC          3.0.5      Verfiy the sentences are correct before processing them.
+ * 10/07/2015      RC          3.2.0      Set the BT range values in SetBD().
  * 
  * 
  * 
@@ -1314,6 +1315,29 @@ namespace RTI
                 _prevEns.DvlData.BtUpwardDistance = bd.U;
                 _prevEns.DvlData.BtRangeToBottom = bd.RangeToBottom;
                 _prevEns.DvlData.BtEarthTimeLastGoodVel = bd.Time;
+
+                                // Add DVL dataset
+                if (_prevEns.DvlData == null)
+                {
+                    _prevEns.DvlData = new DataSet.DvlDataSet();
+                    _prevEns.IsDvlDataAvail = true;
+                }
+                _prevEns.DvlData.RangeBeam0 = bd.RangeToBottom;
+                _prevEns.DvlData.RangeBeam1 = bd.RangeToBottom;
+                _prevEns.DvlData.RangeBeam2 = bd.RangeToBottom;
+                _prevEns.DvlData.RangeBeam3 = bd.RangeToBottom;
+
+
+                // Add Bottom Track DataSet
+                if (!_prevEns.IsBottomTrackAvail)
+                {
+                    _prevEns.BottomTrackData = new DataSet.BottomTrackDataSet();
+                    _prevEns.IsBottomTrackAvail = true;
+                }
+                _prevEns.BottomTrackData.Range[0] = bd.RangeToBottom;
+                _prevEns.BottomTrackData.Range[1] = bd.RangeToBottom;
+                _prevEns.BottomTrackData.Range[2] = bd.RangeToBottom;
+                _prevEns.BottomTrackData.Range[3] = bd.RangeToBottom;
             }
 
             _prevBD = bd;

@@ -1,5 +1,10 @@
 RTI Changelog
 
+RTI-3.2.0
+ - Changed the version number.
+ - In Pd6_13Codec, set the BT range values in SetBD().
+ - In SystemSetupDataSet, check for missing JSON values in ReadJson.
+
 RTI-3.1.1
  - Changed the version number.
  - BottomTrackDataSet allow BT to handle 3 beams.

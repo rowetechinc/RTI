@@ -37,6 +37,7 @@
  * 07/24/2014      RC          2.23.0     Added and empty constructor.
  * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
  * 09/25/2015      RC          3.1.1      Added missing variables.
+ * 10/07/2015      RC          3.2.0      Check for missing JSON values in ReadJson.
  * 
  */
 
@@ -665,32 +666,59 @@ namespace RTI
                     // Voltage
                     data.Voltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE];
 
-                    // XmtVoltage
-                    data.XmtVoltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE] != null)
+                    {
+                        // XmtVoltage
+                        data.XmtVoltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE];
+                    }
 
-                    // BtBroadband
-                    data.BtBroadband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND] != null)
+                    {
+                        // BtBroadband
+                        data.BtBroadband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND];
+                    }
 
-                    // BtLagLength
-                    data.BtLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTLAGLENGTH];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTLAGLENGTH] != null)
+                    {
+                        // BtLagLength
+                        data.BtLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTLAGLENGTH];
+                    }
 
-                    // BtNarrowband
-                    data.BtNarrowband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND] != null)
+                    {
+                        // BtNarrowband
+                        data.BtNarrowband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND];
+                    }
 
-                    // BtBeamMux
-                    data.BtBeamMux = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX] != null)
+                    {
+                        // BtBeamMux
+                        data.BtBeamMux = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX];
+                    }
 
-                    // WpBroadband
-                    data.WpBroadband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBROADBAND];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBROADBAND] != null)
+                    {
+                        // WpBroadband
+                        data.WpBroadband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBROADBAND];
+                    }
 
-                    // WpLagLength
-                    data.WpLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH] != null)
+                    {
+                        // WpLagLength
+                        data.WpLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH];
+                    }
 
-                    // WpBandWidth
-                    data.WpBandWidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH] != null)
+                    {
+                        // WpBandWidth
+                        data.WpBandWidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH];
+                    }
 
-                    // WpBandWidth1
-                    data.WpBandWidth1 = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1] != null)
+                    {
+                        // WpBandWidth1
+                        data.WpBandWidth1 = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1];
+                    }
 
                     return data;
                 }

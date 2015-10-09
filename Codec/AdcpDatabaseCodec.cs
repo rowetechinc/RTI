@@ -222,16 +222,21 @@ namespace RTI
 
             try
             {
-                // Ensemble
-                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ENSEMBLE_DS))
+                try
                 {
-                    ensemble.EnsembleData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EnsembleDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_ENSEMBLE_DS]));
+                    // Ensemble
+                    if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ENSEMBLE_DS))
+                    {
+                        ensemble.EnsembleData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EnsembleDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_ENSEMBLE_DS]));
+                    }
+                    if (ensemble.EnsembleData != null)
+                    {
+                        ensemble.IsEnsembleAvail = true;
+                    }
                 }
-                if (ensemble.EnsembleData != null)
-                {
-                    ensemble.IsEnsembleAvail = true;
-                }
+                catch (Exception e) { log.Error("Error parsing the Ensemble data from the database.", e); }
 
+                try { 
                 // Amplitude
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_AMPLITUDE_DS))
                 {
@@ -241,7 +246,10 @@ namespace RTI
                 {
                     ensemble.IsAmplitudeAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Amplitude data from the database.", e); }
 
+                try { 
                 // Correlation
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_CORRELATION_DS))
                 {
@@ -251,7 +259,10 @@ namespace RTI
                 {
                     ensemble.IsCorrelationAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Correlation data from the database.", e); }
 
+                try { 
                 // Ancillary
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ANCILLARY_DS))
                 {
@@ -261,7 +272,10 @@ namespace RTI
                 {
                     ensemble.IsAncillaryAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Ancillary data from the database.", e); }
 
+                try { 
                 // Beam Velocity
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_BEAMVELOCITY_DS))
                 {
@@ -271,7 +285,10 @@ namespace RTI
                 {
                     ensemble.IsBeamVelocityAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Beam Velocity data from the database.", e); }
 
+                try { 
                 // Instrument Velocity
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_INSTRUMENTVELOCITY_DS))
                 {
@@ -281,17 +298,24 @@ namespace RTI
                 {
                     ensemble.IsInstrumentVelocityAvail = true;
                 }
-
-                // Earth Velocity
-                if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_EARTHVELOCITY_DS))
-                {
-                    ensemble.EarthVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EarthVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_EARTHVELOCITY_DS]));
                 }
-                if (ensemble.EarthVelocityData != null)
-                {
-                    ensemble.IsEarthVelocityAvail = true;
-                }
+                catch (Exception e) { log.Error("Error parsing the Instrument Velocity data from the database.", e); }
 
+                try
+                {
+                    // Earth Velocity
+                    if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_EARTHVELOCITY_DS))
+                    {
+                        ensemble.EarthVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.EarthVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_EARTHVELOCITY_DS]));
+                    }
+                    if (ensemble.EarthVelocityData != null)
+                    {
+                        ensemble.IsEarthVelocityAvail = true;
+                    }
+                }
+                catch (Exception e) { log.Error("Error parsing the Earth Velocity data from the database.", e); }
+
+                try { 
                 // Good Beam
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GOODBEAM_DS))
                 {
@@ -301,7 +325,10 @@ namespace RTI
                 {
                     ensemble.IsGoodBeamAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Good Beam data from the database.", e); }
 
+                try { 
                 // Good Earth
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GOODEARTH_DS))
                 {
@@ -311,7 +338,10 @@ namespace RTI
                 {
                     ensemble.IsGoodEarthAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Good Earth data from the database.", e); }
 
+                try { 
                 // Bottom Track
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_BOTTOMTRACK_DS))
                 {
@@ -321,7 +351,10 @@ namespace RTI
                 {
                     ensemble.IsBottomTrackAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Bottom Track data from the database.", e); }
 
+                try { 
                 // NMEA
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_NMEA_DS))
                 {
@@ -331,7 +364,10 @@ namespace RTI
                 {
                     ensemble.IsNmeaAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the NMEA data from the database.", e); }
 
+                try { 
                 // Earth Water Mass Velocity
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_EARTHWATERMASS_DS))
                 {
@@ -341,7 +377,10 @@ namespace RTI
                 {
                     ensemble.IsEarthWaterMassAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Earth Water Mass Velocity data from the database.", e); }
 
+                try { 
                 // Instrument Water Mass Velocity
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_INSTRUMENTWATERMASS_DS))
                 {
@@ -351,7 +390,10 @@ namespace RTI
                 {
                     ensemble.IsInstrumentWaterMassAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Instrument Water Mass Velocity data from the database.", e); }
 
+                try { 
                 // Profile Engineering
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_PROFILEENGINEERING_DS))
                 {
@@ -361,7 +403,10 @@ namespace RTI
                 {
                     ensemble.IsProfileEngineeringAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Profile Engineering data from the database.", e); }
 
+                try { 
                 // Bottom Track Engineering
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_BOTTOMTRACKENGINEERING_DS))
                 {
@@ -371,7 +416,10 @@ namespace RTI
                 {
                     ensemble.IsBottomTrackEngineeringAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Bottom Track Engineering data from the database.", e); }
 
+                try { 
                 // System Setup
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_SYSTEMSETUP_DS))
                 {
@@ -381,7 +429,10 @@ namespace RTI
                 {
                     ensemble.IsSystemSetupAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the System Setup data from the database.", e); }
 
+                try { 
                 // Range Tracking
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_RANGETRACKING_DS))
                 {
@@ -391,7 +442,10 @@ namespace RTI
                 {
                     ensemble.IsRangeTrackingAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the Ranging Tracking data from the database.", e); }
 
+                try { 
                 // ADCP GPS
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_ADCPGPS))
                 {
@@ -401,7 +455,10 @@ namespace RTI
                 {
                     ensemble.IsAdcpGpsDataAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the ADCP GPS data from the database.", e); }
 
+                try { 
                 // GPS 1
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GPS1))
                 {
@@ -411,7 +468,10 @@ namespace RTI
                 {
                     ensemble.IsGps1DataAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the GPS 1 data from the database.", e); }
 
+                try { 
                 // GPS 2
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GPS2))
                 {
@@ -421,7 +481,10 @@ namespace RTI
                 {
                     ensemble.IsGps2DataAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the GPS 2 data from the database.", e); }
 
+                try { 
                 // NMEA 1
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_NMEA1))
                 {
@@ -431,7 +494,10 @@ namespace RTI
                 {
                     ensemble.IsNmea1DataAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the NMEA 1 data from the database.", e); }
 
+                try { 
                 // NMEA 2
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_NMEA2))
                 {
@@ -441,7 +507,10 @@ namespace RTI
                 {
                     ensemble.IsNmea2DataAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the NMEA 2 data from the database.", e); }
 
+                try { 
                 // DVL
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_DVL_DS))
                 {
@@ -451,6 +520,8 @@ namespace RTI
                 {
                     ensemble.IsDvlDataAvail = true;
                 }
+                }
+                catch (Exception e) { log.Error("Error parsing the DVL data from the database.", e); }
 
             }
             catch (Exception e)

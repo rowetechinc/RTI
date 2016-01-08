@@ -321,6 +321,150 @@ namespace RTI
             Assert.AreEqual(90, dir, 0.0001, "Direction incorrect");
         }
 
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionNorth()
+        {
+            double east = 0;    // X
+            double north = 0.5;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(0, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionEast()
+        {
+            double east = 0.5;    // X
+            double north = 0;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(90, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionWest()
+        {
+            double east = -0.5;    // X
+            double north = 0;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(270, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionSouth()
+        {
+            double east = 0;    // X
+            double north = -0.5;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(180, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionNorthEast()
+        {
+            double east = 1.0;    // X
+            double north = 0.5;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(63.4349, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionSouthWest()
+        {
+            double east = -0.5;    // X
+            double north = -1.0;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(206.565, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionNorthWest()
+        {
+            double east = -0.5;    // X
+            double north = 1.0;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(333.4349, dir, 0.0001, "Direction incorrect");
+        }
+
+        /// <summary>
+        /// Test the direction calculation and magnitude direction.
+        /// Give a north as Y and east as X.
+        /// All values 0.
+        /// 
+        /// http://www.analyzemath.com/vector_calculators/magnitude_direction.html
+        /// </summary>
+        [Test]
+        public void CalculateDirectionSouthEast()
+        {
+            double east = 1.0;    // X
+            double north = -0.5;   // Y
+
+            double dir = RTI.MathHelper.CalculateDirection(east, north);
+
+            Assert.AreEqual(116.56505, dir, 0.0001, "Direction incorrect");
+        }
+
         #endregion
 
         #region Degree To Radians

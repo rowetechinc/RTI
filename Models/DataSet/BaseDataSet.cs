@@ -1113,6 +1113,11 @@ namespace RTI
             public const string JSON_STR_DVL_BT_NORMAL_VEL = "BtNormalVelocity";
 
             /// <summary>
+            /// Bottom Track Ship Error Velocity.
+            /// </summary>
+            public const string JSON_STR_DVL_BT_SHIP_ERR_VEL = "BtShipErrorVelocity";
+
+            /// <summary>
             /// Bottom Track Ship Is Good Velocity.
             /// </summary>
             public const string JSON_STR_DVL_BT_SHIP_IS_GOOD_VEL = "BtShipIsGoodVelocity";

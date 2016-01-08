@@ -379,6 +379,25 @@ namespace RTI
             /// </summary>
             public const int BEAM_Z_INDEX = BEAM_2_INDEX;
 
+
+            /// <summary>
+            /// Index of beams in Ship transformation.
+            /// Beam Forward.
+            /// </summary>
+            public const int BEAM_FORWARD_INDEX = BEAM_0_INDEX;
+
+            /// <summary>
+            /// Index of beams in Ship transformation.
+            /// Beam Port.
+            /// </summary>
+            public const int BEAM_PORT_INDEX = BEAM_1_INDEX;
+
+            /// <summary>
+            /// Index of beams in Ship transformation.
+            /// Beam Up.
+            /// </summary>
+            public const int BEAM_UP_INDEX = BEAM_2_INDEX;
+
             #endregion
 
             #region Validation Variables
@@ -2282,6 +2301,30 @@ namespace RTI
                         return "Y";
                     case DataSet.Ensemble.BEAM_Z_INDEX:
                         return "Z";
+                    case DataSet.Ensemble.BEAM_Q_INDEX:
+                        return "Q";
+                    default:
+                        return "";
+                }
+            }
+
+            /// <summary>
+            /// Based off the given beam number, give
+            /// the name of the beam in Instrument Coordinate transform.
+            /// Forward, Port, Up, and Q.
+            /// </summary>
+            /// <param name="beam">Beam number.</param>
+            /// <returns>Name for the beam number in Instrument Coordinate Transform.</returns>
+            public static string ShipBeamName(int beam)
+            {
+                switch (beam)
+                {
+                    case DataSet.Ensemble.BEAM_FORWARD_INDEX:
+                        return "Forward";
+                    case DataSet.Ensemble.BEAM_PORT_INDEX:
+                        return "Port";
+                    case DataSet.Ensemble.BEAM_UP_INDEX:
+                        return "Up";
                     case DataSet.Ensemble.BEAM_Q_INDEX:
                         return "Q";
                     default:

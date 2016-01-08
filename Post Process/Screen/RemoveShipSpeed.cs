@@ -105,9 +105,9 @@ namespace RTI
                         {
                             // If you cannot use bottom track
                             // Do not also use the previous bottom track
-                            btPrevEast = DataSet.Ensemble.BAD_VELOCITY;
-                            btPrevNorth = DataSet.Ensemble.BAD_VELOCITY;
-                            btPrevVertical = DataSet.Ensemble.BAD_VELOCITY;
+                            //btPrevEast = DataSet.Ensemble.BAD_VELOCITY;
+                            //btPrevNorth = DataSet.Ensemble.BAD_VELOCITY;
+                            //btPrevVertical = DataSet.Ensemble.BAD_VELOCITY;
                         }
 
                         // Check if we can use GPS speed
@@ -186,7 +186,7 @@ namespace RTI
                             }
                             else
                             {
-                                // No bottom track information is good
+                                // No ship speed information is good
                                 // So do nothing
                                 return false;
                             }

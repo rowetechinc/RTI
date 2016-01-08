@@ -56,6 +56,7 @@
  * 10/31/2014      RC          3.0.2      Added DoubleToByteArray().
  * 04/29/2015      RC          3.0.4      In CalculateDirection(), make the value between 0 and 360.
  * 10/30/0215      RC          3.2.1      Added AngleDiff() to calculate the difference between 2 heading values.
+ * 12/09/2015      RC          3.3.0      Added AdcpCorrection() to calculate the fudge factor number.
  * 
  * 
  */
@@ -251,6 +252,9 @@ namespace RTI
         /// Calculate the Direction of the velocities given.
         /// Value will be returned in degrees.  Give the Y axis as the first parameter.
         /// Make the value between 0 and 360.
+        /// 
+        /// Parameters should be EAST,NORTH for water velocity in ADCP.
+        /// 
         /// </summary>
         /// <param name="y">Y axis velocity value.</param>
         /// <param name="x">X axis velocity value.</param>
@@ -981,6 +985,63 @@ namespace RTI
             }
 
             return ((Math.Abs(exp1Value - exp2Value)) / (0.5 * (exp1Value + exp2Value))) * 100;
+        }
+
+        /// <summary>
+        /// Take the ratios of the DMG of the GPS and ADCP for each path traveled.
+        /// Ratio = ADCP/GPS
+        /// 
+        /// Average the ratios.
+        /// Return the reciprical of the average.
+        /// If the ADCP traveled greater than GPS, the result will be less than 1.
+        /// If the ADCP traveled less than GPS, the resull will be greater 1.
+        /// 
+        /// The ratios should be close to each other.  If the error is only in 1 direction,
+        /// this correction will not work.  Multiply the result to the original ADCP value and it should
+        /// be within 0.25% of the GPS value for the fudge factor to be considered good.
+        /// 
+        /// This value can be entered into the ADCP as a fudge factor using the command: ENGXDCRSCALE.
+        /// ENGCONF can verify the command and review what it was previously.
+        /// </summary>
+        /// <param name="gpsDmgB0">GPS DMG for Beam 0 orientation.</param>
+        /// <param name="adcpDmgB0">ADCP DMG for Beam 0 orientation.</param>
+        /// <param name="gpsDmgB3">GPS DMG for Beam 3 orientation.</param>
+        /// <param name="adcpDmgB3">ADCP DMG for Beam 3 orientation.</param>
+        /// <returns>ADCP correction value.</returns>
+        public static double AdcpCorrection(double gpsDmgB0, double adcpDmgB0, double gpsDmgB3, double adcpDmgB3)
+        {
+            // Calculate ratios
+            double ratioB0 = adcpDmgB0 / gpsDmgB0;
+            double ratioB3 = adcpDmgB3 / gpsDmgB3;
+
+            // Avg Ratios 
+            double avg = (ratioB0 + ratioB3) / 2.0;
+
+            // Recipical of ratio
+            double result = 1.0 / avg;
+
+            // =====================
+            // Verify the results are good
+            // The new ADCP values should both be under .25% for the value to be good
+            // If value is bad, 1 will be returned
+            double newAdcpDmgB0 = adcpDmgB0 * result;
+            double newAdcpDmgB3 = adcpDmgB3 * result;
+
+            // Check if Beam 0 failed
+            if(PercentError(newAdcpDmgB0, adcpDmgB0) > 0.25)
+            {
+                return 1.0;
+            }
+
+            // Check if B3 Failed
+            if(PercentError(newAdcpDmgB3, adcpDmgB3) > 0.25)
+            {
+                return 1.0;
+            }
+
+            // The result is good so use it
+            return result;
+
         }
 
         #endregion

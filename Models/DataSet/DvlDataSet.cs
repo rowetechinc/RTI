@@ -35,6 +35,7 @@
  * -----------------------------------------------------------------
  * 06/18/2014      RC          2.22.1     Initial coding
  * 09/24/2014      RC          3.0.2      Added DMG data.
+ * 12/07/2015      RC          3.3.0      Added Ship Error velocity.
  * 
  */
 
@@ -378,6 +379,11 @@ namespace RTI
             public float BtNormalVelocity { get; set; }
 
             /// <summary>
+            /// Bottom Track Ship Error Velocity in mm/s.
+            /// </summary>
+            public float BtShipErrorVelocity { get; set; }
+
+            /// <summary>
             /// Bottom Track Ship Is Velocity good.
             /// </summary>
             public bool BtShipIsGoodVelocity { get; set; }
@@ -607,6 +613,7 @@ namespace RTI
             /// <param name="BtTransverseVelocity">Bottom Track Transverse Velocity.</param>
             /// <param name="BtLongitudinalVelocity">Bottom Track Longitudinal Velocity.</param>
             /// <param name="BtNormalVelocity">Bottom Track Normal Velocity.</param>
+            /// <param name="BtShipErrorVelocity">Bottom Track Ship Error Velocity.</param>
             /// <param name="BtShipIsGoodVelocity">Bottom Track Ship Is Good Velocity.</param>
             /// <param name="BtEastVelocity">Bottom Track East Velocity.</param>
             /// <param name="BtNorthVelocity">Bottom Track North Velocity.</param>
@@ -643,7 +650,7 @@ namespace RTI
                         float WmEastVelocity, float WmNorthVelocity, float WmUpwardVelocity, bool WmEarthIsGoodVelocity,
                         float WmEastDistance, float WmNorthDistance, float WmUpwardDistance, float WmEarthRangeToWaterMassCenter, float WmEarthTimeLastGoodVel,
                         float BtXVelocity, float BtYVelocity, float BtZVelocity, float BtErrorVelocity, bool BtInstrumentIsGoodVelocity,
-                        float BtTransverseVelocity, float BtLongitudinalVelocity, float BtNormalVelocity, bool BtShipIsGoodVelocity,
+                        float BtTransverseVelocity, float BtLongitudinalVelocity, float BtNormalVelocity, float BtShipErrorVelocity, bool BtShipIsGoodVelocity,
                         float BtEastVelocity, float BtNorthVelocity, float BtUpwardVelocity, bool BtEarthIsGoodVelocity,
                         float BtEastDistance, float BtNorthDistance, float BtUpwardDistance, float BtEarthRangeToWaterMassCenter, float BtEarthTimeLastGoodVel,
                         float Pressure, float RangeBeam0, float RangeBeam1, float RangeBeam2, float RangeBeam3, float AverageRange,
@@ -714,6 +721,7 @@ namespace RTI
                 this.BtTransverseVelocity = BtTransverseVelocity;
                 this.BtLongitudinalVelocity = BtLongitudinalVelocity;
                 this.BtNormalVelocity = BtNormalVelocity;
+                this.BtShipErrorVelocity = BtShipErrorVelocity;
                 this.BtShipIsGoodVelocity = BtShipIsGoodVelocity;
 
                 this.BtEastVelocity = BtEastVelocity;
@@ -809,6 +817,7 @@ namespace RTI
                 BtTransverseVelocity = 0.0f;
                 BtLongitudinalVelocity = 0.0f;
                 BtNormalVelocity = 0.0f;
+                BtShipErrorVelocity = 0.0f;
                 BtShipIsGoodVelocity = false;
 
                 BtEastVelocity = 0.0f;
@@ -941,6 +950,7 @@ namespace RTI
                 sb.AppendLine(string.Format("BtTransverseVelocity = {0}", BtTransverseVelocity));
                 sb.AppendLine(string.Format("BtLongitudinalVelocity = {0}", BtLongitudinalVelocity));
                 sb.AppendLine(string.Format("BtNormalVelocity = {0}", BtNormalVelocity));
+                sb.AppendLine(string.Format("BtShipErrorVelocity = {0}", BtShipErrorVelocity));
                 sb.AppendLine(string.Format("BtShipIsGoodVelocity = {0}", BtShipIsGoodVelocity));
 
                 sb.AppendLine();
@@ -1280,6 +1290,10 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DVL_BT_NORMAL_VEL);
                 writer.WriteValue(data.BtNormalVelocity);
 
+                // Bottom Track Ship Error Vel
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_ERR_VEL);
+                writer.WriteValue(data.BtShipErrorVelocity);
+
                 // Bottom Track Ship Is Good Vel
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_IS_GOOD_VEL);
                 writer.WriteValue(data.BtShipIsGoodVelocity);
@@ -1586,17 +1600,41 @@ namespace RTI
 
                     #region Bottom Track Ship Velocity
 
-                    // Bottom Track Transverse Vel 
-                    float BtTransverseVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_TRANSVERSE_VEL];
+                    float BtTransverseVel = 0.0f;
+                    float BtLongitudinalVel = 0.0f;
+                    float BtNormalVel = 0.0f;
+                    float BtShipErrVel = 0.0f;
+                    bool BtShipIsGoodVel = false;
 
-                    // Bottom Track Longitudinal Vel 
-                    float BtLongitudinalVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_LONGITUDINAL_VEL];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_TRANSVERSE_VEL] != null)
+                    {
+                        // Bottom Track Transverse Vel 
+                        BtTransverseVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_TRANSVERSE_VEL];
+                    }
 
-                    // Bottom Track Normal Vel 
-                    float BtNormalVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_NORMAL_VEL];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_LONGITUDINAL_VEL] != null)
+                    {
+                        // Bottom Track Longitudinal Vel 
+                        BtLongitudinalVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_LONGITUDINAL_VEL];
+                    }
 
-                    // Bottom Track Ship Is Good Vel 
-                    bool BtShipIsGoodVel = (bool)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_IS_GOOD_VEL];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_NORMAL_VEL] != null)
+                    {
+                        // Bottom Track Normal Vel 
+                        BtNormalVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_NORMAL_VEL];
+                    }
+
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_ERR_VEL] != null)
+                    {
+                        // Bottom Track Ship Error Vel 
+                        BtShipErrVel = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_ERR_VEL];
+                    }
+
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_IS_GOOD_VEL] != null)
+                    {
+                        // Bottom Track Ship Is Good Vel 
+                        BtShipIsGoodVel = (bool)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_SHIP_IS_GOOD_VEL];
+                    }
 
                     #endregion
 
@@ -1764,7 +1802,7 @@ namespace RTI
                                                 WmEastVel, WmNorthVel, WmUpwardVel, WmEarthIsGoodVel,
                                                 WmEastDist, WmNorthDist, WmUpwardDist, WmEarthRangeToWaterMassCenter, WmEarthTimeLastGoodVel,
                                                 BtXVel, BtYVel, BtZVel, BtErrorVel, BtInstrumentIsGoodVel,
-                                                BtTransverseVel, BtLongitudinalVel, BtNormalVel, WmShipIsGoodVel,
+                                                BtTransverseVel, BtLongitudinalVel, BtNormalVel, BtShipErrVel, BtShipIsGoodVel,
                                                 BtEastVel, BtNorthVel, BtUpwardVel, BtEarthIsGoodVel,
                                                 BtEastDist, BtNorthDist, BtUpwardDist, BtEarthRangeToWaterMassCenter, BtEarthTimeLastGoodVel,
                                                 Pressure, RangeB0, RangeB1, RangeB2, RangeB3, AvgRange,

@@ -1,5 +1,14 @@
 RTI Changelog
 
+RTI-3.3.0
+ - Added Ship Error velocity to DVL data.
+ - In MathHelper, added AdcpCorrection() to calculate the fudge factor number.
+ - Added AdcpBinaryCodecForFiles to increase the performance by adding a MemoryStream to buffer the data.
+ - Added MemoryStreamExtensions to add more to MemoryStream.
+ - Added ScreeningScaleFactor.
+ - Added AverageBinsTogether.
+ - In Transform, Added GPS heading and Heading offset.
+
 RTI-3.2.1
  - Changed the version number.
  - CsvExportWriter, fixed bug in EncodeCSV() if bin sizes were different between configurations.

@@ -172,12 +172,12 @@ namespace RTI
             /// <summary>
             /// WP Bandwidth.
             /// </summary>
-            public float WpBandWidth { get; set; }
+            public float WpTransmitBandwidth { get; set; }
 
             /// <summary>
             /// WP Bandwidth.
             /// </summary>
-            public float WpBandWidth1 { get; set; }
+            public float WpReceiveBandwidth { get; set; }
 
             #endregion
 
@@ -378,8 +378,8 @@ namespace RTI
                     BtBeamMux = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
                     WpBroadband = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
                     WpLagLength = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
-                    WpBandWidth = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
-                    WpBandWidth1 = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
+                    WpTransmitBandwidth = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
+                    WpReceiveBandwidth = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
 
                 }
 
@@ -422,8 +422,8 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtBeamMux), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBroadband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpLagLength), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBandWidth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBandWidth1), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpTransmitBandwidth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpReceiveBandwidth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
@@ -593,11 +593,11 @@ namespace RTI
 
                 // WpBandWidth
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH);
-                writer.WriteValue(data.WpBandWidth);
+                writer.WriteValue(data.WpTransmitBandwidth);
 
                 // WpBandWidth1
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1);
-                writer.WriteValue(data.WpBandWidth1);
+                writer.WriteValue(data.WpReceiveBandwidth);
 
                 // End the object
                 writer.WriteEndObject();
@@ -711,13 +711,13 @@ namespace RTI
                     if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH] != null)
                     {
                         // WpBandWidth
-                        data.WpBandWidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH];
+                        data.WpTransmitBandwidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH];
                     }
 
                     if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1] != null)
                     {
                         // WpBandWidth1
-                        data.WpBandWidth1 = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1];
+                        data.WpReceiveBandwidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1];
                     }
 
                     return data;

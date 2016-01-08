@@ -615,8 +615,8 @@ namespace RTI
                 ensemble.BottomTrackData.EarthGood[Ensemble.BEAM_NORTH_INDEX] = 0.0f;
                 ensemble.BottomTrackData.InstrumentGood[Ensemble.BEAM_Y_INDEX] = 0.0f;
 
-                ensemble.DvlData.BtEastVelocity = Ensemble.BAD_VELOCITY;
-                ensemble.DvlData.BtXVelocity = Ensemble.BAD_VELOCITY;
+                ensemble.DvlData.BtNorthVelocity = Ensemble.BAD_VELOCITY;
+                ensemble.DvlData.BtYVelocity = Ensemble.BAD_VELOCITY;
                 ensemble.DvlData.BtLongitudinalVelocity = Ensemble.BAD_VELOCITY;
             }
             else
@@ -736,6 +736,7 @@ namespace RTI
                 ensemble.BottomTrackData.InstrumentGood[Ensemble.BEAM_Q_INDEX] = 0.0f;
 
                 ensemble.DvlData.BtErrorVelocity = Ensemble.BAD_VELOCITY;
+                ensemble.DvlData.BtShipErrorVelocity = Ensemble.BAD_VELOCITY;
             }
             else
             {
@@ -776,7 +777,13 @@ namespace RTI
                 // Ship velocity
                 if (config.VelTransform == Core.Commons.Transforms.SHIP)
                 {
+                    //ensemble.BottomTrackData.InstrumentVelocity[Ensemble.BEAM_Q_INDEX] = MathHelper.LsbMsbShort(binaryEnsemble[11], binaryEnsemble[12]) * 0.001f;        // mm/s to m/s
+                    //ensemble.BottomTrackData.InstrumentGood[Ensemble.BEAM_Q_INDEX] = 1.0f;
 
+                    ensemble.DvlData.BtShipErrorVelocity = MathHelper.LsbMsbShort(binaryEnsemble[11], binaryEnsemble[12]) * 0.001f;        // mm/s to m/s
+
+                    ensemble.EnsembleData.NumBeams++;       // Number of beams
+                    ensemble.BottomTrackData.NumBeams++;    // Number of beams
                 }
             }
 

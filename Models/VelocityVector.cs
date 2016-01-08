@@ -82,6 +82,9 @@ namespace RTI
             public double Magnitude { get; set; }
 
             /// <summary>
+            /// 
+            /// USE THIS VALUE FOR ADCP WATER DIRECTION
+            /// 
             /// Direction of the bin velocity
             /// with Bottom Track velocity removed.
             /// The positive X direction is North.
@@ -290,7 +293,7 @@ namespace RTI
 
                             // Set the values
                             ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude = Math.Abs(mag);
-                            ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
+                            ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);       // USE THIS VALUE FOR ADCP
                             ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
                         }
                     }

@@ -36,6 +36,7 @@
  * 07/25/2013      RC          2.19.2     Added Instrument transform.
  *                                         Updated how Pitch and Roll are used per SM.
  * 05/07/2014      RC          2.21.4     Added Correlation and SNR threshold.
+ * 01/06/2016      RC          3.3.0      Added GPS heading and Heading offset.
  * 
  */
 
@@ -59,13 +60,20 @@ namespace RTI
         /// it will be created and then filled with the data.  If the ensemble already has the Instrument/Earth dataset, the
         /// data will be overwritten with new data.
         /// 
+        /// If the isUseGpsHeading is set to true it will use the GPS heading if it exist.  If there is no GPS data, or no GPS heading,
+        /// fall back to the ancillary heading data.
+        /// 
+        /// Add the heading offset to the heading value before using it to retransform the data.
+        /// 
         /// Correlation Thresholds Defaults
         /// BB = 0.25f
         /// NB = 0.80f
         /// </summary>
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
         /// <param name="corrThresh">Correlation Threshold.</param>
-        public static void ProfileTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.25f)
+        /// <param name="isUseGpsHeading">Use the GPS heading instead of the Anciallary data.</param>
+        /// <param name="headingOffset">Heading offset to add to the heading.</param>
+        public static void ProfileTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.25f, bool isUseGpsHeading = false, float headingOffset = 0.0f)
         {
             // Create the array to hold the earth data
             int numBins = 0;
@@ -121,12 +129,55 @@ namespace RTI
             float Heading = 0.0f;
             float Pitch = 0.0f;
             float Roll = 0.0f;
-            if(ensemble.IsAncillaryAvail)
+            if(isUseGpsHeading)
+            {
+                if(ensemble.IsNmeaAvail)
+                {
+                    // GPHDT
+                    if (ensemble.NmeaData.IsGphdtAvail())
+                    {
+                        Heading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
+                    }
+                    // GPRMC
+                    else if (ensemble.NmeaData.IsGprmcAvail())
+                    {
+                        Heading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
+                    }
+                    // Ancillary
+                    else if(ensemble.IsAncillaryAvail)
+                    {
+                        Heading = ensemble.AncillaryData.Heading;
+                    }
+                    // Bottom Track
+                    else if(ensemble.IsBottomTrackAvail)
+                    {
+                        Heading = ensemble.BottomTrackData.Heading;
+                    }
+                }
+            }
+            else if(ensemble.IsAncillaryAvail)
             {
                 Heading = ensemble.AncillaryData.Heading;
+            }
+            else if (ensemble.IsBottomTrackAvail)
+            {
+                Heading = ensemble.BottomTrackData.Heading;
+            }
+
+            // Set pitch and roll
+            if (ensemble.IsAncillaryAvail)
+            {
                 Pitch = ensemble.AncillaryData.Pitch;
                 Roll = ensemble.AncillaryData.Roll;
             }
+            else if (ensemble.IsBottomTrackAvail)
+            {
+                Pitch = ensemble.BottomTrackData.Pitch;
+                Roll = ensemble.BottomTrackData.Roll;
+            }
+
+            // Add the heading offset
+            Heading += headingOffset;
 
             // Subsystem selection
             switch(ensemble.EnsembleData.SubsystemConfig.SubSystem.Code)
@@ -374,6 +425,11 @@ namespace RTI
         /// it will be created and then filled with the data.  If the ensemble already has the Instrument/Earth dataset, the
         /// data will be overwritten with new data.
         /// 
+        /// If the isUseGpsHeading is set to true it will use the GPS heading if it exist.  If there is no GPS data, or no GPS heading,
+        /// fall back to the ancillary heading data.
+        /// 
+        /// Add the heading offset to the heading value before using it to retransform the data.
+        /// 
         /// Correlation Thresholds Default
         /// BB = 0.90f
         /// 
@@ -383,7 +439,9 @@ namespace RTI
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
         /// <param name="corrThresh">Correlation Threshold.</param>
         /// <param name="snrThresh">SNR Threshold.</param>
-        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f)
+        /// <param name="isUseGpsHeading">Use the GPS heading instead of the Anciallary data.</param>
+        /// <param name="headingOffset">Heading offset to add to the heading.</param>
+        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, bool isUseGpsHeading = false, float headingOffset = 0.0f)
         {
             // If there is no ensemble data, we cannot get the subsystem
             // If there is no Bottom Track data, we have nothing to transform
@@ -404,10 +462,41 @@ namespace RTI
             // Recreate the Bottom Track Earth Good dataset if it does not exist
             ensemble.BottomTrackData.EarthGood = new float[numBeams];
 
-            // Set the Heading pitch and roll
-            float Heading = ensemble.BottomTrackData.Heading;
+            //// Set the Heading pitch and roll
+            //float Heading = ensemble.BottomTrackData.Heading;
             float Pitch = ensemble.BottomTrackData.Pitch;
             float Roll = ensemble.BottomTrackData.Roll;
+
+            // Set the Heading pitch and roll
+            float Heading = 0.0f;
+            if (isUseGpsHeading)
+            {
+                if (ensemble.IsNmeaAvail)
+                {
+                    // GPHDT
+                    if (ensemble.NmeaData.IsGphdtAvail())
+                    {
+                        Heading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
+                    }
+                    // GPRMC
+                    else if (ensemble.NmeaData.IsGprmcAvail())
+                    {
+                        Heading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
+                    }
+                    // Ancillary
+                    else
+                    {
+                        Heading = ensemble.BottomTrackData.Heading;
+                    }
+                }
+            }
+            else
+            {
+                Heading = ensemble.BottomTrackData.Heading;
+            }
+
+            // Add the heading offset
+            Heading += headingOffset;
 
             // Subsystem selection
             switch (ensemble.EnsembleData.SubsystemConfig.SubSystem.Code)

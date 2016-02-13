@@ -78,6 +78,7 @@
  * 02/20/2014      RC          2.21.3     Fixed bug in WriteEnsembleDataToDatabase() where if GPS data was not present, the @position value was not set.
  * 03/03/2014      RC          2.21.4     In ProcessDataThread(), check for a DVL serial number.
  * 06/19/2014      RC          2.22.1     Added writing the DVL dataset in WriteEnsembleDataToDatabase().
+ * 02/12/2016      RC          3.3.1      Added RangeTracking column.
  * 
  */
 
@@ -769,6 +770,7 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_PROFILEENGINEERING_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_BOTTOMTRACKENGINEERING_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_SYSTEMSETUP_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_RANGETRACKING_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_ADCPGPS));
                     builder.Append(string.Format("{0},", DbCommon.COL_GPS1));
                     builder.Append(string.Format("{0},", DbCommon.COL_GPS2));
@@ -797,6 +799,7 @@ namespace RTI
                     builder.Append("@profileEngineeringDS, ");
                     builder.Append("@bottomTrackEngineeringDS, ");
                     builder.Append("@systemSetupDS, ");
+                    builder.Append("@rangeTrackingDS, ");
                     builder.Append("@adcpGps, ");
                     builder.Append("@gps1, ");
                     builder.Append("@gps2, ");
@@ -995,6 +998,16 @@ namespace RTI
                     else
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@systemSetupDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Range Tracking
+                    if (ensemble.IsRangeTrackingAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@rangeTrackingDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.RangeTrackingData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@rangeTrackingDS", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
                     // ADCP GPS

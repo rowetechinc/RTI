@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-3.3.1
+ - Added RangeTracking column to the project.
+
+
 RTI-3.3.0
  - Added Ship Error velocity to DVL data.
  - In MathHelper, added AdcpCorrection() to calculate the fudge factor number.

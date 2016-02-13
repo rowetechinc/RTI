@@ -1048,10 +1048,6 @@ namespace RTI
                     {
                         return false;
                     }
-                    else
-                    {
-                        return false;
-                    }
                     
                 }
 
@@ -1087,10 +1083,6 @@ namespace RTI
                 {
                     // Vertical beam only
                     if (NumBeams >= 1 && InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
-                    {
-                        return false;
-                    }
-                    else
                     {
                         return false;
                     }

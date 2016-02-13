@@ -59,6 +59,7 @@
  * 12/05/2013      RC           2.21.0    Added Pitch to MagCalibrationPosition().
  * 10/02/2014      RC           3.0.2     Fixed bug with SetAllDataComponentsCommand() adding missing IZAligned.
  * 02/05/2015      RC           3.0.2     Added ToString for PniDataResponse.
+ * 01/20/2016      RC           4.4.2     In MagCalibrationPosition, added the Roll values in to the calibration.
  * 
  */
 
@@ -2789,29 +2790,29 @@ namespace RTI
             switch (sample)
             {
                 case 0:
-                    return "Hdg:    0°";
+                    return "Hdg:    0°\nRoll: 30°";
                 case 1:
-                    return "Hdg:   90°";
+                    return "Hdg:   90°\nRoll: -30°";
                 case 2:
-                    return "Hdg:  180°";
+                    return "Hdg:  180°\nRoll: 30°";
                 case 3:
-                    return "Hdg:  270°";
+                    return "Hdg:  270°\nRoll: -30°";
                 case 4:
-                    return "Hdg:   30°\nPitch: 20°";
+                    return "Hdg:   30°\nPitch: 20°\nRoll: 30°";
                 case 5:
-                    return "Hdg:  120°\nPitch: 20°";
+                    return "Hdg:  120°\nPitch: 20°\nRoll: -30°";
                 case 6:
-                    return "Hdg:  210°\nPitch: 20°";
+                    return "Hdg:  210°\nPitch: 20°\nRoll: 30°";
                 case 7:
-                    return "Hdg:  300°\nPitch: 20°";
+                    return "Hdg:  300°\nPitch: 20°\nRoll: -30°";
                 case 8:
-                    return "Hdg:   60°\nPitch: -20°";
+                    return "Hdg:   60°\nPitch: -20°\nRoll: 30°";
                 case 9:
-                    return "Hdg:  150°\nPitch: -20°";
+                    return "Hdg:  150°\nPitch: -20°\nRoll: -30°";
                 case 10:
-                    return "Hdg:  240°\nPitch: -20°";
+                    return "Hdg:  240°\nPitch: -20°\nRoll: 30°";
                 case 11:
-                    return "Hdg:  330°\nPitch: -20°";
+                    return "Hdg:  330°\nPitch: -20°\nRoll: -30°";
                 default:
                     return "-";
             }

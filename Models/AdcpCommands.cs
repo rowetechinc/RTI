@@ -115,6 +115,7 @@ using System.Globalization;
 using System.ComponentModel;
 using DotSpatial.Positioning;
 using Newtonsoft.Json;
+using System.Linq;
 
 
 namespace RTI
@@ -1340,6 +1341,126 @@ namespace RTI
                 IsPressureSensorInstalled = false;
                 Rating = "";
                 DiagPressureStr = "";
+            }
+        }
+
+
+        #endregion
+
+        #region DiagSpectrum
+
+        /// <summary>
+        /// DiagSpectrum values.
+        /// </summary>
+        public struct DiagSpectrumValues
+        {
+            /// <summary>
+            /// Step index.
+            /// </summary>
+            public int Step;
+
+            /// <summary>
+            /// Frequency.
+            /// </summary>
+            public float Hz;
+
+            /// <summary>
+            /// Beam 0 value.
+            /// </summary>
+            public float Beam0;
+
+            /// <summary>
+            /// Beam 1 value.
+            /// </summary>
+            public float Beam1;
+
+            /// <summary>
+            /// Beam 2 value.
+            /// </summary>
+            public float Beam2;
+
+            /// <summary>
+            /// Beam 3 value.
+            /// </summary>
+            public float Beam3;
+        }
+
+        /// <summary>
+        /// Spectrum information.
+        /// </summary>
+        public class DiagSpectrum
+        {
+            #region Properties
+
+            /// <summary>
+            /// FO value.
+            /// </summary>
+            public float FO { get; set; }
+
+            /// <summary>
+            /// FS value.
+            /// </summary>
+            public float FS { get; set; }
+
+            /// <summary>
+            /// FC value.
+            /// </summary>
+            public float FC { get; set; }
+
+            /// <summary>
+            /// Steps value.
+            /// </summary>
+            public float Steps { get; set; }
+
+            /// <summary>
+            /// Samples value.
+            /// </summary>
+            public float Samples { get; set; }
+
+            /// <summary>
+            /// List of values.
+            /// </summary>
+            public List<DiagSpectrumValues> Values { get; set; }
+
+            /// <summary>
+            /// Buffer from the command.
+            /// </summary>
+            public List<string> DiagSpectrumStr { get; set; }
+
+            /// <summary>
+            /// Plot model html.
+            /// </summary>
+            public string PlotReport { get; set; }
+
+            /// <summary>
+            /// Serial number of the ADCP.
+            /// </summary>
+            public string SerialNumber { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            public DiagSpectrum()
+            {
+                Init();
+            }
+
+            /// <summary>
+            /// Initialize the values.
+            /// </summary>
+            public void Init()
+            {
+                FO = 0.0f;
+                FS = 0.0f;
+                FC = 0.0f;
+                Steps = 0.0f;
+                Samples = 0.0f;
+                Values = new List<DiagSpectrumValues>();
+                DiagSpectrumStr = new List<string>();
+                PlotReport = "";
+                SerialNumber = "";
             }
         }
 
@@ -6095,6 +6216,165 @@ namespace RTI
                 }
 
                 return pressureSensor;
+            }
+
+
+            #endregion
+
+            #region DIAGSPECTRUM
+
+            /// <summary>
+            /// Check the frequency spectrum
+            /// 
+            /// Noise Spectrum Test, fo = 576000.00, fs = 48000.00, fc = 576.00, steps = 84, samples = 2000
+            /// step,        Hz,   bm0,   bm1,   bm2,   bm3
+            ///    0, 551808.00,-13.01,-14.66,-15.11,-13.37
+            ///    1, 552384.00,-11.63,-14.34,-14.09,-12.16
+            ///    2, 552960.00,-10.99,-13.08,-13.12,-11.60
+            ///    ...
+            ///    83, 599616.00,-13.00,-14.57,-15.25,-13.83
+            /// </summary>
+            /// <param name="buffer">Buffer of the message.</param>
+            /// <returns>Return the spectrum results.</returns>
+            public static DiagSpectrum DecodeDiagSpectrum(string buffer)
+            {
+                // Initialize a sample
+                DiagSpectrum spectrum = new DiagSpectrum();
+
+                if (string.IsNullOrEmpty(buffer))
+                {
+                    return spectrum;
+                }
+
+                // Set the buffer
+                //spectrum.DiagSpectrumStr = buffer;
+
+                // Break up the lines
+                char[] newLines = new char[] { '\r', '\n' };
+                char[] spaces = new char[] { ' ' };
+                char[] spacesComma = new char[] { ',' };
+                char[] equal = new char[] { '=' };
+                string[] lines = buffer.Split(newLines, StringSplitOptions.RemoveEmptyEntries);
+
+                // Set the buffer
+                spectrum.DiagSpectrumStr = new List<string>(lines);
+
+                // Decode each line of data
+                for (int x = 0; x < lines.Length; x++)
+                {
+                    // Parameters
+                    if (lines[x].Contains("Noise") && lines[x].Contains("Spectrum"))
+                    {
+                        var vals = lines[x].Split(spacesComma, StringSplitOptions.RemoveEmptyEntries);
+                        if (vals.Length >= 6)
+                        {
+                            var FOs = vals[1].Split(equal, StringSplitOptions.RemoveEmptyEntries);
+                            float fo;
+                            if (float.TryParse(FOs[1], out fo))
+                            {
+                                spectrum.FO = fo;
+                            }
+
+                            var FSs = vals[2].Split(equal, StringSplitOptions.RemoveEmptyEntries);
+                            float fs;
+                            if (float.TryParse(FSs[1], out fs))
+                            {
+                                spectrum.FS = fs;
+                            }
+
+                            var FCs = vals[3].Split(equal, StringSplitOptions.RemoveEmptyEntries);
+                            float fc;
+                            if (float.TryParse(FCs[1], out fc))
+                            {
+                                spectrum.FC = fc;
+                            }
+
+                            var Steps = vals[4].Split(equal, StringSplitOptions.RemoveEmptyEntries);
+                            float step;
+                            if (float.TryParse(Steps[1], out step))
+                            {
+                                spectrum.Steps = step;
+                            }
+
+                            var Samples = vals[5].Split(equal, StringSplitOptions.RemoveEmptyEntries);
+                            float sample;
+                            if (float.TryParse(Samples[1], out sample))
+                            {
+                                spectrum.Samples = sample;
+                            }
+                        }
+                    }
+                    else if (lines[x].Contains("step") && lines[x].Contains("Hz")) 
+                    {
+                        // Title line, do nothing
+                    } 
+                    else 
+                    {
+                        // Values
+                        var vals = lines[x].Split(spacesComma, StringSplitOptions.RemoveEmptyEntries);
+                        if (vals.Length >= 6)
+                        {
+                            DiagSpectrumValues value = new DiagSpectrumValues();
+
+                            int step;
+                            if (int.TryParse(vals[0], out step))
+                            {
+                                value.Step = step;
+                            }
+
+                            float hz;
+                            if (float.TryParse(vals[1], out hz))
+                            {
+                                value.Hz = hz;
+                            }
+
+                            float bm0;
+                            if (float.TryParse(vals[2], out bm0))
+                            {
+                                value.Beam0 = bm0;
+                            }
+                            else
+                            {
+                                value.Beam0 = RTI.DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            float bm1;
+                            if (float.TryParse(vals[3], out bm1))
+                            {
+                                value.Beam1 = bm1;
+                            }
+                            else
+                            {
+                                value.Beam1 = RTI.DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            float bm2;
+                            if (float.TryParse(vals[4], out bm2))
+                            {
+                                value.Beam2 = bm2;
+                            }
+                            else
+                            {
+                                value.Beam2 = RTI.DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            float bm3;
+                            if (float.TryParse(vals[5], out bm3))
+                            {
+                                value.Beam3 = bm3;
+                            }
+                            else
+                            {
+                                value.Beam3 = RTI.DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            // Add the value to the list
+                            spectrum.Values.Add(value);
+                        }
+                    }
+                }
+
+                return spectrum;
             }
 
 

@@ -172,6 +172,12 @@ namespace RTI
         /// </summary>
         public const string BASE_ELEC_TYPE_ADCP3 = "03";
 
+        /// <summary>
+        /// Base Electronic type for Sea7 7 beam system.
+        /// This includes 2 three beam systems and a vertical beam.
+        /// </summary>
+        public const string BASE_ELEC_TYPE_ADCP4 = "04";
+
         #endregion
 
         #endregion
@@ -231,6 +237,7 @@ namespace RTI
                 list.Add(BASE_ELEC_TYPE_ADCP1);
                 list.Add(BASE_ELEC_TYPE_ADCP2);
                 list.Add(BASE_ELEC_TYPE_ADCP3);
+                list.Add(BASE_ELEC_TYPE_ADCP4);
                 return list;
             } 
         }

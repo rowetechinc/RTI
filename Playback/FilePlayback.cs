@@ -42,6 +42,7 @@
  * 06/12/2015      RC          3.0.5      Removed the file from the constructor and moved it to FindEnsembles().
  * 07/27/2015      RC          3.0.5      Set the file name playing back. 
  * 08/13/2015      RC          3.0.5      Read the file with a smaller buffer so large files will not take all the RAM in FindEnsembles().
+ * 05/11/2016      RC          3.3.2      Changed from list to dictionary to prevent playback being out of order.
  * 
  */
 
@@ -125,9 +126,24 @@ namespace RTI
         private object _ensembleFoundLock = new object();
 
         /// <summary>
-        /// List of ensembles found.
+        /// Dictionary to hold all the ensemble data.
         /// </summary>
-        private List<EnsembleData> _ensembleList;
+        private Dictionary<int, EnsembleData> _ensembleDict;
+
+        /// <summary>
+        /// Current ensemble to display.
+        /// </summary>
+        private int _currEnsNum;
+
+        /// <summary>
+        /// First ensemble number.  Used to jump around.
+        /// </summary>
+        private int _firstEnsNum;
+
+        /// <summary>
+        /// Last ensemble number.  Used to handle duplicate ensemble numbers.
+        /// </summary>
+        private int _lastEnsNum;
 
         /// <summary>
         /// Event to cause the thread
@@ -175,9 +191,12 @@ namespace RTI
             BytesPerEnsemble = DEFAULT_BYTES_PER_ENSEMBLE;
             _fileOffset = 0;
             TotalEnsembles = 0;
-            _ensembleList = new List<EnsembleData>();
+            //_ensembleList = new List<EnsembleData>();
             Name = "";
-
+            _ensembleDict = new Dictionary<int, EnsembleData>();
+            _currEnsNum = 0;
+            _firstEnsNum = 0;
+            _lastEnsNum = 0;
 
             // Codecs
             _adcpCodec = new AdcpCodec();
@@ -208,6 +227,26 @@ namespace RTI
         }
 
         /// <summary>
+        /// Find the next ensemble based off the first ensemble given.
+        /// This will max out at int max value.  If it reaches this, it will give
+        /// the first ensemble in the dictionary.
+        /// </summary>
+        /// <param name="ensNum"></param>
+        private void FindEns(int ensNum)
+        {
+            while (!_ensembleDict.ContainsKey(_currEnsNum))
+            {
+                _currEnsNum++;
+
+                // If we hit the max, then give the first ensemble
+                if(_currEnsNum == Int16.MaxValue)
+                {
+                    _currEnsNum = _ensembleDict.Keys.First();
+                }
+            }
+        }
+
+        /// <summary>
         /// Set forward in the file.
         /// </summary>
         /// <returns>Next ensemble in the file.</returns>
@@ -219,14 +258,28 @@ namespace RTI
             // Increment the playback index
             PlaybackIndex++;
 
-            if (PlaybackIndex < _ensembleList.Count)
+            if (PlaybackIndex < _ensembleDict.Count)
             {
+                // Find the first ensemble
+                if (_currEnsNum == 0)
+                {
+                    while (!_ensembleDict.ContainsKey(_currEnsNum))
+                    {
+                        _currEnsNum++;
+                    }
+                }
+
+                // Find the next good ensemble
+                FindEns(_currEnsNum);
+
                 // Set the values
                 args.Index = PlaybackIndex;
-                args.Ensemble = _ensembleList[(int)PlaybackIndex].Ensemble;
+                args.Ensemble = _ensembleDict[_currEnsNum].Ensemble;
                 args.TotalEnsembles = TotalEnsembles;
+
+                _currEnsNum++;
             }
-            else
+            else 
             {
                 return null;
             }
@@ -241,19 +294,33 @@ namespace RTI
         public PlaybackArgs StepBackward()
         {
             // Verify the playback index
-            if(PlaybackIndex - 1 < 0)
+            if(_currEnsNum -1 <= 0)
             {
+                PlaybackIndex = 0;
+                _currEnsNum = 0;
                 return null;
             }
 
             // Create the args and set the total number of ensembles
             PlaybackArgs args = new PlaybackArgs();
 
-            if ( PlaybackIndex < _ensembleList.Count)
+            if ( PlaybackIndex < _ensembleDict.Count)
             {
+
+                PlaybackIndex--;
+                if(PlaybackIndex < 0)
+                {
+                    PlaybackIndex = 0;
+                }
+
+                _currEnsNum--;
+
+                // Find the next good ensemble
+                FindEns(_currEnsNum);
+
                 // Set the values
-                args.Index = PlaybackIndex--;
-                args.Ensemble = _ensembleList[(int)PlaybackIndex].Ensemble;
+                args.Index = PlaybackIndex;
+                args.Ensemble = _ensembleDict[_currEnsNum].Ensemble;
                 args.TotalEnsembles = TotalEnsembles;
             }
 
@@ -271,14 +338,25 @@ namespace RTI
             // Create the args and set the total number of ensembles
             PlaybackArgs args = new PlaybackArgs();
 
-            if (index < _ensembleList.Count)
+            // Get the first ensemble number
+            // Determine how far forward to jump based off index
+            // Then add the jump to the first ensemble number and find the next 
+            // ensemble number near that jump
+            if (index < _ensembleDict.Count)
             {
                 // Set new index
                 PlaybackIndex = index;
 
+                // Set new current ensemble
+                // Zero based, so subtract 1
+                _currEnsNum = _firstEnsNum + (int)index;
+
+                // Find the next good ensemble
+                FindEns(_currEnsNum);
+
                 // Set the values
-                args.Index = index;
-                args.Ensemble = _ensembleList[(int)PlaybackIndex].Ensemble;
+                args.Index = PlaybackIndex;
+                args.Ensemble = _ensembleDict[_currEnsNum].Ensemble;
                 args.TotalEnsembles = TotalEnsembles;
             }
 
@@ -291,12 +369,13 @@ namespace RTI
         /// <returns>List of all the ensembles in the file.</returns>
         public Cache<long, DataSet.Ensemble> GetAllEnsembles()
         {
-            Cache<long, DataSet.Ensemble> list = new Cache<long, DataSet.Ensemble>((uint)_ensembleList.Count);
+            Cache<long, DataSet.Ensemble> list = new Cache<long, DataSet.Ensemble>((uint)_ensembleDict.Count);
 
             // Populate the cache with all the ensembles
-            for (int x = 0; x < _ensembleList.Count; x++ )
+            int x = 0;
+            foreach(var ens in _ensembleDict.Values)
             {
-                list.Add(x, _ensembleList[x].Ensemble);
+                list.Add(x++, ens.Ensemble);
             }
 
             return list;
@@ -308,7 +387,7 @@ namespace RTI
         /// <returns>List of all the ensembles in the file.</returns>
         public List<EnsembleData> GetEnsembleDataList()
         {
-            return _ensembleList;
+            return _ensembleDict.Values.ToList();
         }
 
         /// <summary>
@@ -411,12 +490,35 @@ namespace RTI
             // Create the velocity vectors for the ensemble
             DataSet.VelocityVectorHelper.CreateVelocityVector(ref ens);
 
-            // Store the found ensemble
-            _ensembleList.Add(new EnsembleData(raw, ens));
+            if (ensemble.IsEnsembleAvail)
+            {
+                // Store the found ensemble to the dictionary
+                if (!_ensembleDict.ContainsKey(ensemble.EnsembleData.EnsembleNumber))
+                {
+                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(raw, ens));
+
+                    // Find the first ensemble number
+                    if (_firstEnsNum == 0 || _firstEnsNum > ensemble.EnsembleData.EnsembleNumber)
+                    {
+                        _firstEnsNum = ensemble.EnsembleData.EnsembleNumber;
+                    }
+
+                    // Find the last ensemble number
+                    if (_lastEnsNum < ensemble.EnsembleData.EnsembleNumber)
+                    {
+                        _lastEnsNum = ensemble.EnsembleData.EnsembleNumber;
+                    }
+                }
+                else
+                {
+                    // Create a new ensemble number key based off the last ensemble and add 1
+                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(raw, ens));
+                }
+            }
 
             // Set total number of ensembles
             // Subtract because 0 based
-            TotalEnsembles = _ensembleList.Count() - 1;
+            TotalEnsembles = _ensembleDict.Count() - 1;
         }
 
         /// <summary>

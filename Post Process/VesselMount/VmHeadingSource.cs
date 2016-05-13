@@ -153,6 +153,19 @@ namespace RTI
                         heading = adcpGps.GPRMC.Bearing.DecimalDegrees;
                     }
                 }
+                else if(ensemble.IsNmeaAvail)
+                {
+                    // GPHDT
+                    if(ensemble.NmeaData.IsGphdtAvail())
+                    {
+                        heading = ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
+                    }
+                    // GPRMC
+                    else if(ensemble.NmeaData.IsGprmcAvail())
+                    {
+                        heading = ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
+                    }
+                }
 
                 // Set the heading
                 SetHeading(ref ensemble, (float)heading);

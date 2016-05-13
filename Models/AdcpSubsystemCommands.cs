@@ -1720,7 +1720,7 @@ namespace RTI
             /// Scale: Mode 
             /// Range: 0-2
             /// </summary>
-            private UInt16 _cWPRT_FirstBin;
+            private float _cWPRT_FirstBin;
             /// <summary>
             /// Water Ping Range Tracking. First Bin.
             /// Sets Water ping tracking mode and supporting parameters. When 
@@ -1739,7 +1739,7 @@ namespace RTI
             /// Scale: Mode 
             /// Range: 0-2
             /// </summary>
-            public UInt16 CWPRT_FirstBin
+            public float CWPRT_FirstBin
             {
                 get { return _cWPRT_FirstBin; }
 
@@ -4519,14 +4519,15 @@ namespace RTI
                 if (CWPON)
                 {
                     //list.Add(CWPRT_CmdStr());              // CWPRT
-                    list.Add(CWPBB_CmdStr());              // CWBB
+                    list.Add(CWPBB_CmdStr());               // CWBB
                     //list.Add(CWPAP_CmdStr());              // CWPAP
                     //list.Add(CWPBP_CmdStr());              // CWPBP
                     //list.Add(CWPST_CmdStr());              // CWPST
-                    list.Add(CWPBL_CmdStr());              // CWPBL
-                    list.Add(CWPBS_CmdStr());              // CWPBS
+                    list.Add(CWPBL_CmdStr());               // CWPBL
+                    list.Add(CWPBS_CmdStr());               // CWPBS
                     //list.Add(CWPX_CmdStr());               // CWPX
-                    list.Add(CWPBN_CmdStr());              // CWPBN
+                    list.Add(CWPRT_CmdStr());               // CWPRT
+                    list.Add(CWPBN_CmdStr());               // CWPBN
                     if (!IsEnableCWPAI())
                     {
                         list.Add(CWPP_CmdStr());           // CWPP
@@ -4663,7 +4664,17 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPRT_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString(), CWPRT_LastBin.ToString());
+                switch(CWPRT_Mode)
+                {
+                    default:
+                    case 0:
+                        return String.Format("{0}[{1}] {2}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString());
+                    case 1:
+                        return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString(), CWPRT_LastBin.ToString());
+                    case 2:
+                        return String.Format("{0}[{1}] {2},{3}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString());
+
+                }
             }
 
             /// <summary>
@@ -5826,6 +5837,36 @@ namespace RTI
             }
 
 
+
+            #endregion
+
+            #region CWPRT
+
+            /// <summary>
+            /// CWPRT description string.
+            /// </summary>
+            /// <returns>Description string.</returns>
+            public static string GetCwprtDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("CWPRT m,n1,n2<CR>");
+                sb.AppendLine("Water Ping Range Tracking. Sets Water ping tracking mode ");
+                sb.AppendLine("and supporting parameters. When enabled the system locates the highest ");
+                sb.AppendLine("amplitude signal in the profile amplitude data. The system uses very high ");
+                sb.AppendLine("resolution sample data to give precise range to the target. The range data is ");
+                sb.AppendLine("useful for non-directional wave height and bottom depth sounding. ");
+                sb.AppendLine("Note: You need to setup the profile to collect more bins than the expected ");
+                sb.AppendLine("maximum range to the surface.");
+                sb.AppendLine("1. Mode m");
+                sb.AppendLine(" a. 0 = OFF.");
+                sb.AppendLine(" b. 1 = ON and use n1 and n2 for the first and last bin to look between for a valid amplitude target. Search window is between bins n1 and n2.");
+                sb.AppendLine(" c. 2 = ON and use n1 as a fraction of the range before and after the depth as measured by the pressure sensor. Search window = depth*(1-n1) to depth*(1+n1).");
+                sb.AppendLine("2. n1, n2 supporting parameters for the tracking mode.");
+                sb.AppendLine("");
+
+                return sb.ToString();
+            }
 
             #endregion
 

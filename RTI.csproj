@@ -116,6 +116,7 @@
     <Compile Include="Models\DataSet\GageHeightDataSet.cs" />
     <Compile Include="Models\DataSet\Adcp2InfoDataSet.cs" />
     <Compile Include="Post Process\Average\AverageBinsTogether.cs" />
+    <Compile Include="Post Process\Screen\ScreenBadHeading.cs" />
     <Compile Include="Post Process\Screen\ScreenScaleFactor.cs" />
     <Compile Include="Utils\MemoryStreamExtensions.cs" />
     <Compile Include="Writer\AdcpImporter.cs" />

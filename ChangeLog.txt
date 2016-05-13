@@ -1,5 +1,12 @@
 RTI Changelog
 
+RTI-3.3.2
+ - In DvlDataSet, fixed bug with JSON decoding Pressure.   
+ - In Status. Changed 0x0001 error to BT_Long_Lag.  
+ - Added ScreenBadHeading to look for missing headings.
+ - In Transform,  fixed bug for Q value. 
+ - In FilePlayback, changed from list to dictionary to prevent playback being out of order.
+
 RTI-3.3.1
  - Added RangeTracking column to the project.
 

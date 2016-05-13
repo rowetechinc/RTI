@@ -37,6 +37,7 @@
  *                                         Updated how Pitch and Roll are used per SM.
  * 05/07/2014      RC          2.21.4     Added Correlation and SNR threshold.
  * 01/06/2016      RC          3.3.0      Added GPS heading and Heading offset.
+ * 05/11/2016      RC          3.3.2      Fixed bug for Q value.
  * 
  */
 
@@ -385,10 +386,10 @@ namespace RTI
                     }
                     else
                     {
-                        float Q = (tempVel[0] * M[2, 0]                                                 // Profile does not invert the value like BT
-                                 + tempVel[1] * M[2, 1]
-                                 + tempVel[2] * M[2, 2]
-                                 + tempVel[3] * M[2, 3]);
+                        float Q = (tempVel[0] * M[3, 0]                                                 // Profile does not invert the value like BT
+                                 + tempVel[1] * M[3, 1]
+                                 + tempVel[2] * M[3, 2]
+                                 + tempVel[3] * M[3, 3]);
                         
                         // Q
                         ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = Q;
@@ -702,10 +703,10 @@ namespace RTI
                 }
                 else
                 {
-                    float Q = -(tempVel[0] * M[2, 0]
-                              + tempVel[1] * M[2, 1]
-                              + tempVel[2] * M[2, 2]
-                              + tempVel[3] * M[2, 3]);
+                    float Q = -(tempVel[0] * M[3, 0]
+                              + tempVel[1] * M[3, 1]
+                              + tempVel[2] * M[3, 2]
+                              + tempVel[3] * M[3, 3]);
 
                     ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_Q_INDEX] = Q;
                     ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_Q_INDEX] = Q;

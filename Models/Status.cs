@@ -43,6 +43,7 @@
  *                                         Updated the error codes.
  * 07/24/2014      RC          2.23.0     Added a comma to the status errors.
  * 05/14/2015      RC          3.0.4      Added more status options.
+ * 04/28/2016      RC          3.3.2      Changed 0x0001 error to BT_Long_Lag.
  * 
  */
 
@@ -59,6 +60,8 @@ namespace RTI
     /// Water Track 3 Beam Solution (NMEA output only)      = 0x0001
     ///    Indicates the Water Track velocity output contains
     ///    a 3 beam solution
+    ///    
+    /// Bottom track long lag processing is in use          = 0x0001
     ///    
     /// Bottom Track 3 Beam Solution (NMEA output only)     = 0x0002
     ///    Indicates the Bottom Track velocity output contains
@@ -131,11 +134,9 @@ namespace RTI
         public const int GOOD = 0x0000;
 
         /// <summary>
-        /// Water Track 3 Beam solution STATUS value (DVL only).
-        /// Indicates the water track velocity output contains a 
-        /// 3 beam solution.
+        /// Bottom track long lag processing is in use.
         /// </summary>
-        public const int BT_WT_3BEAM_SOLUTION = 0x0001;
+        public const int BT_LONG_LAG = 0x0001;
 
         /// <summary>
         /// Bottom Track 3 Beam solution STATUS value.
@@ -258,6 +259,11 @@ namespace RTI
         public static readonly string STR_WT_3_BEAM_SOLUTION = "WT 3 Beam Solution";
 
         /// <summary>
+        /// Bottom Track Long Lag string.
+        /// </summary>
+        public static readonly string STR_BT_LONG_LAG = "BT Long Lag";
+
+        /// <summary>
         /// Bottom Track 3 Beam Solution string.
         /// </summary>
         public static readonly string STR_BT_3_BEAM_SOLUTION = "BT 3 Beam Solution";
@@ -368,12 +374,12 @@ namespace RTI
 
         /// <summary>
         /// Check whether status bit set for
-        /// Water Track 3 beam solution.
+        /// Bottom Track Long Lag.
         /// </summary>
-        /// <returns>TRUE = Water Track 3 Beam Solution.</returns>
-        public bool IsWaterTrack3BeamSolution()
+        /// <returns>TRUE = Bottom Track Long Lag.</returns>
+        public bool IsBottomTrackLongLag()
         {
-            return (Value & BT_WT_3BEAM_SOLUTION) > 0;
+            return (Value & BT_LONG_LAG) > 0;
         }
 
         /// <summary>
@@ -571,9 +577,9 @@ namespace RTI
                 string result = "0x" + Value.ToString("X4") + ", ";
 
                 // Check for all warnings.
-                if (IsWaterTrack3BeamSolution())
+                if (IsBottomTrackLongLag())
                 {
-                    result += STR_WT_3_BEAM_SOLUTION + ", ";
+                    result += STR_BT_LONG_LAG + ", ";
                 }
                 if (IsBottomTrack3BeamSolution())
                 {

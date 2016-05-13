@@ -224,6 +224,7 @@ namespace RTI
         /// include the configuration number in brackets and the
         /// subsystem description.
         /// 
+        /// Ex:
         /// [CEPO Index] Subsystem description
         /// </summary>
         /// <returns>Description string for this object.</returns>
@@ -235,6 +236,7 @@ namespace RTI
         /// <summary>
         /// Return the CEPO index and the Subsystem code for this configuration.
         /// 
+        /// Ex:
         /// [CEPO Index] Code
         /// </summary>
         /// <returns>[CEPO Index] Code</returns>

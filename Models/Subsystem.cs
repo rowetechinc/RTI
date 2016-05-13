@@ -68,13 +68,18 @@ namespace RTI
     [JsonConverter(typeof(SubsystemSerializer))]
     public class Subsystem
     {
-        #region Enums
+        #region Enums and Classes
 
         /// <summary>
         /// System frequency types.
         /// </summary>
         public enum SystemFrequency
         {
+            /// <summary>
+            /// 20 kHz.
+            /// </summary>
+            Freq_20kHz,
+
             /// <summary>
             /// 38 kHz.
             /// </summary>
@@ -109,6 +114,7 @@ namespace RTI
             /// 2000 kHz.
             /// </summary>
             Freq_2000kHz
+
         }
 
         /// <summary>
@@ -130,6 +136,11 @@ namespace RTI
             /// 30 Degrees Beam Angle.
             /// </summary>
             BeamAngle_30_Degree,
+
+            /// <summary>
+            /// Vertical Beam Angle.
+            /// </summary>
+            BeamAngle_Vertical,
 
             /// <summary>
             /// Other Beam Angle.
@@ -536,6 +547,8 @@ namespace RTI
         /// <summary>
         /// Create a string for this object.
         /// The string will contain the code and index.
+        /// 
+        /// Ex:
         /// INDEX_CODE
         /// </summary>
         /// <returns>Code and index of this object as a string.</returns>
@@ -557,6 +570,9 @@ namespace RTI
         /// Return the string version of the code.
         /// This will convert the code from a hex byte value to 
         /// a string character.
+        /// 
+        /// Ex:
+        /// CODE
         /// </summary>
         /// <returns>Code as a string.</returns>
         public string CodeToString()
@@ -567,6 +583,9 @@ namespace RTI
         /// <summary>
         /// Get the description string based off
         /// the code for this object.
+        /// 
+        /// Ex:
+        /// XXX kHz X Beam XX degree piston
         /// </summary>
         /// <returns>String of the subsystem description.</returns>
         public string DescString()
@@ -577,6 +596,9 @@ namespace RTI
         /// <summary>
         /// Create a string for the subsystem that includes the
         /// code and the description.
+        /// 
+        /// Ex:
+        /// CODE - XXX kHz X Beam XX degree piston
         /// </summary>
         /// <returns>String of the subsystem with the code and description.</returns>
         public string CodedDescString()
@@ -586,6 +608,9 @@ namespace RTI
 
         /// <summary>
         /// Convert the code into a string.
+        ///
+        /// Ex:
+        /// XXX kHz X Beam XX degree piston
         /// 
         /// NOTE
         /// If the subsystem is an old revision of firmware,
@@ -741,7 +766,7 @@ namespace RTI
                 case SUB_38KHZ_VERT_PISTON_F:
                     return SystemFrequency.Freq_38kHz;
                 case SUB_20KHZ_VERT_PISTON_G:
-                    return SystemFrequency.Freq_2000kHz;
+                    return SystemFrequency.Freq_20kHz;
                 case SUB_600KHZ_4BEAM_30DEG_ARRAY_I:
                     return SystemFrequency.Freq_600kHz;
                 case SUB_300KHZ_4BEAM_30DEG_ARRAY_J:
@@ -753,7 +778,7 @@ namespace RTI
                 case SUB_38KHZ_4BEAM_30DEG_ARRAY_M:
                     return SystemFrequency.Freq_38kHz;
                 case SUB_20KHZ_4BEAM_30DEG_ARRAY_N:
-                    return SystemFrequency.Freq_2000kHz;
+                    return SystemFrequency.Freq_20kHz;
                 case SUB_600KHZ_4BEAM_15DEG_ARRAY_O:
                     return SystemFrequency.Freq_600kHz;
                 case SUB_300KHZ_4BEAM_15DEG_ARRAY_P:
@@ -765,7 +790,7 @@ namespace RTI
                 case SUB_38KHZ_4BEAM_15DEG_ARRAY_S:
                     return SystemFrequency.Freq_38kHz;
                 case SUB_20KHZ_4BEAM_15DEG_ARRAY_T:
-                    return SystemFrequency.Freq_2000kHz;
+                    return SystemFrequency.Freq_20kHz;
                 case SUB_600KHZ_1BEAM_0DEG_ARRAY_U:
                     return SystemFrequency.Freq_600kHz;
                 case SUB_300KHZ_1BEAM_0DEG_ARRAY_V:
@@ -777,7 +802,7 @@ namespace RTI
                 case SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
                     return SystemFrequency.Freq_38kHz;
                 case SUB_20KHZ_1BEAM_0DEG_ARRAY_Z:
-                    return SystemFrequency.Freq_2000kHz;
+                    return SystemFrequency.Freq_20kHz;
                 case SUB_SPARE_0:
                 case SUB_SPARE_H:
                 case SUB_SPARE_a:
@@ -799,6 +824,8 @@ namespace RTI
 
             switch (freq)
             {
+                case SystemFrequency.Freq_20kHz:
+                    return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_20;
                 case SystemFrequency.Freq_38kHz:
                     return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_38;
                 case SystemFrequency.Freq_75kHz:
@@ -915,6 +942,516 @@ namespace RTI
 
         #endregion
     }
+
+            /// <summary>
+        /// Information about the subsystem.
+        /// </summary>
+        public class SubsystemInfo
+        {
+            /// <summary>
+            /// Subsystem.
+            /// </summary>
+            public Subsystem Subsystem { get; set; }
+
+            /// <summary>
+            /// Beam Angle.
+            /// </summary>
+            public RTI.Subsystem.BeamAngles BeamAngle { get; set; }
+
+            /// <summary>
+            /// Frequency.
+            /// </summary>
+            public RTI.Subsystem.SystemFrequency Frequency { get; set; }
+
+            /// <summary>
+            /// Number of beams.
+            /// </summary>
+            public int NumBeams { get; set; }
+
+            /// <summary>
+            /// Flag if the subsystem is a vertical beam.
+            /// </summary>
+            public bool IsVerticalBeam { get; set; }
+
+            /// <summary>
+            /// TRUE if this is the Primary set of beams.  The primary beams are the first set of beams in the configuration.
+            /// The Offset beams are the secondary set of beams.  Offset by 45 degrees typically.
+            /// </summary>
+            public bool IsPrimaryBeams { get; set; }
+
+            /// <summary>
+            /// Offset angle of the beams.
+            /// </summary>
+            public double OffsetAngle { get; set; }
+
+            /// <summary>
+            /// Flag if the system is an array.
+            /// </summary>
+            public bool Array { get; set; }
+
+            /// <summary>
+            /// Set if the Head is an opposite facing head.
+            /// </summary>
+            public bool IsOppositeFacing { get; set; }
+
+            /// <summary>
+            /// Default setup.
+            /// </summary>
+            public SubsystemInfo()
+            {
+                BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree;
+                Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz;
+                NumBeams = 4;
+                IsVerticalBeam = false;
+                IsPrimaryBeams = true;
+                OffsetAngle = 0;
+                Array = false;
+                IsOppositeFacing = false;
+            }
+
+            /// <summary>
+            /// Initialize the values based off the Subsystems.
+            /// </summary>
+            /// <param name="ss">Subsystem.</param>
+            public SubsystemInfo(Subsystem ss)
+            {
+                var ssInfo = GetSubystemInfo(ss);
+
+                this.Subsystem = ssInfo.Subsystem;
+                this.BeamAngle = ssInfo.BeamAngle;
+                this.Frequency = ssInfo.Frequency;
+                this.NumBeams = ssInfo.NumBeams;
+                this.IsVerticalBeam = ssInfo.IsVerticalBeam;
+                this.IsPrimaryBeams = ssInfo.IsPrimaryBeams;
+                this.OffsetAngle = ssInfo.OffsetAngle;
+                this.Array = ssInfo.Array;
+                this.IsOppositeFacing = false;
+            }
+
+            /// <summary>
+            /// Get the Subsystem info.  This will tell about the system type.
+            /// The number of beams, the offset, the beam angle and if its a vertical beam.
+            /// </summary>
+            /// <param name="ss">Subsystem.</param>
+            /// <returns>Subsystem information.</returns>
+            public SubsystemInfo GetSubystemInfo(Subsystem ss)
+            {
+                switch(ss.Code)
+                {
+                    case RTI.Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_1:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_2000kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_1200kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_600kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_5:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_2000kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 45.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_1200kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 45.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_600kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 45.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_20_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 45.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_2MHZ_VERT_PISTON_9:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_2000kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_1_2MHZ_VERT_PISTON_A:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_1200kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_600KHZ_VERT_PISTON_B:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_600kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_300KHZ_VERT_PISTON_C:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_150KHZ_VERT_PISTON_D:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_150kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_75KHZ_VERT_PISTON_E:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_75kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_38KHZ_VERT_PISTON_F:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_38kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_20KHZ_VERT_PISTON_G:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_20kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = true,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = false,
+                        };
+                    case RTI.Subsystem.SUB_600KHZ_4BEAM_30DEG_ARRAY_I:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_30_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_600kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_300KHZ_4BEAM_30DEG_ARRAY_J:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_30_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_30_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_150kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_75KHZ_4BEAM_30DEG_ARRAY_L:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_30_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_75kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_38KHZ_4BEAM_30DEG_ARRAY_M:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_30_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_38kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_20KHZ_4BEAM_30DEG_ARRAY_N:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_30_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_20kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_600KHZ_4BEAM_15DEG_ARRAY_O:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_15_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_600kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_300KHZ_4BEAM_15DEG_ARRAY_P:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_15_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_150KHZ_4BEAM_15DEG_ARRAY_Q:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_15_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_150kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_75KHZ_4BEAM_15DEG_ARRAY_R:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_15_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_75kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_38KHZ_4BEAM_15DEG_ARRAY_S:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_15_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_38kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_20KHZ_4BEAM_15DEG_ARRAY_T:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_15_Degree,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_20kHz,
+                            NumBeams = 4,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = true,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_600KHZ_1BEAM_0DEG_ARRAY_U:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_600kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_300KHZ_1BEAM_0DEG_ARRAY_V:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_300kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_150KHZ_1BEAM_0DEG_ARRAY_W:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_150kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_75KHZ_1BEAM_0DEG_ARRAY_X:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_75kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_38kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    case RTI.Subsystem.SUB_20KHZ_1BEAM_0DEG_ARRAY_Z:
+                        return new SubsystemInfo()
+                        {
+                            Subsystem = ss,
+                            BeamAngle = RTI.Subsystem.BeamAngles.BeamAngle_Vertical,
+                            Frequency = RTI.Subsystem.SystemFrequency.Freq_20kHz,
+                            NumBeams = 1,
+                            IsVerticalBeam = false,
+                            IsPrimaryBeams = false,
+                            OffsetAngle = 0.0,
+                            Array = true,
+                        };
+                    default:
+                        return new SubsystemInfo();
+                }
+            }
+
+        }
 
 
     /// <summary>

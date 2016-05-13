@@ -36,6 +36,7 @@
  * 06/18/2014      RC          2.22.1     Initial coding
  * 09/24/2014      RC          3.0.2      Added DMG data.
  * 12/07/2015      RC          3.3.0      Added Ship Error velocity.
+ * 03/03/2016      RC          3.3.2      Fixed bug with JSON decoding Pressure.      
  * 
  */
 
@@ -1676,7 +1677,7 @@ namespace RTI
                     #region Pressure and Range
 
                     // Pressure
-                    float Pressure = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_BT_EAST_DMG];
+                    float Pressure = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_PRESSURE];
 
                     // Range Beam 0
                     float RangeB0 = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_DVL_RANGE_B0];

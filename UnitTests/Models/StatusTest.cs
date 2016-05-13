@@ -65,7 +65,6 @@ namespace RTI
             Assert.AreEqual(false, status.IsReceiverDataError(), "Receiver Data Error is incorrect.");
             Assert.AreEqual(false, status.IsReceiverTimeout(), "Receiver Timeout is incorrect.");
             Assert.AreEqual(false, status.IsTemperatureError(), "Temperature is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
 
             Assert.AreEqual("Good", status.ToString(), "ToString is incorrect.");
 
@@ -83,7 +82,7 @@ namespace RTI
             Status status = new Status(0x0001);
 
             Assert.AreEqual(1, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(true, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(true, status.IsBottomTrackLongLag(), "BT Long Lag is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -108,7 +107,7 @@ namespace RTI
             Status status = new Status(0x0002);
 
             Assert.AreEqual(0x0002, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(true, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -133,7 +132,7 @@ namespace RTI
             Status status = new Status(0x0004);
 
             Assert.AreEqual(0x0004, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(true, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -158,7 +157,7 @@ namespace RTI
             Status status = new Status(0x0008);
 
             Assert.AreEqual(0x0008, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(true, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -183,7 +182,7 @@ namespace RTI
             Status status = new Status(0x0100);
 
             Assert.AreEqual(0x0100, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -208,7 +207,7 @@ namespace RTI
             Status status = new Status(0x0200);
 
             Assert.AreEqual(0x0200, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -233,7 +232,7 @@ namespace RTI
             Status status = new Status(0x0400);
 
             Assert.AreEqual(0x0400, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -258,7 +257,7 @@ namespace RTI
             Status status = new Status(0x0800);
 
             Assert.AreEqual(0x0800, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -283,7 +282,7 @@ namespace RTI
             Status status = new Status(0x1000);
 
             Assert.AreEqual(0x1000, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -308,7 +307,7 @@ namespace RTI
             Status status = new Status(0x2000);
 
             Assert.AreEqual(0x2000, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -333,7 +332,7 @@ namespace RTI
             Status status = new Status(0x4000);
 
             Assert.AreEqual(0x4000, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -358,7 +357,7 @@ namespace RTI
             Status status = new Status(0x8000);
 
             Assert.AreEqual(0x8000, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(false, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(false, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");
@@ -383,7 +382,7 @@ namespace RTI
             Status status = new Status(0x8401);
 
             Assert.AreEqual(0x8401, status.Value, "Status value is incorrect.");
-            Assert.AreEqual(true, status.IsWaterTrack3BeamSolution(), "WT 3 Beam Solution is incorrect.");
+            Assert.AreEqual(true, status.IsBottomTrackLongLag(), "WT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrack3BeamSolution(), "BT 3 Beam Solution is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackHold(), "BT Hold is incorrect.");
             Assert.AreEqual(false, status.IsBottomTrackSearching(), "BT Searching is incorrect.");

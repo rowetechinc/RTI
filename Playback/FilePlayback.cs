@@ -408,14 +408,24 @@ namespace RTI
         {
             foreach (var file in files)
             {
-                AdcpCodecReadFile readFile = new AdcpCodecReadFile();
-                var list = readFile.GetEnsembles(file);
+                FindRtbEnsembles(file);
+            }
+        }
 
-                // Add the ensembles to the dictionary
-                foreach (var ens in list)
-                {
-                    AddEnsemble(ens.RawEnsemble, ens.Ensemble);
-                }
+        /// <summary>
+        /// Find all the ensembles in the given file.
+        /// Add them to the dictionary.
+        /// </summary>
+        /// <param name="file">File to search for the ensembles.</param>
+        public void FindRtbEnsembles(string file)
+        {
+            AdcpCodecReadFile readFile = new AdcpCodecReadFile();
+            var list = readFile.GetEnsembles(file);
+
+            // Add the ensembles to the dictionary
+            foreach (var ens in list)
+            {
+                AddEnsemble(ens.RawEnsemble, ens.Ensemble);
             }
         }
 

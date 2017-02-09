@@ -354,6 +354,32 @@ namespace RTI
                     EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(23));
                     EarthVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(24));
                 }
+                else if (NumBeams == 2.0f)
+                {
+                    SNR[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(1));
+                    SNR[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(2));
+
+                    Range[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(3));
+                    Range[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(4));
+
+                    Pings[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(5));
+                    Pings[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(6));
+
+                    Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(7));
+                    Amplitude[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(8));
+
+                    Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
+                    Correlation[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
+
+                    BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
+                    BeamVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+
+                    InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
+                    InstrumentVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
+
+                    EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+                    EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
+                }
                 else
                 {
                     SNR[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(1));

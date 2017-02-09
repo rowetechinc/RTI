@@ -1,5 +1,11 @@
 RTI Changelog
 
+RTI-3.4.0
+ - Add AdcpBinaryCodecReadFile to optimize reading binary files.
+ - In BottomTrackDataSet, Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ - In Ensemble, Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ - Added AdcpCodecReadFile, AdcpBinaryCodecReadFile and AdcpDvlCodecReadFile.
+
 RTI-3.3.2
  - In DvlDataSet, fixed bug with JSON decoding Pressure.   
  - In Status. Changed 0x0001 error to BT_Long_Lag.  

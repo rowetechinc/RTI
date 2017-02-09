@@ -66,6 +66,7 @@
  * 04/10/2015      RC          3.0.4      Added GetRangeBin().
  * 09/25/2015      RC          3.1.1      Allow BT to handle 3 beams.
  * 11/11/2015      RC          3.2.1      Fixed bug in IsEarthVelocityGood.
+ * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
  * 
  */
 
@@ -507,6 +508,17 @@ namespace RTI
             /// </summary>
             /// <param name="sentence">Additional data to add to the dataset.</param>
             public void AddAdditionalBottomTrackData(Prti02Sentence sentence)
+            {
+                // Decode the information
+                DecodeBottomTrackData(sentence);
+            }
+
+            /// <summary>
+            /// This will add additional Bottom Track data from the
+            /// Prti03Sentence.
+            /// </summary>
+            /// <param name="sentence">Additional data to add to the dataset.</param>
+            public void AddAdditionalBottomTrackData(Prti03Sentence sentence)
             {
                 // Decode the information
                 DecodeBottomTrackData(sentence);

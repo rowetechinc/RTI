@@ -212,7 +212,7 @@ namespace RTI
         /// <summary>
         /// Ensemble Info.
         /// </summary>
-        struct EnsInfo
+        public struct EnsInfo
         {
             // Ensemble size.
             public int EnsSize { get; set; }
@@ -220,20 +220,6 @@ namespace RTI
             // Good Ensemble
             public bool EnsGood { get; set; }
 
-            // Ensemble Byte array
-            public byte[] RawEnsemble { get; set; }
-
-            /// <summary>
-            /// Ensemble object.
-            /// </summary>
-            public DataSet.Ensemble Ensemble { get; set; }
-        }
-
-        /// <summary>
-        /// Ensemble package containing the Ensemble and the raw binary data.
-        /// </summary>
-        private struct EnsPak
-        {
             // Ensemble Byte array
             public byte[] RawEnsemble { get; set; }
 
@@ -526,7 +512,7 @@ namespace RTI
         /// </summary>
         /// <param name="binaryEnsemble">Byte array containing data from an ADCP.</param>
         /// <returns>Object holding decoded ADCP data.</returns>
-        private EnsPak DecodeAdcpData(byte[] binaryEnsemble)
+        public DataSet.EnsemblePackage DecodeAdcpData(byte[] binaryEnsemble)
         {
             // Keep track where in the packet
             // we are currently decoding
@@ -806,7 +792,7 @@ namespace RTI
             //}
 
             // Set the values to return 
-            var pak = new EnsPak();
+            var pak = new DataSet.EnsemblePackage();
             pak.Ensemble = ensemble;
             pak.RawEnsemble = binaryEnsemble;
 
@@ -964,7 +950,7 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Good ensemble containing a checksum value.</param>
         /// <returns>Checksum value converted from byte array to long.</returns>
-        private long RetrieveEnsembleChecksum(byte[] ensemble)
+        public long RetrieveEnsembleChecksum(byte[] ensemble)
         {
             long checksum = ensemble[ensemble.Length - DataSet.Ensemble.CHECKSUM_SIZE];
             checksum += ensemble[ensemble.Length - 3] << 8;

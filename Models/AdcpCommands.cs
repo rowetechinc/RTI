@@ -4839,9 +4839,9 @@ namespace RTI
             #region CWPON
 
             /// <summary>
-            /// Show the CWPON description.
+            /// CWPON Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPON descrpition string.</returns>
             public static string GetCwponDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -4872,9 +4872,9 @@ namespace RTI
             #region CWPBB_MODE
 
             /// <summary>
-            /// Show the CWPBB description.
+            /// CWPBB Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPBB Mode descrpition string.</returns>
             public static string GetCwpbbModeDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -4922,9 +4922,9 @@ namespace RTI
             #region CWPBB_LAG
 
             /// <summary>
-            /// Show the CWPBB Lag Length description.
+            /// CWPBB Lag Length Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPBB Lag Length descrpition string.</returns>
             public static string GetCwpbbLagLengthDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -4944,9 +4944,9 @@ namespace RTI
             #region CWPBL
 
             /// <summary>
-            /// Show the CWPBL description.
+            /// CWPBL Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPBL descrpition string.</returns>
             public static string GetCwpblDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -4962,9 +4962,9 @@ namespace RTI
             #region CWPBS
 
             /// <summary>
-            /// Show the CWPBS description.
+            /// CWPBS Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPBS descrpition string.</returns>
             public static string GetCwpbsDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -4978,9 +4978,9 @@ namespace RTI
             #region CWPBN
 
             /// <summary>
-            /// Show the CWPBN description.
+            /// CWPBN Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPBN descrpition string.</returns>
             public static string GetCwpbnDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -4995,9 +4995,9 @@ namespace RTI
             #region CWPP
 
             /// <summary>
-            /// SHow the CWPP description.
+            /// CWPP Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPP descrpition string.</returns>
             public static string GetCwppDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -5013,9 +5013,9 @@ namespace RTI
             #region CWPTBP
 
             /// <summary>
-            /// Show the CWPTBP description.
+            /// CWPTBP Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CWPTBP descrpition string.</returns>
             public static string GetCwptbpDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -5034,9 +5034,9 @@ namespace RTI
             #region CBTON
 
             /// <summary>
-            /// Give the BTON description.
+            /// CBTON Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CBTON descrpition string.</returns>
             public static string GetCbtonDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -5055,12 +5055,12 @@ namespace RTI
 
             #endregion
 
-            #region CBTON
+            #region CBTBB
 
             /// <summary>
-            /// Show the BT Description.
+            /// CBTBB Description string.
             /// </summary>
-            /// <returns>BT Description.</returns>
+            /// <returns>CBTBB descrpition string.</returns>
             public static string GetCbtbbDesc()
             {
                 StringBuilder sb = new StringBuilder();
@@ -5100,9 +5100,9 @@ namespace RTI
             #region CWPBS
 
             /// <summary>
-            /// Display the CBTTBP description.
+            /// CBTTBP Description string.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>CBTTBP descrpition string.</returns>
             public static string GetCbttbpDesc()
             {
                 StringBuilder sb = new StringBuilder();

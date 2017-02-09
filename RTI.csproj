@@ -94,6 +94,9 @@
   <ItemGroup>
     <Compile Include="Codec\AdcpBinaryCodecForFiles.cs" />
     <Compile Include="Codec\AdcpBinaryCodecNew.cs" />
+    <Compile Include="Codec\AdcpBinaryCodecReadFile.cs" />
+    <Compile Include="Codec\AdcpCodecReadFile.cs" />
+    <Compile Include="Codec\AdcpDvlCodecReadFile.cs" />
     <Compile Include="Codec\PD3Codec.cs" />
     <Compile Include="Codec\PD4_5Codec.cs" />
     <Compile Include="Codec\AdcpBinaryCodec.cs" />

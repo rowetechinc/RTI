@@ -400,6 +400,26 @@ namespace RTI
         }
 
         /// <summary>
+        /// Find all the ensebles in a RoweTech Binary file.
+        /// This is optimized to work with RoweTech Binary files (RTB).
+        /// </summary>
+        /// <param name="files">List of files.</param>
+        public void FindRtbEnsembles(string[] files)
+        {
+            foreach (var file in files)
+            {
+                AdcpCodecReadFile readFile = new AdcpCodecReadFile();
+                var list = readFile.GetEnsembles(file);
+
+                // Add the ensembles to the dictionary
+                foreach (var ens in list)
+                {
+                    AddEnsemble(ens.RawEnsemble, ens.Ensemble);
+                }
+            }
+        }
+
+        /// <summary>
         /// Find the ensembles in the file.
         /// </summary>
         /// <param name="files">Files to look for the ensembles.</param>
@@ -425,7 +445,7 @@ namespace RTI
                 // Open the file
                 if (File.Exists(file))
                 {
-                    // Set the file name
+                    //Set the file name
                     FileInfo finfo = new FileInfo(file);
                     Name = finfo.Name;
 
@@ -464,24 +484,14 @@ namespace RTI
             }
         }
 
-
-        #region EventHandler
-
         /// <summary>
-        /// Receive the ensemble from the codec.
-        /// Then set the ensemble size in bytes 
-        /// so that the next ensemble can be found quicker.
-        /// Set the flag that the ensemble was found.
-        /// Then store the ensemble for playback.
+        /// Add the ensemble to the dictionary.  The ensemble will then
+        /// be available to playback.
         /// </summary>
-        /// <param name="ensembleRaw">Ensemble binary data.</param>
-        /// <param name="ensemble">Ensemble object.</param>
-        private void _adcpCodec_ProcessDataEvent(byte[] ensembleRaw, DataSet.Ensemble ensemble)
+        /// <param name="ensembleRaw"></param>
+        /// <param name="ensemble"></param>
+        public void AddEnsemble(byte[] ensembleRaw, DataSet.Ensemble ensemble)
         {
-            // Set the length of an ensemble to find the next ensemble
-            // quicker
-            BytesPerEnsemble = ensembleRaw.Length;
-
             // Copy the data
             var ens = ensemble.Clone();
             byte[] raw = new byte[ensembleRaw.Length];
@@ -519,6 +529,27 @@ namespace RTI
             // Set total number of ensembles
             // Subtract because 0 based
             TotalEnsembles = _ensembleDict.Count() - 1;
+        }
+
+        #region EventHandler
+
+        /// <summary>
+        /// Receive the ensemble from the codec.
+        /// Then set the ensemble size in bytes 
+        /// so that the next ensemble can be found quicker.
+        /// Set the flag that the ensemble was found.
+        /// Then store the ensemble for playback.
+        /// </summary>
+        /// <param name="ensembleRaw">Ensemble binary data.</param>
+        /// <param name="ensemble">Ensemble object.</param>
+        private void _adcpCodec_ProcessDataEvent(byte[] ensembleRaw, DataSet.Ensemble ensemble)
+        {
+            // Set the length of an ensemble to find the next ensemble
+            // quicker
+            BytesPerEnsemble = ensembleRaw.Length;
+
+            AddEnsemble(ensembleRaw, ensemble);
+
         }
 
         /// <summary>

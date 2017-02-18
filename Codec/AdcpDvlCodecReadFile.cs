@@ -180,8 +180,8 @@ namespace RTI
                     if (ens.RawEnsemble != null)
                     {
                         list.Add(ens);
-                        buffer.Clear();
                     }
+                    buffer.Clear();
                 }
                 // Add the sentence to the buffer
                 buffer.Add(sent);
@@ -211,10 +211,26 @@ namespace RTI
             }
 
             // Convert the sentences to an ensemble.
-            var ens = DecodeSentences(buffer);
+            try
+            {
+                var ens = DecodeSentences(buffer);
 
-            package.Ensemble = ens;
-            package.RawEnsemble = ens.Encode();
+                if (ens != null)
+                {
+                    package.Ensemble = ens;
+                    package.RawEnsemble = ens.Encode();
+                }
+
+            }
+            catch(Exception e)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach(var line in buffer)
+                {
+                    sb.Append(line);
+                }
+                log.Error("Error Decoding DVL ensemble.  " + sb.ToString(), e);
+            }
 
             return package;
         }

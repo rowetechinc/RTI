@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.1
+
+
 RTI-3.4.0
  - Add AdcpBinaryCodecReadFile to optimize reading binary files.
  - In BottomTrackDataSet, Add AddAdditionalBottomTrackData for PRTI03 sentence.

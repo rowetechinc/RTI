@@ -79,6 +79,7 @@
  * 03/03/2014      RC          2.21.4     In ProcessDataThread(), check for a DVL serial number.
  * 06/19/2014      RC          2.22.1     Added writing the DVL dataset in WriteEnsembleDataToDatabase().
  * 02/12/2016      RC          3.3.1      Added RangeTracking column.
+ * 02/27/2017      RC          3.4.1      Added WriteFileToDatabase() to write all the ensembles at once.
  * 
  */
 
@@ -232,7 +233,7 @@ namespace RTI
         /// Start the thread to write the latest ensemble to 
         /// the project database.
         /// </summary>
-        public AdcpDatabaseWriter()
+        public AdcpDatabaseWriter(bool useThread = true)
         {
             // Initialize data
             _selectedProject = null;
@@ -250,7 +251,7 @@ namespace RTI
             _lockIsProjectOptionsNeedUpdate = new object();
 
             // Initialize the thread
-            _continue = true;
+            _continue = useThread;
             _eventWaitData = new EventWaitHandle(false, EventResetMode.AutoReset);
             _processDataThread = new Thread(ProcessDataThread);
             _processDataThread.Name = "ADCP Database Writer";
@@ -614,7 +615,11 @@ namespace RTI
                     }
                     catch (NullReferenceException ex)
                     {
-                        log.Error("Selected Mission does not exist. ", ex);
+                        log.Error("Selected Project does not exist. ", ex);
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error("Error adding data to database.", e);
                     }
 
                     //watch.Stop();
@@ -1140,6 +1145,110 @@ namespace RTI
             catch (SQLiteException e)
             {
                 log.Error("Error updating GPS Ensemble data to database.", e);
+            }
+        }
+
+        #endregion
+
+        #region Write Ensemble File to Database
+
+        /// <summary>
+        /// Read in an entire file and write it to the project.
+        /// This will write all the ensembles given in cache in 
+        /// one transaction.  This saves on writes.
+        /// </summary>
+        /// <param name="project">Project to add the data.</param>
+        /// <param name="ensembles">Ensembles to write.</param>
+        public void WriteFileToDatabase(Project project, Cache<long, DataSet.Ensemble> ensembles)
+        {
+            // Used to determine if a new Subsystem Configuration was found
+            AdcpSubsystemConfig asConfig = null;
+
+            try
+            {
+                // Open a connection to the database
+                SQLiteConnection cnn = DbCommon.OpenProjectDB(project);
+
+                if (cnn != null)
+                {
+                    // Start a transaction
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        // Go through each ensemble
+                        for(int x = 0; x < ensembles.Count(); x++)
+                        {
+                            // Get the ensemble
+                            var ensemble = ensembles.IndexValue(x);
+
+                            // Write the ensemble
+                            WriteEnsembleDataToDatabase(ensemble, cnn);
+
+                            // Set the serial number if it has not been set already to the project
+                            if (project.SerialNumber.IsEmpty())
+                            {
+                                project.SerialNumber = ensemble.EnsembleData.SysSerialNumber;
+                            }
+
+                            // If the serial number is still a DVL serial number,
+                            // Add the subsystem so it will change to a standard serial number.
+                            if (project.SerialNumber == SerialNumber.DVL)
+                            {
+                                // Remove the DVL Subsystem
+                                project.SerialNumber.RemoveSubsystem(new Subsystem(Subsystem.SUB_SPARE_H));
+
+                                // Add the actual subsystem
+                                project.SerialNumber.AddSubsystem(ensemble.EnsembleData.SubsystemConfig.SubSystem);
+                            }
+
+                            // Add the ADCP Configuration to the project
+                            // Check if the configuration has already been added to the project.
+                            // If it has not been added to the project add it now.
+                            // Later it will be written to the project.
+                            // CheckSubsystemCompatibility() is used because of the change to the SubsystemCode vs SubsystemIndex in Firmware 2.13
+                            if (ensemble.IsEnsembleAvail)
+                            {
+                                SubsystemConfiguration ssConfig = ensemble.EnsembleData.SubsystemConfig;
+                                if (ssConfig != null)
+                                {
+                                    //Subsystem ss = ensemble.EnsembleData.GetSubSystem();
+                                    Subsystem ss = ssConfig.SubSystem;
+                                    CheckSubsystemCompatibility(ensemble, ref ss, ref ssConfig);
+                                    if (!project.Configuration.AdcpSubsystemConfigExist(ssConfig))
+                                    {
+                                        //_selectedProject.Configuration.AddConfiguration(ss, out asConfig);
+                                        project.Configuration.AddConfiguration(ss, out asConfig, ssConfig.CepoIndex);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Check if Commands and Options need to be updated
+                        CheckCommandsAndOptions(cnn, project);
+
+                        // Check if Application Configurations needs to be updated
+                        CheckAppConfiguration(cnn, project);
+
+                        // Check if the Project options needs to be updated
+                        CheckProjectOptions(cnn, project);
+
+                        // Commit the transaction
+                        dbTrans.Commit();
+                    }
+                    // Close the connection to the database
+                    cnn.Close();
+                }
+            }
+            catch (SQLiteException ex)
+            {
+                log.Error("Error adding Ensemble data to database.", ex);
+            }
+            catch (NullReferenceException ex)
+            {
+                log.Error("Selected Mission does not exist. ", ex);
+            }
+            catch (Exception ex)
+            {
+                log.Error("Error writing data to database. ", ex);
             }
         }
 

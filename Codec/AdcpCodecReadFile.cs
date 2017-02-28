@@ -69,6 +69,11 @@ namespace RTI
             _dvlCodec = new AdcpDvlCodecReadFile();
         }
 
+        /// <summary>
+        /// Get all the ensembles from the files.
+        /// </summary>
+        /// <param name="files">Files to read.</param>
+        /// <returns>List of all the ensembles found in the files given.</returns>
         public List<DataSet.EnsemblePackage> GetEnsembles(string files)
         {
             // Check Binary Codec

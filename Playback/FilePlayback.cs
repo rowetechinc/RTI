@@ -502,20 +502,24 @@ namespace RTI
         /// <param name="ensemble"></param>
         public void AddEnsemble(byte[] ensembleRaw, DataSet.Ensemble ensemble)
         {
+            // **********
+            // Moved this to eventhandler
+            // Not needed when reading in the entire file
+            // **********
             // Copy the data
-            var ens = ensemble.Clone();
-            byte[] raw = new byte[ensembleRaw.Length];
-            Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
+            //var ens = ensemble.Clone();
+            //byte[] raw = new byte[ensembleRaw.Length];
+            //Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
 
             // Create the velocity vectors for the ensemble
-            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ens);
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
 
             if (ensemble.IsEnsembleAvail)
             {
                 // Store the found ensemble to the dictionary
                 if (!_ensembleDict.ContainsKey(ensemble.EnsembleData.EnsembleNumber))
                 {
-                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(raw, ens));
+                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble));
 
                     // Find the first ensemble number
                     if (_firstEnsNum == 0 || _firstEnsNum > ensemble.EnsembleData.EnsembleNumber)
@@ -532,7 +536,7 @@ namespace RTI
                 else
                 {
                     // Create a new ensemble number key based off the last ensemble and add 1
-                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(raw, ens));
+                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble));
                 }
             }
 
@@ -558,7 +562,12 @@ namespace RTI
             // quicker
             BytesPerEnsemble = ensembleRaw.Length;
 
-            AddEnsemble(ensembleRaw, ensemble);
+            // Copy the data
+            var ens = ensemble.Clone();
+            byte[] raw = new byte[ensembleRaw.Length];
+            Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
+
+            AddEnsemble(raw, ens);
 
         }
 

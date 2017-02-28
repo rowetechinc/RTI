@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/08/2017      RC          3.4.0      Initial coding
+ * 02/23/2017      RC          3.4.1      Changed to ReadBytes to read in from the file to improve performance.
  * 
  */
 
@@ -107,7 +108,7 @@ namespace RTI
         {
             var ensStartList = new List<int>();
 
-            using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read))
+            using (var fileStream = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read)))
             {
                 var queue = new List<byte>();
 
@@ -169,19 +170,19 @@ namespace RTI
         /// <returns>List of all the ensembles in the file.</returns>
         protected List<DataSet.EnsemblePackage> FindCompleteEnsembles(List<int> ensStart, string file)
         {
-            var list = new List<DataSet.EnsemblePackage>();
+            var list = new List<DataSet.EnsemblePackage>(ensStart.Count);
 
-            using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read))
+            using (var fileStream = new BinaryReader(File.Open(file, FileMode.Open, FileAccess.Read)))
             {
+                // Go through each start location
                 foreach (var start in ensStart)
                 {
                     try
                     {
-                        var buffer = new byte[DataSet.Ensemble.ENSEMBLE_HEADER_LEN];
-
                         // Move the start location and read in the header
-                        fileStream.Seek(start, SeekOrigin.Begin);
-                        if (fileStream.Read(buffer, 0, buffer.Length) >= DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
+                        fileStream.BaseStream.Seek(start, SeekOrigin.Begin);
+                        byte[] buffer = fileStream.ReadBytes(DataSet.Ensemble.ENSEMBLE_HEADER_LEN);
+                        if (buffer.Length >= DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
                         {
                             // Get the payload size
                             int payloadSize = buffer[24];
@@ -189,35 +190,55 @@ namespace RTI
                             payloadSize += buffer[26] << 16;
                             payloadSize += buffer[27] << 24;
 
-                            // Get the ensemble size
-                            int ensSize = DataSet.Ensemble.CalculateEnsembleSize(payloadSize);
+                            // Get the payload inverse
+                            int notPayloadSize = buffer[28];
+                            notPayloadSize += buffer[29] << 8;
+                            notPayloadSize += buffer[30] << 16;
+                            notPayloadSize += buffer[31] << 24;
+                            notPayloadSize = ~notPayloadSize;
 
-                            // Sanity check
-                            if (ensSize > DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
+                            // Check the payload value is correct based off the inverse
+                            if( payloadSize == notPayloadSize)
                             {
-                                // Get the entire ensemble
-                                var rawEns = new byte[ensSize];
-                                fileStream.Seek(start, SeekOrigin.Begin);
-                                fileStream.Read(rawEns, 0, rawEns.Length);
+                                // Get the ensemble size
+                                int ensSize = DataSet.Ensemble.CalculateEnsembleSize(payloadSize);
 
-                                // Check the checksum
-                                long calculatedChecksum = DataSet.Ensemble.CalculateEnsembleChecksum(rawEns);
-                                long ensembleChecksum = DataSet.Ensemble.RetrieveEnsembleChecksum(rawEns);
-                                if (calculatedChecksum == ensembleChecksum)
+                                // Sanity check
+                                // Check if it is too small or too large
+                                if (ensSize > DataSet.Ensemble.ENSEMBLE_HEADER_LEN && ensSize < MathHelper.MB_TO_BYTES)
                                 {
-                                    // Decode the ensemble and add it to the list
-                                    var ens = DataSet.Ensemble.DecodeRawAdcpData(rawEns);
+                                    // Get the entire ensemble
+                                    fileStream.BaseStream.Seek(start, SeekOrigin.Begin);
+                                    byte[] rawEns = fileStream.ReadBytes(ensSize);
 
-                                    var ensPak = new DataSet.EnsemblePackage();
-                                    ensPak.Ensemble = ens;
-                                    ensPak.RawEnsemble = rawEns;
-                                    list.Add(ensPak);
-                                    //Debug.WriteLine("Ens: " + ens.EnsembleData.EnsembleNumber + " Count: " + list.Count);
+                                    // Check the checksum
+                                    long calculatedChecksum = DataSet.Ensemble.CalculateEnsembleChecksum(rawEns);
+                                    long ensembleChecksum = DataSet.Ensemble.RetrieveEnsembleChecksum(rawEns);
+                                    if (calculatedChecksum == ensembleChecksum)
+                                    {
+                                        // Decode the ensemble and add it to the list
+                                        var ens = DataSet.Ensemble.DecodeRawAdcpData(rawEns);
+
+                                        // Package the data
+                                        var ensPak = new DataSet.EnsemblePackage();
+                                        ensPak.Ensemble = ens;
+                                        ensPak.RawEnsemble = rawEns;
+                                        list.Add(ensPak);
+                                        //Debug.WriteLine("Ens: " + ens.EnsembleData.EnsembleNumber + " Count: " + count + " " + System.DateTime.Now);
+                                    }
                                 }
+                                else
+                                {
+                                    Debug.WriteLine("AdcpBinaryCodecReadFile::Ensemble Size to large or small:" + start + ":" + ensSize);
+                                }
+                            }
+                            else
+                            {
+                                Debug.WriteLine("AdcpBinaryCodecReadFile::Playload and Inv do not match:" + start + " : " + payloadSize + ":" + notPayloadSize);
                             }
                         }
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         log.Error("Error looking for an ensemble. Loc: " + start, e);
                     }

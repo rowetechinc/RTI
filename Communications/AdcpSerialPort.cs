@@ -296,7 +296,7 @@ namespace RTI
         /// a response from the ADCP for sending
         /// a command.  Value in milliseconds.
         /// </summary>
-        private const int TIMEOUT = 2000; 
+        private const int TIMEOUT = 2000;
 
         #region XModem Variables
 
@@ -643,7 +643,7 @@ namespace RTI
 
                 // Wait for it to sleep
                 Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
-                
+
                 // Send the BREAK and STOP using StopPinging
                 StopPinging();
             }
@@ -917,7 +917,7 @@ namespace RTI
                 int index = ReceiveBufferString.IndexOf("File Size =");
                 string strFileSize = ReceiveBufferString.Substring(index + 12, 10);
                 long.TryParse(strFileSize, out fileSize);
-                
+
                 // Set the file size
                 _fileSize = fileSize;
             }
@@ -1219,7 +1219,7 @@ namespace RTI
                                         }
                                     }
                                 }
-                                catch(Exception e) 
+                                catch (Exception e)
                                 {
                                     log.Error("Error downloading a file from the ADCP.", e);
                                 }
@@ -1253,7 +1253,7 @@ namespace RTI
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 //OK = false;
                 //Debug.WriteLine("Exception: {0}", e.ToString());
@@ -1266,7 +1266,7 @@ namespace RTI
 
             return true;
         }
-        
+
         /// <summary>
         /// Parse the packet received from the serial port.
         /// The system is in Download mode, so the serial port
@@ -1356,7 +1356,7 @@ namespace RTI
                                     // Write the data to the file only
                                     _downloadDataBinWriter.Write(Fbuff);
                                 }
-                                catch (Exception e) 
+                                catch (Exception e)
                                 {
                                     log.Error("Error trying to write serial port download data to file.", e);
                                 }
@@ -1591,7 +1591,7 @@ namespace RTI
             {
                 SendData(XmodemBuff, 0, BYTES_IN_XMODEM_PACKET);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Error("Error trying to send a serial port download packet.", e);
             }
@@ -1633,227 +1633,227 @@ namespace RTI
 
             //if (openFileDialog1.ShowDialog() == DialogResult.OK)
             //{
-                try
+            try
+            {
+                if ((stream = File.OpenRead(path)) != null)
                 {
-                    if ((stream = File.OpenRead(path)) != null)
+                    // Get the file size and publish
+                    FileInfo fileInfo = new FileInfo(path);
+                    long fileSize = fileInfo.Length;
+                    PublishUploadFileSizeEvent(path, fileSize);
+
+                    // Read in the first packet of data from the file
+                    // Determine which is smaller, the packet size or filesize.
+                    nBytesRead = stream.Read(XmodemData, 0, (int)Math.Min(XmodemPackageSize, fileSize));
+
+                    if (nBytesRead > 0)
                     {
-                        // Get the file size and publish
-                        FileInfo fileInfo = new FileInfo(path);
-                        long fileSize = fileInfo.Length;
-                        PublishUploadFileSizeEvent(path, fileSize);
+                        XmodemState = 0;
+                        XmodemGotC = false;
+                        XmodemCancel = false;
+                        XmodemFirstPacketSent = false;
+                        XmodemPacketNum = 1;
+                        XMODEM = true;
 
-                        // Read in the first packet of data from the file
-                        // Determine which is smaller, the packet size or filesize.
-                        nBytesRead = stream.Read(XmodemData, 0, (int)Math.Min(XmodemPackageSize, fileSize));
-
-                        if (nBytesRead > 0)
+                        // Create command to upload to the ADCP.
+                        string message1 = string.Format("{0}{1} \r", RTI.Commands.AdcpCommands.CMD_DSXR, Path.GetFileName(path));
+                        //DSXR
+                        try
                         {
-                            XmodemState = 0;
-                            XmodemGotC = false;
-                            XmodemCancel = false;
-                            XmodemFirstPacketSent = false;
-                            XmodemPacketNum = 1;
-                            XMODEM = true;
+                            // Send the command to the ADCP to start uploading a file
+                            // ****
+                            // BUG, SHOULD WAIT FOR ECHO TO ENSURE NO NAME WITH A C IS PARSED LATER
+                            // ****
+                            SendData(message1);
+                            //SendDataWaitReply(message1);  // Need to call a read.  Move StartUpload() to here
 
-                            // Create command to upload to the ADCP.
-                            string message1 = string.Format("{0}{1} \r", RTI.Commands.AdcpCommands.CMD_DSXR, Path.GetFileName(path));
-                            //DSXR
-                            try
+
+                            XmodemState = XmodemXsent;
+
+                            while (XMODEM)
                             {
-                                // Send the command to the ADCP to start uploading a file
-                                // ****
-                                // BUG, SHOULD WAIT FOR ECHO TO ENSURE NO NAME WITH A C IS PARSED LATER
-                                // ****
-                                SendData(message1);
-                                //SendDataWaitReply(message1);  // Need to call a read.  Move StartUpload() to here
-
-
-                                XmodemState = XmodemXsent;
-
-                                while (XMODEM)
+                                if (XmodemCancel)
                                 {
-                                    if (XmodemCancel)
+                                    XMODEM = false;
+                                    CancelXmodem();
+                                }
+                                else
+                                {
+                                    try
                                     {
-                                        XMODEM = false;
-                                        CancelXmodem();
-                                    }
-                                    else
-                                    {
-                                        try
+                                        // Get the command from the ADCP
+                                        count = ReadData(bBuff, 0, 1);
+                                        if (count > 0)
                                         {
-                                            // Get the command from the ADCP
-                                            count = ReadData(bBuff, 0, 1);
-                                            if (count > 0)
+                                            bBuff[1] = 0;
+
+                                            string message = System.Text.ASCIIEncoding.ASCII.GetString(bBuff);
+
+                                            if (XmodemState == XmodemXsent)
                                             {
-                                                bBuff[1] = 0;
-
-                                                string message = System.Text.ASCIIEncoding.ASCII.GetString(bBuff);
-
-                                                if (XmodemState == XmodemXsent)
+                                                switch (bBuff[0])
                                                 {
-                                                    switch (bBuff[0])
-                                                    {
-                                                        default:
-                                                            break;
-                                                        case ACK:
-                                                            XmodemState = XmodemXrcvd;
-                                                            break;
-                                                        case NAK:
-                                                            XMODEM = false;
-                                                            CancelXmodem();
-                                                            break;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    // Determine which command was sent from the ADCP
-                                                    switch (bBuff[0])
-                                                    {
-                                                        default:
-                                                            exceptionmessage = "ADCP not ready to upload.";
-                                                            break;
-                                                        // Request download
-                                                        case (byte)'C':
-                                                            XmodemGotC = true;
-                                                            SendXmodemPacket(XmodemData);
-                                                            bytesWritten += XmodemData.Length;
-                                                            XmodemFirstPacketSent = true;
-
-                                                            break;
-                                                        // Received packet
-                                                        case ACK:
-                                                            // Reset retry
-                                                            retry = 0;
-
-                                                            // End of Transmmision 
-                                                            if (XmodemState == XmodemEOTsent)
-                                                            {
-                                                                // Complete the upload process
-                                                                CompleteUpload();
-                                                            }
-                                                            else
-                                                            {
-                                                                // If the first packet was received and accepted
-                                                                // continue to send packets
-                                                                if (XmodemFirstPacketSent)
-                                                                {
-                                                                    // Read the next packet of data from the file
-                                                                    try
-                                                                    {
-                                                                        nBytesRead = stream.Read(XmodemData, 0, XmodemPackageSize);
-                                                                    }
-                                                                    catch (Exception ex)
-                                                                    {
-                                                                        nBytesRead = 0;
-                                                                        exceptionmessage = String.Format("caughtH: {0}", ex.GetType().ToString());
-                                                                        SetReceiveBuffer(exceptionmessage);
-                                                                        log.Error("Error reading serial port upload file.", ex);
-                                                                    }
-
-                                                                    // If there are bytes ready to be sent
-                                                                    // Continue sending the files
-                                                                    if (nBytesRead > 0)
-                                                                    {
-                                                                        // Fill in the empty bytes to make a complete packet
-                                                                        if (nBytesRead < XmodemPackageSize)
-                                                                        {
-                                                                            for (i = nBytesRead; i < XmodemPackageSize; i++)
-                                                                                XmodemData[i] = 0xFF;
-                                                                        }
-
-                                                                        // Send the packet to the serial port
-                                                                        XmodemPacketNum++;
-                                                                        SendXmodemPacket(XmodemData);
-
-                                                                        // Publish the number of bytes written currently
-                                                                        bytesWritten += nBytesRead;
-                                                                        PublishUploadProgressEvent(path, bytesWritten);
-                                                                    }
-                                                                    // Entire file sent
-                                                                    else
-                                                                    {
-                                                                        // Set state that end of transmission is sent
-                                                                        XmodemState = XmodemEOTsent;
-                                                                        if (IsAvailable())
-                                                                        {
-                                                                            // Send End of Transmission
-                                                                            try
-                                                                            {
-                                                                                byte[] buff = new byte[2];
-                                                                                buff[0] = EOT;
-                                                                                SendData(buff, 0, 1);
-                                                                            }
-                                                                            catch (Exception ex)
-                                                                            {
-                                                                                nBytesRead = 0;
-                                                                                exceptionmessage = String.Format("caughtI: {0}", ex.GetType().ToString());
-                                                                                SetReceiveBuffer(exceptionmessage);
-                                                                                log.Error("Error trying to send data to the serial port while uploading data.", ex);
-                                                                            }
-                                                                        }
-
-                                                                        // Send event that upload is complete
-                                                                        PublishUploadCompleteEvent(path, true);
-
-                                                                        XMODEM = false;
-                                                                    }
-                                                                }
-                                                                // A first packet has not been sent
-                                                                // Try resending the first packet
-                                                                else
-                                                                {
-                                                                    SendXmodemPacket(XmodemData);
-                                                                    XmodemFirstPacketSent = true;
-                                                                }
-                                                            }
-                                                            break;
-                                                        // Did not receive packet, resend packet
-                                                        case NAK:
-                                                            SendXmodemPacket(XmodemData);
-                                                            XmodemFirstPacketSent = true;
-
-                                                            // Limit the number of times this should retry to send a command
-                                                            if (retry++ > XMODEM_RETRY_LIMIT)
-                                                            {
-                                                                CompleteUpload();
-                                                            }
-                                                            break;
-                                                        // Cancel Upload
-                                                        case CAN:
-                                                            message = "Client requests CANCEL";
-                                                            //WriteMessageTxtSerial(message, false);
-                                                            CompleteUpload();
-                                                            break;
-                                                    }
-                                                    SetReceiveBuffer(message);
+                                                    default:
+                                                        break;
+                                                    case ACK:
+                                                        XmodemState = XmodemXrcvd;
+                                                        break;
+                                                    case NAK:
+                                                        XMODEM = false;
+                                                        CancelXmodem();
+                                                        break;
                                                 }
                                             }
+                                            else
+                                            {
+                                                // Determine which command was sent from the ADCP
+                                                switch (bBuff[0])
+                                                {
+                                                    default:
+                                                        exceptionmessage = "ADCP not ready to upload.";
+                                                        break;
+                                                    // Request download
+                                                    case (byte)'C':
+                                                        XmodemGotC = true;
+                                                        SendXmodemPacket(XmodemData);
+                                                        bytesWritten += XmodemData.Length;
+                                                        XmodemFirstPacketSent = true;
+
+                                                        break;
+                                                    // Received packet
+                                                    case ACK:
+                                                        // Reset retry
+                                                        retry = 0;
+
+                                                        // End of Transmmision 
+                                                        if (XmodemState == XmodemEOTsent)
+                                                        {
+                                                            // Complete the upload process
+                                                            CompleteUpload();
+                                                        }
+                                                        else
+                                                        {
+                                                            // If the first packet was received and accepted
+                                                            // continue to send packets
+                                                            if (XmodemFirstPacketSent)
+                                                            {
+                                                                // Read the next packet of data from the file
+                                                                try
+                                                                {
+                                                                    nBytesRead = stream.Read(XmodemData, 0, XmodemPackageSize);
+                                                                }
+                                                                catch (Exception ex)
+                                                                {
+                                                                    nBytesRead = 0;
+                                                                    exceptionmessage = String.Format("caughtH: {0}", ex.GetType().ToString());
+                                                                    SetReceiveBuffer(exceptionmessage);
+                                                                    log.Error("Error reading serial port upload file.", ex);
+                                                                }
+
+                                                                // If there are bytes ready to be sent
+                                                                // Continue sending the files
+                                                                if (nBytesRead > 0)
+                                                                {
+                                                                    // Fill in the empty bytes to make a complete packet
+                                                                    if (nBytesRead < XmodemPackageSize)
+                                                                    {
+                                                                        for (i = nBytesRead; i < XmodemPackageSize; i++)
+                                                                            XmodemData[i] = 0xFF;
+                                                                    }
+
+                                                                    // Send the packet to the serial port
+                                                                    XmodemPacketNum++;
+                                                                    SendXmodemPacket(XmodemData);
+
+                                                                    // Publish the number of bytes written currently
+                                                                    bytesWritten += nBytesRead;
+                                                                    PublishUploadProgressEvent(path, bytesWritten);
+                                                                }
+                                                                // Entire file sent
+                                                                else
+                                                                {
+                                                                    // Set state that end of transmission is sent
+                                                                    XmodemState = XmodemEOTsent;
+                                                                    if (IsAvailable())
+                                                                    {
+                                                                        // Send End of Transmission
+                                                                        try
+                                                                        {
+                                                                            byte[] buff = new byte[2];
+                                                                            buff[0] = EOT;
+                                                                            SendData(buff, 0, 1);
+                                                                        }
+                                                                        catch (Exception ex)
+                                                                        {
+                                                                            nBytesRead = 0;
+                                                                            exceptionmessage = String.Format("caughtI: {0}", ex.GetType().ToString());
+                                                                            SetReceiveBuffer(exceptionmessage);
+                                                                            log.Error("Error trying to send data to the serial port while uploading data.", ex);
+                                                                        }
+                                                                    }
+
+                                                                    // Send event that upload is complete
+                                                                    PublishUploadCompleteEvent(path, true);
+
+                                                                    XMODEM = false;
+                                                                }
+                                                            }
+                                                            // A first packet has not been sent
+                                                            // Try resending the first packet
+                                                            else
+                                                            {
+                                                                SendXmodemPacket(XmodemData);
+                                                                XmodemFirstPacketSent = true;
+                                                            }
+                                                        }
+                                                        break;
+                                                    // Did not receive packet, resend packet
+                                                    case NAK:
+                                                        SendXmodemPacket(XmodemData);
+                                                        XmodemFirstPacketSent = true;
+
+                                                        // Limit the number of times this should retry to send a command
+                                                        if (retry++ > XMODEM_RETRY_LIMIT)
+                                                        {
+                                                            CompleteUpload();
+                                                        }
+                                                        break;
+                                                    // Cancel Upload
+                                                    case CAN:
+                                                        message = "Client requests CANCEL";
+                                                        //WriteMessageTxtSerial(message, false);
+                                                        CompleteUpload();
+                                                        break;
+                                                }
+                                                SetReceiveBuffer(message);
+                                            }
                                         }
-                                        catch { }
                                     }
+                                    catch { }
                                 }
                             }
-
-                            catch (Exception ex)
-                            {
-                                XmodemState = XmodemInit;
-                                exceptionmessage = String.Format("caughtJ: {0}", ex.GetType().ToString());
-                                SetReceiveBuffer(exceptionmessage);
-                                log.Error("Error uploading a file through the serial port. __", ex);
-                            }
-
-                            stream.Close();
                         }
-                        CompleteUpload();
+
+                        catch (Exception ex)
+                        {
+                            XmodemState = XmodemInit;
+                            exceptionmessage = String.Format("caughtJ: {0}", ex.GetType().ToString());
+                            SetReceiveBuffer(exceptionmessage);
+                            log.Error("Error uploading a file through the serial port. __", ex);
+                        }
+
+                        stream.Close();
                     }
+                    CompleteUpload();
                 }
-                catch (Exception ex)
-                {
-                    nBytesRead = 0;
-                    exceptionmessage = String.Format("caughtK: {0}", ex.GetType().ToString());
-                    SetReceiveBuffer(exceptionmessage);
-                    log.Error("Error uploading a file through the serial port.", ex);
-                }
+            }
+            catch (Exception ex)
+            {
+                nBytesRead = 0;
+                exceptionmessage = String.Format("caughtK: {0}", ex.GetType().ToString());
+                SetReceiveBuffer(exceptionmessage);
+                log.Error("Error uploading a file through the serial port.", ex);
+            }
             //}
         }
 
@@ -2089,7 +2089,7 @@ namespace RTI
 
             // Wait for an output
             Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 2);
-                                                        // Get the current date and time
+            // Get the current date and time
             DateTime adcpDt = RTI.Commands.AdcpCommands.DecodeSTIME(ReceiveBufferString);           // Decode the date and time from the ADCP
 
             return adcpDt;
@@ -2218,7 +2218,7 @@ namespace RTI
         /// <returns>TRUE = Command sent.  / False = Command NOT sent.  Most likely not in Compass mode.</returns>
         public bool SendCompassCommand(byte[] command)
         {
-            if (Mode == AdcpSerialModes.COMPASS  && command != null)
+            if (Mode == AdcpSerialModes.COMPASS && command != null)
             {
                 SendData(command, 0, command.Length);
                 return true;
@@ -2362,7 +2362,7 @@ namespace RTI
             else
             {
                 RTI.Commands.BreakStmt breakStmt = RTI.Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
-                
+
                 // Pass the results
                 result.Results = breakStmt;
             }
@@ -2487,7 +2487,7 @@ namespace RTI
                 bool sysconfExist = false;
                 bool bbcodeExist = false;
 
-                for(int x = 0; x < lines.Length; x++)
+                for (int x = 0; x < lines.Length; x++)
                 {
                     if (lines[x].Contains("HELP")) { helpExist = true; }            // HELP.TXT
                     if (lines[x].Contains("ENGHELP")) { engHelpExist = true; }      // ENGHELP.TXT
@@ -3051,12 +3051,12 @@ namespace RTI
             {
                 //if (TestSerialPortConnection(port))
                 //{
-                    AdcpSerialOptions options = TestSerialBaudConnection(port);
-                    // Found a port now test the baud rate
-                    if (options != null)
-                    {
-                        result.Add(options);
-                    }
+                AdcpSerialOptions options = TestSerialBaudConnection(port);
+                // Found a port now test the baud rate
+                if (options != null)
+                {
+                    result.Add(options);
+                }
                 //}
             }
 
@@ -3149,6 +3149,8 @@ namespace RTI
             if (IsOpen())
             {
                 Disconnect();
+
+                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
             }
 
             // Test all the baud rates until one is found
@@ -3160,7 +3162,7 @@ namespace RTI
                 _serialOptions.BaudRate = baud;
                 Connect();
 
-                Thread.Sleep(AdcpSerialPort.WAIT_STATE); 
+                Thread.Sleep(AdcpSerialPort.WAIT_STATE);
 
                 // Verify the connection was created
                 if (IsOpen())
@@ -3184,7 +3186,7 @@ namespace RTI
                     {
                         Debug.WriteLine("AdcpSerialPort.TestSerialBaudConnection(): " + ReceiveBufferString);
 
-                         //Decode the data to see if the response is not garabage
+                        //Decode the data to see if the response is not garabage
                         if (ReceiveBufferString.Contains(" Rowe Technologies Inc."))
                         {
 
@@ -3228,7 +3230,7 @@ namespace RTI
             // Send a BREAK to get the serial number
             SendBreak();
             // Wait for an output
-            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE*5);
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 5);
 
             // Get the buffer output
             string breakResult = ReceiveBufferString;
@@ -3375,6 +3377,58 @@ namespace RTI
         {
             string buffer = SendDataGetReply(RTI.Commands.AdcpCommands.CMD_ENGCONF);    // Send command to get ENGCONF
             return RTI.Commands.AdcpCommands.DecodeENGCONF(buffer);
+        }
+
+        #endregion
+
+        #region Update Firmware
+
+        /// <summary>
+        /// Execute the upload process.  This should be called
+        /// from the async command.
+        /// </summary>
+        /// <param name="fileNames">File names to upload.</param>
+        public void UpdateFirmware(string[] fileNames)
+        {
+            if (fileNames != null)
+            {
+                // Verify the file name is good
+                if (IsAvailable())
+                {
+                    // Stop the ADCP pinging if its pinging
+                    StopPinging();
+
+                    // Upload all the selected files
+                    foreach (var file in fileNames)
+                    {
+                        // Upload the file to the ADCP
+                        XModemUpload(file);
+
+                        // Wait for the update to complete
+                        Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
+
+                        // Load the firmware to NAND
+                        if (file.ToLower().Contains("rtisys"))
+                        {
+                            SendDataWaitReply("FMCOPYS");
+                        }
+
+                        // Load the boot code to NAND
+                        if (file.ToLower().Contains("boot"))
+                        {
+                            SendDataWaitReply("FMCOPYB");
+                        }
+                    }
+
+
+                    // Reboot the ADCP to use the new firmware
+                    Reboot();
+
+                    // Validate the files uploaded
+                    // By downloading it and compairing it against
+                    // the original file
+                }
+            }
         }
 
         #endregion

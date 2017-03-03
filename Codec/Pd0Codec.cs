@@ -260,7 +260,7 @@ namespace RTI
                     int currentEnsembleSize = GetEnsembleSize();
 
                     // Ensure the entire ensemble is present
-                    // before preceeding
+                    // before proceeding
                     if (_incomingDataBuffer.Count >= currentEnsembleSize && currentEnsembleSize > 0)
                     {
                         // Create an array to hold the ensemble
@@ -314,7 +314,7 @@ namespace RTI
         /// Then publish the data to all subscribers.
         /// </summary>
         /// <param name="binaryEnsemble">Binary PD0 data.</param>
-        private void DecodePd0Data(byte[] binaryEnsemble)
+        public void DecodePd0Data(byte[] binaryEnsemble)
         {
             // Create the PD0 and RTI ensemble
             PD0 pd0Ensemble = new PD0(binaryEnsemble);
@@ -444,7 +444,7 @@ namespace RTI
         /// To Unsubscribe:
         /// pd0Codec.ProcessDataEvent -= (method to call)
         /// </summary>
-        public event ProcessDataEventHandler ProcessDataEvent;
+        public static event ProcessDataEventHandler ProcessDataEvent;
 
         /// <summary>
         /// Event To subscribe to.  This gives the paramater
@@ -463,7 +463,7 @@ namespace RTI
         /// To Unsubscribe:
         /// codec.ProcessDataCompleteEvent -= (method to call)
         /// </summary>
-        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
+        public static event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
 
         #endregion
 

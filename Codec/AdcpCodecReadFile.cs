@@ -56,6 +56,11 @@ namespace RTI
         /// <summary>
         /// DVL Codec to read files.
         /// </summary>
+        private AdcpPD0CodecReadFile _pd0Codec;
+
+        /// <summary>
+        /// DVL Codec to read files.
+        /// </summary>
         private AdcpDvlCodecReadFile _dvlCodec;
 
         #endregion
@@ -66,7 +71,9 @@ namespace RTI
         public AdcpCodecReadFile()
         {
             _binaryCodec = new AdcpBinaryCodecReadFile();
+            _pd0Codec = new AdcpPD0CodecReadFile();
             _dvlCodec = new AdcpDvlCodecReadFile();
+            
         }
 
         /// <summary>
@@ -80,6 +87,11 @@ namespace RTI
             var binList = _binaryCodec.GetEnsembles(files);
             if (binList.Count > 0)
                 return binList;
+
+            // Check Pd0 Codec
+            var pd0List = _pd0Codec.GetEnsembles(files);
+            if (binList.Count > 0)
+                return pd0List;
 
             // Check DVL Codec
             var dvlList = _dvlCodec.GetEnsembles(files);

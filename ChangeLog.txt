@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.2
+
+
 RTI-3.4.1
  - Changed to ReadBytes to read in from the file to improve performance.
  - In AdcpDatabaseWriter, added WriteFileToDatabase() to write all the ensembles at once.

@@ -177,8 +177,8 @@ namespace RTI
 
             // PD0 Codec
             _pd0Codec = new Pd0Codec();
-            _pd0Codec.ProcessDataEvent += new Pd0Codec.ProcessDataEventHandler(_pd0Codec_ProcessDataEvent);
-            _pd0Codec.ProcessDataCompleteEvent += pd0Codec_ProcessDataCompleteEvent;
+            Pd0Codec.ProcessDataEvent += new Pd0Codec.ProcessDataEventHandler(_pd0Codec_ProcessDataEvent);
+            Pd0Codec.ProcessDataCompleteEvent += pd0Codec_ProcessDataCompleteEvent;
 
             // PD6 and PD13 Codec
             _pd6_13Codec = new Pd6_13Codec();
@@ -218,8 +218,8 @@ namespace RTI
             // Shutdown PD0 codec
             if (_pd0Codec != null)
             {
-                _pd0Codec.ProcessDataEvent -= _pd0Codec_ProcessDataEvent;
-                _pd0Codec.ProcessDataCompleteEvent -= pd6_13Codec_ProcessDataCompleteEvent;
+                Pd0Codec.ProcessDataEvent -= _pd0Codec_ProcessDataEvent;
+                Pd0Codec.ProcessDataCompleteEvent -= pd6_13Codec_ProcessDataCompleteEvent;
                 _pd0Codec.Dispose();
             }
 

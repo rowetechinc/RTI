@@ -88,6 +88,7 @@ using System.IO.Ports;
 using System.Diagnostics;
 using System.Threading;
 using log4net;
+using System.Text;
 
 namespace RTI
 {
@@ -101,7 +102,7 @@ namespace RTI
     /// To send data to the serial port, the sendBuffer must
     /// be filled and then the SendDataCommand must be given.
     /// </summary>
-    public abstract class SerialConnection: IDisposable
+    public abstract class SerialConnection : IDisposable
     {
         // Setup logger
         private static readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -135,6 +136,11 @@ namespace RTI
         private byte ACK = 6;
 
         /// <summary>
+        /// NAK for receiving messages.
+        /// </summary>
+        private byte NAK = 15;
+
+        /// <summary>
         /// Max to set to observable collection.
         /// </summary>
         private int MAX_DISPLAY_BUFFER = 5000;
@@ -148,7 +154,7 @@ namespace RTI
         /// Serial port options.
         /// </summary>
         protected SerialOptions _serialOptions;
-        
+
         /// <summary>
         /// Used to determine if the applicaiton is shutting down
         /// to properly stop the serial port.
@@ -350,7 +356,6 @@ namespace RTI
 
             // Disconnect the serial port
             Disconnect();
-
             // Reconnect the serial port
             return Connect();
         }
@@ -380,6 +385,7 @@ namespace RTI
                 _serialPort.ReadTimeout = 50;
                 _serialPort.WriteTimeout = 500;
 
+                // Check if Open() has already been called on this serial port object
                 if (!_serialPort.IsOpen)
                 {
                     // Open the serial port and remove old data
@@ -390,7 +396,7 @@ namespace RTI
                         // If the connection is opened, start the thread
                         if (_serialPort.IsOpen)
                         {
-                            if(!_readThread.IsAlive)
+                            if (!_readThread.IsAlive)
                             {
                                 _readThread = new Thread(new ParameterizedThreadStart(ReadThreadMethod));
                                 _readThread.Priority = ThreadPriority.Normal;
@@ -407,6 +413,7 @@ namespace RTI
                     {
                         // Port is already in use
                         log.Warn("COMM Port already in use: " + _serialOptions.Port, ex);
+                        Debug.WriteLine("COMM Port already in use: " + _serialOptions.Port);
                         Disconnect();
                         return false;
                     }
@@ -414,6 +421,7 @@ namespace RTI
                     {
                         // Not sure what is causing this exception yet
                         log.Error("Error COMM Port: " + _serialOptions.Port, ex_range);
+                        Debug.WriteLine("Error COMM Port: " + _serialOptions.Port);
                         Disconnect();
                         return false;
                     }
@@ -421,12 +429,14 @@ namespace RTI
                     {
                         // The Serial port does not exist
                         log.Warn(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port), io_ex);
+                        Debug.WriteLine(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port));
                         Disconnect();
                         return false;
                     }
                     catch (Exception ex)
                     {
                         log.Error("Error Opening in COMM Port: " + _serialOptions.Port, ex);
+                        Debug.WriteLine("Error Opening in COMM Port: " + _serialOptions.Port);
                         Disconnect();
                         return false;
                     }
@@ -447,18 +457,37 @@ namespace RTI
         /// </summary>
         public void Disconnect()
         {
-            // Close and dispose the serial port
-            if (_serialPort != null && _serialPort.IsOpen)
+            // Stop the thread
+            _stopThread = true;
+
+            // Allow the thread to loop through onces to shutdown
+            Thread.Sleep(DEFAULT_SERIAL_INTERVAL);
+
+            if(_readThread.IsAlive)
             {
                 try
                 {
                     // Stop the thread
                     _readThread.Abort();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     log.Error("Error stopping Serial Read Thread", e);
                 }
+            }
+
+            // Close and dispose the serial port
+            if (_serialPort != null && _serialPort.IsOpen)
+            {
+                //try
+                //{
+                //    // Stop the thread
+                //    //_readThread.Abort();
+                //}
+                //catch (Exception e)
+                //{
+                //    log.Error("Error stopping Serial Read Thread", e);
+                //}
 
                 // Close the port
                 _serialPort.Close();
@@ -537,7 +566,7 @@ namespace RTI
                 return false;
             }
 
-        return true;
+            return true;
         }
 
         /// <summary>
@@ -573,13 +602,13 @@ namespace RTI
 
                 // Wait for the state to change
                 // and leave on a bit of time
-                System.Threading.Thread.Sleep(WAIT_STATE*4);
+                System.Threading.Thread.Sleep(WAIT_STATE * 5);
 
                 // Change state back
                 _serialPort.BreakState = false;
 
                 // Wait for state to change back
-                System.Threading.Thread.Sleep(WAIT_STATE);
+                System.Threading.Thread.Sleep(WAIT_STATE * 4);
 
                 // Check if something is in the buffer
                 if (string.IsNullOrEmpty(_receiveBufferString))
@@ -675,6 +704,7 @@ namespace RTI
                     catch (ThreadAbortException)
                     {
                         // Do nothing, forcing the thread to stop if it does not stop at shutdown
+                        Debug.WriteLine("Shutting down Serial port Read thread abruptly.");
                     }
                     catch (Exception ex)
                     {
@@ -749,7 +779,7 @@ namespace RTI
         public int ReadData(byte[] buffer, int offset, int count)
         {
             int result = 0;
-            
+
             // Lock to prevent multiple threads from reading at the same time
             lock (_readLock)
             {
@@ -816,7 +846,7 @@ namespace RTI
                 {
                     _isSendingData = true;
                     _serialPort.Write(buffer, offset, count);
-                    
+
                     //ReceiveBufferString = System.Text.ASCIIEncoding.ASCII.GetString(buffer) + ReceiveBufferString;
                     ReceiveBufferString += System.Text.ASCIIEncoding.ASCII.GetString(buffer);
 
@@ -869,7 +899,7 @@ namespace RTI
 
             // Send command
             this.SendData(data);
-           
+
             // Wait for ACK
             _eventWaitResponse.WaitOne(timeout);
 
@@ -880,7 +910,7 @@ namespace RTI
                 // Special case for BREAK response.  It will give the banner as the response
                 if (data == Commands.AdcpCommands.CMD_BREAK)
                 {
-                    if(!_validateMsg.Contains(" Rowe Technologies Inc."))
+                    if (!_validateMsg.Contains(" Rowe Technologies Inc."))
                     {
                         log.Warn(string.Format("Error sending BREAK to serial port. Sent data: {0} length: {1}  Received Data: {2} length: {3}", data, data.Length, _validateMsg, _validateMsg.Length));
                         result = false;
@@ -895,6 +925,20 @@ namespace RTI
                         log.Warn(string.Format("Error sending data to serial port. Sent data: {0} length: {1}  Received Data: {2} length: {3}", data, data.Length, _validateMsg, _validateMsg.Length));
                         result = false;
                     }
+                }
+
+                // Check if an ACK or NAK was in the response
+                int ackNakResult = CheckAckNak(Encoding.ASCII.GetBytes(_validateMsg));
+                switch (ackNakResult)
+                {
+                    case 0:
+                        ReceiveBufferString += "BAD COMMAND\n";
+                        break;
+                    case 1:
+                        break;
+                    default:
+                        break;
+
                 }
             }
             // string lengths did not match
@@ -978,7 +1022,35 @@ namespace RTI
                 {
                     _eventWaitResponse.Set();
                 }
-            }  
+            }
+        }
+
+        /// <summary>
+        /// Check for an ACK or NAK in the command response.
+        /// ACK means the command was good.
+        /// NAK means the command was bad.  Either its unknown or not accpeted.
+        /// </summary>
+        /// <param name="bytes">Bytes response to check.</param>
+        /// <returns>0 = NAK received.  1 = ACK received.  -1 = Neither received.</returns>
+        private int CheckAckNak(byte[] bytes)
+        {
+            // Look for ACK
+            for (int x = 0; x < bytes.Length; x++)
+            {
+                // ACK for a good command
+                if (bytes[x] == ACK)
+                {
+                    return 1;
+                }
+                // NAK for a bad command
+                if (bytes[x] == NAK)
+                {
+                    return 0;
+                }
+            }
+
+            // Neither was received
+            return -1;
         }
 
         #endregion

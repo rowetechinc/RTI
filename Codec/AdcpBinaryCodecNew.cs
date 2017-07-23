@@ -35,6 +35,7 @@
  * -----------------------------------------------------------------
  * 09/12/2016      RC          3.3.2      Initial coding
  * 10/21/2016      RC          3.3.2      Fixed bug missing GPS data when connected to computer.
+ * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 
  */
 
@@ -205,6 +206,23 @@ namespace RTI
         /// </summary>
         private const int BUFFER_TIMEOUT = 5;
 
+        /// <summary>
+        /// Set a timeout if the incoming data is accumulating and
+        /// never finding any ensembles.
+        /// </summary>
+        private int _incomingDataTimeout;
+
+        /// <summary>
+        /// Number of times to take incoming data before a timeout
+        /// occurs and the data is cleared.
+        /// </summary>
+        private const int INCOMING_DATA_TIMEOUT = 50;
+
+        // <summary>
+        // TCP Server.
+        // </summary>
+        //private TcpServer _tcpServer;
+
         #endregion
 
         #region Struct 
@@ -244,6 +262,20 @@ namespace RTI
             //_buffer = new BlockingCollection<byte[]>();
             //_processingData = false;
             _timeoutBuffer = 0;
+            _incomingDataTimeout = 0;
+
+            //try
+            //{
+            //    // Create UDP client
+            //    _tcpServer = new TcpServer(RTI.Core.Commons.TCP_ENS);
+            //}
+            //catch(Exception)
+            //{
+            //    // The server can only be started once
+            //    // So if Pulse is opened again, the first connection got it.
+            //    _tcpServer = null;
+            //}
+
 
             // Initialize the thread
             _continue = true;
@@ -297,6 +329,15 @@ namespace RTI
             {
                 // Wake up the thread to process data
                 _eventWaitData.Set();
+            }
+
+            // Check timeout
+            _incomingDataTimeout++;
+            if(_incomingDataTimeout > INCOMING_DATA_TIMEOUT)
+            {
+                // Reset the value and clear the data
+                _incomingDataTimeout = 0;
+                ClearIncomingData();
             }
         }
 
@@ -477,6 +518,15 @@ namespace RTI
                         {
                             ProcessDataEvent(ens.RawEnsemble, ens.Ensemble);
                         }
+
+                        //if (_tcpServer != null)
+                        //{
+                        //    // Send the ensemble to UDP port
+                        //    _tcpServer.Write(ens.Ensemble.EncodeJSON() + "\n");
+                        //}
+
+                        // Reset the incoming data timeout
+                        _incomingDataTimeout = 0;
 
                         //Debug.WriteLine("Ens: " + ens.Ensemble.EnsembleData.EnsembleNumber);
                     }

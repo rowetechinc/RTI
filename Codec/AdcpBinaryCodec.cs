@@ -158,6 +158,11 @@ namespace RTI
         /// </summary>
         private EventWaitHandle _eventWaitData;
 
+        /// <summary>
+        /// UDP client.
+        /// </summary>
+        private System.Net.Sockets.TcpClient _tcpClient;
+
         #endregion
 
         /// <summary>
@@ -174,6 +179,9 @@ namespace RTI
 
             // Initialize the ensemble size to at least the HDRLEN
             _currentEnsembleSize = DataSet.Ensemble.ENSEMBLE_HEADER_LEN;
+
+            // Create UDP client
+            _tcpClient = new System.Net.Sockets.TcpClient("127.0.0.1", RTI.Core.Commons.TCP_ENS);
 
             // Initialize the thread
             _continue = true;
@@ -738,6 +746,10 @@ namespace RTI
             {
                 ProcessDataEvent(binaryEnsemble, ensemble);
             }
+
+            // Send the ensemble to the UDP port
+            byte[] ensJson = System.Text.Encoding.ASCII.GetBytes(ensemble.EncodeJSON() + "\n");
+            _tcpClient.GetStream().Write(ensJson, 0, ensJson.Length);
 
             return ensemble;
         }

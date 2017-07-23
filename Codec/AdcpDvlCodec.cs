@@ -54,6 +54,7 @@
  * 06/17/2015      RC          3.0.5      Removed the recusive call in ProcessData().
  * 07/09/2015      RC          3.0.5      Made the codec its own thread.
  * 08/13/2015      RC          3.0.5      Added complete event.
+ * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 
  */
 
@@ -168,6 +169,18 @@ namespace RTI
         /// </summary>
         private EventWaitHandle _eventWaitData;
 
+        /// <summary>
+        /// Set a timeout if the incoming data is accumulating and
+        /// never finding any ensembles.
+        /// </summary>
+        private int _incomingDataTimeout;
+
+        /// <summary>
+        /// Number of times to take incoming data before a timeout
+        /// occurs and the data is cleared.
+        /// </summary>
+        private const int INCOMING_DATA_TIMEOUT = 50;
+
         #endregion
 
         #region Properties
@@ -242,6 +255,15 @@ namespace RTI
 
                 // Wake up the thread to process data
                 _eventWaitData.Set();
+            }
+
+            // Check timeout
+            _incomingDataTimeout++;
+            if (_incomingDataTimeout > INCOMING_DATA_TIMEOUT)
+            {
+                // Reset the value and clear the data
+                _incomingDataTimeout = 0;
+                ClearIncomingData();
             }
         }
 
@@ -656,6 +678,9 @@ namespace RTI
                 // to the NMEA buffer to be processed with a complete dataset
                 AddNmeaData(sentence.Sentence + NMEA_END);
             }
+
+            // Reset the incoming data timeout
+            _incomingDataTimeout = 0;
         }
 
         #endregion

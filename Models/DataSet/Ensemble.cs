@@ -81,6 +81,7 @@
  * 09/25/2015      RC          3.1.1      Added Adcp2InfoDataSet.
  * 10/29/2015      RC          3.2.1      Added WaterTracking in DecodePd0Ensemble().
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ * 03/03/2017      RC          3.4.2      Added EnsembleWaterProfileTextOutput() to display all data as text.
  * 
  */
 
@@ -3045,7 +3046,7 @@ namespace RTI
             /// <returns>A JSON string of this object.</returns>
             public string EncodeJSON()
             {
-                return Newtonsoft.Json.JsonConvert.SerializeObject(this, Formatting.Indented);
+                return Newtonsoft.Json.JsonConvert.SerializeObject(this, Formatting.None);
             }
 
             #endregion
@@ -3299,6 +3300,490 @@ namespace RTI
             public byte[] EncodePd0Ensemble(PD0.CoordinateTransforms xform)
             {
                 return new PD0(this, xform).Encode();
+            }
+
+            #endregion
+
+            #endregion
+
+            #region Display Ensemble Text Output
+
+            /// <summary>
+            /// Water Profile text output.
+            /// The Header is the header to all the data.
+            /// Then the Bin list contains all the values for
+            /// the bin data.
+            /// </summary>
+            public struct WaterProfileTextOutput
+            {
+                /// <summary>
+                /// Header for the water profilee text output.
+                /// </summary>
+                public string Header { get; set; }
+
+                /// <summary>
+                /// List of all the strings for the bins.
+                /// </summary>
+                public List<string> BinList { get; set; }
+            }
+
+            /// <summary>
+            /// Create a list of all the values for each bin.  This includes
+            /// velocity, good ping, amplitude and correlation.  A single velocity
+            /// value is used and a single good ping value is used.  The user
+            /// can choose which values to use; beam, earth or instrument.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to display.</param>
+            /// <param name="minBinDisplay">Min bin.</param>
+            /// <param name="maxBinDisplay">Max bin to display.</param>
+            /// <param name="measurementStandard">Imperial or standard measurements.</param>
+            /// <param name="selectedTransform">Transform to display.</param>
+            /// <returns></returns>
+            public static WaterProfileTextOutput GetEnsembleWaterProfileTextOutput(DataSet.Ensemble ensemble, int minBinDisplay, int maxBinDisplay, 
+                                                    Core.Commons.MeasurementStandards measurementStandard = Core.Commons.MeasurementStandards.IMPERIAL,
+                                                    Core.Commons.Transforms selectedTransform = Core.Commons.Transforms.BEAM)
+            {
+                // Initialize the output
+                WaterProfileTextOutput output = new WaterProfileTextOutput();
+
+                try
+                {
+                    // Create a list for all the strings
+                    List<string> list = new List<string>();
+
+                    // Determine spacing of the items
+                    int DepthLabelPad = 10;
+                    int VelLabelPad = 26;
+                    int GPLabelPad = 21;
+                    int AmpLabelPad = 21;
+                    int CorrLabelPad = 30;
+                    int MagLabelPad = 19;
+                    int DirLabelPad = 10;
+                    int DepthPad = 10;
+                    int VelPad = 7;
+                    if (measurementStandard == Core.Commons.MeasurementStandards.IMPERIAL)
+                    {
+                        DepthLabelPad = 9;
+                        VelLabelPad = 29;
+                        GPLabelPad = 24;
+                        VelPad = 8;
+                    }
+
+                    // Add Top Label
+                    StringBuilder label = new StringBuilder();
+                    label.Append(("Bin").PadLeft(4) + "");
+                    label.Append(("Depth").PadLeft(DepthLabelPad) + "");
+                    label.Append((GetVelocityTitle(selectedTransform)).PadLeft(VelLabelPad) + "");
+                    label.Append(("Good Ping").PadLeft(GPLabelPad) + "");
+                    label.Append(("Amplitude").PadLeft(AmpLabelPad) + "");
+                    label.Append(("Correlation").PadLeft(CorrLabelPad) + "");
+                    label.Append(("ENU Mag").PadLeft(MagLabelPad) + "");
+                    label.Append(("ENU Dir").PadLeft(DirLabelPad));
+                    output.Header = label.ToString();
+
+                    // Verify the minimum data is available
+                    if (ensemble == null || !ensemble.IsAncillaryAvail || !ensemble.IsEnsembleAvail)
+                    {
+                        // Set at least the titles
+                        return output;
+                    }
+
+                    // Check for Vertical beams to set the SelectedTransform
+                    selectedTransform = CheckForVerticalBeam(ensemble, selectedTransform);
+
+                    // Set the number of bins and the Bin size
+                    int numBins = ensemble.EnsembleData.NumBins;
+                    double binSize = ensemble.AncillaryData.BinSize;
+                    double firstBinDepth = ensemble.AncillaryData.FirstBinRange;
+
+                    // Set the Velocity data to the list
+                    float[,] velData = null;
+                    int[,] goodPingData = null;
+                    switch (selectedTransform)
+                    {
+                        case Core.Commons.Transforms.BEAM:
+                            if (ensemble.IsBeamVelocityAvail)
+                            {
+                                velData = ensemble.BeamVelocityData.BeamVelocityData;
+                            }
+                            if(ensemble.IsGoodBeamAvail)
+                            {
+                                goodPingData = ensemble.GoodBeamData.GoodBeamData;
+                            }
+                            break;
+                        case Core.Commons.Transforms.EARTH:
+                            if (ensemble.IsEarthVelocityAvail)
+                            {
+                                velData = ensemble.EarthVelocityData.EarthVelocityData;
+                            }
+                            if (ensemble.IsGoodEarthAvail)
+                            {
+                                goodPingData = ensemble.GoodEarthData.GoodEarthData;
+                            }
+                            break;
+                        case Core.Commons.Transforms.INSTRUMENT:
+                            if (ensemble.IsInstrumentVelocityAvail)
+                            {
+                                velData = ensemble.InstrumentVelocityData.InstrumentVelocityData;
+                            }
+                            if (ensemble.IsGoodBeamAvail)
+                            {
+                                goodPingData = ensemble.GoodBeamData.GoodBeamData;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    // Get the Amplitude data
+                    float[,] ampData = null;
+                    if(ensemble.IsAmplitudeAvail)
+                    {
+                        ampData = ensemble.AmplitudeData.AmplitudeData;
+                    }
+
+                    // Get the Correlation data
+                    float[,] corrData = null;
+                    if(ensemble.IsCorrelationAvail)
+                    {
+                        corrData = ensemble.CorrelationData.CorrelationData;
+                    }
+
+                    // Combine all the data and add to binding list
+                    for (int bin = minBinDisplay; bin < maxBinDisplay; bin++)
+                    {
+                        StringBuilder binData = new StringBuilder();
+                        binData.Append((bin.ToString()).PadLeft(3) + "  ");
+
+                        binData.Append((SetMeasurementValue((float)((bin * binSize) + firstBinDepth), "0.000", measurementStandard) + MeasurementLabel(measurementStandard)).PadLeft(DepthPad) + "    ");
+
+                        //----------------------------------------------------------------------
+                        // Velocity Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && velData != null)
+                        {
+                            binData.Append((SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_0_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + " "));
+                        }
+
+                        // Velocity Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && velData != null)
+                        {
+                            binData.Append(
+                                (SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_1_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + " "));
+                        }
+
+                        // Velocity Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && velData != null)
+                        {
+                            binData.Append((SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_2_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + " "));
+                        }
+
+                        // Velocity Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && velData != null)
+                        {
+                            binData.Append((SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_3_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + "   ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + "   "));
+                        }
+
+                        //----------------------------------------------------------------------
+                        // Good Ping Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_0_INDEX]).ToString()).PadLeft(1) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + " "));
+                        }
+
+                        // Good Ping Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_1_INDEX]).ToString()).PadLeft(1) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + " "));
+                        }
+
+                        // Good Ping Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_2_INDEX]).ToString()).PadLeft(1) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + " "));
+                        }
+
+                        // Good Ping Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_3_INDEX]).ToString()).PadLeft(1) + "   ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + "   "));
+                        }
+
+                        //----------------------------------------------------------------------
+                        // Amplitude Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_0_INDEX]).ToString("0.0")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Amplitude Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_1_INDEX]).ToString("0.0")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Amplitude Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_2_INDEX]).ToString("0.0")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Amplitude Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_3_INDEX]).ToString("0.0")).PadLeft(6) + "   ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + "   "));
+                        }
+
+                        //----------------------------------------------------------------------
+                        // Correlation Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_0_INDEX]).ToString("0.000")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Correlation Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_1_INDEX]).ToString("0.000")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Correlation Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_2_INDEX]).ToString("0.000")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Correlation Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_3_INDEX]).ToString("0.000")).PadLeft(6));
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6))));
+                        }
+
+                        if (ensemble.IsEarthVelocityAvail && ensemble.EarthVelocityData.IsVelocityVectorAvail)
+                        {
+                            binData.Append(SetMeasurementValue((float)ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude, "0.00", measurementStandard).PadLeft(9));
+                            binData.Append(SetDegreeValue(ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth, "0.00").PadLeft(12));
+                        }
+
+                        // Add the string to the list
+                        list.Add(binData.ToString());
+                    }
+
+                    // Set the new list
+                    output.BinList = list;
+                    return output;
+                }
+                catch (System.IndexOutOfRangeException)
+                {
+                    // This check is done if we are switching between live and playback data and
+                    // number of bins are not the same
+                    //log.Error("Index for the number of bins error", ex);
+                    return new WaterProfileTextOutput();
+                }
+                catch (Exception )
+                {
+                    //log.Error("Error Displaying the data.", e);
+                    return new WaterProfileTextOutput();
+                }
+            }
+
+
+            #region DataSets
+
+            /// <summary>
+            /// If the ensemble is for a Vertical Beam,
+            /// it can only have Beam data.  So set the selected
+            /// transform to beam data.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to get the subsystem type.</param>
+            /// <param name="transform">Coordinate Transform.</param>
+            public static Core.Commons.Transforms CheckForVerticalBeam(DataSet.Ensemble ensemble, Core.Commons.Transforms transform)
+            {
+                if (ensemble.IsEnsembleAvail)
+                {
+                    // Check for vertical beam
+                    switch (ensemble.EnsembleData.SubsystemConfig.SubSystem.Code)
+                    {
+                        case Subsystem.SUB_2MHZ_VERT_PISTON_9:
+                        case Subsystem.SUB_1_2MHZ_VERT_PISTON_A:
+                        case Subsystem.SUB_600KHZ_VERT_PISTON_B:
+                        case Subsystem.SUB_300KHZ_VERT_PISTON_C:
+                        case Subsystem.SUB_150KHZ_VERT_PISTON_D:
+                        case Subsystem.SUB_75KHZ_VERT_PISTON_E:
+                        case Subsystem.SUB_38KHZ_VERT_PISTON_F:
+                        case Subsystem.SUB_20KHZ_VERT_PISTON_G:
+                            // Set the selected transform
+                            return Core.Commons.Transforms.BEAM;
+                        default:
+                            return transform;
+                    }
+                }
+
+                return transform;
+            }
+
+            #endregion
+
+            #region Measurement Standard
+
+            /// <summary>
+            /// Determine what the title should be for velocity.
+            /// This wills state which transform is selected.
+            /// </summary>
+            /// <returns>Velocity label based off transform selected.</returns>
+            public static string GetVelocityTitle(Core.Commons.Transforms selectedTransform = Core.Commons.Transforms.BEAM)
+            {
+                if (selectedTransform == Core.Commons.Transforms.BEAM)
+                {
+                    return "BEAM VELOCITY";
+                }
+
+                if (selectedTransform == Core.Commons.Transforms.EARTH)
+                {
+                    return "EARTH VELOCITY";
+                }
+
+                if (selectedTransform == Core.Commons.Transforms.INSTRUMENT)
+                {
+                    return "INSTRUMENT VELOCITY";
+                }
+
+                return "VELOCITY";
+            }
+
+            /// <summary>
+            /// Depending on the measurement standard set, convert
+            /// the value given from meters to feet.
+            /// </summary>
+            /// <param name="value">Value to convert if set to Standard.</param>
+            /// <param name="converter">String used in ToString to set number of decimal places.</param>
+            /// <param name="MeasurementStandard">Measurement standard.</param>
+            /// <returns>String of the value.</returns>
+            public static string SetMeasurementValue(float value, string converter, Core.Commons.MeasurementStandards MeasurementStandard = Core.Commons.MeasurementStandards.IMPERIAL)
+            {
+                float METERS_TO_FEET = 3.2808399f;
+
+                // Check for a bad value
+                if (value == DataSet.Ensemble.BAD_VELOCITY)
+                {
+                    return "  -   ";
+                    //return DataSet.BeamVelocityDataSet.BAD_VELOCITY_PLACEHOLDER;
+                }
+
+                string result = "";
+                if (MeasurementStandard == Core.Commons.MeasurementStandards.METRIC)
+                {
+                    result = value.ToString(converter);
+                }
+                else
+                {
+                    // Convert meters to feet
+                    value *= METERS_TO_FEET;
+                    result = value.ToString(converter);
+                }
+
+                return result;
+            }
+
+            /// <summary>
+            /// Set the degree symbol at the end of the string.
+            /// If the value is bad, put the place holder for a
+            /// bad value.
+            /// </summary>
+            /// <param name="value">Value to create.</param>
+            /// <param name="converter">Decimal places for the value.</param>
+            /// <returns>String of the degree with the given decimal places and degree symbol.</returns>
+            public static string SetDegreeValue(double value, string converter)
+            {
+                // Check for a bad value
+                if (value == DataSet.Ensemble.BAD_VELOCITY)
+                {
+                    return "  -   ";
+                    //return DataSet.BeamVelocityDataSet.BAD_VELOCITY_PLACEHOLDER;
+                }
+
+                return string.Format("{0}°", value.ToString(converter));
+            }
+
+            /// <summary>
+            /// Determine which label to add to the end of a value
+            /// based off which measurement standard is selected.
+            /// </summary>
+            /// <returns></returns>
+            public static string MeasurementLabel(Core.Commons.MeasurementStandards measurementStandard = Core.Commons.MeasurementStandards.IMPERIAL)
+            {
+                switch (measurementStandard)
+                {
+                    case Core.Commons.MeasurementStandards.METRIC:
+                        return "m";
+                    case Core.Commons.MeasurementStandards.IMPERIAL:
+                        return "ft";
+                }
+
+                return "m";
             }
 
             #endregion

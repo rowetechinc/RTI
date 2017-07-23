@@ -279,6 +279,7 @@ namespace RTI
             _pd6_13Counter = 0;
             _pd4_5Counter = 0;
 
+            // Clear the codec buffers
             _binaryCodec.ClearIncomingData();
             _dvlCodec.ClearIncomingData();
             _pd0Codec.ClearIncomingData();
@@ -314,10 +315,10 @@ namespace RTI
             //}
 
             // Clear the counters to not have a buffer overflow
-            if(_binaryCounter <= 0)
-            {
-                _binaryCodec.ClearIncomingData();
-            }
+            //if(_binaryCounter <= 0)
+            //{
+            //    _binaryCodec.ClearIncomingData();
+            //}
 
             if(_dvlCounter <= 0)
             {
@@ -443,7 +444,7 @@ namespace RTI
             _binaryCounter++;
 
             // Check which buffers to clear
-            CheckCodecBuffers(CodecEnum.Binary);
+            //CheckCodecBuffers(CodecEnum.Binary);
         }
 
         /// <summary>
@@ -479,7 +480,7 @@ namespace RTI
             _dvlCounter++;
 
             // Check which buffers to clear
-            CheckCodecBuffers(CodecEnum.DVL);
+            //CheckCodecBuffers(CodecEnum.DVL);
         }
 
         /// <summary>
@@ -519,7 +520,7 @@ namespace RTI
             _pd0Counter++;
 
             // Check which buffers to clear
-            CheckCodecBuffers(CodecEnum.PD0);
+            //CheckCodecBuffers(CodecEnum.PD0);
         }
 
         /// <summary>
@@ -555,7 +556,7 @@ namespace RTI
             _pd6_13Counter++;
 
             // Check which buffers to clear
-            CheckCodecBuffers(CodecEnum.PD6_13);
+            //CheckCodecBuffers(CodecEnum.PD6_13);
         }
 
         /// <summary>
@@ -591,7 +592,7 @@ namespace RTI
             _pd4_5Counter++;
 
             // Check which buffers to clear
-            CheckCodecBuffers(CodecEnum.PD4_5);
+            //CheckCodecBuffers(CodecEnum.PD4_5);
         }
 
         /// <summary>

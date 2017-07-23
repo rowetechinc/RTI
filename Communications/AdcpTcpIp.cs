@@ -168,7 +168,7 @@ namespace RTI
                 // Limit the size of the data in the buffer
                 if (_receiveBufferString.Length > 16000)
                 {
-                    _receiveBufferString = _receiveBufferString.Remove(0, _receiveBufferString.Length - 6000);
+                    _receiveBufferString = _receiveBufferString.Remove(10000, 6000);
                 }
             }
         }

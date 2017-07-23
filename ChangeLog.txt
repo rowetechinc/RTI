@@ -1,7 +1,10 @@
 RTI Changelog
 
 RTI-3.4.2
-
+ - In Ensemble, added EnsembleWaterProfileTextOutput() to display all data as text.
+ - In Subsystem, added IsVerticalBeam() to check if the code is for a vertical beam subsystem.
+ - In FilePlayback, fixed bug in FindRtbEnsembles() when ensemble numbers are duplicated.
+ - In all the codecs, make them in charge of clearing there buffers if the data is not in there format.
 
 RTI-3.4.1
  - Changed to ReadBytes to read in from the file to improve performance.

@@ -95,6 +95,7 @@ using System.Globalization;
 using RTI.Commands;
 using log4net;
 using System.Timers;
+using System.Threading.Tasks;
 
 namespace RTI
 {
@@ -3049,15 +3050,17 @@ namespace RTI
 
             foreach (var port in ports)
             {
-                //if (TestSerialPortConnection(port))
-                //{
-                AdcpSerialOptions options = TestSerialBaudConnection(port);
-                // Found a port now test the baud rate
-                if (options != null)
+                if (TestSerialPortConnection(port))
                 {
-                    result.Add(options);
+                    Task<AdcpSerialOptions> options = TestSerialBaudConnection(port);
+                    SendBreak();
+                    //AdcpSerialOptions options = TestSerialBaudConnection(port);
+                    // Found a port now test the baud rate
+                    if (options != null)
+                    {
+                        result.Add(options.Result);
+                    }
                 }
-                //}
             }
 
             // Shutdown the object
@@ -3071,101 +3074,85 @@ namespace RTI
         }
 
         /// <summary>
+        /// Test if the connection is connected to an ADCP with the correct baud rate.
+        /// This will send a BREAK and check the response.  If the response is good, it will
+        /// return TRUE.
+        /// </summary>
+        /// <returns>TRUE = Good connection.</returns>
+        public bool TestSerialPortConnection()
+        {
+            // Verify the connection was created
+            if (IsOpen())
+            {
+                // Stop pinging just in case
+                StopPinging();
+
+                // Clear buffer
+                ReceiveBufferString = "";
+
+                // Send a Break
+                SendBreak();
+
+                // Wait for an output
+                //Thread.Sleep(1000);
+
+                // Get the buffer output
+                string buffer = ReceiveBufferString;
+
+                if (!string.IsNullOrEmpty(ReceiveBufferString))
+                {
+                    Debug.WriteLine("AdcpSerialPort.TestSerialBaudConnection(): " + ReceiveBufferString);
+
+                    //Decode the data to see if the response is not garabage
+                    if (ReceiveBufferString.Contains(" Rowe Technologies Inc."))
+                    {
+                        // Decode the Break response
+                        Commands.BreakStmt breakStmt = Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Send a BREAK to the port.
         /// If there is no response, then it is
         /// probably not an ADCP.  Even if the baud rate is 
         /// wrong, the BREAK should send something back.
         /// </summary>
         /// <param name="port">Serial port to test.</param>
+        /// <param name="baud">Serial port baud rate.</param>
         /// <returns>TRUE = A response was give for the port.</returns>
-        protected bool TestSerialPortConnection(string port)
+        public bool TestSerialPortConnection(string port, int baud = 115200)
         {
             try
             {
                 // Shutdown the serial port if it is currently open
                 if (IsOpen())
                 {
+                    SendBreak();
+                    Thread.Sleep(AdcpSerialPort.WAIT_STATE);
                     Disconnect();
+                    SendBreak();
+                    Thread.Sleep(AdcpSerialPort.WAIT_STATE);
+                    bool open = IsOpen();
                 }
 
-                // Create a serial connection
-                _serialOptions = new SerialOptions();
-                _serialOptions.Port = port;
-                Connect();
-
-                if (IsOpen())
-                {
-                    // Clear the buffer
-                    ReceiveBufferString = "";
-
-                    // Send a break to the Port and see if there was a response
-                    string response = SendDataGetReply("", true, 500);
-                    // Send a BREAK and wait 0.5 seconds
-                    if (!string.IsNullOrEmpty(response))
-                    {
-                        // Shutdown the connection
-                        Disconnect();
-
-                        // Something responded
-                        return true;
-                    }
-
-                    // Shutdown the connection
-                    Disconnect();
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error("Error Searching for an ADCP", e);
-
-                Disconnect();
-                return false;
-            }
-
-            // Never got a response
-            Disconnect();
-            return false;
-        }
-
-        /// <summary>
-        /// Test each baud rate until a good baud rate is found for the 
-        /// port given.  
-        /// 
-        /// A good baud rate is one that when the BREAK statement
-        /// is decode, it has valid data.  If the BREAK statement is
-        /// garabage, it cannot be decoded.
-        /// 
-        /// A quick way to decode the BREAK statement is to just check
-        /// for a phrase in the buffer.
-        /// </summary>
-        /// <param name="port">Serial port to test.</param>
-        /// <returns>Options to connect to the serial port.</returns>
-        public AdcpSerialOptions TestSerialBaudConnection(string port)
-        {
-            // Get a list of all the baud rates
-            List<int> bauds = SerialOptions.BaudRateOptions;
-
-            // Ensure the the serial port is not open now
-            if (IsOpen())
-            {
-                Disconnect();
-
-                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
-            }
-
-            // Test all the baud rates until one is found
-            foreach (var baud in bauds)
-            {
                 // Create a serial connection
                 _serialOptions = new SerialOptions();
                 _serialOptions.Port = port;
                 _serialOptions.BaudRate = baud;
-                Connect();
+                
+                bool connectResult = Connect();
 
+                // Wait for connection to be made
                 Thread.Sleep(AdcpSerialPort.WAIT_STATE);
 
                 // Verify the connection was created
-                if (IsOpen())
+                if (connectResult && IsOpen())
                 {
                     // Stop pinging just in case
                     StopPinging();
@@ -3197,6 +3184,102 @@ namespace RTI
                             Disconnect();
 
                             // Return the options used to find the ADCP
+                            return true;
+                        }
+                        else
+                        {
+                            // Nothing found for this baud rate so shutdown the connection
+                            Disconnect();
+                        }
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error("Error Searching for an ADCP", e);
+
+                Disconnect();
+                return false;
+            }
+
+            // Never got a response
+            Disconnect();
+            return false;
+        }
+
+        /// <summary>
+        /// Test each baud rate until a good baud rate is found for the 
+        /// port given.  
+        /// 
+        /// A good baud rate is one that when the BREAK statement
+        /// is decode, it has valid data.  If the BREAK statement is
+        /// garabage, it cannot be decoded.
+        /// 
+        /// A quick way to decode the BREAK statement is to just check
+        /// for a phrase in the buffer.
+        /// </summary>
+        /// <param name="port">Serial port to test.</param>
+        /// <returns>Options to connect to the serial port.</returns>
+        public async Task<AdcpSerialOptions> TestSerialBaudConnection(string port)
+        {
+            // Get a list of all the baud rates
+            List<int> bauds = SerialOptions.BaudRateOptions;
+
+            // Ensure the the serial port is not open now
+            if (IsOpen())
+            {
+                Disconnect();
+
+                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 4);
+            }
+
+            // Test all the baud rates until one is found
+            foreach (var baud in bauds)
+            {
+                // Create a serial connection
+                _serialOptions = new SerialOptions();
+                _serialOptions.Port = port;
+                _serialOptions.BaudRate = baud;
+
+                // Connect the serial port
+                bool connectResult = Connect();
+
+                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 5);
+
+                // Verify the connection was created
+                if (IsOpen())
+                {
+                    // Stop pinging just in case
+                    //StopPinging();
+
+                    // Clear buffer
+                    ReceiveBufferString = "";
+
+                    // Send a Break
+                    //SendBreak();
+                    await Task.Run(() => SendBreak());
+
+                    // Wait for an output
+                    Thread.Sleep(1000);
+
+                    // Get the buffer output
+                    string buffer = ReceiveBufferString;
+
+                    if (!string.IsNullOrEmpty(ReceiveBufferString))
+                    {
+                        Debug.WriteLine("AdcpSerialPort.TestSerialBaudConnection(): " + ReceiveBufferString);
+
+                        //Decode the data to see if the response is not garabage
+                        if (ReceiveBufferString.Contains(" Rowe Technologies Inc."))
+                        {
+                            // Decode the Break response
+                            Commands.BreakStmt breakStmt = Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
+
+                            // Close the connection
+                            Disconnect();
+
+                            // Return the options used to find the ADCP
                             return new AdcpSerialOptions() { SerialOptions = _serialOptions, SerialNumber = breakStmt.SerialNum, Firmware = breakStmt.FirmwareVersion, Hardware = breakStmt.Hardware };
                         }
                         else
@@ -3204,6 +3287,10 @@ namespace RTI
                             // Nothing found for this baud rate so shutdown the connection
                             Disconnect();
                         }
+                    }
+                    else
+                    {
+                        Disconnect();
                     }
 
                 }
@@ -3403,6 +3490,7 @@ namespace RTI
                     {
                         // Upload the file to the ADCP
                         XModemUpload(file);
+
 
                         // Wait for the update to complete
                         Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);

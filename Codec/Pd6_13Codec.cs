@@ -44,7 +44,7 @@
  * 07/20/2015      RC          3.0.5      Fixed codec to also do playback and use the NMEA data.
  * 08/11/2015      RC          3.0.5      Verfiy the sentences are correct before processing them.
  * 10/07/2015      RC          3.2.0      Set the BT range values in SetBD().
- * 
+ * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 
  * 
  */
@@ -129,6 +129,18 @@ namespace RTI
         /// to go to sleep or wakeup.
         /// </summary>
         private EventWaitHandle _eventWaitData;
+
+        /// <summary>
+        /// Set a timeout if the incoming data is accumulating and
+        /// never finding any ensembles.
+        /// </summary>
+        private int _incomingDataTimeout;
+
+        /// <summary>
+        /// Number of times to take incoming data before a timeout
+        /// occurs and the data is cleared.
+        /// </summary>
+        private const int INCOMING_DATA_TIMEOUT = 50;
 
         #region Previous Values
 
@@ -219,6 +231,7 @@ namespace RTI
         public Pd6_13Codec()
         {
             _prevEns = new DataSet.Ensemble();
+            _incomingDataTimeout = 0;
 
             // Clear the values
             Clear();
@@ -265,6 +278,15 @@ namespace RTI
 
                 // Wake up the thread to process data
                 _eventWaitData.Set();
+            }
+
+            // Check timeout
+            _incomingDataTimeout++;
+            if (_incomingDataTimeout > INCOMING_DATA_TIMEOUT)
+            {
+                // Reset the value and clear the data
+                _incomingDataTimeout = 0;
+                ClearIncomingData();
             }
         }
 
@@ -1380,6 +1402,9 @@ namespace RTI
             {
                 ProcessDataEvent(data.ToByteArray(), _prevEns);
             }
+
+            // Reset the incoming data timeout
+            _incomingDataTimeout = 0;
         }
 
         #endregion

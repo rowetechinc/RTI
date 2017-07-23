@@ -43,6 +43,7 @@
  * 07/27/2015      RC          3.0.5      Set the file name playing back. 
  * 08/13/2015      RC          3.0.5      Read the file with a smaller buffer so large files will not take all the RAM in FindEnsembles().
  * 05/11/2016      RC          3.3.2      Changed from list to dictionary to prevent playback being out of order.
+ * 03/28/2017      RC          3.4.2      Fixed bug in FindRtbEnsembles() when ensemble numbers are duplicated.
  * 
  */
 
@@ -425,7 +426,20 @@ namespace RTI
             // Add the ensembles to the dictionary
             foreach (var ens in list)
             {
-                AddEnsemble(ens.RawEnsemble, ens.Ensemble);
+                try
+                {
+                    AddEnsemble(ens.RawEnsemble, ens.Ensemble);
+                }
+                catch(Exception e)
+                {
+                    string num = "";
+                    if(ens.Ensemble.IsEnsembleAvail)
+                    {
+                        num = ens.Ensemble.EnsembleData.EnsembleNumber.ToString();
+                    }
+
+                    log.Error("Error adding the ensemble to the list.  " + num + " " + _ensembleDict.Count, e);
+                }
             }
         }
 

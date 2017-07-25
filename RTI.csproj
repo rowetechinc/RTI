@@ -109,6 +109,7 @@
     <Compile Include="Codec\ImportGpsText.cs" />
     <Compile Include="Codec\Pd0Codec.cs" />
     <Compile Include="Codec\PniPrimeCompassBinaryCodec.cs" />
+    <Compile Include="Codec\VmDasAsciiCodec.cs" />
     <Compile Include="Commons\Commons.cs" />
     <Compile Include="Commons\DbCommon.cs" />
     <Compile Include="Communications\AdcpEthernet.cs" />

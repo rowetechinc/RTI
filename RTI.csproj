@@ -98,6 +98,7 @@
     <Compile Include="Codec\AdcpCodecReadFile.cs" />
     <Compile Include="Codec\AdcpDvlCodecReadFile.cs" />
     <Compile Include="Codec\AdcpPd0CodecReadFile.cs" />
+    <Compile Include="Codec\EnsToPd6_13Codec.cs" />
     <Compile Include="Codec\PD3Codec.cs" />
     <Compile Include="Codec\PD4_5Codec.cs" />
     <Compile Include="Codec\AdcpBinaryCodec.cs" />

@@ -93,7 +93,7 @@ namespace RTI
             /// Used to denote Beta or Alpha builds.  Or any
             /// special branches of the application.
             /// </summary>
-            public const string RTI_VERSION_ADDITIONAL = " Beta";
+            public const string RTI_VERSION_ADDITIONAL = "";
 
             /// <summary>
             /// DotSpatial Major version number. 
@@ -321,6 +321,15 @@ namespace RTI
                 MeasurementStandardList.Add(Core.Commons.MeasurementStandards.IMPERIAL);
                 return MeasurementStandardList;
             }
+
+            #endregion
+
+            #region UDP ports
+
+            /// <summary>
+            /// UDP ensemble port.
+            /// </summary>
+            public const int TCP_ENS = 55057; 
 
             #endregion
         }

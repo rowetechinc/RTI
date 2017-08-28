@@ -40,7 +40,7 @@
  * 06/18/2015      RC          3.0.5      Ensure the codec is shutdown properly.
  * 07/09/2015      RC          3.0.5      Mode the codec a thread.
  * 08/13/2015      RC          3.0.5      Added complete event.
- * 
+ * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 
  */
 
@@ -96,6 +96,18 @@ namespace RTI
         /// </summary>
         private EventWaitHandle _eventWaitData;
 
+        /// <summary>
+        /// Set a timeout if the incoming data is accumulating and
+        /// never finding any ensembles.
+        /// </summary>
+        private int _incomingDataTimeout;
+
+        /// <summary>
+        /// Number of times to take incoming data before a timeout
+        /// occurs and the data is cleared.
+        /// </summary>
+        private const int INCOMING_DATA_TIMEOUT = 50;
+
         #endregion
 
         /// <summary>
@@ -106,6 +118,7 @@ namespace RTI
             // Initialize buffer
             //_incomingDataQueue = new Queue<byte[]>();
             _incomingDataBuffer = new List<Byte>();
+            _incomingDataTimeout = 0;
 
             // Initialize the thread
             _continue = true;
@@ -135,6 +148,15 @@ namespace RTI
 
             // Wake up the thread to process data
             _eventWaitData.Set();
+
+            // Check timeout
+            _incomingDataTimeout++;
+            if (_incomingDataTimeout > INCOMING_DATA_TIMEOUT)
+            {
+                // Reset the value and clear the data
+                _incomingDataTimeout = 0;
+                ClearIncomingData();
+            }
         }
 
         /// <summary>
@@ -260,7 +282,7 @@ namespace RTI
                     int currentEnsembleSize = GetEnsembleSize();
 
                     // Ensure the entire ensemble is present
-                    // before preceeding
+                    // before proceeding
                     if (_incomingDataBuffer.Count >= currentEnsembleSize && currentEnsembleSize > 0)
                     {
                         // Create an array to hold the ensemble
@@ -314,7 +336,7 @@ namespace RTI
         /// Then publish the data to all subscribers.
         /// </summary>
         /// <param name="binaryEnsemble">Binary PD0 data.</param>
-        private void DecodePd0Data(byte[] binaryEnsemble)
+        public void DecodePd0Data(byte[] binaryEnsemble)
         {
             // Create the PD0 and RTI ensemble
             PD0 pd0Ensemble = new PD0(binaryEnsemble);
@@ -325,6 +347,9 @@ namespace RTI
             {
                 ProcessDataEvent(binaryEnsemble, pd0Ensemble);
             }
+
+            // Reset the timeout
+            _incomingDataTimeout = 0;
         }
 
         /// <summary>
@@ -444,7 +469,7 @@ namespace RTI
         /// To Unsubscribe:
         /// pd0Codec.ProcessDataEvent -= (method to call)
         /// </summary>
-        public event ProcessDataEventHandler ProcessDataEvent;
+        public static event ProcessDataEventHandler ProcessDataEvent;
 
         /// <summary>
         /// Event To subscribe to.  This gives the paramater
@@ -463,7 +488,7 @@ namespace RTI
         /// To Unsubscribe:
         /// codec.ProcessDataCompleteEvent -= (method to call)
         /// </summary>
-        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
+        public static event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
 
         #endregion
 

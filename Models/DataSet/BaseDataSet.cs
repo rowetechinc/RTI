@@ -572,19 +572,34 @@ namespace RTI
             public const string JSON_STR_VELX = "VelocityX";
 
             /// <summary>
-            /// String for Water Mass Velocity Y property.
+            /// String for Water Mass Instrument Velocity Y property.
             /// </summary>
             public const string JSON_STR_VELY = "VelocityY";
 
             /// <summary>
-            /// String for Water Mass Velocity Z property.
+            /// String for Water Mass Instrument Velocity Z property.
             /// </summary>
             public const string JSON_STR_VELZ = "VelocityZ";
 
             /// <summary>
-            /// String for Water Mass Velocity Q property.
+            /// String for Water Mass Instrument Velocity Q property.
             /// </summary>
             public const string JSON_STR_VELQ = "VelocityQ";
+
+            /// <summary>
+            /// String for Water Mass Ship Velocity Transverse property.
+            /// </summary>
+            public const string JSON_STR_VEL_TRANS = "VelocityTransverse";
+
+            /// <summary>
+            /// String for Water Mass Ship Velocity Longitudinal property.
+            /// </summary>
+            public const string JSON_STR_VEL_LONG = "VelocityLongitudinal";
+
+            /// <summary>
+            /// String for Water Mass Ship Velocity Normal property.
+            /// </summary>
+            public const string JSON_STR_VEL_NORM = "VelocityNormal";
 
             /// <summary>
             /// String for Water Mass Depth Layer property.

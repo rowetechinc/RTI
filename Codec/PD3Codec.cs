@@ -35,6 +35,7 @@
  * -----------------------------------------------------------------
  * 05/19/2015      RC          3.0.5      Initial coding
  * 06/23/2015      RC          3.0.5      Removed the thread.
+ * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 
  */
 
@@ -107,6 +108,18 @@ namespace RTI
         /// </summary>
         private bool _isRunning;
 
+        /// <summary>
+        /// Set a timeout if the incoming data is accumulating and
+        /// never finding any ensembles.
+        /// </summary>
+        private int _incomingDataTimeout;
+
+        /// <summary>
+        /// Number of times to take incoming data before a timeout
+        /// occurs and the data is cleared.
+        /// </summary>
+        private const int INCOMING_DATA_TIMEOUT = 50;
+
         #endregion
 
         #region Struct
@@ -149,6 +162,7 @@ namespace RTI
 
             // Initialize buffer
             _incomingDataBuffer = new BlockingCollection<Byte>();
+            _incomingDataTimeout = 0;
 
             // Initialize the ensemble size to at least the HDRLEN
             //_currentEnsembleSize = MIN_ENS_SIZE;
@@ -194,6 +208,15 @@ namespace RTI
             if(!_isRunning)
             {
                 ProcessDataThread();
+            }
+
+            // Check timeout
+            _incomingDataTimeout++;
+            if (_incomingDataTimeout > INCOMING_DATA_TIMEOUT)
+            {
+                // Reset the value and clear the data
+                _incomingDataTimeout = 0;
+                ClearIncomingData();
             }
         }
 
@@ -807,6 +830,9 @@ namespace RTI
             {
                 ProcessDataEvent(binaryEnsemble, ensemble);
             }
+
+            // Reset the incoming data timeout
+            _incomingDataTimeout = 0;
 
             return ensemble;
         }

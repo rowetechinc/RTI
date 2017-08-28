@@ -97,6 +97,8 @@
     <Compile Include="Codec\AdcpBinaryCodecReadFile.cs" />
     <Compile Include="Codec\AdcpCodecReadFile.cs" />
     <Compile Include="Codec\AdcpDvlCodecReadFile.cs" />
+    <Compile Include="Codec\AdcpPd0CodecReadFile.cs" />
+    <Compile Include="Codec\EnsToPd6_13Codec.cs" />
     <Compile Include="Codec\PD3Codec.cs" />
     <Compile Include="Codec\PD4_5Codec.cs" />
     <Compile Include="Codec\AdcpBinaryCodec.cs" />
@@ -108,6 +110,7 @@
     <Compile Include="Codec\ImportGpsText.cs" />
     <Compile Include="Codec\Pd0Codec.cs" />
     <Compile Include="Codec\PniPrimeCompassBinaryCodec.cs" />
+    <Compile Include="Codec\VmDasAsciiCodec.cs" />
     <Compile Include="Commons\Commons.cs" />
     <Compile Include="Commons\DbCommon.cs" />
     <Compile Include="Communications\AdcpEthernet.cs" />
@@ -117,6 +120,10 @@
     <Compile Include="Communications\GpsSerialPort.cs" />
     <Compile Include="Communications\SerialConnection.cs" />
     <Compile Include="Communications\SerialOptions.cs" />
+    <Compile Include="Communications\TcpServer.cs" />
+    <Compile Include="Communications\UdpMessages.cs" />
+    <Compile Include="Models\DataSet\ShipWaterMassDataSet.cs" />
+    <Compile Include="Models\DataSet\ShipVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\GageHeightDataSet.cs" />
     <Compile Include="Models\DataSet\Adcp2InfoDataSet.cs" />
     <Compile Include="Post Process\Average\AverageBinsTogether.cs" />

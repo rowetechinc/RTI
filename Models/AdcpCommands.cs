@@ -1429,11 +1429,6 @@ namespace RTI
             public List<string> DiagSpectrumStr { get; set; }
 
             /// <summary>
-            /// Plot model html.
-            /// </summary>
-            public string PlotReport { get; set; }
-
-            /// <summary>
             /// Serial number of the ADCP.
             /// </summary>
             public string SerialNumber { get; set; }
@@ -1460,7 +1455,6 @@ namespace RTI
                 Samples = 0.0f;
                 Values = new List<DiagSpectrumValues>();
                 DiagSpectrumStr = new List<string>();
-                PlotReport = "";
                 SerialNumber = "";
             }
         }

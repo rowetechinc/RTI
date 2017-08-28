@@ -51,6 +51,7 @@
  * 06/10/2013      RC          2.19       Added CodeToChar() to convert the code to a char.
  * 07/22/2013      RC          2.19.1     Added SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c, SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d and SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e
  * 08/14/2013      RC          2.19.4     Encode and Decode to JSON.
+ * 03/17/2017      RC          3.4.2      Added IsVerticalBeam() to check if the code is for a vertical beam subsystem.
  *
  */
 
@@ -844,6 +845,30 @@ namespace RTI
 
             // Default to 300 kHz
             return RTI.Core.Commons.FREQ_BASE / RTI.Core.Commons.FREQ_DIV_300; 
+        }
+
+        /// <summary>
+        /// Check if the given subsystem code is a vertical beam.
+        /// </summary>
+        /// <param name="code">Subsystem code.</param>
+        /// <returns>True if subsystem code is for a vertical beam.</returns>
+        public static bool IsVerticalBeam(byte code)
+        {
+            switch (code)
+            {
+                case SUB_2MHZ_VERT_PISTON_9:
+                case SUB_1_2MHZ_VERT_PISTON_A:
+                case SUB_600KHZ_VERT_PISTON_B:
+                case SUB_300KHZ_VERT_PISTON_C:
+                case SUB_150KHZ_VERT_PISTON_D:
+                case SUB_75KHZ_VERT_PISTON_E:
+                case SUB_38KHZ_VERT_PISTON_F:
+                case SUB_20KHZ_VERT_PISTON_G:
+                    return true;
+                default:
+                    return false;
+            }
+
         }
 
         /// <summary>

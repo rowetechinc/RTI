@@ -67,6 +67,7 @@
  * 09/25/2015      RC          3.1.1      Allow BT to handle 3 beams.
  * 11/11/2015      RC          3.2.1      Fixed bug in IsEarthVelocityGood.
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ * 08/25/2017      RC          3.4.2      Added Ship Velocity.
  * 
  */
 
@@ -320,6 +321,11 @@ namespace RTI
             /// Number of pings averaged together in EarthVelocity form.
             /// </summary>
             public float[] EarthGood { get; set; }
+
+            /// <summary>
+            /// Bottom Track Ship Velocity in meters/second.  Only populated if data is retransformed.
+            /// </summary>
+            public float[] ShipVelocity { get; set; }
 
             #endregion
 
@@ -592,6 +598,7 @@ namespace RTI
                 InstrumentGood = new float[numBeams];
                 EarthVelocity = new float[numBeams];
                 EarthGood = new float[numBeams];
+                ShipVelocity = new float[numBeams];
             }
 
             /// <summary>

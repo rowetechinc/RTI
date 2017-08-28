@@ -81,6 +81,8 @@
  * 09/25/2015      RC          3.1.1      Added Adcp2InfoDataSet.
  * 10/29/2015      RC          3.2.1      Added WaterTracking in DecodePd0Ensemble().
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ * 03/03/2017      RC          3.4.2      Added EnsembleWaterProfileTextOutput() to display all data as text.
+ * 08/25/2017      RC          3.4.2      Added ShipVelocityDataSet.
  * 
  */
 
@@ -226,7 +228,19 @@ namespace RTI
             /// DVL Data ID.  This is for Pulse usage only.
             /// This ID is not output by the ADCP.
             /// </summary>
-            public const string DvlID = "E000DVL\0"; 
+            public const string DvlID = "E000DVL\0";
+
+            /// <summary>
+            /// Ship Velocity ID.  This is for retransformation usage only.
+            /// This ID is not output by the ADCP.
+            /// </summary>
+            public const string ShipVelocityID = "E00SHIP\0";
+
+            /// <summary>
+            /// Water Mass Ship Velocity ID.  This is for retransformation usage only.
+            /// This ID is not output by the ADCP.
+            /// </summary>
+            public const string WaterMassShipID = "EWMSHIP\0"; 
 
             #endregion
 
@@ -585,6 +599,16 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISADCP2INFOAVAIL = "IsAdcp2InfoAvail";
 
+            /// <summary>
+            /// String for IsShipVelocityAvail.
+            /// </summary>
+            public const string JSON_STR_ISSHIPVELOCITYAVAIL = "IsShipVelocityAvail";
+
+            /// <summary>
+            /// String for IsShipWaterMassAvail.
+            /// </summary>
+            public const string JSON_STR_ISSHIPWATERMASSAVAIL = "IsShipWaterMassAvail";
+
             #endregion
 
             #region DataSets
@@ -714,6 +738,16 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ADCP2INFODATA = "Adcp2InfoData";
 
+            /// <summary>
+            /// String for Ship Velocity Data.
+            /// </summary>
+            public const string JSON_STR_SHIPVELOCITYDATA = "ShipVelocityData";
+
+            /// <summary>
+            /// String for Ship Water Mass Data.
+            /// </summary>
+            public const string JSON_STR_SHIPWATERMASSDATA = "ShipWaterMassData";
+
             #endregion
 
             #endregion
@@ -785,6 +819,11 @@ namespace RTI
             public bool IsInstrumentWaterMassAvail { get; set; }
 
             /// <summary>
+            /// Set if the Ship Water Mass data set is available for this ensemble.
+            /// </summary>
+            public bool IsShipWaterMassAvail { get; set; }
+
+            /// <summary>
             /// Set if the NMEA data set is available for this ensemble.
             /// </summary>
             public bool IsNmeaAvail { get; set; }
@@ -849,6 +888,11 @@ namespace RTI
             /// </summary>
             public bool IsAdcp2InfoAvail { get; set; }
 
+            /// <summary>
+            /// Set if the Ship Velocity data set is available in this ensemble.
+            /// </summary>
+            public bool IsShipVelocityAvail { get; set; }
+
             #endregion
 
             #region Data Sets Properties
@@ -912,6 +956,11 @@ namespace RTI
             /// Water Mass Instrument Velocity Data set for this data set.
             /// </summary>
             public InstrumentWaterMassDataSet InstrumentWaterMassData { get; set; }
+
+            /// <summary>
+            /// Water Mass Ship Velocity Data set for this data set.
+            /// </summary>
+            public ShipWaterMassDataSet ShipWaterMassData { get; set; }
 
             /// <summary>
             /// NMEA Data set for this data set.
@@ -981,6 +1030,14 @@ namespace RTI
             /// </summary>
             public DvlDataSet DvlData { get; set; }
 
+            /// <summary>
+            /// Ship Velocity data set.
+            /// This data set is not output by the ADCP.
+            /// It is created from a combination of DVL
+            /// messages.  It is also created if the data is retransformed.
+            /// </summary>
+            public ShipVelocityDataSet ShipVelocityData { get; set; }
+
             #endregion
 
             #endregion
@@ -1021,6 +1078,8 @@ namespace RTI
                 IsDvlDataAvail = false;
                 IsGageHeightAvail = false;
                 IsAdcp2InfoAvail = false;
+                IsShipVelocityAvail = false;
+                IsShipWaterMassAvail = false;
             }
 
             /// <summary>
@@ -1075,6 +1134,8 @@ namespace RTI
             /// <param name="IsDvlDataAvail">Flag if DVL data is available.</param>
             /// <param name="IsGageHeightAvail">Flag if Gage Height data is available.</param>
             /// <param name="IsAdcp2InfoAvail">Flag if ADCP 2 Info data is available.</param>
+            /// <param name="IsShipVelocityAvail">Flag if Ship Velocity is available.</param>
+            /// <param name="IsWaterMassShipAvail">Flag if Water Mass Ship data is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -1100,19 +1161,21 @@ namespace RTI
             /// <param name="DvlData">DVL data.</param>
             /// <param name="GageHeightData">Gage Height data.</param>
             /// <param name="Adcp2InfoDataSet">ADCP 2 Info data.</param>
+            /// <param name="ShipVelocityData">Ship Velocity data.</param>
+            /// <param name="ShipWaterMassData">Water Mass Ship data.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
                             bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
                             bool IsSystemSetupAvail, bool IsRangeTrackingAvail, bool IsGageHeightAvail,
                             bool IsAdcpGpsDataAvail, bool IsGps1DataAvail, bool IsGps2DataAvail, bool IsNmea1DataAvail, bool IsNmea2DataAvail,
-                            bool IsDvlDataAvail, bool IsAdcp2InfoAvail,
+                            bool IsDvlDataAvail, bool IsAdcp2InfoAvail, bool IsShipVelocityAvail, bool IsWaterMassShipAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
                             InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
                             SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData, GageHeightDataSet GageHeightData, Adcp2InfoDataSet Adcp2InfoDataSet,
-                            DvlDataSet DvlData,
+                            DvlDataSet DvlData, ShipVelocityDataSet ShipVelocityData, ShipWaterMassDataSet ShipWaterMassData,
                             string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
             {
                 // Initialize all ranges
@@ -1141,6 +1204,8 @@ namespace RTI
                 this.IsDvlDataAvail = IsDvlDataAvail;
                 this.IsGageHeightAvail = IsGageHeightAvail;
                 this.IsAdcp2InfoAvail = IsAdcp2InfoAvail;
+                this.IsShipVelocityAvail = IsShipVelocityAvail;
+                this.IsShipWaterMassAvail = IsShipWaterMassAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -1167,6 +1232,8 @@ namespace RTI
                 this.DvlData = DvlData;
                 this.GageHeightData = GageHeightData;
                 this.Adcp2InfoData = Adcp2InfoData;
+                this.ShipVelocityData = ShipVelocityData;
+                this.ShipWaterMassData = ShipWaterMassData;
             }
 
             #region Beam Velocity Data Set
@@ -1239,6 +1306,43 @@ namespace RTI
             {
                 IsInstrumentVelocityAvail = true;
                 InstrumentVelocityData = new InstrumentVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
+            }
+
+            #endregion
+
+            #region Ship Velocity Data Set
+
+            /// <summary>
+            /// Add the Ship Velocity data set to the data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddShipVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsShipVelocityAvail = true;
+                ShipVelocityData = new ShipVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Ship Velocity data set to the data.
+            /// This will add the Ship Velocity data and decode the byte array
+            /// for all the Ship Velocity data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="velocityData">Byte array containing Ship velocity data</param>
+            public void AddShipVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData)
+            {
+                IsShipVelocityAvail = true;
+                ShipVelocityData = new ShipVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
             }
 
             #endregion
@@ -1801,6 +1905,29 @@ namespace RTI
             {
                 IsInstrumentWaterMassAvail = true;
                 InstrumentWaterMassData = new InstrumentWaterMassDataSet(sent);
+            }
+
+            #endregion
+
+            #region Ship Water Mass Data Set
+
+            /// <summary>
+            /// Add the Ship Water Mass Velocity data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="trans">Transverse Velocity.</param>
+            /// <param name="lon">Longitundinal Velocity.</param>
+            /// <param name="norm">Normal Velocity.</param>
+            /// <param name="depthLayer">Water Mass Depth Layer.</param>
+            public void AddShipWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float trans, float lon, float norm, float depthLayer)
+            {
+                IsShipWaterMassAvail = true;
+                ShipWaterMassData = new ShipWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, trans, lon, norm, depthLayer);
             }
 
             #endregion
@@ -3045,7 +3172,7 @@ namespace RTI
             /// <returns>A JSON string of this object.</returns>
             public string EncodeJSON()
             {
-                return Newtonsoft.Json.JsonConvert.SerializeObject(this, Formatting.Indented);
+                return Newtonsoft.Json.JsonConvert.SerializeObject(this, Formatting.None);
             }
 
             #endregion
@@ -3266,6 +3393,19 @@ namespace RTI
                                 this.GoodBeamData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
                             }
                             break;
+                        case PD0.CoordinateTransforms.Coord_Ship:
+                            this.IsShipVelocityAvail = true;
+                            this.ShipVelocityData = new ShipVelocityDataSet(ensemble.FixedLeader.NumberOfCells);
+                            this.ShipVelocityData.DecodePd0Ensemble(ensemble.Velocity);
+
+                            // Add Good Beam Data Set
+                            if (ensemble.IsPercentGoodExist)
+                            {
+                                this.IsGoodBeamAvail = true;
+                                this.GoodBeamData = new GoodBeamDataSet(ensemble.FixedLeader.NumberOfCells);
+                                this.GoodBeamData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
+                            }
+                            break;
                     }
                 }
 
@@ -3299,6 +3439,490 @@ namespace RTI
             public byte[] EncodePd0Ensemble(PD0.CoordinateTransforms xform)
             {
                 return new PD0(this, xform).Encode();
+            }
+
+            #endregion
+
+            #endregion
+
+            #region Display Ensemble Text Output
+
+            /// <summary>
+            /// Water Profile text output.
+            /// The Header is the header to all the data.
+            /// Then the Bin list contains all the values for
+            /// the bin data.
+            /// </summary>
+            public struct WaterProfileTextOutput
+            {
+                /// <summary>
+                /// Header for the water profilee text output.
+                /// </summary>
+                public string Header { get; set; }
+
+                /// <summary>
+                /// List of all the strings for the bins.
+                /// </summary>
+                public List<string> BinList { get; set; }
+            }
+
+            /// <summary>
+            /// Create a list of all the values for each bin.  This includes
+            /// velocity, good ping, amplitude and correlation.  A single velocity
+            /// value is used and a single good ping value is used.  The user
+            /// can choose which values to use; beam, earth or instrument.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to display.</param>
+            /// <param name="minBinDisplay">Min bin.</param>
+            /// <param name="maxBinDisplay">Max bin to display.</param>
+            /// <param name="measurementStandard">Imperial or standard measurements.</param>
+            /// <param name="selectedTransform">Transform to display.</param>
+            /// <returns></returns>
+            public static WaterProfileTextOutput GetEnsembleWaterProfileTextOutput(DataSet.Ensemble ensemble, int minBinDisplay, int maxBinDisplay, 
+                                                    Core.Commons.MeasurementStandards measurementStandard = Core.Commons.MeasurementStandards.IMPERIAL,
+                                                    Core.Commons.Transforms selectedTransform = Core.Commons.Transforms.BEAM)
+            {
+                // Initialize the output
+                WaterProfileTextOutput output = new WaterProfileTextOutput();
+
+                try
+                {
+                    // Create a list for all the strings
+                    List<string> list = new List<string>();
+
+                    // Determine spacing of the items
+                    int DepthLabelPad = 10;
+                    int VelLabelPad = 26;
+                    int GPLabelPad = 21;
+                    int AmpLabelPad = 21;
+                    int CorrLabelPad = 30;
+                    int MagLabelPad = 19;
+                    int DirLabelPad = 10;
+                    int DepthPad = 10;
+                    int VelPad = 7;
+                    if (measurementStandard == Core.Commons.MeasurementStandards.IMPERIAL)
+                    {
+                        DepthLabelPad = 9;
+                        VelLabelPad = 29;
+                        GPLabelPad = 24;
+                        VelPad = 8;
+                    }
+
+                    // Add Top Label
+                    StringBuilder label = new StringBuilder();
+                    label.Append(("Bin").PadLeft(4) + "");
+                    label.Append(("Depth").PadLeft(DepthLabelPad) + "");
+                    label.Append((GetVelocityTitle(selectedTransform)).PadLeft(VelLabelPad) + "");
+                    label.Append(("Good Ping").PadLeft(GPLabelPad) + "");
+                    label.Append(("Amplitude").PadLeft(AmpLabelPad) + "");
+                    label.Append(("Correlation").PadLeft(CorrLabelPad) + "");
+                    label.Append(("ENU Mag").PadLeft(MagLabelPad) + "");
+                    label.Append(("ENU Dir").PadLeft(DirLabelPad));
+                    output.Header = label.ToString();
+
+                    // Verify the minimum data is available
+                    if (ensemble == null || !ensemble.IsAncillaryAvail || !ensemble.IsEnsembleAvail)
+                    {
+                        // Set at least the titles
+                        return output;
+                    }
+
+                    // Check for Vertical beams to set the SelectedTransform
+                    selectedTransform = CheckForVerticalBeam(ensemble, selectedTransform);
+
+                    // Set the number of bins and the Bin size
+                    int numBins = ensemble.EnsembleData.NumBins;
+                    double binSize = ensemble.AncillaryData.BinSize;
+                    double firstBinDepth = ensemble.AncillaryData.FirstBinRange;
+
+                    // Set the Velocity data to the list
+                    float[,] velData = null;
+                    int[,] goodPingData = null;
+                    switch (selectedTransform)
+                    {
+                        case Core.Commons.Transforms.BEAM:
+                            if (ensemble.IsBeamVelocityAvail)
+                            {
+                                velData = ensemble.BeamVelocityData.BeamVelocityData;
+                            }
+                            if(ensemble.IsGoodBeamAvail)
+                            {
+                                goodPingData = ensemble.GoodBeamData.GoodBeamData;
+                            }
+                            break;
+                        case Core.Commons.Transforms.EARTH:
+                            if (ensemble.IsEarthVelocityAvail)
+                            {
+                                velData = ensemble.EarthVelocityData.EarthVelocityData;
+                            }
+                            if (ensemble.IsGoodEarthAvail)
+                            {
+                                goodPingData = ensemble.GoodEarthData.GoodEarthData;
+                            }
+                            break;
+                        case Core.Commons.Transforms.INSTRUMENT:
+                            if (ensemble.IsInstrumentVelocityAvail)
+                            {
+                                velData = ensemble.InstrumentVelocityData.InstrumentVelocityData;
+                            }
+                            if (ensemble.IsGoodBeamAvail)
+                            {
+                                goodPingData = ensemble.GoodBeamData.GoodBeamData;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    // Get the Amplitude data
+                    float[,] ampData = null;
+                    if(ensemble.IsAmplitudeAvail)
+                    {
+                        ampData = ensemble.AmplitudeData.AmplitudeData;
+                    }
+
+                    // Get the Correlation data
+                    float[,] corrData = null;
+                    if(ensemble.IsCorrelationAvail)
+                    {
+                        corrData = ensemble.CorrelationData.CorrelationData;
+                    }
+
+                    // Combine all the data and add to binding list
+                    for (int bin = minBinDisplay; bin < maxBinDisplay; bin++)
+                    {
+                        StringBuilder binData = new StringBuilder();
+                        binData.Append((bin.ToString()).PadLeft(3) + "  ");
+
+                        binData.Append((SetMeasurementValue((float)((bin * binSize) + firstBinDepth), "0.000", measurementStandard) + MeasurementLabel(measurementStandard)).PadLeft(DepthPad) + "    ");
+
+                        //----------------------------------------------------------------------
+                        // Velocity Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && velData != null)
+                        {
+                            binData.Append((SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_0_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + " "));
+                        }
+
+                        // Velocity Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && velData != null)
+                        {
+                            binData.Append(
+                                (SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_1_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + " "));
+                        }
+
+                        // Velocity Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && velData != null)
+                        {
+                            binData.Append((SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_2_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + " "));
+                        }
+
+                        // Velocity Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && velData != null)
+                        {
+                            binData.Append((SetMeasurementValue(velData[bin, DataSet.Ensemble.BEAM_3_INDEX], "0.000", measurementStandard)).PadLeft(VelPad) + "   ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((VelPad)) + "   "));
+                        }
+
+                        //----------------------------------------------------------------------
+                        // Good Ping Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_0_INDEX]).ToString()).PadLeft(1) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + " "));
+                        }
+
+                        // Good Ping Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_1_INDEX]).ToString()).PadLeft(1) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + " "));
+                        }
+
+                        // Good Ping Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_2_INDEX]).ToString()).PadLeft(1) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + " "));
+                        }
+
+                        // Good Ping Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && goodPingData != null)
+                        {
+                            binData.Append(((goodPingData[bin, DataSet.Ensemble.BEAM_3_INDEX]).ToString()).PadLeft(1) + "   ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((1)) + "   "));
+                        }
+
+                        //----------------------------------------------------------------------
+                        // Amplitude Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_0_INDEX]).ToString("0.0")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Amplitude Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_1_INDEX]).ToString("0.0")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Amplitude Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_2_INDEX]).ToString("0.0")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Amplitude Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && ampData != null)
+                        {
+                            binData.Append(((ampData[bin, DataSet.Ensemble.BEAM_3_INDEX]).ToString("0.0")).PadLeft(6) + "   ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + "   "));
+                        }
+
+                        //----------------------------------------------------------------------
+                        // Correlation Beam 0
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_0_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_0_INDEX]).ToString("0.000")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Correlation Beam 1
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_1_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_1_INDEX]).ToString("0.000")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Correlation Beam 2
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_2_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_2_INDEX]).ToString("0.000")).PadLeft(6) + " ");
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6)) + " "));
+                        }
+
+                        // Correlation Beam 3
+                        if (ensemble.EnsembleData.NumBeams > DataSet.Ensemble.BEAM_3_INDEX && corrData != null)
+                        {
+                            binData.Append(((corrData[bin, DataSet.Ensemble.BEAM_3_INDEX]).ToString("0.000")).PadLeft(6));
+                        }
+                        else
+                        {
+                            binData.Append(("-".PadLeft((6))));
+                        }
+
+                        if (ensemble.IsEarthVelocityAvail && ensemble.EarthVelocityData.IsVelocityVectorAvail)
+                        {
+                            binData.Append(SetMeasurementValue((float)ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude, "0.00", measurementStandard).PadLeft(9));
+                            binData.Append(SetDegreeValue(ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth, "0.00").PadLeft(12));
+                        }
+
+                        // Add the string to the list
+                        list.Add(binData.ToString());
+                    }
+
+                    // Set the new list
+                    output.BinList = list;
+                    return output;
+                }
+                catch (System.IndexOutOfRangeException)
+                {
+                    // This check is done if we are switching between live and playback data and
+                    // number of bins are not the same
+                    //log.Error("Index for the number of bins error", ex);
+                    return new WaterProfileTextOutput();
+                }
+                catch (Exception )
+                {
+                    //log.Error("Error Displaying the data.", e);
+                    return new WaterProfileTextOutput();
+                }
+            }
+
+
+            #region DataSets
+
+            /// <summary>
+            /// If the ensemble is for a Vertical Beam,
+            /// it can only have Beam data.  So set the selected
+            /// transform to beam data.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to get the subsystem type.</param>
+            /// <param name="transform">Coordinate Transform.</param>
+            public static Core.Commons.Transforms CheckForVerticalBeam(DataSet.Ensemble ensemble, Core.Commons.Transforms transform)
+            {
+                if (ensemble.IsEnsembleAvail)
+                {
+                    // Check for vertical beam
+                    switch (ensemble.EnsembleData.SubsystemConfig.SubSystem.Code)
+                    {
+                        case Subsystem.SUB_2MHZ_VERT_PISTON_9:
+                        case Subsystem.SUB_1_2MHZ_VERT_PISTON_A:
+                        case Subsystem.SUB_600KHZ_VERT_PISTON_B:
+                        case Subsystem.SUB_300KHZ_VERT_PISTON_C:
+                        case Subsystem.SUB_150KHZ_VERT_PISTON_D:
+                        case Subsystem.SUB_75KHZ_VERT_PISTON_E:
+                        case Subsystem.SUB_38KHZ_VERT_PISTON_F:
+                        case Subsystem.SUB_20KHZ_VERT_PISTON_G:
+                            // Set the selected transform
+                            return Core.Commons.Transforms.BEAM;
+                        default:
+                            return transform;
+                    }
+                }
+
+                return transform;
+            }
+
+            #endregion
+
+            #region Measurement Standard
+
+            /// <summary>
+            /// Determine what the title should be for velocity.
+            /// This wills state which transform is selected.
+            /// </summary>
+            /// <returns>Velocity label based off transform selected.</returns>
+            public static string GetVelocityTitle(Core.Commons.Transforms selectedTransform = Core.Commons.Transforms.BEAM)
+            {
+                if (selectedTransform == Core.Commons.Transforms.BEAM)
+                {
+                    return "BEAM VELOCITY";
+                }
+
+                if (selectedTransform == Core.Commons.Transforms.EARTH)
+                {
+                    return "EARTH VELOCITY";
+                }
+
+                if (selectedTransform == Core.Commons.Transforms.INSTRUMENT)
+                {
+                    return "INSTRUMENT VELOCITY";
+                }
+
+                return "VELOCITY";
+            }
+
+            /// <summary>
+            /// Depending on the measurement standard set, convert
+            /// the value given from meters to feet.
+            /// </summary>
+            /// <param name="value">Value to convert if set to Standard.</param>
+            /// <param name="converter">String used in ToString to set number of decimal places.</param>
+            /// <param name="MeasurementStandard">Measurement standard.</param>
+            /// <returns>String of the value.</returns>
+            public static string SetMeasurementValue(float value, string converter, Core.Commons.MeasurementStandards MeasurementStandard = Core.Commons.MeasurementStandards.IMPERIAL)
+            {
+                float METERS_TO_FEET = 3.2808399f;
+
+                // Check for a bad value
+                if (value == DataSet.Ensemble.BAD_VELOCITY)
+                {
+                    return "  -   ";
+                    //return DataSet.BeamVelocityDataSet.BAD_VELOCITY_PLACEHOLDER;
+                }
+
+                string result = "";
+                if (MeasurementStandard == Core.Commons.MeasurementStandards.METRIC)
+                {
+                    result = value.ToString(converter);
+                }
+                else
+                {
+                    // Convert meters to feet
+                    value *= METERS_TO_FEET;
+                    result = value.ToString(converter);
+                }
+
+                return result;
+            }
+
+            /// <summary>
+            /// Set the degree symbol at the end of the string.
+            /// If the value is bad, put the place holder for a
+            /// bad value.
+            /// </summary>
+            /// <param name="value">Value to create.</param>
+            /// <param name="converter">Decimal places for the value.</param>
+            /// <returns>String of the degree with the given decimal places and degree symbol.</returns>
+            public static string SetDegreeValue(double value, string converter)
+            {
+                // Check for a bad value
+                if (value == DataSet.Ensemble.BAD_VELOCITY)
+                {
+                    return "  -   ";
+                    //return DataSet.BeamVelocityDataSet.BAD_VELOCITY_PLACEHOLDER;
+                }
+
+                return string.Format("{0}°", value.ToString(converter));
+            }
+
+            /// <summary>
+            /// Determine which label to add to the end of a value
+            /// based off which measurement standard is selected.
+            /// </summary>
+            /// <returns></returns>
+            public static string MeasurementLabel(Core.Commons.MeasurementStandards measurementStandard = Core.Commons.MeasurementStandards.IMPERIAL)
+            {
+                switch (measurementStandard)
+                {
+                    case Core.Commons.MeasurementStandards.METRIC:
+                        return "m";
+                    case Core.Commons.MeasurementStandards.IMPERIAL:
+                        return "ft";
+                }
+
+                return "m";
             }
 
             #endregion
@@ -3449,6 +4073,14 @@ namespace RTI
                 // IsGageHeightDataAvail
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISADCP2INFOAVAIL);
                 writer.WriteValue(ensemble.IsAdcp2InfoAvail);
+
+                // IsShipVelocityAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISSHIPVELOCITYAVAIL);
+                writer.WriteValue(ensemble.IsShipVelocityAvail);
+
+                // IsShipWaterMassAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISSHIPWATERMASSAVAIL);
+                writer.WriteValue(ensemble.IsShipWaterMassAvail);
 
                 #endregion
 
@@ -3712,6 +4344,28 @@ namespace RTI
                 if (ensemble.IsAdcp2InfoAvail)
                 {
                     writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Adcp2InfoData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // Ship Velocity data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_SHIPVELOCITYDATA);
+                if (ensemble.IsShipVelocityAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ShipVelocityData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // Ship Water Mass data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_SHIPWATERMASSDATA);
+                if (ensemble.IsShipWaterMassAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ShipWaterMassData));
                 }
                 else
                 {

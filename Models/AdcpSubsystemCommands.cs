@@ -2977,6 +2977,91 @@ namespace RTI
                 }
             }
 
+            /// <summary>
+            /// Burst Interval ON
+            /// Enables or disables burst mode. 
+            /// </summary>
+            public bool CBI { get; set; }
+
+            #endregion
+
+            #region CED
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000001 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000002 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000003 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000004 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000005 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000006 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000007 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000008 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000009 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000010 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000011 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000012 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000013 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000014 { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool E0000015 { get; set; }
+
             #endregion
 
             #region Bottom Track Properties

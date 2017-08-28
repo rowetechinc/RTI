@@ -342,6 +342,7 @@ namespace RTI
         /// Create a TS object.
         /// </summary>
         /// <param name="dt">Date and Time</param>
+        /// <param name="hundrethSec">Hundredth of a second.</param>
         /// <param name="salinity">Salinity in PPT</param>
         /// <param name="temp">Temperature in degrees C.</param>
         /// <param name="xdcr_depth">Transducer depth in meters.</param>

@@ -122,6 +122,8 @@
     <Compile Include="Communications\SerialOptions.cs" />
     <Compile Include="Communications\TcpServer.cs" />
     <Compile Include="Communications\UdpMessages.cs" />
+    <Compile Include="Models\DataSet\ShipWaterMassDataSet.cs" />
+    <Compile Include="Models\DataSet\ShipVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\GageHeightDataSet.cs" />
     <Compile Include="Models\DataSet\Adcp2InfoDataSet.cs" />
     <Compile Include="Post Process\Average\AverageBinsTogether.cs" />

@@ -549,7 +549,7 @@ namespace RTI
             /// <summary>
             /// Default 40khz Water Profile Time between pings (4 seconds).
             /// </summary>
-            public const float DEFAULT_38_CWPTBP = 4.0f;
+            public const float DEFAULT_38_CWPTBP = 0.13f;
 
             /// <summary>
             /// Default 40khz Bottom Track Blank (2 meters).
@@ -666,7 +666,7 @@ namespace RTI
             /// <summary>
             /// Default 80khz Water Profile Time between pings (2 seconds).
             /// </summary>
-            public const float DEFAULT_75_CWPTBP = 2.0f;
+            public const float DEFAULT_75_CWPTBP = 0.13f;
 
             /// <summary>
             /// Default 80khz Bottom Track Blank (1 meters).
@@ -783,7 +783,7 @@ namespace RTI
             /// <summary>
             /// Default 160khz Water Profile Time between pings (1 seconds).
             /// </summary>
-            public const float DEFAULT_150_CWPTBP = 1.0f;
+            public const float DEFAULT_150_CWPTBP = 0.13f;
 
             /// <summary>
             /// Default 160khz Bottom Track Blank (0.5 meters).
@@ -900,7 +900,7 @@ namespace RTI
             /// <summary>
             /// Default 320khz Water Profile Time between pings (0.5 seconds).
             /// </summary>
-            public const float DEFAULT_300_CWPTBP = 0.5f;
+            public const float DEFAULT_300_CWPTBP = 0.13f;
 
             /// <summary>
             /// Default 320khz Bottom Track Blank (0.25 meters).
@@ -1017,7 +1017,7 @@ namespace RTI
             /// <summary>
             /// Default 640khz Water Profile Time between pings (0.25 seconds).
             /// </summary>
-            public const float DEFAULT_600_CWPTBP = 0.25f;
+            public const float DEFAULT_600_CWPTBP = 0.13f;
 
             /// <summary>
             /// Default 640khz Bottom Track Blank (0.125 meters).
@@ -1134,7 +1134,7 @@ namespace RTI
             /// <summary>
             /// Default 1.2 MHz Water Profile Time between pings (0.1 seconds).
             /// </summary>
-            public const float DEFAULT_1200_CWPTBP = 0.1f;
+            public const float DEFAULT_1200_CWPTBP = 0.13f;
 
             /// <summary>
             /// Default 1.2 MHz Bottom Track Blank (0.1 meters).

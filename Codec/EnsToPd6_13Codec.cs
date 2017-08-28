@@ -172,7 +172,7 @@ namespace RTI
             float lon = PD0.BAD_VELOCITY;
             float norm = PD0.BAD_VELOCITY;
             bool isGood = false;
-            if (ens.IsShipVelocityAvail)
+            if (ens.IsShipWaterMassAvail)
             {
                 trans = ens.ShipWaterMassData.VelocityTransverse / 1000.0f;      // convert to mm/s
                 lon = ens.ShipWaterMassData.VelocityLongitudinal / 1000.0f;

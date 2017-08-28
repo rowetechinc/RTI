@@ -292,6 +292,36 @@ namespace RTI
 
         #endregion
 
+        #region Instrument Velocity
+
+        /// <summary>
+        /// Add a blank Ship velocity data set to
+        /// the given ensemble.  This will use the number
+        /// of bins and beams given to create the Instrument
+        /// Velocity array.  The array will be empty.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public static void AddShipVelocity(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            // Check for null
+            if (ensemble == null)
+            {
+                return;
+            }
+
+            // Add a blank Ship Velocity Data set
+            ensemble.AddShipVelocityData(DataSet.Ensemble.DATATYPE_FLOAT,              // Type of data stored (Float or Int)
+                                            numBins,                                    // Number of bins
+                                            numBeams,                                   // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
+                                            DataSet.Ensemble.ShipVelocityID);             // Dataset ID
+        }
+
+        #endregion
+
         #region Bottom Track
 
         /// <summary>

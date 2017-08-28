@@ -592,32 +592,39 @@ namespace RTI
         /// </summary>
         public void SendBreak()
         {
-            if (IsAvailable())
+            try
             {
-                // Clear the buffer
-                _receiveBufferString = string.Empty;
-
-                // Send a break to the serial port
-                _serialPort.BreakState = true;
-
-                // Wait for the state to change
-                // and leave on a bit of time
-                System.Threading.Thread.Sleep(WAIT_STATE * 5);
-
-                // Change state back
-                _serialPort.BreakState = false;
-
-                // Wait for state to change back
-                System.Threading.Thread.Sleep(WAIT_STATE * 4);
-
-                // Check if something is in the buffer
-                if (string.IsNullOrEmpty(_receiveBufferString))
+                if (IsAvailable())
                 {
-                    // Send a Text BREAK just incase the instrument cannot take a break
-                    // This is the case if using wireless serial communication or
-                    // ethernet
-                    SendDataWaitReply(Commands.AdcpCommands.CMD_BREAK, 2000);
+                    // Clear the buffer
+                    _receiveBufferString = string.Empty;
+
+                    // Send a break to the serial port
+                    _serialPort.BreakState = true;
+
+                    // Wait for the state to change
+                    // and leave on a bit of time
+                    System.Threading.Thread.Sleep(WAIT_STATE * 5);
+
+                    // Change state back
+                    _serialPort.BreakState = false;
+
+                    // Wait for state to change back
+                    System.Threading.Thread.Sleep(WAIT_STATE * 4);
+
+                    // Check if something is in the buffer
+                    if (string.IsNullOrEmpty(_receiveBufferString))
+                    {
+                        // Send a Text BREAK just incase the instrument cannot take a break
+                        // This is the case if using wireless serial communication or
+                        // ethernet
+                        SendDataWaitReply(Commands.AdcpCommands.CMD_BREAK, 2000);
+                    }
                 }
+            }
+            catch(Exception e)
+            {
+                log.Warn("Error sending a BREAK to serial port.", e);
             }
         }
 

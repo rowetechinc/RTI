@@ -55,6 +55,141 @@ namespace RTI
     /// </summary>
     public class Transform
     {
+        #region Heading Source
+
+        /// <summary>
+        /// ADCP string.
+        /// </summary>
+        public const string SRC_STR_ADCP = "ADCP";
+
+        /// <summary>
+        /// ADCP GPS string.
+        /// </summary>
+        public const string SRC_STR_ADCP_GPS = "ADCP GPS";
+
+        /// <summary>
+        /// GPS 1 string.
+        /// </summary>
+        public const string SRC_STR_GPS1 = "GPS 1";
+
+        /// <summary>
+        /// GPS 2 string.
+        /// </summary>
+        public const string SRC_STR_GPS2 = "GPS 2";
+
+        /// <summary>
+        /// NMEA 1 string.
+        /// </summary>
+        public const string SRC_STR_NMEA1 = "NMEA 1";
+
+        /// <summary>
+        /// NMEA 2 string.
+        /// </summary>
+        public const string SRC_STR_NMEA2 = "NMEA 2";
+
+        /// <summary>
+        /// Fixed Heading string.
+        /// </summary>
+        public const string SRC_STR_FIXED_HEADING = "Fixed Heading";
+
+        /// <summary>
+        /// Heading Source options.
+        /// </summary>
+        public enum HeadingSource : byte
+        {
+            /// <summary>
+            /// ADCP internal compass.
+            /// </summary>
+            ADCP,
+
+            /// <summary>
+            /// ADCP with a GPS connected to the serial port.
+            /// It will get the data from the NmeaDataSet.
+            /// </summary>
+            ADCP_GPS,
+
+            /// <summary>
+            /// Get the heading from the GPS1 terminal.
+            /// </summary>
+            GPS1,
+
+            /// <summary>
+            /// Get the heading from the GPS2 terminal.
+            /// </summary>
+            GPS2,
+
+            /// <summary>
+            /// Get the heading from the NMEA1 terminal.
+            /// </summary>
+            NMEA1,
+
+            /// <summary>
+            /// Get the heading from the NMEA2 terminal.
+            /// </summary>
+            NMEA2,
+
+            /// <summary>
+            /// Use a fixed heading.
+            /// </summary>
+            Fixed_Heading
+        }
+
+        /// <summary>
+        /// Convert the Heading Source Enum to a string.
+        /// </summary>
+        /// <param name="source">Enum source.</param>
+        /// <returns>String of Heading Source.</returns>
+        public static string HeadingSourceStr(HeadingSource source)
+        {
+            switch(source)
+            {
+                case HeadingSource.ADCP_GPS:
+                    return SRC_STR_ADCP;
+                case HeadingSource.Fixed_Heading:
+                    return SRC_STR_FIXED_HEADING;
+                case HeadingSource.GPS1:
+                    return SRC_STR_GPS1;
+                case HeadingSource.GPS2:
+                    return SRC_STR_GPS2;
+                case HeadingSource.NMEA1:
+                    return SRC_STR_NMEA1;
+                case HeadingSource.NMEA2:
+                    return SRC_STR_NMEA2;
+                case HeadingSource.ADCP:
+                default:
+                    return SRC_STR_ADCP;
+            }
+        }
+
+        /// <summary>
+        /// Convert the given string to the enum value.
+        /// </summary>
+        /// <param name="source">Heading Source string.</param>
+        /// <returns>Enum value of heading source.</returns>
+        public static HeadingSource HeadingSourceEnum(string source)
+        {
+            switch(source.Trim())
+            {
+                case SRC_STR_ADCP_GPS:
+                    return HeadingSource.ADCP_GPS;
+                case SRC_STR_FIXED_HEADING:
+                    return HeadingSource.Fixed_Heading;
+                case SRC_STR_GPS1:
+                    return HeadingSource.GPS1;
+                case SRC_STR_GPS2:
+                    return HeadingSource.GPS2;
+                case SRC_STR_NMEA1:
+                    return HeadingSource.NMEA1;
+                case SRC_STR_NMEA2:
+                    return HeadingSource.NMEA2;
+                case SRC_STR_ADCP:
+                default:
+                    return HeadingSource.ADCP;
+            }
+        }
+
+        #endregion
+
         #region Profile Transform
 
         /// <summary>
@@ -73,10 +208,10 @@ namespace RTI
         /// </summary>
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
         /// <param name="corrThresh">Correlation Threshold.</param>
-        /// <param name="isUseGpsHeading">Use the GPS heading instead of the Anciallary data.</param>
+        /// <param name="headingSource">Get the heading from the selected heading source.</param>
         /// <param name="headingOffset">Heading offset to add to the heading.</param>
         /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        public static void ProfileTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.25f, bool isUseGpsHeading = false, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
+        public static void ProfileTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.25f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
         {
             // Create the array to hold the earth data
             int numBins = 0;
@@ -120,6 +255,17 @@ namespace RTI
                 ensemble.GoodEarthData.GoodEarthData = new int[numBins, numBeams];
             }
 
+            // Create the Ship Velocity dataset if it does not exist
+            if (!ensemble.IsShipVelocityAvail)
+            {
+                EnsembleHelper.AddShipVelocity(ref ensemble, numBins, numBeams);
+            }
+            else
+            {
+                // Recreate the array
+                ensemble.ShipVelocityData.ShipVelocityData = new float[numBins, numBeams];
+            }
+
             // If there is no ensemble data, we cannot get heading, pitch and roll
             // If there is no beam data, we have nothing to transform
             // If there is no correlation data, we cannot verify the beam data is good
@@ -132,34 +278,47 @@ namespace RTI
             float Heading = 0.0f;
             float Pitch = 0.0f;
             float Roll = 0.0f;
-            if(isUseGpsHeading)
-            {
-                if(ensemble.IsNmeaAvail)
-                {
-                    // GPHDT
-                    if (ensemble.NmeaData.IsGphdtAvail())
-                    {
-                        Heading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
-                        
-                        // If NaN, use backup of Ancillary heading
-                        if (float.IsNaN(Heading))
-                        {
-                            Heading = ensemble.AncillaryData.Heading;
-                        }
-                    }
-                    // GPRMC
-                    else if (ensemble.NmeaData.IsGprmcAvail())
-                    {
-                        Heading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
 
-                        // If NaN, use backup of Ancillary heading
-                        if (float.IsNaN(Heading))
+            // Use the Ancillary heading as a backup if no other heading is found
+            if(ensemble.IsAncillaryAvail)
+            {
+                Heading = ensemble.AncillaryData.Heading;
+            }
+
+            // Get the Heading from the heading source
+            // The GPS and NMEA data are lumped into NmeaDataSet.
+            // So if there is an HDT or RMC message, the heading will be taken.
+            switch(headingSource)
+            {
+                case HeadingSource.ADCP_GPS:
+                case HeadingSource.GPS1:
+                case HeadingSource.GPS2:
+                case HeadingSource.NMEA1:
+                case HeadingSource.NMEA2:
+                    if(ensemble.IsNmeaAvail)
+                    {
+                        // GPHDT
+                        if(ensemble.NmeaData.IsGphdtAvail())
                         {
-                            Heading = ensemble.AncillaryData.Heading;
+                            if (!float.IsNaN((float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees))
+                            {
+                                Heading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
+                            }
+                        }
+                        // GPRMC
+                        else if(ensemble.NmeaData.IsGprmcAvail())
+                        {
+                            if (!float.IsNaN((float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees))
+                            {
+                                Heading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
+                            }
                         }
                     }
+                    break;
+                default:
+                case HeadingSource.ADCP:
                     // Ancillary
-                    else if(ensemble.IsAncillaryAvail)
+                    if (ensemble.IsAncillaryAvail)
                     {
                         Heading = ensemble.AncillaryData.Heading;
                     }
@@ -168,15 +327,7 @@ namespace RTI
                     {
                         Heading = ensemble.BottomTrackData.Heading;
                     }
-                }
-            }
-            else if(ensemble.IsAncillaryAvail)
-            {
-                Heading = ensemble.AncillaryData.Heading;
-            }
-            else if (ensemble.IsBottomTrackAvail)
-            {
-                Heading = ensemble.BottomTrackData.Heading;
+                    break;
             }
 
             // Set pitch and roll
@@ -501,10 +652,10 @@ namespace RTI
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
         /// <param name="corrThresh">Correlation Threshold.</param>
         /// <param name="snrThresh">SNR Threshold.</param>
-        /// <param name="isUseGpsHeading">Use the GPS heading instead of the Anciallary data.</param>
+        /// <param name="headingSource">Select the heading source.</param>
         /// <param name="headingOffset">Heading offset to add to the heading.</param>
         /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, bool isUseGpsHeading = false, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
+        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
         {
             // If there is no ensemble data, we cannot get the subsystem
             // If there is no Bottom Track data, we have nothing to transform
@@ -522,6 +673,9 @@ namespace RTI
             // Recreate the BT Earth array
             ensemble.BottomTrackData.EarthVelocity = new float[numBeams];
 
+            // Recreate the BT Ship array
+            ensemble.BottomTrackData.ShipVelocity = new float[numBeams];
+
             // Recreate the Bottom Track Earth Good dataset if it does not exist
             ensemble.BottomTrackData.EarthGood = new float[numBeams];
 
@@ -530,45 +684,58 @@ namespace RTI
             float Pitch = ensemble.BottomTrackData.Pitch;
             float Roll = ensemble.BottomTrackData.Roll;
 
-            // Set the Heading pitch and roll
+            // Set the Heading based off the selected source
             float Heading = 0.0f;
-            if (isUseGpsHeading)
+            
+            // Use the Bottom Track heading as a backup if no other heading is found
+            if (ensemble.IsBottomTrackAvail)
             {
-                if (ensemble.IsNmeaAvail)
-                {
-                    // GPHDT
-                    if (ensemble.NmeaData.IsGphdtAvail())
+                Heading = ensemble.BottomTrackData.Heading;
+            }
+
+            // Get the Heading from the heading source
+            // The GPS and NMEA data are lumped into NmeaDataSet.
+            // So if there is an HDT or RMC message, the heading will be taken.
+            switch (headingSource)
+            {
+                case HeadingSource.ADCP_GPS:
+                case HeadingSource.GPS1:
+                case HeadingSource.GPS2:
+                case HeadingSource.NMEA1:
+                case HeadingSource.NMEA2:
+                    if (ensemble.IsNmeaAvail)
                     {
-                        Heading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
-
-                        // If NaN, use backup of Bottom Track heading
-                        if (float.IsNaN(Heading))
+                        // GPHDT
+                        if (ensemble.NmeaData.IsGphdtAvail())
                         {
-                            Heading = ensemble.BottomTrackData.Heading;
+                            if (!float.IsNaN((float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees))
+                            {
+                                Heading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
+                            }
                         }
-
-                    }
-                    // GPRMC
-                    else if (ensemble.NmeaData.IsGprmcAvail())
-                    {
-                        Heading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
-
-                        // If NaN, use backup of Bottom Track heading
-                        if(float.IsNaN(Heading))
+                        // GPRMC
+                        else if (ensemble.NmeaData.IsGprmcAvail())
                         {
-                            Heading = ensemble.BottomTrackData.Heading;
+                            if (!float.IsNaN((float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees))
+                            {
+                                Heading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
+                            }
                         }
                     }
+                    break;
+                default:
+                case HeadingSource.ADCP:
                     // Bottom Track
-                    else
+                    if (ensemble.IsBottomTrackAvail)
                     {
                         Heading = ensemble.BottomTrackData.Heading;
                     }
-                }
-            }
-            else
-            {
-                Heading = ensemble.BottomTrackData.Heading;
+                    // Ancillary
+                    else if (ensemble.IsAncillaryAvail)
+                    {
+                        Heading = ensemble.AncillaryData.Heading;
+                    }
+                    break;
             }
 
             // Add the heading offset
@@ -858,10 +1025,10 @@ namespace RTI
         /// <param name="ensemble">Ensemble to add the Earth velocity data.</param>
         /// <param name="corrThresh">Correlation Threshold.</param>
         /// <param name="snrThresh">SNR Threshold.</param>
-        /// <param name="isUseGpsHeading">Flag if using GPS heading or compass heading.</param>
+        /// <param name="headingSource">Select the heading source.</param>
         /// <param name="headingOffset">Heading offset to add to the heading.</param>
         /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        public static void WaterMassTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, bool isUseGpsHeading = false, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
+        public static void WaterMassTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
         {
             if (ensemble.IsInstrumentWaterMassAvail)
             {
@@ -882,20 +1049,59 @@ namespace RTI
             float pitch = 0.0f;
             float roll = 0.0f;
             float compassHeading = 0.0f;
-            if(ensemble.IsAncillaryAvail)
-            {
-                pitch = ensemble.AncillaryData.Pitch;
-                roll = ensemble.AncillaryData.Roll;
-                compassHeading = ensemble.AncillaryData.Heading;
-            }
 
             // Replace the heading value GPS HDT if flag set
-            if(isUseGpsHeading)
+            // Use the Bottom Track heading as a backup if no other heading is found
+            if (ensemble.IsBottomTrackAvail)
             {
-                if(ensemble.IsNmeaAvail && ensemble.NmeaData.IsGphdtAvail())
-                {
-                    compassHeading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
-                }
+                pitch = ensemble.BottomTrackData.Pitch;
+                roll = ensemble.BottomTrackData.Roll;
+                compassHeading = ensemble.BottomTrackData.Heading;
+            }
+
+            // Get the Heading from the heading source
+            // The GPS and NMEA data are lumped into NmeaDataSet.
+            // So if there is an HDT or RMC message, the heading will be taken.
+            switch (headingSource)
+            {
+                case HeadingSource.ADCP_GPS:
+                case HeadingSource.GPS1:
+                case HeadingSource.GPS2:
+                case HeadingSource.NMEA1:
+                case HeadingSource.NMEA2:
+                    if (ensemble.IsNmeaAvail)
+                    {
+                        // GPHDT
+                        if (ensemble.NmeaData.IsGphdtAvail())
+                        {
+                            if (!float.IsNaN((float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees))
+                            {
+                                compassHeading = (float)ensemble.NmeaData.GPHDT.Heading.DecimalDegrees;
+                            }
+                        }
+                        // GPRMC
+                        else if (ensemble.NmeaData.IsGprmcAvail())
+                        {
+                            if (!float.IsNaN((float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees))
+                            {
+                                compassHeading = (float)ensemble.NmeaData.GPRMC.Bearing.DecimalDegrees;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                case HeadingSource.ADCP:
+                    // Bottom Track
+                    if (ensemble.IsBottomTrackAvail)
+                    {
+                        compassHeading = ensemble.BottomTrackData.Heading;
+                    }
+                    // Ancillary
+                    else if (ensemble.IsAncillaryAvail)
+                    {
+                        compassHeading = ensemble.AncillaryData.Heading;
+                    }
+                    break;
             }
 
             // Set the pitch and roll
@@ -1074,239 +1280,6 @@ namespace RTI
 
 
             return;
-        }
-
-        #endregion
-
-        #region Water Mass Transform
-
-        /// <summary>
-        /// Results from the transformation of the Water Mass data.
-        /// </summary>
-        public class WaterMassTransformResults
-        {
-            /// <summary>
-            /// Ship velocity results
-            /// </summary>
-            public float[] ShipVelocity { get; set; }
-
-            /// <summary>
-            /// Earth Velocity results.
-            /// </summary>
-            public float[] EarthVelocity { get; set; }
-
-            /// <summary>
-            /// Initialize the values.
-            /// </summary>
-            public WaterMassTransformResults()
-            {
-                this.ShipVelocity = new float[4];
-                this.EarthVelocity = new float[4];
-
-                for(int x = 0; x < 4; x++)
-                {
-                    this.ShipVelocity[x] = DataSet.Ensemble.BAD_VELOCITY;
-                    this.EarthVelocity[x] = DataSet.Ensemble.BAD_VELOCITY;
-                }
-
-            }
-        }
-
-        /// <summary>
-        /// Convert the Water Mass Instrument Data to Earth and Ship coordinate transform.
-        /// 
-        /// If the isUseGpsHeading is set to true it will use the GPS heading if it exist.  If there is no GPS data, or no GPS heading,
-        /// fall back to the ancillary heading data.
-        /// 
-        /// Add the heading offset to the heading value before using it to retransform the data.
-        /// 
-        /// Correlation Thresholds Default
-        /// BB = 0.90f
-        /// 
-        /// SNR Thresold Default
-        /// BB = 10.0f
-        /// </summary>
-        /// <param name="compassHeading">Compass heading.</param>
-        /// <param name="corrThresh">Correlation Threshold.</param>
-        /// <param name="snrThresh">SNR Threshold.</param>
-        /// <param name="headingOffset">Heading offset to add to the heading.</param>
-        /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        /// <param name="wmVel_X">Water Mass Insturment X Velocity in m/s.</param>
-        /// <param name="wmVel_Y">Water Mass Insturment Y Velocity in m/s.</param>
-        /// <param name="wmVel_Z">Water Mass Insturment Z Velocity in m/s.</param>
-        /// <param name="pitch">Pitch value in degrees.</param>
-        /// <param name="roll">Roll valuein degrees.</param>
-        public static WaterMassTransformResults WaterMassTransform(float compassHeading, float shipXdcrOffset, float pitch, float roll, float wmVel_X, float wmVel_Y, float wmVel_Z, float corrThresh = 0.90f, float snrThresh = 10.0f, float headingOffset = 0.0f)
-        {
-            // If the data is bad, we cannot transform the data
-            if (wmVel_X == DataSet.Ensemble.BAD_VELOCITY || wmVel_Y == DataSet.Ensemble.BAD_VELOCITY || wmVel_Z == DataSet.Ensemble.BAD_VELOCITY)
-            {
-                return new WaterMassTransformResults();
-            }
-
-            // Set the pitch and roll
-            // From a compass or gyro
-            float Pitch = pitch;
-            float Roll = roll;
-            float Heading = compassHeading;
-            float ShipXdcrOffset = shipXdcrOffset;
-            WaterMassTransformResults results = new WaterMassTransformResults();
-
-            // Add the heading offset
-            Heading += headingOffset;
-
-            //// Subsystem selection
-            //switch (ensemble.EnsembleData.SubsystemConfig.SubSystem.Code)
-            //{
-            //    default:
-            //        break;
-            //    case Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c:
-            //    case Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d:
-            //    case Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e:
-            //        if (Roll < 0)
-            //        {
-            //            Roll = 180.0f + Roll;
-            //        }
-            //        else
-            //        {
-            //            Roll = Roll - 180.0f;
-            //        }
-            //        break;
-            //}
-
-            // Calculate new Pitch and Roll for Beam0 offset from compass bin mapping
-            //
-            // A = new angle +45 degrees for second piston system
-            // P = Pitch
-            // R = Roll
-            //
-            // P' = PcosA - RsinA
-            // R' = PsinA + RcosA
-            float P, R;
-
-            float Bm0CosHeading = 1.0f;      // For a XDCR that is forward facing.  If it is 45 degrees offset, you would do COS of 45 degrees.  This if found based off the subsystem type  
-            float Bm0SinHeading = 0.0f;      // For a XDCR that is forward facing.  If it is 45 degrees offset, you would do SIN of 45 degrees.  This if found based off the subsystem type 
-
-            if (Roll >= 90.0f || Roll <= -90.0f) // Down facing case
-            {
-                float R1;
-                float B1;
-                if (Roll > 90.0f)
-                {
-                    B1 = -180.0f;
-                }
-                else
-                {
-                    B1 = +180.0f;
-                }
-
-                R1 = Roll + B1;
-
-                P = Pitch * Bm0CosHeading - R1 * Bm0SinHeading;
-                R = Pitch * Bm0SinHeading + R1 * Bm0CosHeading - B1;
-            }
-            else // Up Facing case
-            {
-                P = Pitch * Bm0CosHeading + Roll * Bm0SinHeading;
-                R = -Pitch * Bm0SinHeading + Roll * Bm0CosHeading;
-            }
-
-            double SP = Math.Sin(Math.PI * P / 180.0);
-            double CP = Math.Cos(Math.PI * P / 180.0);
-            double SR = Math.Sin(Math.PI * R / 180.0);
-            double CR = Math.Cos(Math.PI * R / 180.0);
-            double SH = Math.Sin(Math.PI * Heading / 180.0);                // Earth Coordinate Compass Heading
-            double CH = Math.Cos(Math.PI * Heading / 180.0);                // Earth Coordinate Compass Heading
-            double SSH = Math.Sin(Math.PI * shipXdcrOffset / 180.0);        // Ship Coordinate Offset
-            double SCH = Math.Cos(Math.PI * shipXdcrOffset / 180.0);        // Ship Coordinate Offset
-
-            // Check how many beams were good
-            // If there were at least 3 good beams, we can do a 3 beam solution
-
-            // Values used to calculate nominal beam angle
-            float beamAngle = 20.0f;                                        // This value should be found based off subsystem type
-            float[,] M = new float[4, 4];
-            float s = (float)Math.Sin(beamAngle / 180.0 * Math.PI);         // SIN of the beam angle
-            float c = (float)Math.Cos(beamAngle / 180.0 * Math.PI);         // COS of the beam angle
-            //X
-            M[0, 0] = -1 / (2 * s);
-            M[0, 1] = 1 / (2 * s);
-            M[0, 2] = 0;
-            M[0, 3] = 0;
-            //Y
-            M[1, 0] = 0;
-            M[1, 1] = 0;
-            M[1, 2] = -1 / (2 * s);
-            M[1, 3] = 1 / (2 * s);
-            //Z
-            M[2, 0] = -1 / (4 * c);
-            M[2, 1] = -1 / (4 * c);
-            M[2, 2] = -1 / (4 * c);
-            M[2, 3] = -1 / (4 * c);
-            //Q
-            M[3, 0] = (float)0.25;
-            M[3, 1] = (float)0.25;
-            M[3, 2] = (float)-0.25;
-            M[3, 3] = (float)-0.25;
-
-            // DO I NEED TO MAKE THIS NEGATIVE???
-            float X = wmVel_X;
-            float Y = wmVel_Y;
-
-            // Rotate Axis to align beam 0 with compass
-            float X1 = X;
-            float Y1 = Y;
-            X = X1 * Bm0CosHeading - Y1 * Bm0SinHeading;
-            Y = X1 * Bm0SinHeading + Y1 * Bm0CosHeading;
-
-            // If doppler array the vertical angle uses current speed of sound
-            float Z = wmVel_Z;
-
-
-            // Ship Coordinate Transform
-            // Transverse (+ = Port Stbd ship movement rel. to water mass)
-            results.ShipVelocity[0] = (float)(
-                                        X * (SSH * CP)
-                                        - Y * (SCH * CR + SSH * SR * SP)
-                                        + Z * (SCH * SR - SSH * CR * SP));
-
-            // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
-            results.ShipVelocity[1] = (float)(
-                                        X * (SCH * CP)
-                                        + Y * (SSH * CR - SCH * SR * SP)
-                                        - Z * (SSH * SR + SCH * SP * CR));
-
-            // Normal (+ = ship movement away from water mass)
-            results.ShipVelocity[2] = (float)(
-                                        X * (SP)
-                                        + Y * (SR * CP)
-                                        + Z * (CP * CR));
-
-            // There is no beam data to calculate the error
-            results.ShipVelocity[3] = 0.0f;
-
-            // Earth Coordinate Transform
-            // East
-            results.EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
-                                                                X * (SH * CP)
-                                                                - Y * (CH * CR + SH * SR * SP)
-                                                                + Z * (CH * SR - SH * CR * SP));
-
-            // North
-            results.EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
-                                                                X * (CH * CP)
-                                                                + Y * (SH * CR - CH * SR * SP)
-                                                                - Z * (SH * SR + CH * SP * CR));
-
-            // Up
-            results.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
-                                                                X * (SP)
-                                                                + Y * (SR * CP)
-                                                                + Z * (CP * CR));
-            // There is no beam data to calculate the error
-            results.EarthVelocity[3] = 0.0f;
-
-            return results;
         }
 
         #endregion

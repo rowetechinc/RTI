@@ -80,6 +80,7 @@
  * 03/09/2015      RC          3.0.3      Added GageHeightDataSet.
  * 09/25/2015      RC          3.1.1      Added Adcp2InfoDataSet.
  * 10/29/2015      RC          3.2.1      Added WaterTracking in DecodePd0Ensemble().
+ * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
  * 
  */
 
@@ -94,6 +95,22 @@ namespace RTI
 {
     namespace DataSet
     {
+        /// <summary>
+        /// Ensemble package containing the Ensemble and the raw binary data.
+        /// </summary>
+        public struct EnsemblePackage
+        {
+            /// <summary>
+            /// Ensemble Byte array.
+            /// </summary>
+            public byte[] RawEnsemble { get; set; }
+
+            /// <summary>
+            /// Ensemble object.
+            /// </summary>
+            public Ensemble Ensemble { get; set; }
+        }
+
         /// <summary>
         /// Contains all the datasets within
         /// an ensemble.  An ensemble holds
@@ -1669,6 +1686,19 @@ namespace RTI
 
             /// <summary>
             /// Take existing Bottom Track data and add additional 
+            /// Bottom Track data from the Prti03Sentence.
+            /// </summary>
+            /// <param name="sentence">Sentence containing additional Bottom Track data.</param>
+            public void AddAdditionalBottomTrackData(Prti03Sentence sentence)
+            {
+                if (IsBottomTrackAvail)
+                {
+                    BottomTrackData.AddAdditionalBottomTrackData(sentence);
+                }
+            }
+
+            /// <summary>
+            /// Take existing Bottom Track data and add additional 
             /// Bottom Track data from the Prti30Sentence.
             /// </summary>
             /// <param name="sentence">Sentence containing additional Bottom Track data.</param>
@@ -2370,6 +2400,293 @@ namespace RTI
                 }
 
                 return crc;
+            }
+
+            /// <summary>
+            /// Get the checksum value for the ensemble.  It is the 
+            /// last 4 bytes of the ensemble.  The last 2 bytes should
+            /// be 0's if you visually inspect the ensemble.
+            /// This will find the checksum value and convert the value
+            /// to a long.
+            /// </summary>
+            /// <param name="ensemble">Good ensemble containing a checksum value.</param>
+            /// <returns>Checksum value converted from byte array to long.</returns>
+            public static long RetrieveEnsembleChecksum(byte[] ensemble)
+            {
+                long checksum = ensemble[ensemble.Length - DataSet.Ensemble.CHECKSUM_SIZE];
+                checksum += ensemble[ensemble.Length - 3] << 8;
+                checksum += ensemble[ensemble.Length - 2] << 16;
+                checksum += ensemble[ensemble.Length - 1] << 24;
+
+                return checksum;
+            }
+
+            /// <summary>
+            /// Parse the incoming packet for all the Data Sets.
+            /// Add the data to a AdcpDataSet variable and 
+            /// return the filled variable when complete.
+            /// </summary>
+            /// <param name="binaryEnsemble">Byte array containing data from an ADCP.</param>
+            /// <returns>Object holding decoded ADCP data.</returns>
+            public static Ensemble DecodeRawAdcpData(byte[] binaryEnsemble)
+            {
+                // Keep track where in the packet
+                // we are currently decoding
+                int packetPointer = DataSet.Ensemble.ENSEMBLE_HEADER_LEN;
+                int type = 0;
+                int numElements = 0;
+                int elementMultiplier = 0;
+                int imag = 0;
+                int nameLen = 0;
+                string name = "";
+                int dataSetSize = 0;
+
+                Ensemble ensemble = new Ensemble();
+
+                for (int i = 0; i < DataSet.Ensemble.MAX_NUM_DATA_SETS; i++)
+                {
+                    //Debug.Print("binaryEnsemble: " + binaryEnsemble.Length + " packetPointer: " + packetPointer + "\n");
+                    type = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 0));
+                    numElements = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 1));
+                    elementMultiplier = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 2));
+                    imag = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 3));
+                    nameLen = MathHelper.ByteArrayToInt32(binaryEnsemble, packetPointer + (DataSet.Ensemble.BYTES_IN_INT32 * 4));
+                    name = MathHelper.ByteArrayToString(binaryEnsemble, 8, packetPointer + (DataSet.Ensemble.BYTES_IN_FLOAT * 5));
+
+                    // Verify the data is good
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        break;
+                    }
+
+                    //Debug.Print("name: " + name + "\n");
+                    //Debug.Print("numElements: " + numElements + "\n");
+                    //Debug.Print("elementMultiplier" + elementMultiplier + "\n");
+
+                    // Get the size of this data set
+                    dataSetSize = BaseDataSet.GetDataSetSize(type, nameLen, numElements, elementMultiplier);
+
+                    if (Ensemble.BeamVelocityID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] velData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddBeamVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                        //Debug.WriteLine(adcpData.BeamVelocityData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.InstrumentVelocityID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] velData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddInstrumentVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                        //Debug.WriteLine(adcpData.InstrVelocityData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.EarthVelocityID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] velData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddEarthVelocityData(type, numElements, elementMultiplier, imag, nameLen, name, velData);
+                        //Debug.WriteLine(adcpData.EarthVelocityData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.AmplitudeID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] ampData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddAmplitudeData(type, numElements, elementMultiplier, imag, nameLen, name, ampData);
+                        //Debug.WriteLine(adcpData.AmplitudeData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.CorrelationID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] corrData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddCorrelationData(type, numElements, elementMultiplier, imag, nameLen, name, corrData);
+                        //Debug.WriteLine(adcpData.CorrelationData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.GoodBeamID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] goodBeamData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddGoodBeamData(type, numElements, elementMultiplier, imag, nameLen, name, goodBeamData);
+                        //Debug.WriteLine(adcpData.GoodBeamData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.GoodEarthID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] goodEarthData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddGoodEarthData(type, numElements, elementMultiplier, imag, nameLen, name, goodEarthData);
+                        //Debug.WriteLine(adcpData.GoodEarthData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.EnsembleDataID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] ensembleData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddEnsembleData(type, numElements, elementMultiplier, imag, nameLen, name, ensembleData);
+                        //Debug.WriteLine(adcpData.EnsembleData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.AncillaryID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] ancillaryData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddAncillaryData(type, numElements, elementMultiplier, imag, nameLen, name, ancillaryData);
+                        //Debug.WriteLine(adcpData.AncillaryData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.BottomTrackID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] bottomTrackData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddBottomTrackData(type, numElements, elementMultiplier, imag, nameLen, name, bottomTrackData);
+                        //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.NmeaID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // List of all data read
+                        byte[] nmeaData = new byte[dataSetSize];
+
+                        // Scan through the data set and store all the data
+                        for (int x = 0; x < dataSetSize; x++)
+                        {
+                            nmeaData[x] = binaryEnsemble[packetPointer++];
+                        }
+
+                        // Add the data
+                        ensemble.AddNmeaData(type, numElements, elementMultiplier, imag, nameLen, name, nmeaData);
+                        //Debug.WriteLine(adcpData.NmeaData.ToString());
+                    }
+                    else if (Ensemble.ProfileEngineeringID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] peData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddProfileEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, peData);
+                        //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.BottomTrackEngineeringID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] bteData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddBottomTrackEngineeringData(type, numElements, elementMultiplier, imag, nameLen, name, bteData);
+                        //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.SystemSetupID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] ssData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddSystemSetupData(type, numElements, elementMultiplier, imag, nameLen, name, ssData);
+                        //Debug.WriteLine(adcpData.BottomTrackData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.RangeTrackingID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] rtData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddRangeTrackingData(type, numElements, elementMultiplier, imag, nameLen, name, rtData);
+                        //Debug.WriteLine(adcpData.RangeTrackingData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.GageHeightID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] ghData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddGageHeightData(type, numElements, elementMultiplier, imag, nameLen, name, ghData);
+                        //Debug.WriteLine(adcpData.GageHeightData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else if (Ensemble.Adcp2InfoID.Equals(name, StringComparison.Ordinal))
+                    {
+                        // Create a sub array of just this data set data
+                        byte[] adcp2InfoData = MathHelper.SubArray<byte>(binaryEnsemble, packetPointer, dataSetSize);
+
+                        // Add the data
+                        ensemble.AddAdcp2InfoData(type, numElements, elementMultiplier, imag, nameLen, name, adcp2InfoData);
+                        //Debug.WriteLine(adcpData.GageHeightData.ToString());
+
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+                    else
+                    {
+                        // Advance the packet pointer
+                        packetPointer += dataSetSize;
+                    }
+
+
+                    //Debug.Print("DataSetSize: " + dataSetSize + "\n");
+                    //Debug.Print(" packetPointer: " + packetPointer + "\n");
+                    if (packetPointer + 4 >= binaryEnsemble.Length || packetPointer < 0)
+                        break;
+                }
+
+                return ensemble;
             }
 
             #endregion

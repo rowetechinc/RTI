@@ -32,6 +32,7 @@
  * 10/09/2013      RC          2.21.0     Added DeploymentMode.
  * 10/14/2013      RC          2.21.0     Added InternalMemoryCardUsed and InternalMemoryCardTotal.
  * 11/13/2014      RC          2.21.0     Added DVL and VM deployment modes.
+ * 10/19/2016      RC          3.3.2      Changed default battery to 38C.
  * 
  */
 
@@ -154,7 +155,7 @@ namespace RTI
         /// <summary>
         /// Default Battery Type.
         /// </summary>
-        public const AdcpBatteryType DEFAULT_BATTERY_TYPE = AdcpBatteryType.Alkaline_21D;
+        public const AdcpBatteryType DEFAULT_BATTERY_TYPE = AdcpBatteryType.Alkaline_38C;
 
         /// <summary>
         /// Default Depth to bottom in meters.

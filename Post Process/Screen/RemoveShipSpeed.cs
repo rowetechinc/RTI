@@ -133,15 +133,17 @@ namespace RTI
                         {
                             // Heading defaults from ADCP
                             double heading = ensemble.AncillaryData.Heading + gpsHeadingOffset;
+
                             // Heading from GPS if its available
-                            if (ensemble.NmeaData.IsGpvtgAvail())
-                            {
-                                heading = ensemble.NmeaData.GPVTG.Bearing.DecimalDegrees + gpsHeadingOffset;
-                            }
-                            else if(ensemble.NmeaData.IsGphdtAvail())
+                            if(ensemble.NmeaData.IsGphdtAvail())
                             {
                                 heading = ensemble.NmeaData.GPHDT.Heading.DecimalDegrees + gpsHeadingOffset;
                             }
+                            else if (ensemble.NmeaData.IsGpvtgAvail())
+                            {
+                                heading = ensemble.NmeaData.GPVTG.Bearing.DecimalDegrees + gpsHeadingOffset;
+                            }
+
                             // Speed from the GPS
                             double speed = ensemble.NmeaData.GPVTG.Speed.ToMetersPerSecond().Value;
 

@@ -408,7 +408,8 @@ namespace RTI
                     // Format the command
                     data += '\r';
 
-                    byte[] buffer = MathHelper.GetBytes(data);
+                    //byte[] buffer = MathHelper.GetBytes(data);
+                    byte[] buffer = MathHelper.GetBytesUtf8(data);
                     _tcpStream.Write(buffer, 0, buffer.Length);
                 }
             }

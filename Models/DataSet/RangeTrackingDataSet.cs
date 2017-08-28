@@ -34,6 +34,8 @@
  * -----------------------------------------------------------------
  * 10/31/2014      RC          3.0.2      Initial coding
  * 12/19/2014      RC          3.0.2      Added NumBeams.
+ * 07/22/2016      RC          3.3.2      Added Ice Tracking data.
+ * 10/19/2016      RC          3.3.2      Fixed bug exporting Range Tracking Data.
  * 
  * 
  * 
@@ -62,8 +64,13 @@ namespace RTI
 
             /// <summary>
             /// Number of elements in this data set.
+            /// This is the number of arrays in the dataset.
+            /// You will then need to muliply by the number of beams and 
+            /// add one for the NumBeam value to get the total number of elements.
+            /// 
+            /// 1 + (NUM_DATA_ELEMENTS * NumBeam) = Total Number of elements.
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = 13;
+            public const int NUM_DATA_ELEMENTS = 8;
 
             #endregion
 
@@ -85,6 +92,31 @@ namespace RTI
             public float[] Pings { get; set; }
 
             /// <summary>
+            /// Amplitude data for each beam in dB.
+            /// </summary>
+            public float[] Amplitude { get; set; }
+
+            /// <summary>
+            /// Correlation data for each beam in percent.
+            /// </summary>
+            public float[] Correlation { get; set; }
+
+            /// <summary>
+            /// Beam Velocity data for each beam in m/s.
+            /// </summary>
+            public float[] BeamVelocity { get; set; }
+
+            /// <summary>
+            /// Instrument Velocity data for each beam in m/s.
+            /// </summary>
+            public float[] InstrumentVelocity { get; set; }
+
+            /// <summary>
+            /// Earth Velocity data for each beam in m/s.
+            /// </summary>
+            public float[] EarthVelocity { get; set; }
+
+            /// <summary>
             /// Number of beams in the data.
             /// If the number of beams is 1, then the arrays will only contain
             /// 1 value for each property.
@@ -98,7 +130,7 @@ namespace RTI
             /// </summary>
             public RangeTrackingDataSet(int numBeams) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT,                       // Type of data stored (Float or Int)
-                            NUM_DATA_ELEMENTS,                              // Number of data elements
+                            1 + (NUM_DATA_ELEMENTS * numBeams),             // Number of data elements
                             numBeams,                                       // Number of beams
                             DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
@@ -170,16 +202,25 @@ namespace RTI
             /// <param name="SNR">Singal to Noise Ratio.</param>
             /// <param name="Range">Range.</param>
             /// <param name="Pings">Number of pings.</param>
+            /// <param name="Amp">Amplitude data.</param>
+            /// <param name="Corr">Correlation data.</param>
+            /// <param name="BeamVel">Beam Velocity.</param>
+            /// <param name="InstrVel">Instrument Velocity.</param>
+            /// <param name="EarthVel">Earth Velocity.</param>
             [JsonConstructor]
             public RangeTrackingDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
-                int NumBeams, float[] SNR, float[] Range, float[] Pings)
+                int NumBeams, float[] SNR, float[] Range, float[] Pings, float[] Amp, float[] Corr, float[] BeamVel, float[] InstrVel, float[] EarthVel)
                 : base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
                 this.NumBeams = NumBeams;
                 this.SNR = SNR;
                 this.Range = Range;
                 this.Pings = Pings;
-
+                this.Amplitude = Amp;
+                this.Correlation = Corr;
+                this.BeamVelocity = BeamVel;
+                this.InstrumentVelocity = InstrVel;
+                this.EarthVelocity = EarthVel;
             }
 
             #region Init
@@ -196,6 +237,11 @@ namespace RTI
                 SNR = new float[numBeams];
                 Range = new float[numBeams];
                 Pings = new float[numBeams];
+                Amplitude = new float[numBeams];
+                Correlation = new float[numBeams];
+                BeamVelocity = new float[numBeams];
+                InstrumentVelocity = new float[numBeams];
+                EarthVelocity = new float[numBeams];
             }
 
             #endregion
@@ -248,6 +294,91 @@ namespace RTI
                     Pings[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
                     Pings[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
                     Pings[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+
+                    Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
+                    Amplitude[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
+                    Amplitude[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+                    Amplitude[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
+
+                    Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
+                    Correlation[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
+                    Correlation[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
+                    Correlation[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
+
+                    BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(21));
+                    BeamVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(22));
+                    BeamVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(23));
+                    BeamVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(24));
+
+                    InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(25));
+                    InstrumentVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(26));
+                    InstrumentVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(27));
+                    InstrumentVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(28));
+
+                    EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(29));
+                    EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(30));
+                    EarthVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(31));
+                    EarthVelocity[3] = MathHelper.ByteArrayToFloat(data, GenerateIndex(32));
+                }
+                else if (NumBeams == 3.0f)
+                {
+                    SNR[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(1));
+                    SNR[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(2));
+                    SNR[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(3));
+
+                    Range[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(4));
+                    Range[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(5));
+                    Range[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(6));
+
+                    Pings[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(7));
+                    Pings[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(8));
+                    Pings[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
+
+                    Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
+                    Amplitude[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
+                    Amplitude[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+
+                    Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
+                    Correlation[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
+                    Correlation[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+
+                    BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
+                    BeamVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
+                    BeamVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
+
+                    InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
+                    InstrumentVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
+                    InstrumentVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(21));
+
+                    EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(22));
+                    EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(23));
+                    EarthVelocity[2] = MathHelper.ByteArrayToFloat(data, GenerateIndex(24));
+                }
+                else if (NumBeams == 2.0f)
+                {
+                    SNR[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(1));
+                    SNR[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(2));
+
+                    Range[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(3));
+                    Range[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(4));
+
+                    Pings[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(5));
+                    Pings[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(6));
+
+                    Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(7));
+                    Amplitude[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(8));
+
+                    Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(9));
+                    Correlation[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(10));
+
+                    BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(11));
+                    BeamVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+
+                    InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
+                    InstrumentVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
+
+                    EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+                    EarthVelocity[1] = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
                 }
                 else
                 {
@@ -256,6 +387,16 @@ namespace RTI
                     Range[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(2));
 
                     Pings[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(3));
+
+                    Amplitude[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(4));
+
+                    Correlation[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(5));
+
+                    BeamVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(6));
+
+                    InstrumentVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(7));
+
+                    EarthVelocity[0] = MathHelper.ByteArrayToFloat(data, GenerateIndex(8));
                 }
             }
 
@@ -273,24 +414,104 @@ namespace RTI
                 int index = 0;
 
                 // Get the length
-                byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
+                byte[] payload = new byte[(1 + (NUM_DATA_ELEMENTS * (int)NumBeams)) * Ensemble.BYTES_IN_FLOAT];
 
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(NumBeams), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                if (NumBeams == 4)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[3]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+                else if (NumBeams == 3)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[1]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[2]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+                else if (NumBeams == 1)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(SNR[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Range[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Pings[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Amplitude[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Correlation[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(InstrumentVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthVelocity[0]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NumElements);
@@ -334,6 +555,31 @@ namespace RTI
                 sb.Append("Pings: ");
                 for (i = 0; i < 4; i++)
                     sb.Append(Pings[i].ToString("0.000") + " ");
+                sb.AppendLine();
+
+                sb.Append("Amplitude: ");
+                for (i = 0; i < 4; i++)
+                    sb.Append(Amplitude[i].ToString("0.000") + " ");
+                sb.AppendLine();
+
+                sb.Append("Correlation: ");
+                for (i = 0; i < 4; i++)
+                    sb.Append(Correlation[i].ToString("0.000") + " ");
+                sb.AppendLine();
+
+                sb.Append("BeamVelocity: ");
+                for (i = 0; i < 4; i++)
+                    sb.Append(BeamVelocity[i].ToString("0.000") + " ");
+                sb.AppendLine();
+
+                sb.Append("InstrumentVelocity: ");
+                for (i = 0; i < 4; i++)
+                    sb.Append(InstrumentVelocity[i].ToString("0.000") + " ");
+                sb.AppendLine();
+
+                sb.Append("EarthVelocity: ");
+                for (i = 0; i < 4; i++)
+                    sb.Append(EarthVelocity[i].ToString("0.000") + " ");
                 sb.AppendLine();
 
                 return sb.ToString();
@@ -414,6 +660,51 @@ namespace RTI
                 }
                 writer.WriteEndArray();
 
+                // Amplitude
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_RT_AMPLITUDE);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.Amplitude.Length; beam++)
+                {
+                    writer.WriteValue(data.Amplitude[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Correlation
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_RT_CORRELATION);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.Correlation.Length; beam++)
+                {
+                    writer.WriteValue(data.Correlation[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Beam Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_RT_BEAMVEL);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.BeamVelocity.Length; beam++)
+                {
+                    writer.WriteValue(data.BeamVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Instrument Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_RT_INSTRVEL);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.InstrumentVelocity.Length; beam++)
+                {
+                    writer.WriteValue(data.InstrumentVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Earth Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_RT_EARTHVEL);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.EarthVelocity.Length; beam++)
+                {
+                    writer.WriteValue(data.EarthVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
                 // End the object
                 writer.WriteEndObject();
             }
@@ -450,29 +741,98 @@ namespace RTI
 
                     // SNR
                     JArray jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_SNR];
-                    data.SNR = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jArray != null)
                     {
-                        // Add all the values to the array
-                        data.SNR[x] = (float)jArray[x];
+                        data.SNR = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.SNR[x] = (float)jArray[x];
+                        }
                     }
 
                     // Range
                     jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_RANGE];
-                    data.Range = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jArray != null)
                     {
-                        // Add all the values to the array
-                        data.Range[x] = (float)jArray[x];
+                        data.Range = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.Range[x] = (float)jArray[x];
+                        }
                     }
 
                     // Pings
                     jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_PINGS];
-                    data.Pings = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jArray != null)
                     {
-                        // Add all the values to the array
-                        data.Pings[x] = (float)jArray[x];
+                        data.Pings = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.Pings[x] = (float)jArray[x];
+                        }
+                    }
+
+                    // Amplitude
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_AMPLITUDE];
+                    if (jArray != null)
+                    {
+                        data.Amplitude = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.Amplitude[x] = (float)jArray[x];
+                        }
+                    }
+
+                    // Correlation
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_CORRELATION];
+                    if (jArray != null)
+                    {
+                        data.Correlation = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.Correlation[x] = (float)jArray[x];
+                        }
+                    }
+
+                    // Beam Velocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_BEAMVEL];
+                    if (jArray != null)
+                    {
+                        data.BeamVelocity = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.BeamVelocity[x] = (float)jArray[x];
+                        }
+                    }
+
+                    // Instrument Velocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_INSTRVEL];
+                    if (jArray != null)
+                    {
+                        data.InstrumentVelocity = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.InstrumentVelocity[x] = (float)jArray[x];
+                        }
+                    }
+
+                    // Earth Velocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_RT_EARTHVEL];
+                    if (jArray != null)
+                    {
+                        data.EarthVelocity = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.EarthVelocity[x] = (float)jArray[x];
+                        }
                     }
 
                     return data;

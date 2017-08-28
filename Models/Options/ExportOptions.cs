@@ -28,6 +28,7 @@
  * 07/16/2014      RC          2.23.0       Added SetMaxBin() set all the max bin values.
  * 10/31/2014      RC          3.0.2        Added IsRangeTrackingDataSetOn.
  * 11/03/2014      RC          3.0.2        Added PressureOffset and CorrelationThreshold.
+ * 09/28/2016      RC          3.3.2      Added export of Velocity Vectors in CSV.
  * 
  */
 
@@ -103,6 +104,11 @@ namespace RTI
         /// Turn on or off the Earth Velocity dataset.
         /// </summary>
         public bool IsEarthVelocityDataSetOn { get; set; }
+
+        /// <summary>
+        /// Turn on or off the Velocity Vector dataset.
+        /// </summary>
+        public bool IsVelocityVectorDataSetOn { get; set; }
 
         /// <summary>
         /// Turn on or off the Earth Water Mass dataset.
@@ -233,6 +239,16 @@ namespace RTI
         public int EarthMaxBin { get; set; }
 
         /// <summary>
+        /// Velocity Velocity Bin Minimum index.
+        /// </summary>
+        public int VelVectorMinBin { get; set; }
+
+        /// <summary>
+        /// Velcoity Vector Bin Maximum index.
+        /// </summary>
+        public int VelVectorMaxBin { get; set; }
+
+        /// <summary>
         /// Amplitude Minimum bin index.
         /// </summary>
         public int AmplitudeMinBin { get; set; }
@@ -298,6 +314,7 @@ namespace RTI
             IsBottomTrackDataSetOn = true;
             IsCorrelationDataSetOn = true;
             IsEarthVelocityDataSetOn = true;
+            IsVelocityVectorDataSetOn = true;
             IsEarthWaterMassDataSetOn = true;
             IsEnsembleDataSetOn = true;
             IsGoodBeamDataSetOn = true;
@@ -322,6 +339,8 @@ namespace RTI
             InstrumentMaxBin = 0;
             EarthMinBin = 0;
             EarthMaxBin = 0;
+            VelVectorMinBin = 0;
+            VelVectorMaxBin = 0;
             CorrelationMinBin = 0;
             CorrelationMaxBin = 0;
             AmplitudeMinBin = 0;
@@ -343,6 +362,7 @@ namespace RTI
             BeamMaxBin = maxBin;
             InstrumentMaxBin = maxBin;
             EarthMaxBin = maxBin;
+            VelVectorMaxBin = maxBin;
             CorrelationMaxBin = maxBin;
             AmplitudeMaxBin = maxBin;
             GoodBeamMaxBin = maxBin;

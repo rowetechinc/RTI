@@ -38,11 +38,14 @@
  * 07/09/2015      RC          3.0.5      Mode the codecs there own thread.
  * 07/27/2015      RC          3.0.5      Check when to clear the codecs based on how many ensembles found.
  * 08/13/2015      RC          3.0.5      Check for complete event for all the codec.
+ * 10/10/2016      RC          3.3.2      Changed binary codec to BinaryCodecNew.
  * 
  */
 
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
+
 
 namespace RTI
 {
@@ -93,7 +96,7 @@ namespace RTI
         /// <summary>
         /// Binary Codec for binary files.
         /// </summary>
-        private AdcpBinaryCodec _binaryCodec;
+        private AdcpBinaryCodecNew _binaryCodec;
 
         /// <summary>
         /// Decode the DVL ADCP data into
@@ -163,8 +166,8 @@ namespace RTI
             _pd4_5Counter = 0;
 
             // Binary Codecs
-            _binaryCodec = new AdcpBinaryCodec();
-            _binaryCodec.ProcessDataEvent += new AdcpBinaryCodec.ProcessDataEventHandler(_binaryCodec_ProcessDataEvent);
+            _binaryCodec = new AdcpBinaryCodecNew();
+            _binaryCodec.ProcessDataEvent += new AdcpBinaryCodecNew.ProcessDataEventHandler(_binaryCodec_ProcessDataEvent);
             _binaryCodec.ProcessDataCompleteEvent += binaryCodec_ProcessDataCompleteEvent;
 
             // DVL Codec

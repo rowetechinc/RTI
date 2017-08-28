@@ -1771,7 +1771,6 @@ namespace RTI
             {
                 // Decode the values for each index
                 Dictionary<int, int> values = DecodeIndexedIntValues(buffer);
-
                 // Set the value to the SubsysteConfiguration
                 foreach (AdcpSubsystemConfig ssConfig in config.SubsystemConfigDict.Values)
                 {
@@ -1781,6 +1780,7 @@ namespace RTI
                         // CWPP
                         ssConfig.Commands.CWPP = (ushort)values[ssConfig.SubsystemConfig.CepoIndex];
                     }
+
                 }
             }
         }
@@ -2469,27 +2469,77 @@ namespace RTI
             
             // Split it by [ to find all configurations
             string[] split = buffer.Split(new char[] { '[' }, StringSplitOptions.RemoveEmptyEntries);
-
-            // Go through each configuration and decode the index and value
-            foreach (string indexSplit in split)
+            //if buffer has brackets, else buffer doesn't have brackets
+            if (split.Length>1)
             {
-                // Split it by ] to seperate the index from the configuration values
-                string[] indexValue = indexSplit.Split(new char[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (indexValue.Length >= 2)
+                // Go through each configuration and decode the index and value
+                foreach (string indexSplit in split)
                 {
-                    int cepoIndex = 0;
-                    bool cepoIndexGood = int.TryParse(indexValue[0], out cepoIndex);
-
-                    int intValue = 0;
-                    bool valueGood = int.TryParse(indexValue[1], out intValue);
-
-                    // If the Index and the value is good, add it to the list
-                    if (cepoIndexGood && valueGood)
+                    if (!indexSplit.Contains("]"))
                     {
-                        // Add the value to the results array
-                        results.Add(cepoIndex, intValue);
+                        string[] spaceIndexValue = indexSplit.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (spaceIndexValue.Length >= 2)
+                        {
+                            int cepoIndex = 0;
+                            bool cepoIndexGood = int.TryParse(spaceIndexValue[0], out cepoIndex);
+
+                            int intValue = 0;
+                            bool valueGood = int.TryParse(spaceIndexValue[1], out intValue);
+
+                            // If the Index and the value is good, add it to the list
+                            if (cepoIndexGood && valueGood)
+                            {
+                                // Add the value to the results array
+                                results.Add(cepoIndex, intValue);
+                            }
+                        }
                     }
+                    else
+                    {
+                        // Split it by ] to seperate the index from the configuration values
+                        string[] indexValue = indexSplit.Split(new char[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
+                        
+
+
+                        if (indexValue.Length >= 2)
+                        {
+                            int cepoIndex = 0;
+                            bool cepoIndexGood = int.TryParse(indexValue[0], out cepoIndex);
+
+                            int intValue = 0;
+                            bool valueGood = int.TryParse(indexValue[1], out intValue);
+
+                            // If the Index and the value is good, add it to the list
+                            if (cepoIndexGood && valueGood)
+                            {
+                                // Add the value to the results array
+                                results.Add(cepoIndex, intValue);
+                            }
+                        }
+                        else
+                        {
+                            int intValue = 0;
+                            bool valueGood = int.TryParse(indexValue[0], out intValue);
+
+                            results.Add(0, intValue);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                string[] spliter = buffer.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if(spliter.Length >=2)
+                {
+                    int inputedValue = 0;
+                    bool inputedValueGood= int.TryParse(spliter[1], out inputedValue);
+                    if (inputedValueGood)
+                    {
+                        results.Add(0, inputedValue);
+                    }
+
+
                 }
             }
 
@@ -2517,30 +2567,49 @@ namespace RTI
 
             // Split it by [ to find all configurations
             string[] split = buffer.Split(new char[] { '[' }, StringSplitOptions.RemoveEmptyEntries);
-
-            // Go through each configuration and decode the index and value
-            foreach (string indexSplit in split)
+            if (split.Length>1)
             {
-                // Split it by ] to seperate the index from the configuration values
-                string[] indexValue = indexSplit.Split(new char[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
-
-                if (indexValue.Length >= 2)
+                // Go through each configuration and decode the index and value
+                foreach (string indexSplit in split)
                 {
-                    int cepoIndex = 0;
-                    bool cepoIndexGood = int.TryParse(indexValue[0], out cepoIndex);
+                    // Split it by ] to seperate the index from the configuration values
+                    string[] indexValue = indexSplit.Split(new char[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
 
-                    float floatValue = 0;
-                    bool valueGood = float.TryParse(indexValue[1], out floatValue);
-
-                    // If the Index and the value is good, add it to the list
-                    if (cepoIndexGood && valueGood)
+                    if (indexValue.Length >= 2)
                     {
-                        // Add the value to the results array
-                        results.Add(cepoIndex, floatValue);
+                        int cepoIndex = 0;
+                        bool cepoIndexGood = int.TryParse(indexValue[0], out cepoIndex);
+
+                        float floatValue = 0;
+                        bool valueGood = float.TryParse(indexValue[1], out floatValue);
+
+                        // If the Index and the value is good, add it to the list
+                        if (cepoIndexGood && valueGood)
+                        {
+                            // Add the value to the results array
+                            results.Add(cepoIndex, floatValue);
+                        }
                     }
                 }
             }
+            else
+            {
+                string[] spliter = buffer.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (spliter.Length >= 2)
+                {
+                    float floatValue = 0;
+                    bool valueGood = float.TryParse(spliter[1], out floatValue);
 
+                    // If the Index and the value is good, add it to the list
+                    if (valueGood)
+                    {
+                        // Add the value to the results array
+                        results.Add(0,floatValue);
+                    }
+
+
+                }
+            }
             return results;
         }
 
@@ -2565,27 +2634,37 @@ namespace RTI
 
             // Split it by [ to find all configurations
             string[] split = buffer.Split(new char[] { '[' }, StringSplitOptions.RemoveEmptyEntries);
-
-            // Go through each configuration and decode the index and values
-            foreach (string indexSplit in split)
+            if (split.Length > 1)
             {
-                // Split it by ] to seperate the index from the configuration values
-                string[] indexValue = indexSplit.Split(new char[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (indexValue.Length >= 2)
+                // Go through each configuration and decode the index and values
+                foreach (string indexSplit in split)
                 {
-                    int cepoIndex = 0;
-                    bool cepoIndexGood = int.TryParse(indexValue[0], out cepoIndex);
+                    // Split it by ] to seperate the index from the configuration values
+                    string[] indexValue = indexSplit.Split(new char[] { ']' }, StringSplitOptions.RemoveEmptyEntries);
 
-                    // If the Index is good, add it to the list
-                    if (cepoIndexGood)
+                    if (indexValue.Length >= 2)
                     {
-                        // Add the value to the results array
-                        results.Add(cepoIndex, indexValue[1]);
+                        int cepoIndex = 0;
+                        bool cepoIndexGood = int.TryParse(indexValue[0], out cepoIndex);
+
+                        // If the Index is good, add it to the list
+                        if (cepoIndexGood)
+                        {
+                            // Add the value to the results array
+                            results.Add(cepoIndex, indexValue[1]);
+                        }
                     }
                 }
             }
-
+            else
+            {
+                string[] spliter = buffer.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (spliter.Length >= 2)
+                {
+                        results.Add(0, spliter[1]);
+                }
+            }
             return results;
         }
 

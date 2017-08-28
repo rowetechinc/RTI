@@ -109,7 +109,7 @@ namespace RTI
         /// </summary>
         public AdcpEthernetOptions()
         {
-            IpAddrA = 191;
+            IpAddrA = 192;
             IpAddrB = 168;
             IpAddrC = 1;
             IpAddrD = 130;

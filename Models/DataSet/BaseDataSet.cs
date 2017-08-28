@@ -50,6 +50,7 @@
  * 07/28/2014      RC          2.23.0     Changed the name of numBins and numBeams to NumElements and ElementMutiplier.
  * 10/31/2014      RC          3.0.2      Added Range Tracking values.
  * 03/09/2015      RC          3.0.3      Added Gage Height.
+ * 07/22/2016      RC          3.3.2      Added additional Range Tracking values.
  * 
  */
 
@@ -1286,6 +1287,31 @@ namespace RTI
             /// String for Range Tracking Pings.
             /// </summary>
             public const string JSON_STR_RT_PINGS = "Pings";
+
+            /// <summary>
+            /// String for Range Tracking Pings.
+            /// </summary>
+            public const string JSON_STR_RT_AMPLITUDE = "Amplitude";
+
+            /// <summary>
+            /// String for Range Tracking Pings.
+            /// </summary>
+            public const string JSON_STR_RT_CORRELATION = "Correlation";
+
+            /// <summary>
+            /// String for Range Tracking Pings.
+            /// </summary>
+            public const string JSON_STR_RT_BEAMVEL = "BeamVelocity";
+
+            /// <summary>
+            /// String for Range Tracking Pings.
+            /// </summary>
+            public const string JSON_STR_RT_INSTRVEL = "InstrumentVelocity";
+
+            /// <summary>
+            /// String for Range Tracking Pings.
+            /// </summary>
+            public const string JSON_STR_RT_EARTHVEL = "EarthVelocity";
 
             #endregion
 

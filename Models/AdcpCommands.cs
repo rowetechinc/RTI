@@ -105,6 +105,7 @@
  * 09/30/2014      RC          3.0.2      Added DecodeCommandSet() to decode a command set.
  * 05/28/2015      RC          3.0.5      Added DiagSamp.
  * 08/28/2015      RC          3.2.0      Added BreakStmtToString().
+ * 01/04/2017      RC          3.3.2      In DecodeDSDIR(), added ability for any .EN file to be downloaded.
  * 
  */
 
@@ -4139,6 +4140,25 @@ namespace RTI
                 return sb.ToString();
             }
 
+            /// <summary>
+            /// A shorten list of commands that are neccessary for a Prediction deployment.
+            /// Create a list of all the Prediction deployment commands and there value.
+            /// </summary>
+            /// <returns>List of all the commands and there value for a Prediction deployment.</returns>
+            public List<string> GetPredictionCommandList()
+            {
+                List<string> list = new List<string>();
+
+                list.Add(CEPO_CmdStr());                            // CEPO
+                //list.Add(Mode_CmdStr());                          // Mode
+                list.Add(CMD_CPROFILE);                             // Force Profile mode
+                //list.Add(CEOUTPUT_CmdStr());                        // CEOUTPUT
+                list.Add(CEI_CmdStr());                             // CEI
+                //list.Add(CERECORD_CmdStr());                        // CERECORD
+
+                return list;
+            }
+
             #endregion
 
             #region Lists
@@ -4810,6 +4830,288 @@ namespace RTI
                 sb.AppendLine("hh = Hundredth of a second");
                 sb.AppendLine("");
                 sb.AppendLine("Note: all digits including the space following CEI and the separators must be part of the command or the system will reject it.");
+
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPON
+
+            /// <summary>
+            /// CWPON Description string.
+            /// </summary>
+            /// <returns>CWPON descrpition string.</returns>
+            public static string GetCwponDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Turn on or off Water Profile.  Water Profile data will display the water current speed and direction for each bin.");
+                sb.AppendLine("CWPON 1, 2, 3 < CR > Water Profile Pings On.Enables or disables water profile pings.");
+                sb.AppendLine();
+                sb.AppendLine("1.Enable / Disable");
+                sb.AppendLine("    a. 0 = disable water profiling. When the application requires");
+                sb.AppendLine("    bottom tracking only disabling profiling allows for more bottom pings per second.");
+                sb.AppendLine("    b. 1 = enable water profiling.");
+                sb.AppendLine();
+                sb.AppendLine("2.Begin Range");
+                sb.AppendLine("    a.When using multiple sub systems this parameter sets the");
+                sb.AppendLine("    minimum bottom range at which the profile ping is allowed to");
+                sb.AppendLine("    occur.The default is set to 0(zero) which enables profiling at all");
+                sb.AppendLine("    ranges beyond zero.");
+                sb.AppendLine();
+                sb.AppendLine("3.End Range");
+                sb.AppendLine("    a.When using multiple sub systems this parameter sets the");
+                sb.AppendLine("    maximum bottom range at which the profile ping is allowed to");
+                sb.AppendLine("    occur.The default is set to 0(zero) which enables profiling at all ranges.");
+
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPBB_MODE
+
+            /// <summary>
+            /// CWPBB Description string.
+            /// </summary>
+            /// <returns>CWPBB Mode descrpition string.</returns>
+            public static string GetCwpbbModeDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("CWPBB 1, 2, 3, 4, 5<CR> Water Profile Broad Band.");
+                sb.AppendLine("Sets water profile coded pulse transmission");
+                sb.AppendLine("     1.Transmit Pulse Type and Processing");
+                sb.AppendLine("         a. 0 = Narrowband.");
+                sb.AppendLine("             i.Provides long range profiles at the expense of variance.");
+                sb.AppendLine("             ii.Not recommended for use with bin size less than the");
+                sb.AppendLine("             default bin size.");
+                sb.AppendLine("         b. 1 = Broadband.");
+                sb.AppendLine("             i.Typically 15 % less range than narrow band but has");
+                sb.AppendLine("             greatly reduced variance(depending on lag length).");
+                sb.AppendLine("             ii.Used in conjunction with CWPBP for small bins.");
+                sb.AppendLine("         c. 2 = Un - coded Broadband(no ambiguity resolver).");
+                sb.AppendLine("             i.Non - coded has slightly higher variance than the coded");
+                sb.AppendLine("             transmit without the annoying autocorrelation side");
+                sb.AppendLine("             peaks.Better for small bins.");
+                sb.AppendLine("         d. 3 = Broadband pulse - to - pulse(no ambiguity resolver).");
+                sb.AppendLine("             i.Provides ultra low variance for small bin sizes.");
+                sb.AppendLine("         e. 4 = Non Coded Broadband pulse - to - pulse(no ambiguity");
+                sb.AppendLine("             resolver).");
+                sb.AppendLine("             RTI ADCP / DVL User Guide April 2016 firmware V 0.02.87 Rev AC");
+                sb.AppendLine("         Page 28 of 97");
+                sb.AppendLine("             i.Provides ultra low variance for small bin sizes.");
+                sb.AppendLine("         f. 5 = Broadband with ambiguity resolver ping.");
+                sb.AppendLine("             i.Used in conjunction with CWPBP averaging.");
+                sb.AppendLine("         g. 6 = Broadband pulse to pulse with pulse to pulse ambiguity");
+                sb.AppendLine("             resolver ping.");
+                sb.AppendLine("             i.Used in conjunction with CWPAP");
+                sb.AppendLine("     2.Transmit Bandwidth");
+                sb.AppendLine("         a.Not fully implemented");
+                sb.AppendLine("     3.Receive Bandwidth");
+                sb.AppendLine("         a.Not fully implemented");
+                sb.AppendLine("     4.Beam Multiplex");
+                sb.AppendLine("         a. 1 = ping and process each beam one at a time.");
+                sb.AppendLine("         b. 2 = ping and process beam pairs.");
+                sb.AppendLine("         c. 4 = ping and process all four beams together. ");
+
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPBB_LAG
+
+            /// <summary>
+            /// CWPBB Lag Length Description string.
+            /// </summary>
+            /// <returns>CWPBB Lag Length descrpition string.</returns>
+            public static string GetCwpbbLagLengthDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("CWPBB 1, 2, 3, 4, 5<CR> Water Profile Broad Band.");
+                sb.AppendLine();
+                sb.AppendLine("Sets water profile lag length.");
+                sb.AppendLine("Water Profile Lag Length.");
+                sb.AppendLine("Lag length in vertical meters (m).");
+                sb.AppendLine("Not used with Narrowband.");
+                sb.AppendLine("A longer lag will have lower");
+                sb.AppendLine("variance and a lower ambiguity velocity");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPBL
+
+            /// <summary>
+            /// CWPBL Description string.
+            /// </summary>
+            /// <returns>CWPBL descrpition string.</returns>
+            public static string GetCwpblDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Water Profile Blank. This is the start location of the first bin in the Water Profile data.");
+                sb.AppendLine("The distance where the measurement will begin below the ADCP. This sets the profiling range.");
+                sb.AppendLine("CWPBL n.nn < CR > Water Profile Blank(meters).n.nn = 0 to 100. Sets the");
+                sb.AppendLine("vertical range from the face of the transducer to the first sample of the first bin.");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPBS
+
+            /// <summary>
+            /// CWPBS Description string.
+            /// </summary>
+            /// <returns>CWPBS descrpition string.</returns>
+            public static string GetCwpbsDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Size of a bin within a Water Profile ensemble.  Based off the bin size and number of bins a profile range will be set.");
+                sb.AppendLine("CWPBS n.nn<CR> Water Profile Bin Size (meters). n.nn sets the vertical bin size. ");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPBN
+
+            /// <summary>
+            /// CWPBN Description string.
+            /// </summary>
+            /// <returns>CWPBN descrpition string.</returns>
+            public static string GetCwpbnDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Number of bins within the Water Profile data.  Each bin is a meaurement at a specific depth.");
+                sb.AppendLine("CWPBN n<CR> Water Profile Bin N. n = 0 to 200 sets the number bins that will");
+                sb.AppendLine("be processed and output. ");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPP
+
+            /// <summary>
+            /// CWPP Description string.
+            /// </summary>
+            /// <returns>CWPP descrpition string.</returns>
+            public static string GetCwppDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Number of pings within an ensemble.  If the value is greater than 1, then all the pings will be averaged ");
+                sb.AppendLine("together and output as a single ensemble.  Used with CWTBP to set the time length of the average.");
+                sb.AppendLine("CWPP n < CR > Water Profile Pings.n = 0 to 10, 000 sets the number of pings that");
+                sb.AppendLine("will be averaged together during the ensemble.");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPTBP
+
+            /// <summary>
+            /// CWPTBP Description string.
+            /// </summary>
+            /// <returns>CWPTBP descrpition string.</returns>
+            public static string GetCwptbpDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Water Profile Time Between Pings.  ");
+                sb.AppendLine("This value will set the length of time between each ping within an ensemble.");
+                sb.AppendLine("This is used to set the timing of the average length with CWPP.  ");
+                sb.AppendLine("Average Time = CWPP * CWPTBP.  If the average time exceeds CEI, then this value gets priority.");
+                sb.AppendLine("CWPTBP n.nn<CR> Water Profile Time Between Pings. n.nn = 0.00 to 86400.00");
+                sb.AppendLine("seconds(24 hours) sets the time between the last ping, regardless of ping type,");
+                sb.AppendLine("and the next profile ping.");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CBTON
+
+            /// <summary>
+            /// CBTON Description string.
+            /// </summary>
+            /// <returns>CBTON descrpition string.</returns>
+            public static string GetCbtonDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Turn on or off Bottom Track. ");
+                sb.AppendLine("Bottom Track data will give you the depth to the bottom and the speed of instrument in the water.");
+                sb.AppendLine("CBTON n<CR> Bottom Track ON. Enables or disables bottom track pings. ");
+                sb.AppendLine("     1. n = 0 disable bottom tracking. Allows for more water profile pings per ");
+                sb.AppendLine("         second and saves battery energy during self-contained deployments.");
+                sb.AppendLine("     2. n = 1 enable bottom tracking. When enabled a bottom track ping occurs");
+                sb.AppendLine("         once per ensemble. Or, when profiling is enabled, a bottom track ping");
+                sb.AppendLine("         occurs at the beginning of the ensemble and then after every 10 profile ");
+                sb.AppendLine("         pings in the ensemble. If there are less than 10 profile pings per");
+                sb.AppendLine("         ensemble the bottom track ping will only occur once at the beginning of the ensemble.");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CBTBB
+
+            /// <summary>
+            /// CBTBB Description string.
+            /// </summary>
+            /// <returns>CBTBB descrpition string.</returns>
+            public static string GetCbtbbDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("Bottom Track pulse type.Narrowband will give greater depth but will be noisier.");
+                sb.AppendLine();
+                sb.AppendLine("CBTBB 1, 2, 3, 4<CR> Bottom Track BB control. ");
+                sb.AppendLine("     1. Mode");
+                sb.AppendLine("         a. 0 = Narrowband long range. Maximum velocity 11 m/s 20 ");
+                sb.AppendLine("             degree beam angle, 7 m/s for a 30 degree.");
+                sb.AppendLine("         b. 1 = Broadband coded transmit. Maximum velocity 13 m/s 20 ");
+                sb.AppendLine("             degree beam angle, 9 m/s for a 30 degree.");
+                sb.AppendLine("         c. 2 = Broadband non-coded transmit. Maximum velocity 22 m/s ");
+                sb.AppendLine("             20 degree beam angle, 15 m/s for a 30 degree.");
+                sb.AppendLine("         d. 3 = NA.");
+                sb.AppendLine("         e. 4 = Broadband non-code pulse to pulse. Maximum velocity ");
+                sb.AppendLine("             dependent on lag length.");
+                sb.AppendLine("         f. 5 = NA.");
+                sb.AppendLine("         g. 6 = NA.");
+                sb.AppendLine("         h. 7 = Auto Switch between Mode 0, 2, and 4.");
+                sb.AppendLine("     2. Pulse-to-Pulse Lag(m)");
+                sb.AppendLine("         a. Lag length in vertical meters. When enabled bottom track will ");
+                sb.AppendLine("             use pulse-to-pulse transmit and processing at depths less than");
+                sb.AppendLine("             ½ the lag length. Allows for near bottom ultra low variance ");
+                sb.AppendLine("             velocity measurements.");
+                sb.AppendLine("     3. Long Range depth (m).");
+                sb.AppendLine("         a. The range in meters beyond which the bottom track will switch ");
+                sb.AppendLine("             to narrowband long range processing when n = 7.");
+                sb.AppendLine("     4. Beam Multiplex");
+                sb.AppendLine("         a. 1 = ping and process each beam one at a time.");
+                sb.AppendLine("         b. 2 = ping and process beam pairs");
+                sb.AppendLine("         c. 4 = ping and process all four beams together. ");
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CWPBS
+
+            /// <summary>
+            /// CBTTBP Description string.
+            /// </summary>
+            /// <returns>CBTTBP descrpition string.</returns>
+            public static string GetCbttbpDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine(" Bottom Track Time Between Pings.This value set the length of time between the Water Profile pings and the Bottom Track pings.");
+                sb.AppendLine("If it takes longer to accomplish the Bottom Track Ping, then this value is ignored.This value is used to prevent reverb,");
+                sb.AppendLine("if the Bottom Track ping is seen in the Water Profile data.Or to have a fixed time between Water Profile pings and Bottom Track pings.");
+                sb.AppendLine();
+                sb.AppendLine("CBTTBP n.nn<CR> Bottom Track Time Between Pings. n.nn = 0.00 to 86400.00");
+                sb.AppendLine("seconds (24 hours) sets the time between the last ping, regardless of ping type, and the next bottom ping");
 
                 return sb.ToString();
             }
@@ -5666,7 +5968,7 @@ namespace RTI
                 {
                     // Only add the ENS files to the list
                     // Ignore the txt and bin files
-                    if (lines[x].Contains("ENS") || lines[x].Contains("RAW"))
+                    if (lines[x].Contains("ENS") || lines[x].Contains("RAW") || lines[x].Contains("EN"))
                     {
                         listing.DirListing.Add(new AdcpEnsFileInfo(lines[x]));
                     }
@@ -6400,7 +6702,8 @@ namespace RTI
 
                 // Convert the commandset in to CSHOW
                 string[] results = buffer.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-                for (int x = 0; x < results.Length; x++)
+
+                    for (int x = 0; x < results.Length; x++)
                 {
                     // Get the command for each line
                     string[] cmd = results[x].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);

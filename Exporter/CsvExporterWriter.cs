@@ -41,6 +41,7 @@
  * 07/27/2015      RC          3.0.5      Make the number format for decimal place US so decimals are not commas.
  * 10/27/2015      RC          3.2.1      Fixed bug in EncodeCSV() if bin sizes were different between configurations.
  * 10/28/2015      RC          3.2.1      Fixed missing Range Tracking Header.  Fixed Correlation header.  Fixed Bottom Track extra ,.  Made it handle any number of beams in BT.
+ * 09/28/2016      RC          3.3.2      Added export of Velocity Vectors in CSV.
  * 
  */
 
@@ -168,6 +169,13 @@ namespace RTI
             if (options.IsEarthVelocityDataSetOn)
             {
                 sb.Append(CreateEarthVelocityHeader(options));
+                sb.Append(",");
+            }
+
+            // Velocity Vector
+            if (options.IsVelocityVectorDataSetOn)
+            {
+                sb.Append(CreateVelocityVectorHeader(options));
                 sb.Append(",");
             }
 
@@ -390,6 +398,13 @@ namespace RTI
                 if (options.IsEarthVelocityDataSetOn)
                 {
                     sb.Append(WriteEarthVelocityData(ensemble, options));
+                    sb.Append(",");
+                }
+
+                // Velocity Vector
+                if (options.IsVelocityVectorDataSetOn)
+                {
+                    sb.Append(WriteVelocityVectorData(ensemble, options));
                     sb.Append(",");
                 }
 
@@ -830,6 +845,63 @@ namespace RTI
                 for (int bin = options.EarthMinBin; bin < options.EarthMaxBin + 1; bin++)
                 {
                     sb.Append(",,,,");
+                }
+            }
+
+            return sb.ToString();
+        }
+
+
+
+
+        #endregion
+
+        #region Velocity Vector DataSet
+
+        /// <summary>
+        /// Create the Velocity Vector header based off the options selected.
+        /// </summary>
+        /// <param name="options">Export Options.</param>
+        /// <returns>Velocity Velocity Header</returns>
+        public static string CreateVelocityVectorHeader(ExportOptions options)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
+            {
+                sb.Append(string.Format("VelVector{0}_{1},", bin, "Mag"));
+                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir XNorth"));
+                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir YNorth"));
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Output the Velocity Vector dataset to CSV format.
+        /// </summary>
+        /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
+        /// <returns>Velocity Vector DataSet data in CSV format.</returns>
+        public static string WriteVelocityVectorData(Ensemble ensemble, ExportOptions options)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (ensemble.IsEarthVelocityAvail && ensemble.EarthVelocityData.IsVelocityVectorAvail)
+            {
+                for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
+                {
+                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude.ToString(new CultureInfo("en-US"))));
+                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
+                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth.ToString(new CultureInfo("en-US"))));
+                }
+            }
+            else
+            {
+                // Put blank data
+                for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
+                {
+                    sb.Append(",,,");
                 }
             }
 

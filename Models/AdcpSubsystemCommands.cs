@@ -1632,7 +1632,8 @@ namespace RTI
             /// 0=Disable 
             /// 1=Enable. 
             /// </summary>
-            public bool CWPON { get; set; }
+            public bool CWPON { get;
+                set; }
 
             /// <summary>
             /// Return a string of whether
@@ -4571,6 +4572,39 @@ namespace RTI
             }
 
             /// <summary>
+            /// A shorten list of commands that are neccessary for a Prediction deployment.
+            /// Create a list of all the Prediction deployment commands and there value.
+            /// </summary>
+            /// <returns>List of all the commands and there value for a Precition deployment.</returns>
+            public List<string> GetPredictionCommandList()
+            {
+                List<string> list = new List<string>();
+
+                // Only display WP if on
+                list.Add(CWPON_CmdStr());                   // CWPON
+                if (CWPON)
+                {
+                    list.Add(CWPBB_CmdStr());               // CWPBB
+                    list.Add(CWPBL_CmdStr());               // CWPBL
+                    list.Add(CWPBS_CmdStr());               // CWPBS
+                    list.Add(CWPBN_CmdStr());               // CWPBN
+                    list.Add(CWPP_CmdStr());                // CWPP
+                    list.Add(CWPTBP_CmdStr());              // CWPTBP
+                }  
+
+                // Only display BT if on
+                list.Add(CBTON_CmdStr());                   // CBTON
+                if (CBTON)
+                {
+                    list.Add(CBTBB_CmdStr());               // CBTBB
+                    //list.Add(CBTMX_CmdStr());               // CBTMX
+                    list.Add(CBTTBP_CmdStr());              // CBTTBP
+                }
+
+                return list;
+            }
+
+            /// <summary>
             /// String of all the commands and there value.
             /// 
             /// Put all the values in United States English format.
@@ -5703,6 +5737,27 @@ namespace RTI
                 sb.AppendLine("");
                 sb.AppendLine("n.nn = 0.00 to 86400.00 seconds (24 hours)");
                 sb.AppendLine("Sets the time between the last ping, regardless of ping type, and the next profile ping.");
+
+                return sb.ToString();
+            }
+
+            #endregion
+
+            #region CBTON
+
+            /// <summary>
+            /// CBTON description string.
+            /// </summary>
+            /// <returns>Description string.</returns>
+            public static string GetCbtonDesc()
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("CBTON n<CR>");
+                sb.AppendLine("Bottom Track ON. Enables or disables bottom track pings.");
+                sb.AppendLine("");
+                sb.AppendLine("1. n = 0 disable bottom tracking. Allows for more water profile pings per second and saves battery energy during self-contained deployments.");
+                sb.AppendLine("2. n = 1 enable bottom tracking. When enabled a bottom track ping occurs once per ensemble. Or, when profiling is enabled, a bottom track ping occurs at the beginning of the ensemble and then after every 10 profile pings in the ensemble. If there are less than 10 profile pings per ensemble the bottom track ping will only occur once at the beginning of the ensemble.");
 
                 return sb.ToString();
             }

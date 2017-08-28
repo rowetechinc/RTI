@@ -57,6 +57,7 @@
  * 04/29/2015      RC          3.0.4      In CalculateDirection(), make the value between 0 and 360.
  * 10/30/0215      RC          3.2.1      Added AngleDiff() to calculate the difference between 2 heading values.
  * 12/09/2015      RC          3.3.0      Added AdcpCorrection() to calculate the fudge factor number.
+ * 07/05/2016      RC          3.3.2      Fixed PercentError() to calculate order correctly.
  * 
  * 
  */
@@ -965,7 +966,7 @@ namespace RTI
             }
 
             //return Math.Abs((correctValue - experimentalValue) / correctValue) * 100;
-            return ((correctValue - experimentalValue) / correctValue) * 100;
+            return ((experimentalValue - correctValue) / correctValue) * 100;
         }
 
         /// <summary>
@@ -1444,6 +1445,8 @@ namespace RTI
 
         /// <summary>
         /// Convert the given string to a byte array.
+        /// The bytes will be in UTF-16 or Unicode.
+        /// 
         /// </summary>
         /// <param name="str">String to convert.</param>
         /// <returns>Byte array of the string.</returns>
@@ -1452,6 +1455,19 @@ namespace RTI
             byte[] bytes = new byte[str.Length * sizeof(char)];
             System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
             return bytes;
+        }
+
+        /// <summary>
+        /// Convert the given string to a byte arra.
+        /// This will be in UTF-8.
+        /// </summary>
+        /// <param name="str">String to convert.</param>
+        /// <returns>Byte array of the string in UTF-8.</returns>
+        public static byte[] GetBytesUtf8(string str)
+        {
+            UTF8Encoding utf8 = new UTF8Encoding();
+            Byte[] encodedBytes = utf8.GetBytes(str);
+            return encodedBytes;
         }
 
         /// <summary>

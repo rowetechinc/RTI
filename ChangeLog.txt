@@ -1,11 +1,31 @@
 RTI Changelog
 
+RTI-3.4.1
+ - Changed to ReadBytes to read in from the file to improve performance.
+ - In AdcpDatabaseWriter, added WriteFileToDatabase() to write all the ensembles at once.
+
+RTI-3.4.0
+ - Add AdcpBinaryCodecReadFile to optimize reading binary files.
+ - In BottomTrackDataSet, Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ - In Ensemble, Add AddAdditionalBottomTrackData for PRTI03 sentence.
+ - Added AdcpCodecReadFile, AdcpBinaryCodecReadFile and AdcpDvlCodecReadFile.
+
 RTI-3.3.2
  - In DvlDataSet, fixed bug with JSON decoding Pressure.   
  - In Status. Changed 0x0001 error to BT_Long_Lag.  
  - Added ScreenBadHeading to look for missing headings.
  - In Transform,  fixed bug for Q value. 
  - In FilePlayback, changed from list to dictionary to prevent playback being out of order.
+ - In MatlabExporterWriter, check if the data is valid before converting.
+ - In MathHelper, fixed PercentError() to calculate order correctly.
+ - In CsvExportWriter, added Velocity Vector export.
+ - In AdcpEthernet, improved download speed by removing all the buffers.  Now downloading about 16mb a minute in Ethernet mode.
+ - Created an new ADCP Binary Codec, AdcpBinaryCodecNew.
+ - In RangeTrackingDataSet, fixed bug exporting Range Tracking Data.
+ - In DeploymentOptions, changed default battery to 38C.
+ - In AdcpBinaryCodecNew, fixed bug missing GPS data when connected to computer.
+ - In AdcpTcpIp, change to UTF-8 encoding for SendData().
+ - In AdcpCommands, in DecodeDSDIR(), added ability for any .EN file to be downloaded.
 
 RTI-3.3.1
  - Added RangeTracking column to the project.

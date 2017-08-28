@@ -212,6 +212,20 @@ namespace RTI
             float Bm0CosHeading = 1.0f;      // For a XDCR that is forward facing.  If it is 45 degrees offset, you would do COS of 45 degrees.  This if found based off the subsystem type  
             float Bm0SinHeading = 0.0f;      // For a XDCR that is forward facing.  If it is 45 degrees offset, you would do SIN of 45 degrees.  This if found based off the subsystem type 
 
+            // Subsystems that are off 45 degrees
+            switch(ensemble.EnsembleData.SubsystemConfig.SubSystem.Code)
+            {
+                case RTI.Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_5:
+                case RTI.Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6:
+                case RTI.Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7:
+                case RTI.Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8:
+                    Bm0CosHeading = (float)Math.Cos(45.0);
+                    Bm0SinHeading = (float)Math.Sin(45.0);
+                    break;
+                default:
+                    break;
+            }
+
             if (Roll >= 90.0f || Roll <= -90.0f) // Down facing case
             {
                 float R1;

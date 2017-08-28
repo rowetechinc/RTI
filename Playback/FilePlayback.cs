@@ -400,6 +400,36 @@ namespace RTI
         }
 
         /// <summary>
+        /// Find all the ensebles in a RoweTech Binary file.
+        /// This is optimized to work with RoweTech Binary files (RTB).
+        /// </summary>
+        /// <param name="files">List of files.</param>
+        public void FindRtbEnsembles(string[] files)
+        {
+            foreach (var file in files)
+            {
+                FindRtbEnsembles(file);
+            }
+        }
+
+        /// <summary>
+        /// Find all the ensembles in the given file.
+        /// Add them to the dictionary.
+        /// </summary>
+        /// <param name="file">File to search for the ensembles.</param>
+        public void FindRtbEnsembles(string file)
+        {
+            AdcpCodecReadFile readFile = new AdcpCodecReadFile();
+            var list = readFile.GetEnsembles(file);
+
+            // Add the ensembles to the dictionary
+            foreach (var ens in list)
+            {
+                AddEnsemble(ens.RawEnsemble, ens.Ensemble);
+            }
+        }
+
+        /// <summary>
         /// Find the ensembles in the file.
         /// </summary>
         /// <param name="files">Files to look for the ensembles.</param>
@@ -425,7 +455,7 @@ namespace RTI
                 // Open the file
                 if (File.Exists(file))
                 {
-                    // Set the file name
+                    //Set the file name
                     FileInfo finfo = new FileInfo(file);
                     Name = finfo.Name;
 
@@ -434,7 +464,7 @@ namespace RTI
                         _fileSize = fileStream.Length;
 
                         // Read in the data from file
-                        byte[] buffer = new byte[1024];
+                        byte[] buffer = new byte[1024 * 100];
                         int count = 0;
                         while ((count = fileStream.Read(buffer, 0, buffer.Length)) > 0)
                         {
@@ -464,6 +494,56 @@ namespace RTI
             }
         }
 
+        /// <summary>
+        /// Add the ensemble to the dictionary.  The ensemble will then
+        /// be available to playback.
+        /// </summary>
+        /// <param name="ensembleRaw"></param>
+        /// <param name="ensemble"></param>
+        public void AddEnsemble(byte[] ensembleRaw, DataSet.Ensemble ensemble)
+        {
+            // **********
+            // Moved this to eventhandler
+            // Not needed when reading in the entire file
+            // **********
+            // Copy the data
+            //var ens = ensemble.Clone();
+            //byte[] raw = new byte[ensembleRaw.Length];
+            //Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
+
+            // Create the velocity vectors for the ensemble
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
+            if (ensemble.IsEnsembleAvail)
+            {
+                // Store the found ensemble to the dictionary
+                if (!_ensembleDict.ContainsKey(ensemble.EnsembleData.EnsembleNumber))
+                {
+                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble));
+
+                    // Find the first ensemble number
+                    if (_firstEnsNum == 0 || _firstEnsNum > ensemble.EnsembleData.EnsembleNumber)
+                    {
+                        _firstEnsNum = ensemble.EnsembleData.EnsembleNumber;
+                    }
+
+                    // Find the last ensemble number
+                    if (_lastEnsNum < ensemble.EnsembleData.EnsembleNumber)
+                    {
+                        _lastEnsNum = ensemble.EnsembleData.EnsembleNumber;
+                    }
+                }
+                else
+                {
+                    // Create a new ensemble number key based off the last ensemble and add 1
+                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble));
+                }
+            }
+
+            // Set total number of ensembles
+            // Subtract because 0 based
+            TotalEnsembles = _ensembleDict.Count() - 1;
+        }
 
         #region EventHandler
 
@@ -487,38 +567,8 @@ namespace RTI
             byte[] raw = new byte[ensembleRaw.Length];
             Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
 
-            // Create the velocity vectors for the ensemble
-            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ens);
+            AddEnsemble(raw, ens);
 
-            if (ensemble.IsEnsembleAvail)
-            {
-                // Store the found ensemble to the dictionary
-                if (!_ensembleDict.ContainsKey(ensemble.EnsembleData.EnsembleNumber))
-                {
-                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(raw, ens));
-
-                    // Find the first ensemble number
-                    if (_firstEnsNum == 0 || _firstEnsNum > ensemble.EnsembleData.EnsembleNumber)
-                    {
-                        _firstEnsNum = ensemble.EnsembleData.EnsembleNumber;
-                    }
-
-                    // Find the last ensemble number
-                    if (_lastEnsNum < ensemble.EnsembleData.EnsembleNumber)
-                    {
-                        _lastEnsNum = ensemble.EnsembleData.EnsembleNumber;
-                    }
-                }
-                else
-                {
-                    // Create a new ensemble number key based off the last ensemble and add 1
-                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(raw, ens));
-                }
-            }
-
-            // Set total number of ensembles
-            // Subtract because 0 based
-            TotalEnsembles = _ensembleDict.Count() - 1;
         }
 
         /// <summary>

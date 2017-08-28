@@ -37,6 +37,7 @@
  * 11/21/2013      RC          2.21.0     Added send and receive methods to match the ADCP serial ports commands.
  * 03/17/2014      RC          2.21.4     Sped up the download process.
  * 04/16/2015      RC          3.0.4      Added a timer to allow pinging through ethernet.
+ * 10/06/2016      RC          3.3.2      Improved download speed by removing all the buffers.  Now downloading about 16mb a minute.
  * 
  */
 
@@ -803,7 +804,7 @@ namespace RTI
         /// written by the parser.  Then download all the packets from the ADCP for the
         /// given file.  Once complete, close the writer and publish complete.
         /// 
-        /// Download is about 7mb/minute.
+        /// Download is about 16mb/minute.
         /// 
         /// </summary>
         /// <param name="dirName">Directory to the store the data.</param>
@@ -826,6 +827,15 @@ namespace RTI
                 // Set the file name being downloaded
                 _downloadFileName = fileName;
 
+                // If the data is being parsed,
+                // the raw data will also be written to a file
+                if (!parseData)
+                {
+                    // Create the BinaryWriter
+                    string filePath = dirName + "\\" + fileName;
+                    _downloadDataBinWriter = CreateBinaryWriter(filePath);
+                }
+
                 // Send command to download data
                 string cmd = Commands.AdcpCommands.CMD_DSXD + fileName;
                 byte[] replyBuffer = null;
@@ -835,15 +845,6 @@ namespace RTI
                 while (DownloadPacket(250) < 0)
                 {
                     System.Threading.Thread.Sleep(1000);
-                }
-
-                // If the data is being parsed,
-                // the raw data will also be written to a file
-                if (!parseData)
-                {
-                    // Create the BinaryWriter
-                    string filePath = dirName + "\\" + fileName;
-                    _downloadDataBinWriter = CreateBinaryWriter(filePath);
                 }
 
                 //Stopwatch sw = new Stopwatch();
@@ -981,7 +982,8 @@ namespace RTI
             {
                 // Write the data to the file
                 //writer.Write(replyBuffer, 0, bytes);
-                WriteData(replyBuffer, 0, bytes);
+                //WriteData(replyBuffer, 0, bytes);
+                _downloadDataBinWriter.Write(replyBuffer, 0, bytes);
             }
 
             // Return the number of bytes read
@@ -1071,12 +1073,12 @@ namespace RTI
             // Write the data if it has not started
             if (!_isWritingDownloadedData)
             {
-                BackgroundWorker worker = new BackgroundWorker();
-                worker.DoWork += delegate(object s, DoWorkEventArgs args)
-                {
+                //BackgroundWorker worker = new BackgroundWorker();
+                //worker.DoWork += delegate(object s, DoWorkEventArgs args)
+                //{
                     WriteDownloadData();
-                };
-                worker.RunWorkerAsync();
+                //};
+                //worker.RunWorkerAsync();
             }
 
         }
@@ -1086,18 +1088,25 @@ namespace RTI
         /// </summary>
         private void WriteDownloadData()
         {
-
-            while (_downloadWriterQueue.Count > 0)
+            try
             {
-                _isWritingDownloadedData = true;
-
-                byte[] buffer = null;
-                _downloadWriterQueue.TryDequeue(out buffer);
-
-                if (buffer != null && _downloadDataBinWriter != null)
+                while (_downloadWriterQueue.Count > 0)
                 {
-                    _downloadDataBinWriter.Write(buffer, 0, buffer.Length);
+                    _isWritingDownloadedData = true;
+
+                    byte[] buffer = null;
+                    _downloadWriterQueue.TryDequeue(out buffer);
+
+                    if (buffer != null && _downloadDataBinWriter != null)
+                    {
+                        _downloadDataBinWriter.Write(buffer, 0, buffer.Length);
+                    }
                 }
+            }
+            catch(Exception e)
+            {
+                log.Error("Error writing download data.", e);
+                _isWritingDownloadedData = false;
             }
 
             _isWritingDownloadedData = false;

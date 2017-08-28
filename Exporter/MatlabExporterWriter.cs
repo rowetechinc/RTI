@@ -33,11 +33,12 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 10/02/2013      RC          2.20.2     Initial coding
+ * 06/16/2016      RC          3.3.2      Check if the data is valid before converting.
  * 
  * 
  * 
  * 
- */ 
+ */
 
 namespace RTI
 {
@@ -54,6 +55,9 @@ namespace RTI
     public class MatlabExporterWriter : IExporterWriter
     {
         #region Variables
+
+        // Setup logger
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Sub-file name to be used for each
@@ -142,8 +146,15 @@ namespace RTI
                 //ensemble.IsInstrumentVelocityAvail = false;
                 //ensemble.IsInstrumentWaterMassAvail = false;
                 //ensemble.IsNmeaAvail = false;
-         
-                File.WriteAllBytes(filename, ensemble.EncodeMatlab());
+
+                try
+                {
+                    File.WriteAllBytes(filename, ensemble.EncodeMatlab());
+                }
+                catch(Exception e)
+                {
+                    log.Error(string.Format("Error writing file {0} {1}", filename), e);
+                }
             }
         }
 

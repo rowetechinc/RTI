@@ -33,6 +33,9 @@ namespace RTI
             /// </summary>
             public int NumBinsSelected { get; set; }
 
+            /// <summary>
+            /// Inititialize the values.
+            /// </summary>
             public BinSelection()
             {
                 MinBin = 0;
@@ -93,6 +96,9 @@ namespace RTI
 
         #endregion
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public VmDasAsciiCodec()
         {
 
@@ -122,6 +128,8 @@ namespace RTI
         /// Get the Bin Selection.  This will verify the selections are correct.
         /// </summary>
         /// <param name="ens">Ensemble to get the number of bins.</param>
+        /// <param name="minBin">Mininum Bin selected.</param>
+        /// <param name="maxBin">Maximum bin selected.</param>
         /// <returns>Bin Selections.</returns>
         private BinSelection GetBinSelection(DataSet.Ensemble ens, int minBin, int maxBin)
         {
@@ -157,6 +165,7 @@ namespace RTI
         /// Encode the data into the VmDas format.
         /// </summary>
         /// <param name="ens"></param>
+        /// <param name="bs">Bin selection.</param>
         private string EncodeData(DataSet.Ensemble ens, BinSelection bs)
         {
             StringBuilder sb = new StringBuilder();
@@ -188,6 +197,7 @@ namespace RTI
         /// Decode the Earth velocity data.
         /// </summary>
         /// <param name="ens">Ensemble data.</param>
+        /// <param name="bs">Bin Selection</param>
         /// <returns>Strings for the Earth Velocity data.</returns>
         private string EncodeEnuData(DataSet.Ensemble ens, BinSelection bs)
         {
@@ -279,6 +289,7 @@ namespace RTI
         /// Encode the Correlation data.
         /// </summary>
         /// <param name="ens">Ensemble.</param>
+        /// <param name="bs">Bin Selection</param>
         /// <returns>String for Correlation data.</returns>
         private string EncodeCorrData(DataSet.Ensemble ens, BinSelection bs)
         {
@@ -310,6 +321,7 @@ namespace RTI
         /// Encode the Amplitude data.
         /// </summary>
         /// <param name="ens">Ensemble.</param>
+        /// <param name="bs">Bin Selection.</param>
         /// <returns>String for Amplitude data.</returns>
         private string EncodeAmpData(DataSet.Ensemble ens, BinSelection bs)
         {
@@ -341,6 +353,7 @@ namespace RTI
         /// Encode the Percent Good data.
         /// </summary>
         /// <param name="ens">Ensemble.</param>
+        /// <param name="bs">Bin Selection.</param>
         /// <returns>String for Amplitude data.</returns>
         private string EncodePgData(DataSet.Ensemble ens, BinSelection bs)
         {
@@ -374,6 +387,7 @@ namespace RTI
         /// Encode the STA and LTA Status data.
         /// </summary>
         /// <param name="ens">Ensemble.</param>
+        /// <param name="bs">Bin Selection.</param>
         /// <returns>String for STA and LTA Status data.</returns>
         private string EncodeStatusData(DataSet.Ensemble ens, BinSelection bs)
         {
@@ -607,35 +621,55 @@ namespace RTI
         {
             if (ens.IsNmeaAvail)
             {
-                // Latitude
-                DotSpatial.Positioning.Latitude lat = ens.NmeaData.GPGGA.Position.Latitude;
-                double lat_sec = (int)Math.Truncate(lat.DecimalDegrees) * 60;       // Degrees converted to minutes
-                lat_sec += (int)Math.Truncate((double)lat.Minutes);                 // Minutes convert to Minutes
-                lat_sec += lat.Seconds / 60.0;                                      // Seconds convert to minutes
-                lat_sec *= 60;                                                      // Convert to seconds
-                lat_sec *= 1000;                                                    // Convert to thousands of second
-                if(lat.Hemisphere == DotSpatial.Positioning.LatitudeHemisphere.South)
+                double lat_sec = 0;
+                double lon_sec = 0;
+                double speed = 0;
+                double course = 0;
+
+                if (ens.NmeaData.IsGpggaAvail())
                 {
-                    lat_sec *= -1;                                                  // Make negative
+                    // Latitude
+                    DotSpatial.Positioning.Latitude lat = ens.NmeaData.GPGGA.Position.Latitude;
+                    if (!lat.IsInvalid)
+                    {
+                        lat_sec = (int)Math.Truncate(lat.DecimalDegrees) * 60;              // Degrees converted to minutes
+                        lat_sec += (int)Math.Truncate((double)lat.Minutes);                 // Minutes convert to Minutes
+                        lat_sec += lat.Seconds / 60.0;                                      // Seconds convert to minutes
+                        lat_sec *= 60;                                                      // Convert to seconds
+                        lat_sec *= 1000;                                                    // Convert to thousands of second
+                        if (lat.Hemisphere == DotSpatial.Positioning.LatitudeHemisphere.South)
+                        {
+                            lat_sec *= -1;                                                  // Make negative
+                        }
+                    }
+
+                    // Longitude
+                    DotSpatial.Positioning.Longitude lon = ens.NmeaData.GPGGA.Position.Longitude;
+                    if (!lon.IsInvalid)
+                    {
+                        lon_sec = (int)Math.Truncate(lon.DecimalDegrees) * 60;       // Degrees converted to minutes
+                        lon_sec += (int)Math.Truncate((double)lon.Minutes);                 // Minutes convert to Minutes
+                        lon_sec += lon.Seconds / 60.0;                                      // Seconds convert to minutes
+                        lon_sec *= 60;                                                      // Convert to seconds
+                        lon_sec *= 1000;                                                    // Convert to thousands of second
+                        if (lon.Hemisphere == DotSpatial.Positioning.LongitudeHemisphere.West)
+                        {
+                            lon_sec *= -1;                                                  // Make negative
+                        }
+                    }
                 }
 
-                // Longitude
-                DotSpatial.Positioning.Longitude lon = ens.NmeaData.GPGGA.Position.Longitude;
-                double lon_sec = (int)Math.Truncate(lon.DecimalDegrees) * 60;       // Degrees converted to minutes
-                lon_sec += (int)Math.Truncate((double)lon.Minutes);                 // Minutes convert to Minutes
-                lon_sec += lon.Seconds / 60.0;                                      // Seconds convert to minutes
-                lon_sec *= 60;                                                      // Convert to seconds
-                lon_sec *= 1000;                                                    // Convert to thousands of second
-                if (lon.Hemisphere == DotSpatial.Positioning.LongitudeHemisphere.West)
+                if (ens.NmeaData.IsGpvtgAvail())
                 {
-                    lon_sec *= -1;                                                  // Make negative
+                    // Velocity
+                    speed = ens.NmeaData.GPVTG.Speed.ToMetersPerSecond().Value * 1000; // Make mm/s
                 }
 
-                // Velocity
-                double speed = ens.NmeaData.GPVTG.Speed.ToMetersPerSecond().Value * 1000; // Make mm/s
-
-                // Course
-                double course = ens.NmeaData.GPHDT.Heading.DecimalDegrees * 100;                   // Make hundreth of degree
+                if (ens.NmeaData.IsGphdtAvail())
+                {
+                    // Course
+                    course = ens.NmeaData.GPHDT.Heading.DecimalDegrees * 100;                   // Make hundreth of degree
+                }
 
                 StringBuilder sb = new StringBuilder();
                 sb.Append("8");                                                 // 8 Header

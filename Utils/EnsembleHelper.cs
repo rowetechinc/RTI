@@ -89,9 +89,9 @@ namespace RTI
 
                 AddBottomTrack(ref ensemble);
 
-                AddWaterMassEarth(ref ensemble, numBins, numBeams);
+                AddWaterMassEarth(ref ensemble, numBeams);
 
-                AddWaterMassInstrument(ref ensemble, numBins, numBeams);
+                AddWaterMassInstrument(ref ensemble, numBeams);
 
                 AddGoodBeam(ref ensemble, numBins, numBeams);
 
@@ -377,9 +377,8 @@ namespace RTI
         /// Add Water Mass Earth data set.
         /// </summary>
         /// <param name="ensemble">Ensemble to add the dataset.</param>
-        /// <param name="numBins">Number of bins in the dataset.</param>
         /// <param name="numBeams">Number of beam sin the dataset.</param>
-        public static void AddWaterMassEarth(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        public static void AddWaterMassEarth(ref DataSet.Ensemble ensemble, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
         {
             ensemble.AddEarthWaterMassData(DataSet.Ensemble.DATATYPE_FLOAT,
                                             DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
@@ -398,15 +397,14 @@ namespace RTI
         #region Water Mass Instrument
 
         /// <summary>
-        /// Add Water Mass Earth data set.
+        /// Add Water Mass Instrument data set.
         /// </summary>
         /// <param name="ensemble">Ensemble to add the dataset.</param>
-        /// <param name="numBins">Number of bins in the dataset.</param>
         /// <param name="numBeams">Number of beam sin the dataset.</param>
-        public static void AddWaterMassInstrument(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        public static void AddWaterMassInstrument(ref DataSet.Ensemble ensemble, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
         {
             ensemble.AddInstrumentWaterMassData(DataSet.Ensemble.DATATYPE_FLOAT,
-                                            DataSet.EarthWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
+                                            DataSet.InstrumentWaterMassDataSet.NUM_DATA_ELEMENTS,        // Num elements (Bins)
                                             DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
                                             DataSet.Ensemble.DEFAULT_IMAG,                          // Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
@@ -415,6 +413,29 @@ namespace RTI
                                             0.0f,                                                   // Water Mass North Velocity in m/s.
                                             0.0f,                                                   // Water Mass Vertical Velocity in m/s.
                                             0.0f,                                                   // Water Mass Error Velocity in m/s.
+                                            0.0f);                                                  // Depth layer of the Water Mass measurement in meters.
+        }
+
+        #endregion
+
+        #region Water Mass Ship
+
+        /// <summary>
+        /// Add Water Mass Ship data set.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBeams">Number of beam sin the dataset.</param>
+        public static void AddWaterMassShip(ref DataSet.Ensemble ensemble, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            ensemble.AddShipWaterMassData(DataSet.Ensemble.DATATYPE_FLOAT,
+                                            DataSet.ShipWaterMassDataSet.NUM_DATA_ELEMENTS,         // Num elements (Bins)
+                                            DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,                // Num Beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,                          // Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
+                                            DataSet.Ensemble.WaterMassShipID,                       // Name (Dataset ID)
+                                            0.0f,                                                   // Water Mass Transverse Velocity in m/s.
+                                            0.0f,                                                   // Water Mass Longitundial Velocity in m/s.
+                                            0.0f,                                                   // Water Mass Normals Velocity in m/s.
                                             0.0f);                                                  // Depth layer of the Water Mass measurement in meters.
         }
 

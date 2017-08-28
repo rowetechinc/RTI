@@ -6,6 +6,9 @@ RTI-3.4.2
  - In FilePlayback, fixed bug in FindRtbEnsembles() when ensemble numbers are duplicated.
  - In all the codecs, make them in charge of clearing there buffers if the data is not in there format.
  - Added VmDas ASCII codec.
+ - Added a Ship Velocity data set.  Also added Ship Velocity to Bottom Track dataset.
+ - Added Ship coordinate transform to Transform.cs.
+ - Added Water Mass Ship Data Set.
 
 RTI-3.4.1
  - Changed to ReadBytes to read in from the file to improve performance.

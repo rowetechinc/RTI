@@ -82,6 +82,7 @@
  * 10/29/2015      RC          3.2.1      Added WaterTracking in DecodePd0Ensemble().
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
  * 03/03/2017      RC          3.4.2      Added EnsembleWaterProfileTextOutput() to display all data as text.
+ * 08/25/2017      RC          3.4.2      Added ShipVelocityDataSet.
  * 
  */
 
@@ -227,7 +228,19 @@ namespace RTI
             /// DVL Data ID.  This is for Pulse usage only.
             /// This ID is not output by the ADCP.
             /// </summary>
-            public const string DvlID = "E000DVL\0"; 
+            public const string DvlID = "E000DVL\0";
+
+            /// <summary>
+            /// Ship Velocity ID.  This is for retransformation usage only.
+            /// This ID is not output by the ADCP.
+            /// </summary>
+            public const string ShipVelocityID = "E00SHIP\0";
+
+            /// <summary>
+            /// Water Mass Ship Velocity ID.  This is for retransformation usage only.
+            /// This ID is not output by the ADCP.
+            /// </summary>
+            public const string WaterMassShipID = "EWMSHIP\0"; 
 
             #endregion
 
@@ -586,6 +599,16 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ISADCP2INFOAVAIL = "IsAdcp2InfoAvail";
 
+            /// <summary>
+            /// String for IsShipVelocityAvail.
+            /// </summary>
+            public const string JSON_STR_ISSHIPVELOCITYAVAIL = "IsShipVelocityAvail";
+
+            /// <summary>
+            /// String for IsShipWaterMassAvail.
+            /// </summary>
+            public const string JSON_STR_ISSHIPWATERMASSAVAIL = "IsShipWaterMassAvail";
+
             #endregion
 
             #region DataSets
@@ -715,6 +738,16 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_ADCP2INFODATA = "Adcp2InfoData";
 
+            /// <summary>
+            /// String for Ship Velocity Data.
+            /// </summary>
+            public const string JSON_STR_SHIPVELOCITYDATA = "ShipVelocityData";
+
+            /// <summary>
+            /// String for Ship Water Mass Data.
+            /// </summary>
+            public const string JSON_STR_SHIPWATERMASSDATA = "ShipWaterMassData";
+
             #endregion
 
             #endregion
@@ -786,6 +819,11 @@ namespace RTI
             public bool IsInstrumentWaterMassAvail { get; set; }
 
             /// <summary>
+            /// Set if the Ship Water Mass data set is available for this ensemble.
+            /// </summary>
+            public bool IsShipWaterMassAvail { get; set; }
+
+            /// <summary>
             /// Set if the NMEA data set is available for this ensemble.
             /// </summary>
             public bool IsNmeaAvail { get; set; }
@@ -850,6 +888,11 @@ namespace RTI
             /// </summary>
             public bool IsAdcp2InfoAvail { get; set; }
 
+            /// <summary>
+            /// Set if the Ship Velocity data set is available in this ensemble.
+            /// </summary>
+            public bool IsShipVelocityAvail { get; set; }
+
             #endregion
 
             #region Data Sets Properties
@@ -913,6 +956,11 @@ namespace RTI
             /// Water Mass Instrument Velocity Data set for this data set.
             /// </summary>
             public InstrumentWaterMassDataSet InstrumentWaterMassData { get; set; }
+
+            /// <summary>
+            /// Water Mass Ship Velocity Data set for this data set.
+            /// </summary>
+            public ShipWaterMassDataSet ShipWaterMassData { get; set; }
 
             /// <summary>
             /// NMEA Data set for this data set.
@@ -982,6 +1030,14 @@ namespace RTI
             /// </summary>
             public DvlDataSet DvlData { get; set; }
 
+            /// <summary>
+            /// Ship Velocity data set.
+            /// This data set is not output by the ADCP.
+            /// It is created from a combination of DVL
+            /// messages.  It is also created if the data is retransformed.
+            /// </summary>
+            public ShipVelocityDataSet ShipVelocityData { get; set; }
+
             #endregion
 
             #endregion
@@ -1022,6 +1078,8 @@ namespace RTI
                 IsDvlDataAvail = false;
                 IsGageHeightAvail = false;
                 IsAdcp2InfoAvail = false;
+                IsShipVelocityAvail = false;
+                IsShipWaterMassAvail = false;
             }
 
             /// <summary>
@@ -1076,6 +1134,8 @@ namespace RTI
             /// <param name="IsDvlDataAvail">Flag if DVL data is available.</param>
             /// <param name="IsGageHeightAvail">Flag if Gage Height data is available.</param>
             /// <param name="IsAdcp2InfoAvail">Flag if ADCP 2 Info data is available.</param>
+            /// <param name="IsShipVelocityAvail">Flag if Ship Velocity is available.</param>
+            /// <param name="IsWaterMassShipAvail">Flag if Water Mass Ship data is available.</param>
             /// <param name="BeamVelocityData">Beam Velocity DataSet.</param>
             /// <param name="InstrumentVelocityData">Instrument Velocity DataSet.</param>
             /// <param name="EarthVelocityData">Earth Velocity DataSet.</param>
@@ -1101,19 +1161,21 @@ namespace RTI
             /// <param name="DvlData">DVL data.</param>
             /// <param name="GageHeightData">Gage Height data.</param>
             /// <param name="Adcp2InfoDataSet">ADCP 2 Info data.</param>
+            /// <param name="ShipVelocityData">Ship Velocity data.</param>
+            /// <param name="ShipWaterMassData">Water Mass Ship data.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,
                             bool IsEarthWaterMassAvail, bool IsInstrumentWaterMassAvail, bool IsNmeaAvail, bool IsProfileEngineeringAvail, bool IsBottomTrackEngineeringAvail,
                             bool IsSystemSetupAvail, bool IsRangeTrackingAvail, bool IsGageHeightAvail,
                             bool IsAdcpGpsDataAvail, bool IsGps1DataAvail, bool IsGps2DataAvail, bool IsNmea1DataAvail, bool IsNmea2DataAvail,
-                            bool IsDvlDataAvail, bool IsAdcp2InfoAvail,
+                            bool IsDvlDataAvail, bool IsAdcp2InfoAvail, bool IsShipVelocityAvail, bool IsWaterMassShipAvail,
                             BeamVelocityDataSet BeamVelocityData, InstrumentVelocityDataSet InstrumentVelocityData, EarthVelocityDataSet EarthVelocityData,
                             AmplitudeDataSet AmplitudeData, CorrelationDataSet CorrelationData, GoodBeamDataSet GoodBeamData, GoodEarthDataSet GoodEarthData,
                             EnsembleDataSet EnsembleData, AncillaryDataSet AncillaryData, BottomTrackDataSet BottomTrackData, EarthWaterMassDataSet EarthWaterMassData,
                             InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
                             SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData, GageHeightDataSet GageHeightData, Adcp2InfoDataSet Adcp2InfoDataSet,
-                            DvlDataSet DvlData,
+                            DvlDataSet DvlData, ShipVelocityDataSet ShipVelocityData, ShipWaterMassDataSet ShipWaterMassData,
                             string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
             {
                 // Initialize all ranges
@@ -1142,6 +1204,8 @@ namespace RTI
                 this.IsDvlDataAvail = IsDvlDataAvail;
                 this.IsGageHeightAvail = IsGageHeightAvail;
                 this.IsAdcp2InfoAvail = IsAdcp2InfoAvail;
+                this.IsShipVelocityAvail = IsShipVelocityAvail;
+                this.IsShipWaterMassAvail = IsShipWaterMassAvail;
 
                 this.BeamVelocityData = BeamVelocityData;
                 this.InstrumentVelocityData = InstrumentVelocityData;
@@ -1168,6 +1232,8 @@ namespace RTI
                 this.DvlData = DvlData;
                 this.GageHeightData = GageHeightData;
                 this.Adcp2InfoData = Adcp2InfoData;
+                this.ShipVelocityData = ShipVelocityData;
+                this.ShipWaterMassData = ShipWaterMassData;
             }
 
             #region Beam Velocity Data Set
@@ -1240,6 +1306,43 @@ namespace RTI
             {
                 IsInstrumentVelocityAvail = true;
                 InstrumentVelocityData = new InstrumentVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
+            }
+
+            #endregion
+
+            #region Ship Velocity Data Set
+
+            /// <summary>
+            /// Add the Ship Velocity data set to the data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            public void AddShipVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name)
+            {
+                IsShipVelocityAvail = true;
+                ShipVelocityData = new ShipVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name);
+            }
+
+            /// <summary>
+            /// Add the Ship Velocity data set to the data.
+            /// This will add the Ship Velocity data and decode the byte array
+            /// for all the Ship Velocity data.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="velocityData">Byte array containing Ship velocity data</param>
+            public void AddShipVelocityData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, byte[] velocityData)
+            {
+                IsShipVelocityAvail = true;
+                ShipVelocityData = new ShipVelocityDataSet(valueType, numBins, numBeams, imag, nameLength, name, velocityData);
             }
 
             #endregion
@@ -1802,6 +1905,29 @@ namespace RTI
             {
                 IsInstrumentWaterMassAvail = true;
                 InstrumentWaterMassData = new InstrumentWaterMassDataSet(sent);
+            }
+
+            #endregion
+
+            #region Ship Water Mass Data Set
+
+            /// <summary>
+            /// Add the Ship Water Mass Velocity data to the dataset.
+            /// </summary>
+            /// <param name="valueType">Whether it contains 32 bit Integers or Single precision floating point </param>
+            /// <param name="numBins">Number of Bin</param>
+            /// <param name="numBeams">Number of beams</param>
+            /// <param name="imag"></param>
+            /// <param name="nameLength">Length of name</param>
+            /// <param name="name">Name of data type</param>
+            /// <param name="trans">Transverse Velocity.</param>
+            /// <param name="lon">Longitundinal Velocity.</param>
+            /// <param name="norm">Normal Velocity.</param>
+            /// <param name="depthLayer">Water Mass Depth Layer.</param>
+            public void AddShipWaterMassData(int valueType, int numBins, int numBeams, int imag, int nameLength, string name, float trans, float lon, float norm, float depthLayer)
+            {
+                IsShipWaterMassAvail = true;
+                ShipWaterMassData = new ShipWaterMassDataSet(valueType, numBins, numBeams, imag, nameLength, name, trans, lon, norm, depthLayer);
             }
 
             #endregion
@@ -3267,6 +3393,19 @@ namespace RTI
                                 this.GoodBeamData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
                             }
                             break;
+                        case PD0.CoordinateTransforms.Coord_Ship:
+                            this.IsShipVelocityAvail = true;
+                            this.ShipVelocityData = new ShipVelocityDataSet(ensemble.FixedLeader.NumberOfCells);
+                            this.ShipVelocityData.DecodePd0Ensemble(ensemble.Velocity);
+
+                            // Add Good Beam Data Set
+                            if (ensemble.IsPercentGoodExist)
+                            {
+                                this.IsGoodBeamAvail = true;
+                                this.GoodBeamData = new GoodBeamDataSet(ensemble.FixedLeader.NumberOfCells);
+                                this.GoodBeamData.DecodePd0Ensemble(ensemble.PercentGood, ensemble.FixedLeader.PingsPerEnsemble);
+                            }
+                            break;
                     }
                 }
 
@@ -3935,6 +4074,14 @@ namespace RTI
                 writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISADCP2INFOAVAIL);
                 writer.WriteValue(ensemble.IsAdcp2InfoAvail);
 
+                // IsShipVelocityAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISSHIPVELOCITYAVAIL);
+                writer.WriteValue(ensemble.IsShipVelocityAvail);
+
+                // IsShipWaterMassAvail
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_ISSHIPWATERMASSAVAIL);
+                writer.WriteValue(ensemble.IsShipWaterMassAvail);
+
                 #endregion
 
                 #region DataSet
@@ -4197,6 +4344,28 @@ namespace RTI
                 if (ensemble.IsAdcp2InfoAvail)
                 {
                     writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.Adcp2InfoData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // Ship Velocity data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_SHIPVELOCITYDATA);
+                if (ensemble.IsShipVelocityAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ShipVelocityData));
+                }
+                else
+                {
+                    writer.WriteNull();
+                }
+
+                // Ship Water Mass data
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_SHIPWATERMASSDATA);
+                if (ensemble.IsShipWaterMassAvail)
+                {
+                    writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ShipWaterMassData));
                 }
                 else
                 {

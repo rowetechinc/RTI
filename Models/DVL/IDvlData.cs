@@ -135,6 +135,55 @@ namespace RTI
                 Single.TryParse(result[3].Trim(), out Heading);
             }
         }
+
+        /// <summary>
+        /// Set the values for this object.
+        /// Typically used to convert data to PD6 or PD13.
+        /// </summary>
+        /// <param name="pitch">Pitch in degrees.</param>
+        /// <param name="roll">Roll in degrees.</param>
+        /// <param name="heading">Heading in degrees.</param>
+        public SA(float heading, float pitch, float roll)
+        {
+            this.Pitch = pitch;
+            this.Roll = roll;
+            this.Heading = heading;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // Pitch
+            if(this.Pitch > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(Pitch.ToString("00.00"));
+            sb.Append(", ");
+
+            // Roll
+            if (this.Roll > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(Roll.ToString("00.00"));
+            sb.Append(", ");
+
+            // Heading
+            sb.Append(Heading.ToString("00.00"));
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
@@ -288,6 +337,89 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// Create a TS object.
+        /// </summary>
+        /// <param name="dt">Date and Time</param>
+        /// <param name="hundrethSec">Hundredth of a second.</param>
+        /// <param name="salinity">Salinity in PPT</param>
+        /// <param name="temp">Temperature in degrees C.</param>
+        /// <param name="xdcr_depth">Transducer depth in meters.</param>
+        /// <param name="sos">Spedd of Sound in m/s.</param>
+        /// <param name="bit">BIT Status.</param>
+        /// <param name="leak">Lead Detection.</param>
+        public TS(DateTime dt, byte hundrethSec, float salinity, float temp, float xdcr_depth, float sos, int bit, RTI.DataSet.DvlDataSet.LeakDetectionOptions leak)
+        {
+            this.DateAndTime = dt;
+            this.HundredthSec = hundrethSec;
+            this.Salinity = salinity;
+            this.Temperature = temp;
+            this.DepthOfTransducer = xdcr_depth;
+            this.SpeedOfSound = sos;
+            this.BIT = bit;
+            this.LeakDetection = leak;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // Date and Time
+            sb.Append(this.DateAndTime.ToString("yyMMddHHmmss"));
+            sb.Append(this.HundredthSec.ToString("00"));
+            sb.Append(", ");
+
+            // Salinity
+            sb.Append(this.Salinity.ToString("0.0"));
+            sb.Append(", ");
+
+            // Temperature
+            if(this.Temperature > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(this.Temperature.ToString("0.0"));
+            sb.Append(", ");
+
+            // Depth of XDCR
+            sb.Append(this.DepthOfTransducer.ToString("0.0"));
+            sb.Append(", ");
+
+            // Speed of Sound
+            sb.Append(this.SpeedOfSound.ToString("0.0"));
+            sb.Append(", ");
+
+            // BIT
+            sb.Append(this.BIT);
+            sb.Append(", ");
+
+            // Leak Detector
+            switch(this.LeakDetection)
+            {
+                case RTI.DataSet.DvlDataSet.LeakDetectionOptions.OK:
+                    sb.Append(LEAKDETECT_OK);
+                    break;
+                case RTI.DataSet.DvlDataSet.LeakDetectionOptions.WaterDetected:
+                    sb.Append(LEAKDETECT_WATER);
+                    break;
+                case RTI.DataSet.DvlDataSet.LeakDetectionOptions.NotInstalled:
+                default:
+                    sb.Append(LEAKDETECT_NOT_INSTALLED);
+                    break;
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
@@ -363,6 +495,60 @@ namespace RTI
                 Single.TryParse(result[4].Trim(), out RangeToBottomB2);
                 Single.TryParse(result[5].Trim(), out RangeToBottomB3);
             }
+        }
+
+        /// <summary>
+        /// Create RA object.
+        /// </summary>
+        /// <param name="pressure">Pressure in kPa.</param>
+        /// <param name="rangeB0">Range to Bottom Beam 0 in decimeters.</param>
+        /// <param name="rangeB1">Range to Bottom Beam 1 in decimeters.</param>
+        /// <param name="rangeB2">Range to Bottom Beam 2 in decimeters.</param>
+        /// <param name="rangeB3">Range to Bottom Beam 3 in decimeters.</param>
+        public RA(float pressure, float rangeB0, float rangeB1, float rangeB2, float rangeB3)
+        {
+            this.Pressure = pressure;
+            this.RangeToBottomB0 = rangeB0;
+            this.RangeToBottomB1 = rangeB1;
+            this.RangeToBottomB2 = rangeB2;
+            this.RangeToBottomB3 = rangeB3;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // Pressure
+            sb.Append(((int)Math.Round(this.Pressure)).ToString());
+            sb.Append(", ");
+
+            // Range Beam 0
+            sb.Append(((int)Math.Round(this.RangeToBottomB0)).ToString());
+            sb.Append(", ");
+
+            // Range Beam 1
+            sb.Append(((int)Math.Round(this.RangeToBottomB1)).ToString());
+            sb.Append(", ");
+            
+            // Range Beam 2
+            sb.Append(((int)Math.Round(this.RangeToBottomB2)).ToString());
+            sb.Append(", ");
+
+            // Range Beam 3
+            sb.Append(((int)Math.Round(this.RangeToBottomB3)).ToString());
+            sb.Append(", ");
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
         }
     }
 
@@ -455,7 +641,6 @@ namespace RTI
                     Q = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
-
                 if (result[5].Contains('A'))
                 {
                     IsGood = true;
@@ -465,6 +650,102 @@ namespace RTI
                     IsGood = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Create the WI object.
+        /// </summary>
+        /// <param name="x">X Water Mass Velocity in mm/s.</param>
+        /// <param name="y">Y Water Mass Velocity in mm/s.</param>
+        /// <param name="z">Z Water Mass Velocity in mm/s.</param>
+        /// <param name="q">Error Water Mass Velocity in mm/s.</param>
+        /// <param name="isGood">Flag if data is good.</param>
+        public WI(float x, float y, float z, float q, bool isGood)
+        {
+            this.X = x;
+            this.Y = y;
+            this.Z = z;
+            this.Q = q;
+            this.IsGood = isGood;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // X
+            float x = this.X;
+            if (x == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                x = PD0.BAD_VELOCITY;
+            }
+            if (x > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(x)).ToString());
+            sb.Append(", ");
+
+            // Y
+            float y = this.Y;
+            if (y == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                y = PD0.BAD_VELOCITY;
+            }
+            if (y > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(y)).ToString());
+            sb.Append(", ");
+
+            // Z
+            float z = this.Z;
+            if (z == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                z = PD0.BAD_VELOCITY;
+            }
+            if (z > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(z)).ToString());
+            sb.Append(", ");
+
+            // Q
+            float q = this.Q;
+            if (q == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                q = PD0.BAD_VELOCITY;
+            }
+            if (q > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(q)).ToString());
+            sb.Append(", ");
+
+            // Is Good
+            if (IsGood)
+            {
+                sb.Append("A");
+            }
+            else
+            {
+                sb.Append("V");
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
         }
     }
 
@@ -558,6 +839,87 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// Create the WS object.
+        /// </summary>
+        /// <param name="t">+/- Transverse velocity data in mm/s.</param>
+        /// <param name="l">+/- Longitudinal velocity data in mm/s.</param>
+        /// <param name="n">+/- Z-axis velocity data in mm/s.</param>
+        /// <param name="isGood">Flag if data is good.</param>
+        public WS(float t, float l, float n, bool isGood)
+        {
+            this.T = t;
+            this.L = l;
+            this.N = n;
+            this.IsGood = isGood;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // Transverse
+            float t = this.T;
+            if (t == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                t = PD0.BAD_VELOCITY;
+            }
+            if (t > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(t)).ToString());
+            sb.Append(", ");
+
+            // Longitudinal
+            float l = this.L;
+            if (l == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                l = PD0.BAD_VELOCITY;
+            }
+            if (l > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(l)).ToString());
+            sb.Append(", ");
+
+            // Vertical
+            float n = this.N;
+            if (n == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                n = PD0.BAD_VELOCITY;
+            }
+            if (n > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(n)).ToString());
+            sb.Append(", ");
+
+            // Is Good
+            if (IsGood)
+            {
+                sb.Append("A");
+            }
+            else
+            {
+                sb.Append("V");
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
@@ -650,6 +1012,87 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// Create the WE object.
+        /// </summary>
+        /// <param name="east">East Water Mass Velocity in mm/s.</param>
+        /// <param name="north">North Water Mass Velocity in mm/s.</param>
+        /// <param name="vert">Vertical Water Mass Velocity in mm/s.</param>
+        /// <param name="isGood">Flag if data is good.</param>
+        public WE(float east, float north, float vert, bool isGood)
+        {
+            this.E = east;
+            this.N = north;
+            this.U = vert;
+            this.IsGood = isGood;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // East
+            float east = this.E;
+            if (east == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                east = PD0.BAD_VELOCITY;
+            }
+            if (east > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(east)).ToString());
+            sb.Append(", ");
+
+            // North
+            float north = this.N;
+            if (north == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                north = PD0.BAD_VELOCITY;
+            }
+            if (north > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(north)).ToString());
+            sb.Append(", ");
+
+            // Z
+            float vertical = this.U;
+            if (vertical == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                vertical = PD0.BAD_VELOCITY;
+            }
+            if (vertical > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(vertical)).ToString());
+            sb.Append(", ");
+
+            // Is Good
+            if (IsGood)
+            {
+                sb.Append("A");
+            }
+            else
+            {
+                sb.Append("V");
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
@@ -740,6 +1183,87 @@ namespace RTI
                 }
 
             }
+        }
+
+        /// <summary>
+        /// Create the WD object.
+        /// </summary>
+        /// <param name="east">East Water Mass Velocity in mm/s.</param>
+        /// <param name="north">North Water Mass Velocity in mm/s.</param>
+        /// <param name="vert">Vertical Water Mass Velocity in mm/s.</param>
+        /// <param name="rangeToWmCenter">Range to the WM center in meter.</param>
+        /// <param name="time">Time since last good-velocity estimate in seconds.</param>
+        public WD(float east, float north, float vert, float rangeToWmCenter, float time)
+        {
+            this.E = east;
+            this.N = north;
+            this.U = vert;
+            this.RangeToWmCenter = rangeToWmCenter;
+            this.Time = time;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // East
+            float east = this.E;
+            if (east == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                east = PD0.BAD_VELOCITY;
+            }
+            if (east > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(east)).ToString());
+            sb.Append(", ");
+
+            // North
+            float north = this.N;
+            if (north == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                north = PD0.BAD_VELOCITY;
+            }
+            if (north > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(north)).ToString());
+            sb.Append(", ");
+
+            // Z
+            float vertical = this.U;
+            if (vertical == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                vertical = PD0.BAD_VELOCITY;
+            }
+            if (vertical > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(vertical)).ToString());
+            sb.Append(", ");
+
+            // Range to Center of WM
+            sb.Append(((int)Math.Round(this.RangeToWmCenter)).ToString());
+            sb.Append(", ");
+
+            // Time
+            sb.Append(((int)Math.Round(this.Time)).ToString());
+
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
         }
     }
 
@@ -845,6 +1369,102 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// Create the WI object.
+        /// </summary>
+        /// <param name="x">X Water Mass Velocity in mm/s.</param>
+        /// <param name="y">Y Water Mass Velocity in mm/s.</param>
+        /// <param name="z">Z Water Mass Velocity in mm/s.</param>
+        /// <param name="q">Error Water Mass Velocity in mm/s.</param>
+        /// <param name="isGood">Flag if data is good.</param>
+        public BI(float x, float y, float z, float q, bool isGood)
+        {
+            this.X = x;
+            this.Y = y;
+            this.Z = z;
+            this.Q = q;
+            this.IsGood = isGood;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // X
+            float x = this.X;
+            if (x == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                x = PD0.BAD_VELOCITY;
+            }
+            if (x > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(x)).ToString());
+            sb.Append(", ");
+
+            // Y
+            float y = this.Y;
+            if (y == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                y = PD0.BAD_VELOCITY;
+            }
+            if (y > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(y)).ToString());
+            sb.Append(", ");
+
+            // Z
+            float z = this.Z;
+            if (z == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                z = PD0.BAD_VELOCITY;
+            }
+            if (z > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(z)).ToString());
+            sb.Append(", ");
+
+            // Q
+            float q = this.Q;
+            if (q == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                q = PD0.BAD_VELOCITY;
+            }
+            if (q > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(q)).ToString());
+            sb.Append(", ");
+
+            // Is Good
+            if (IsGood)
+            {
+                sb.Append("A");
+            }
+            else
+            {
+                sb.Append("V");
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
@@ -936,6 +1556,87 @@ namespace RTI
                     IsGood = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Create the BS object.
+        /// </summary>
+        /// <param name="t">+/- Transverse velocity data in mm/s.</param>
+        /// <param name="l">+/- Longitudinal velocity data in mm/s.</param>
+        /// <param name="n">+/- Z-axis velocity data in mm/s.</param>
+        /// <param name="isGood">Flag if data is good.</param>
+        public BS(float t, float l, float n, bool isGood)
+        {
+            this.T = t;
+            this.L = l;
+            this.N = n;
+            this.IsGood = isGood;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // Transverse
+            float t = this.T;
+            if (t == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                t = PD0.BAD_VELOCITY;
+            }
+            if (t > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(t)).ToString());
+            sb.Append(", ");
+
+            // Longitudinal
+            float l = this.L;
+            if (l == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                l = PD0.BAD_VELOCITY;
+            }
+            if (l > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(l)).ToString());
+            sb.Append(", ");
+
+            // Vertical
+            float n = this.N;
+            if (n == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                n = PD0.BAD_VELOCITY;
+            }
+            if (n > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(n)).ToString());
+            sb.Append(", ");
+
+            // Is Good
+            if (IsGood)
+            {
+                sb.Append("A");
+            }
+            else
+            {
+                sb.Append("V");
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
         }
     }
 
@@ -1029,6 +1730,87 @@ namespace RTI
                 }
             }
         }
+
+        /// <summary>
+        /// Create the BE object.
+        /// </summary>
+        /// <param name="east">East Water Mass Velocity in mm/s.</param>
+        /// <param name="north">North Water Mass Velocity in mm/s.</param>
+        /// <param name="vert">Vertical Water Mass Velocity in mm/s.</param>
+        /// <param name="isGood">Flag if data is good.</param>
+        public BE(float east, float north, float vert, bool isGood)
+        {
+            this.E = east;
+            this.N = north;
+            this.U = vert;
+            this.IsGood = isGood;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // East
+            float east = this.E;
+            if (east == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                east = PD0.BAD_VELOCITY;
+            }
+            if (east > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(east)).ToString());
+            sb.Append(", ");
+
+            // North
+            float north = this.N;
+            if (north == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                north = PD0.BAD_VELOCITY;
+            }
+            if (north > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(north)).ToString());
+            sb.Append(", ");
+
+            // Z
+            float vertical = this.U;
+            if (vertical == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                vertical = PD0.BAD_VELOCITY;
+            }
+            if (vertical > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(vertical)).ToString());
+            sb.Append(", ");
+
+            // Is Good
+            if (IsGood)
+            {
+                sb.Append("A");
+            }
+            else
+            {
+                sb.Append("V");
+            }
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
@@ -1121,6 +1903,86 @@ namespace RTI
                     U = DataSet.Ensemble.BAD_VELOCITY;
                 }
             }
+        }
+
+        /// <summary>
+        /// Create the BD object.
+        /// </summary>
+        /// <param name="east">East Water Mass Velocity in mm/s.</param>
+        /// <param name="north">North Water Mass Velocity in mm/s.</param>
+        /// <param name="vert">Vertical Water Mass Velocity in mm/s.</param>
+        /// <param name="rangeToBottom">Range to Bottom in meters.</param>
+        /// <param name="time">Time since last good-velocity estimate in seconds.</param>
+        public BD(float east, float north, float vert, float rangeToBottom, float time)
+        {
+            this.E = east;
+            this.N = north;
+            this.U = vert;
+            this.RangeToBottom = rangeToBottom;
+            this.Time = time;
+        }
+
+        /// <summary>
+        /// Output the data back into the orignal format.
+        /// </summary>
+        /// <returns></returns>
+        public string Encode()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(ID);
+            sb.Append(", ");
+
+            // East
+            float east = this.E;
+            if (east == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                east = PD0.BAD_VELOCITY;
+            }
+            if (east > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(east)).ToString());
+            sb.Append(", ");
+
+            // North
+            float north = this.N;
+            if (north == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                north = PD0.BAD_VELOCITY;
+            }
+            if (north > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(north)).ToString());
+            sb.Append(", ");
+
+            // Z
+            float vertical = this.U;
+            if (vertical == DataSet.Ensemble.BAD_VELOCITY)
+            {
+                vertical = PD0.BAD_VELOCITY;
+            }
+            if (vertical > 0)
+            {
+                sb.Append("+");
+            }
+            sb.Append(((int)Math.Round(vertical)).ToString());
+            sb.Append(", ");
+
+            float range = this.RangeToBottom;
+            sb.Append(((int)Math.Round(range)).ToString());
+            sb.Append(", ");
+
+            float time = this.Time;
+            sb.Append(((int)Math.Round(time)).ToString());
+
+            // <CR><LF>
+            sb.Append("\r\n");
+
+
+            return sb.ToString();
         }
     }
 }

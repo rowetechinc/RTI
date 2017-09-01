@@ -1,4 +1,42 @@
-﻿using System;
+﻿/*
+ * Copyright 2011, Rowe Technology Inc. 
+ * All rights reserved.
+ * http://www.rowetechinc.com
+ * https://github.com/rowetechinc
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ * 
+ *  1. Redistributions of source code must retain the above copyright notice, this list of
+ *      conditions and the following disclaimer.
+ *      
+ *  2. Redistributions in binary form must reproduce the above copyright notice, this list
+ *      of conditions and the following disclaimer in the documentation and/or other materials
+ *      provided with the distribution.
+ *      
+ *  THIS SOFTWARE IS PROVIDED BY Rowe Technology Inc. ''AS IS'' AND ANY EXPRESS OR IMPLIED 
+ *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ *  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ *  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  
+ * The views and conclusions contained in the software and documentation are those of the
+ * authors and should not be interpreted as representing official policies, either expressed
+ * or implied, of Rowe Technology Inc.
+ * 
+ * HISTORY
+ * -----------------------------------------------------------------
+ * Date            Initials    Version    Comments
+ * -----------------------------------------------------------------
+ * 08/30/2017      RC          3.4.2      Initial coding.
+ * 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -77,7 +115,12 @@ namespace RTI
             /// <summary>
             /// Selected bin to Water Track.
             /// </summary>
-            public int SelectedBin {get; private set;}
+            public int SelectedBinMin {get; private set;}
+
+            /// <summary>
+            /// Selected bin to Water Track.
+            /// </summary>
+            public int SelectedBinMax { get; private set; }
 
             #endregion
 
@@ -86,7 +129,8 @@ namespace RTI
             /// </summary>
             public VmManualWaterTrack()
             {
-                SelectedBin = -1;
+                SelectedBinMin = -1;
+                SelectedBinMax = -1;
                 _prevInstrX = new List<float>();
                 _prevInstrY = new List<float>();
                 _prevInstrZ = new List<float>();
@@ -104,125 +148,225 @@ namespace RTI
             /// The difference will be returned.  This is the speed increased or decreased by the boat.
             /// </summary>
             /// <param name="ens">Ensemble to add Water Track.</param>
-            /// <param name="selectedBin">Selected bin.</param>
-            public void Calculate(ref DataSet.Ensemble ens, int selectedBin)
+            /// <param name="selectedBinMin">Minimum selected bin.</param>
+            /// <param name="selectedBinMax">Maximum selected bin.</param>
+            public void Calculate(ref DataSet.Ensemble ens, int selectedBinMin, int selectedBinMax)
             {
-                // Check if the selected bin has changed
-                // If it has changed, clear the data accumulated
-                if(SelectedBin > 0 && SelectedBin != selectedBin)
+                // Verify we have enough data to do this calculation
+                if(!ens.IsEnsembleAvail || !ens.IsAncillaryAvail)
                 {
-                    // Set the bin
-                    SelectedBin = selectedBin;
-
-                    // Clear the accumulated data
-                    ClearInsturment();
-                    ClearEarth();
-                    ClearShip();
-                    
-                }
-                else if(SelectedBin < 0)
-                {
-                    // The selected bin was never set, so set it now
-                    SelectedBin = selectedBin;
+                    return;
                 }
 
-                // Check if the bin exist
-                if(ens.IsEnsembleAvail)
+                // Verify Bin selections
+                if (!VerifyBinSelection(ens.EnsembleData.NumBins, selectedBinMin, selectedBinMax))
                 {
-                    if(selectedBin < 0 || selectedBin >= ens.EnsembleData.NumBins)
-                    {
-                        return;
-                    }
+                    return;
                 }
 
                 // Calculate the depth layer
-                float depthLayer = selectedBin;
+                float depthLayer = selectedBinMin;
                 if(ens.IsAncillaryAvail)
                 {
-                    depthLayer = ens.AncillaryData.FirstBinRange + (selectedBin * ens.AncillaryData.BinSize);
+                    float depthLayerMin = ens.AncillaryData.FirstBinRange + (selectedBinMin * ens.AncillaryData.BinSize);
+                    float depthLayerMax = ens.AncillaryData.FirstBinRange + (selectedBinMax * ens.AncillaryData.BinSize);
+                    
+                    // Set the depth layer to the mid point of the min and max
+                    depthLayer = depthLayerMin + ((depthLayerMax - depthLayerMin) / 2.0f);
                 }
 
-                // Check if the data is good
-                // We need Instrument data and Earth data
-                // If Instrument is bad, then Earth is bad
+                // INSTRUMENT DATA
                 if(ens.IsInstrumentVelocityAvail)
                 {
-                    if(ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 0] == DataSet.Ensemble.BAD_VELOCITY ||
-                       ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 1] == DataSet.Ensemble.BAD_VELOCITY ||
-                       ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 2] == DataSet.Ensemble.BAD_VELOCITY ||
-                       ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 3] == DataSet.Ensemble.BAD_VELOCITY)
-                    {
-                        return;
-                    }
+                    // Accumulate the Instrument data from the selected bins
+                    float[] accumEnsInstr = AccumulateEnsemble(ens.InstrumentVelocityData.InstrumentVelocityData, SelectedBinMin, SelectedBinMax);
 
-                    // INSTRUMENT DATA
+                    // Accumulate the Instrument data for running average of previous ensembles
+                    AccumulateInstrument(accumEnsInstr[0], accumEnsInstr[1], accumEnsInstr[2]);
+
                     // Average the accumulated data
                     float[] avgInstr = AverageInstrument();
 
-                    // Calculate the Water Track Instrument
-                    // Subtract the latest data from average
-                    float[] wtInstr = CalcWtInstrument(avgInstr,
-                                                    ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 0],
-                                                    ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 0],
-                                                    ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 0]);
-
                     // Store the results to the Water Track Data Sets
-                    StoreInstrumentWt(ref ens, wtInstr, depthLayer);
-
-                    // Accumulate the Instrument data for next average
-                    AccumulateInstrument(ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 0],
-                                         ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 1],
-                                         ens.InstrumentVelocityData.InstrumentVelocityData[selectedBin, 2]);
+                    StoreInstrumentWt(ref ens, avgInstr, depthLayer);
                 }
              
 
                 // EARTH DATA
                 if(ens.IsEarthVelocityAvail)
                 {
+                    // Accumulate the Earth data from the selected bins
+                    float[] accumEnsEarth = AccumulateEnsemble(ens.EarthVelocityData.EarthVelocityData, SelectedBinMin, SelectedBinMax);
+
+                    // Accumulate the Earth data for running average of previous ensembles
+                    AccumulateEarth(accumEnsEarth[0], accumEnsEarth[1], accumEnsEarth[2]);
+
                     // Average the accumulated data
                     float[] avgEarth = AverageEarth();
 
-                    // Calculate the Water Track Earth
-                    // Subtract the latest data from average
-                    float[] wtEarth = CalcWtEarth(avgEarth,
-                                ens.EarthVelocityData.EarthVelocityData[selectedBin, 0],
-                                ens.EarthVelocityData.EarthVelocityData[selectedBin, 0],
-                                ens.EarthVelocityData.EarthVelocityData[selectedBin, 0]);
-
                     // Store the results to the Water Track Data Sets
-                    StoreEarthWt(ref ens, wtEarth, depthLayer);
-
-                    // Accumulate the Earth data for next average
-                    AccumulateEarth(ens.EarthVelocityData.EarthVelocityData[selectedBin, 0],
-                                    ens.EarthVelocityData.EarthVelocityData[selectedBin, 1],
-                                    ens.EarthVelocityData.EarthVelocityData[selectedBin, 2]);
+                    StoreEarthWt(ref ens, avgEarth, depthLayer);
                 }
 
                 // SHIP DATA
                 if (ens.IsShipVelocityAvail)
                 {
+                    // Accumulate the Earth data from the selected bins
+                    float[] accumEnsShip = AccumulateEnsemble(ens.ShipVelocityData.ShipVelocityData, SelectedBinMin, SelectedBinMax);
+
+                    // Accumulate the Ship data for running average of previous ensembles
+                    AccumulateShip(accumEnsShip[0], accumEnsShip[1], accumEnsShip[2]);
+
                     // Average the accumulated data
                     float[] avgShip = AverageShip();
 
-                    // Calculate the Water Track Ship
-                    // Subtract the latest data from average
-                    float[] wtShip = CalcWtShip(avgShip,
-                                ens.ShipVelocityData.ShipVelocityData[selectedBin, 0],
-                                ens.ShipVelocityData.ShipVelocityData[selectedBin, 0],
-                                ens.ShipVelocityData.ShipVelocityData[selectedBin, 0]);
-
                     // Store the results to the Water Track Data Sets
-                    StoreShipWt(ref ens, wtShip, depthLayer);
-
-                    // Accumulate the Ship data for next average
-                    AccumulateShip(ens.ShipVelocityData.ShipVelocityData[selectedBin, 0],
-                                    ens.ShipVelocityData.ShipVelocityData[selectedBin, 1],
-                                    ens.ShipVelocityData.ShipVelocityData[selectedBin, 2]);
+                    StoreShipWt(ref ens, avgShip, depthLayer);
                 }
 
             }
 
+            #region Bin
+
+            /// <summary>
+            /// Verify the bins given are correct.  Verify they can be used.
+            /// </summary>
+            /// <param name="numBins">Number of bins in the ensemble.</param>
+            /// <param name="minBin">Minimum Bin.</param>
+            /// <param name="maxBin">Maximum Bin.</param>
+            /// <returns></returns>
+            private bool VerifyBinSelection(int numBins, int minBin, int maxBin)
+            {
+                // Check if the bin exist
+                if (minBin < 0 ||                           // Min Bin is less than 0
+                    maxBin < 0 ||                           // Max Bin is less than 0
+                    minBin >= numBins ||                    // Min Bin is greater than number of bins
+                    maxBin >= numBins ||                    // Max Bin is greater than number of bins 
+                    minBin > maxBin)                       // Min Bin is greater than Max Bin
+                {
+                    return false;
+                }
+
+                // Check if the selected bin has changed
+                // If it has changed, clear the data accumulated
+                if (SelectedBinMin > 0 && SelectedBinMin != minBin)
+                {
+                    // Set the bin
+                    SelectedBinMin = minBin;
+
+                    // Clear the accumulated data
+                    ClearInsturment();
+                    ClearEarth();
+                    ClearShip();
+
+                }
+                else if (SelectedBinMin < 0)
+                {
+                    // The selected bin was never set, so set it now
+                    SelectedBinMin = minBin;
+                }
+
+                // Check if the selected bin has changed
+                // If it has changed, clear the data accumulated
+                if (SelectedBinMax > 0 && SelectedBinMax != maxBin)
+                {
+                    // Set the bin
+                    SelectedBinMax = maxBin;
+
+                    // Clear the accumulated data
+                    ClearInsturment();
+                    ClearEarth();
+                    ClearShip();
+
+                }
+                else if (SelectedBinMax < 0)
+                {
+                    // The selected bin was never set, so set it now
+                    SelectedBinMax = maxBin;
+                }
+
+                return true;
+            }
+
+            #endregion
+
             #region Accumulate
+
+            /// <summary>
+            /// Accumulate all the data from the ensemble for the selected bins.  
+            /// This will be used to get an average of the selected bins.
+            /// </summary>
+            /// <param name="data">Velocity Data from the ensemble.</param>
+            /// <param name="minBin">Minimum bin selected.</param>
+            /// <param name="maxBin">Maximum bin selected.</param>
+            /// <returns>Average of selected bin.</returns>
+            private float[] AccumulateEnsemble(float[,] data, int minBin, int maxBin)
+            {
+                // Get the values
+                float x, y, z;
+                float ensAccumX = 0.0f;
+                float ensAccumY = 0.0f;
+                float ensAccumZ = 0.0f;
+                int ensCountX = 0;
+                int ensCountY = 0;
+                int ensCountZ = 0;
+
+                // Create an array to store the bin
+                // Initialize to bad velocity
+                float[] result = new float[3];
+                result[0] = DataSet.Ensemble.BAD_VELOCITY;
+                result[1] = DataSet.Ensemble.BAD_VELOCITY;
+                result[2] = DataSet.Ensemble.BAD_VELOCITY;
+ 
+                // If it is only 1 bin selected
+                if (maxBin - minBin == 0)
+                {
+                    // Give the velocity for this bin
+                    result[0] = data[minBin, 0];
+                    result[1] = data[minBin, 1];
+                    result[2] = data[minBin, 2];
+                }
+                else
+                {
+                    // Go through all the selected bins and accumulate the data for an average
+                    for (int bin = minBin; minBin <= maxBin; minBin++)
+                    {
+                        // Get the data
+                        x = data[bin, 0];
+                        y = data[bin, 1];
+                        z = data[bin, 2];
+
+                        // If any of the data is bad, do not accumulate it
+                        if (x == DataSet.Ensemble.BAD_VELOCITY ||
+                            y == DataSet.Ensemble.BAD_VELOCITY ||
+                            z == DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            continue;
+                        }
+
+                        // Accumulate for the average
+                        ensAccumX += x;
+                        ensCountX++;
+
+                        // Accumulate for the average
+                        ensAccumY += y;
+                        ensCountY++;
+
+                        // Accumulate for the average
+                        ensAccumZ += z;
+                        ensCountZ++;
+                    }
+
+                    if (ensCountX > 0)
+                    {
+                        // Store the average of the ensemble for the selected bins
+                        result[0] = ensAccumX / ensCountX;
+                        result[1] = ensAccumY / ensCountY;
+                        result[2] = ensAccumZ / ensCountZ;
+                    }
+                }
+                return result;
+            }
 
             /// <summary>
             /// Accumulate the Instrument data.
@@ -241,7 +385,7 @@ namespace RTI
                 }
 
                 // Limit the list size to AVG_COUNT
-                if(_prevInstrX.Count > AVG_COUNT)
+                if (_prevInstrX.Count > AVG_COUNT)
                 {
                     // Remove the first then add the new value
                     _prevInstrX.RemoveAt(0);
@@ -333,8 +477,8 @@ namespace RTI
             /// <summary>
             /// Accumulate the Ship data.
             /// </summary>
-            /// <param name="east">Traverse Velocity for selected bin.</param>
-            /// <param name="north">Longitudinal Velocity for selected bin.</param>
+            /// <param name="traverse">Traverse Velocity for selected bin.</param>
+            /// <param name="longitudinal">Longitudinal Velocity for selected bin.</param>
             /// <param name="normal">Normal Velocity for selected bin.</param>
             private void AccumulateShip(float traverse, float longitudinal, float normal)
             {
@@ -443,11 +587,11 @@ namespace RTI
                 }
                 if (countZ > 0)
                 {
-                    result[0] = accumZ / countZ;
+                    result[2] = accumZ / countZ;
                 }
                 else
                 {
-                    result[0] = 0.0f;
+                    result[2] = 0.0f;
                 }
 
 
@@ -618,9 +762,9 @@ namespace RTI
             /// that the boat has acheived.
             /// </summary>
             /// <param name="avg">Average of the Earth velocities for the selected bin.</param>
-            /// <param name="x">Lastest Earth Velocity East for the selected bin.</param>
-            /// <param name="y">Latest Earth Velocity North for the selected bin.</param>
-            /// <param name="z">Latest Earth Velocity Up for the selected bin.</param>
+            /// <param name="east">Lastest Earth Velocity East for the selected bin.</param>
+            /// <param name="north">Latest Earth Velocity North for the selected bin.</param>
+            /// <param name="up">Latest Earth Velocity Up for the selected bin.</param>
             /// <returns>Array containing the speed for the selected bin.</returns>
             private float[] CalcWtEarth(float[] avg, float east, float north, float up)
             {
@@ -662,6 +806,7 @@ namespace RTI
 
             /// <summary>
             /// Store the Earth Water Track (Water Mass) to the ensemble.
+            /// Mulitply the final result to -1 to match the sign with Bottom Track.
             /// </summary>
             /// <param name="ens">Ensemble to add the data.</param>
             /// <param name="earth">Earth Water Track data to add to the ensemble.</param>
@@ -674,14 +819,15 @@ namespace RTI
                     EnsembleHelper.AddWaterMassEarth(ref ens);
                 }
 
-                ens.EarthWaterMassData.VelocityEast = earth[0];
-                ens.EarthWaterMassData.VelocityNorth = earth[1];
-                ens.EarthWaterMassData.VelocityVertical = earth[2];
+                ens.EarthWaterMassData.VelocityEast = (-1) * earth[0];                  // Invert the sign to match Bottom Track
+                ens.EarthWaterMassData.VelocityNorth = (-1) * earth[1];
+                ens.EarthWaterMassData.VelocityVertical = (-1) * earth[2];
                 ens.EarthWaterMassData.WaterMassDepthLayer = depthLayer;
             }
 
             /// <summary>
             /// Store the Instrument Water Track (Water Mass) to the ensemble.
+            /// Mulitply the final result to -1 to match the sign with Bottom Track.
             /// </summary>
             /// <param name="ens">Ensemble to add the data.</param>
             /// <param name="instrument">Instrument Water Track data to add to the ensemble.</param>
@@ -694,14 +840,15 @@ namespace RTI
                     EnsembleHelper.AddWaterMassInstrument(ref ens);
                 }
 
-                ens.InstrumentWaterMassData.VelocityX = instrument[0];
-                ens.InstrumentWaterMassData.VelocityY = instrument[1];
-                ens.InstrumentWaterMassData.VelocityZ = instrument[2];
+                ens.InstrumentWaterMassData.VelocityX = (-1) * instrument[0];           // Invert the sign to match Bottom Track
+                ens.InstrumentWaterMassData.VelocityY = (-1) * instrument[1];
+                ens.InstrumentWaterMassData.VelocityZ = (-1) * instrument[2];
                 ens.InstrumentWaterMassData.WaterMassDepthLayer = depthLayer;
             }
 
             /// <summary>
             /// Store the Ship Water Track (Water Mass) to the ensemble.
+            /// Mulitply the final result to -1 to match the sign with Bottom Track.
             /// </summary>
             /// <param name="ens">Ensemble to add the data.</param>
             /// <param name="ship">Ship Water Track data to add to the ensemble.</param>
@@ -714,9 +861,9 @@ namespace RTI
                     EnsembleHelper.AddWaterMassShip(ref ens);
                 }
 
-                ens.ShipWaterMassData.VelocityTransverse = ship[0];
-                ens.ShipWaterMassData.VelocityLongitudinal = ship[1];
-                ens.ShipWaterMassData.VelocityNormal = ship[2];
+                ens.ShipWaterMassData.VelocityTransverse = (-1) * ship[0];              // Invert the sign to match Bottom Track
+                ens.ShipWaterMassData.VelocityLongitudinal = (-1) * ship[1];
+                ens.ShipWaterMassData.VelocityNormal = (-1) * ship[2];
                 ens.InstrumentWaterMassData.WaterMassDepthLayer = depthLayer;
             }
 

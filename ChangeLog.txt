@@ -9,6 +9,7 @@ RTI-3.4.2
  - Added a Ship Velocity data set.  Also added Ship Velocity to Bottom Track dataset.
  - Added Ship coordinate transform to Transform.cs.
  - Added Water Mass Ship Data Set.
+ - Added VmManualWaterTrack.cs.
 
 RTI-3.4.1
  - Changed to ReadBytes to read in from the file to improve performance.

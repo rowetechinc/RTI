@@ -975,6 +975,16 @@ namespace RTI
                 }
 
                 _prevEns.DvlData.WmShipIsGoodVelocity = ws.IsGood;
+
+                // Add Ship Water Mass DataSet
+                if (!_prevEns.IsShipWaterMassAvail)
+                {
+                    _prevEns.ShipWaterMassData = new DataSet.ShipWaterMassDataSet();
+                    _prevEns.IsShipWaterMassAvail = true;
+                }
+                _prevEns.ShipWaterMassData.VelocityTransverse = _prevEns.DvlData.WmTransverseVelocity;
+                _prevEns.ShipWaterMassData.VelocityLongitudinal = _prevEns.DvlData.WmLongitudinalVelocity;
+                _prevEns.ShipWaterMassData.VelocityNormal = _prevEns.DvlData.WmNormalVelocity;
             }
 
             _prevWS = ws;

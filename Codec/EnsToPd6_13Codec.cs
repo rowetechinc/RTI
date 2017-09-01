@@ -46,6 +46,7 @@ namespace RTI
 
             data.Data.Add(EncodeSA(ens));
             data.Data.Add(EncodeTS(ens));
+            data.Data.Add(EncodeRA(ens));
             data.Data.Add(EncodeWI(ens));
             data.Data.Add(EncodeWS(ens));
             data.Data.Add(EncodeWE(ens));
@@ -128,6 +129,39 @@ namespace RTI
         }
 
         /// <summary>
+        /// Get the data out of the ensemble to encode the RA message.
+        /// </summary>
+        /// <param name="ens">Ensemble data.</param>
+        /// <returns>RA string.</returns>
+        private string EncodeRA(DataSet.Ensemble ens)
+        {
+            float pressure = 0.0f;
+            float depthB0 = 0.0f;
+            float depthB1 = 0.0f;
+            float depthB2 = 0.0f;
+            float depthB3 = 0.0f;
+
+            if (ens.IsBottomTrackAvail)
+            {
+                pressure = ens.BottomTrackData.Pressure * 0.0001f;
+                depthB0 = ens.BottomTrackData.Range[0];
+                depthB1 = ens.BottomTrackData.Range[1];
+                depthB2 = ens.BottomTrackData.Range[2];
+                depthB3 = ens.BottomTrackData.Range[3];
+            }
+            else if (ens.IsDvlDataAvail)
+            {
+                pressure = ens.DvlData.Pressure;
+                depthB0 = ens.DvlData.RangeBeam0;
+                depthB1 = ens.DvlData.RangeBeam1;
+                depthB2 = ens.DvlData.RangeBeam2;
+                depthB3 = ens.DvlData.RangeBeam3;
+            }
+
+            return new RA(pressure, depthB0, depthB1, depthB2, depthB3).Encode();
+        }
+
+        /// <summary>
         /// Encode the WI object.
         /// </summary>
         /// <param name="ens">Ensemble.</param>
@@ -141,10 +175,10 @@ namespace RTI
             bool isGood = false;
             if(ens.IsInstrumentWaterMassAvail)
             {
-                x = ens.InstrumentWaterMassData.VelocityX / 1000.0f;      // convert to mm/s
-                y = ens.InstrumentWaterMassData.VelocityY / 1000.0f;
-                z = ens.InstrumentWaterMassData.VelocityZ / 1000.0f;
-                q = ens.InstrumentWaterMassData.VelocityQ / 1000.0f;
+                x = ens.InstrumentWaterMassData.VelocityX * 1000.0f;      // convert to mm/s
+                y = ens.InstrumentWaterMassData.VelocityY * 1000.0f;
+                z = ens.InstrumentWaterMassData.VelocityZ * 1000.0f;
+                q = ens.InstrumentWaterMassData.VelocityQ * 1000.0f;
 
                 if( x == DataSet.Ensemble.BAD_VELOCITY || y == DataSet.Ensemble.BAD_VELOCITY || z == DataSet.Ensemble.BAD_VELOCITY || q == DataSet.Ensemble.BAD_VELOCITY )
                 {
@@ -174,9 +208,9 @@ namespace RTI
             bool isGood = false;
             if (ens.IsShipWaterMassAvail)
             {
-                trans = ens.ShipWaterMassData.VelocityTransverse / 1000.0f;      // convert to mm/s
-                lon = ens.ShipWaterMassData.VelocityLongitudinal / 1000.0f;
-                norm = ens.ShipWaterMassData.VelocityNormal / 1000.0f;
+                trans = ens.ShipWaterMassData.VelocityTransverse * 1000.0f;      // convert to mm/s
+                lon = ens.ShipWaterMassData.VelocityLongitudinal * 1000.0f;
+                norm = ens.ShipWaterMassData.VelocityNormal * 1000.0f;
 
                 if (trans == DataSet.Ensemble.BAD_VELOCITY || lon == DataSet.Ensemble.BAD_VELOCITY || norm == DataSet.Ensemble.BAD_VELOCITY)
                 {
@@ -206,9 +240,9 @@ namespace RTI
             bool isGood = false;
             if (ens.IsInstrumentWaterMassAvail)
             {
-                east = ens.EarthWaterMassData.VelocityEast / 1000.0f;      // convert to mm/s
-                north = ens.EarthWaterMassData.VelocityNorth / 1000.0f;
-                vert = ens.EarthWaterMassData.VelocityVertical / 1000.0f;
+                east = ens.EarthWaterMassData.VelocityEast * 1000.0f;      // convert to mm/s
+                north = ens.EarthWaterMassData.VelocityNorth * 1000.0f;
+                vert = ens.EarthWaterMassData.VelocityVertical * 1000.0f;
 
                 if (east == DataSet.Ensemble.BAD_VELOCITY || north == DataSet.Ensemble.BAD_VELOCITY || vert == DataSet.Ensemble.BAD_VELOCITY)
                 {
@@ -239,10 +273,10 @@ namespace RTI
             bool isGood = false;
             if (ens.IsBottomTrackAvail)
             {
-                x = ens.BottomTrackData.InstrumentVelocity[0] / 1000.0f;      // convert to mm/s
-                y = ens.BottomTrackData.InstrumentVelocity[1] / 1000.0f;
-                z = ens.BottomTrackData.InstrumentVelocity[2] / 1000.0f;
-                q = ens.BottomTrackData.InstrumentVelocity[3] / 1000.0f;
+                x = ens.BottomTrackData.InstrumentVelocity[0] * 1000.0f;      // convert to mm/s
+                y = ens.BottomTrackData.InstrumentVelocity[1] * 1000.0f;
+                z = ens.BottomTrackData.InstrumentVelocity[2] * 1000.0f;
+                q = ens.BottomTrackData.InstrumentVelocity[3] * 1000.0f;
 
                 if (x == DataSet.Ensemble.BAD_VELOCITY || y == DataSet.Ensemble.BAD_VELOCITY || z == DataSet.Ensemble.BAD_VELOCITY || q == DataSet.Ensemble.BAD_VELOCITY)
                 {
@@ -272,9 +306,9 @@ namespace RTI
             bool isGood = false;
             if (ens.IsBottomTrackAvail)
             {
-                trans = ens.BottomTrackData.ShipVelocity[0] / 1000.0f;      // convert to mm/s
-                lon = ens.BottomTrackData.ShipVelocity[1] / 1000.0f;
-                up = ens.BottomTrackData.ShipVelocity[2] / 1000.0f;
+                trans = ens.BottomTrackData.ShipVelocity[0] * 1000.0f;      // convert to mm/s
+                lon = ens.BottomTrackData.ShipVelocity[1] * 1000.0f;
+                up = ens.BottomTrackData.ShipVelocity[2] * 1000.0f;
 
                 if (trans == DataSet.Ensemble.BAD_VELOCITY || lon == DataSet.Ensemble.BAD_VELOCITY || up == DataSet.Ensemble.BAD_VELOCITY)
                 {
@@ -304,9 +338,9 @@ namespace RTI
             bool isGood = false;
             if (ens.IsBottomTrackAvail)
             {
-                east = ens.BottomTrackData.EarthVelocity[0] / 1000.0f;      // convert to mm/s
-                north = ens.BottomTrackData.EarthVelocity[1] / 1000.0f;
-                vert = ens.BottomTrackData.EarthVelocity[2] / 1000.0f;
+                east = ens.BottomTrackData.EarthVelocity[0] * 1000.0f;      // convert to mm/s
+                north = ens.BottomTrackData.EarthVelocity[1] * 1000.0f;
+                vert = ens.BottomTrackData.EarthVelocity[2] * 1000.0f;
 
                 if (east == DataSet.Ensemble.BAD_VELOCITY || north == DataSet.Ensemble.BAD_VELOCITY || vert == DataSet.Ensemble.BAD_VELOCITY)
                 {

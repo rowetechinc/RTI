@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.3
+ - Fixed bug by adding a line feed to the end EnsToPd6_13Codec.
+
 RTI-3.4.2
  - In Ensemble, added EnsembleWaterProfileTextOutput() to display all data as text.
  - In Subsystem, added IsVerticalBeam() to check if the code is for a vertical beam subsystem.

@@ -807,7 +807,8 @@ namespace RTI
         /// the end of the string.
         /// </summary>
         /// <param name="data">Data to write.</param>
-        public void SendData(string data)
+        /// <param name="useCR">Add a carrage return to the end of the string.</param>
+        public void SendData(string data, bool useCR = true)
         {
             // Lock to prevent multiple threads from writing at the same time
             lock (_writeLock)
@@ -815,7 +816,10 @@ namespace RTI
                 if (IsAvailable() && !String.IsNullOrEmpty(data))
                 {
                     // Format the command
-                    data += '\r';
+                    if (useCR)
+                    {
+                        data += '\r';
+                    }
 
                     _isSendingData = true;
                     _serialPort.Write(data);

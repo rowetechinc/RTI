@@ -50,9 +50,11 @@ namespace RTI
             data.Data.Add(EncodeWI(ens));
             data.Data.Add(EncodeWS(ens));
             data.Data.Add(EncodeWE(ens));
+            //data.Data.Add(EncodeWD(ens));
             data.Data.Add(EncodeBI(ens));
             data.Data.Add(EncodeBS(ens));
             data.Data.Add(EncodeBE(ens));
+            //data.Data.Add(EncodeBD(ens));
 
             return data;
         }

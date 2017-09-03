@@ -39,7 +39,7 @@
  * 09/16/2014      RC          3.0.1      Fixed bug with TS not setting the Date and Time.
  * 10/09/2014      RC          3.0.2      Added Leak Detection to TS.
  * 08/11/2015      RC          3.0.5      Set the NUM_ELEM as const.
- * 
+ * 09/02/2017      RC          3.4.3      Made the spacing for the PD6 data match the documentation.
  * 
  */
 
@@ -158,26 +158,32 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(ID);
-            sb.Append(", ");
+            sb.Append(",");
 
             // Pitch
-            if(this.Pitch > 0)
+            if (this.Pitch >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(this.Pitch)).ToString("0.00")));
             }
-            sb.Append(Pitch.ToString("00.00"));
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(this.Pitch)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // Roll
-            if (this.Roll > 0)
+            if (this.Roll >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(this.Roll)).ToString("0.00")));
             }
-            sb.Append(Roll.ToString("00.00"));
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(this.Roll)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // Heading
-            sb.Append(Heading.ToString("00.00"));
+            sb.Append(String.Format("{0, 5}", Heading.ToString("0.00")));
 
             // <CR><LF>
             sb.Append("\r\n");
@@ -365,54 +371,61 @@ namespace RTI
         /// Output the data back into the orignal format.
         /// </summary>
         /// <returns></returns>
-        public string Encode()
+        /// <param name="isLeakDetect">Flag if Leak Detect value should be included.</param>
+        public string Encode(bool isLeakDetect = false)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(ID);
-            sb.Append(", ");
+            sb.Append(",");
 
             // Date and Time
             sb.Append(this.DateAndTime.ToString("yyMMddHHmmss"));
             sb.Append(this.HundredthSec.ToString("00"));
-            sb.Append(", ");
+            sb.Append(",");
 
             // Salinity
-            sb.Append(this.Salinity.ToString("0.0"));
-            sb.Append(", ");
+            sb.Append(String.Format("{0, 4}", this.Salinity.ToString("0.0")));
+            sb.Append(",");
 
             // Temperature
-            if(this.Temperature > 0)
+            if (this.Temperature >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 5}", "+" + ((int)Math.Round(this.Temperature)).ToString("0.0")));
             }
-            sb.Append(this.Temperature.ToString("0.0"));
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 5}", ((int)Math.Round(this.Temperature)).ToString("0.0")));
+            }
+            sb.Append(",");
 
             // Depth of XDCR
-            sb.Append(this.DepthOfTransducer.ToString("0.0"));
-            sb.Append(", ");
+            sb.Append(String.Format("{0, 6}", this.DepthOfTransducer.ToString("0.0")));
+            sb.Append(",");
 
             // Speed of Sound
-            sb.Append(this.SpeedOfSound.ToString("0.0"));
-            sb.Append(", ");
+            sb.Append(String.Format("{0, 6}", this.SpeedOfSound.ToString("0.0")));
+            sb.Append(",");
 
             // BIT
-            sb.Append(this.BIT);
-            sb.Append(", ");
-
-            // Leak Detector
-            switch(this.LeakDetection)
+            sb.Append(String.Format("{0, 3}", this.BIT));
+            
+            if(isLeakDetect)
             {
-                case RTI.DataSet.DvlDataSet.LeakDetectionOptions.OK:
-                    sb.Append(LEAKDETECT_OK);
-                    break;
-                case RTI.DataSet.DvlDataSet.LeakDetectionOptions.WaterDetected:
-                    sb.Append(LEAKDETECT_WATER);
-                    break;
-                case RTI.DataSet.DvlDataSet.LeakDetectionOptions.NotInstalled:
-                default:
-                    sb.Append(LEAKDETECT_NOT_INSTALLED);
-                    break;
+                sb.Append(",");
+                // Leak Detector
+                switch (this.LeakDetection)
+                {
+                    case RTI.DataSet.DvlDataSet.LeakDetectionOptions.OK:
+                        sb.Append(LEAKDETECT_OK);
+                        break;
+                    case RTI.DataSet.DvlDataSet.LeakDetectionOptions.WaterDetected:
+                        sb.Append(LEAKDETECT_WATER);
+                        break;
+                    case RTI.DataSet.DvlDataSet.LeakDetectionOptions.NotInstalled:
+                    default:
+                        sb.Append(LEAKDETECT_NOT_INSTALLED);
+                        break;
+                }
             }
 
             // <CR><LF>
@@ -522,27 +535,26 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(ID);
-            sb.Append(", ");
+            sb.Append(",");
 
             // Pressure
             sb.Append(((int)Math.Round(this.Pressure)).ToString());
-            sb.Append(", ");
+            sb.Append(",");
 
             // Range Beam 0
             sb.Append(((int)Math.Round(this.RangeToBottomB0)).ToString());
-            sb.Append(", ");
+            sb.Append(",");
 
             // Range Beam 1
             sb.Append(((int)Math.Round(this.RangeToBottomB1)).ToString());
-            sb.Append(", ");
+            sb.Append(",");
             
             // Range Beam 2
             sb.Append(((int)Math.Round(this.RangeToBottomB2)).ToString());
-            sb.Append(", ");
+            sb.Append(",");
 
             // Range Beam 3
             sb.Append(((int)Math.Round(this.RangeToBottomB3)).ToString());
-            sb.Append(", ");
 
             // <CR><LF>
             sb.Append("\r\n");
@@ -677,7 +689,7 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(ID);
-            sb.Append(", ");
+            sb.Append(",");
 
             // X
             float x = this.X;
@@ -685,12 +697,15 @@ namespace RTI
             {
                 x = PD0.BAD_VELOCITY;
             }
-            if (x > 0)
+            if (x >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+"+((int)Math.Round(x)).ToString()));
             }
-            sb.Append(((int)Math.Round(x)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(x)).ToString()));
+            }
+            sb.Append(",");
 
             // Y
             float y = this.Y;
@@ -698,12 +713,15 @@ namespace RTI
             {
                 y = PD0.BAD_VELOCITY;
             }
-            if (y > 0)
+            if (y >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(y)).ToString()));
             }
-            sb.Append(((int)Math.Round(y)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(y)).ToString()));
+            }
+            sb.Append(",");
 
             // Z
             float z = this.Z;
@@ -711,12 +729,15 @@ namespace RTI
             {
                 z = PD0.BAD_VELOCITY;
             }
-            if (z > 0)
+            if (z >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(z)).ToString()));
             }
-            sb.Append(((int)Math.Round(z)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(z)).ToString()));
+            }
+            sb.Append(",");
 
             // Q
             float q = this.Q;
@@ -724,12 +745,15 @@ namespace RTI
             {
                 q = PD0.BAD_VELOCITY;
             }
-            if (q > 0)
+            if (q >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(q)).ToString()));
             }
-            sb.Append(((int)Math.Round(q)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(q)).ToString()));
+            }
+            sb.Append(",");
 
             // Is Good
             if (IsGood)
@@ -863,7 +887,7 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(ID);
-            sb.Append(", ");
+            sb.Append(",");
 
             // Transverse
             float t = this.T;
@@ -871,12 +895,15 @@ namespace RTI
             {
                 t = PD0.BAD_VELOCITY;
             }
-            if (t > 0)
+            if (t >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(t)).ToString()));
             }
-            sb.Append(((int)Math.Round(t)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(t)).ToString()));
+            }
+            sb.Append(",");
 
             // Longitudinal
             float l = this.L;
@@ -884,12 +911,15 @@ namespace RTI
             {
                 l = PD0.BAD_VELOCITY;
             }
-            if (l > 0)
+            if (l >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(l)).ToString()));
             }
-            sb.Append(((int)Math.Round(l)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(l)).ToString()));
+            }
+            sb.Append(",");
 
             // Vertical
             float n = this.N;
@@ -897,12 +927,15 @@ namespace RTI
             {
                 n = PD0.BAD_VELOCITY;
             }
-            if (n > 0)
+            if (n >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(n)).ToString()));
             }
-            sb.Append(((int)Math.Round(n)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(n)).ToString()));
+            }
+            sb.Append(",");
 
             // Is Good
             if (IsGood)
@@ -1044,12 +1077,15 @@ namespace RTI
             {
                 east = PD0.BAD_VELOCITY;
             }
-            if (east > 0)
+            if (east >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(east)).ToString()));
             }
-            sb.Append(((int)Math.Round(east)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(east)).ToString()));
+            }
+            sb.Append(",");
 
             // North
             float north = this.N;
@@ -1057,12 +1093,15 @@ namespace RTI
             {
                 north = PD0.BAD_VELOCITY;
             }
-            if (north > 0)
+            if (north >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(north)).ToString()));
             }
-            sb.Append(((int)Math.Round(north)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(north)).ToString()));
+            }
+            sb.Append(",");
 
             // Z
             float vertical = this.U;
@@ -1070,12 +1109,15 @@ namespace RTI
             {
                 vertical = PD0.BAD_VELOCITY;
             }
-            if (vertical > 0)
+            if (vertical >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(vertical)).ToString()));
             }
-            sb.Append(((int)Math.Round(vertical)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(vertical)).ToString()));
+            }
+            sb.Append(",");
 
             // Is Good
             if (IsGood)
@@ -1218,12 +1260,15 @@ namespace RTI
             {
                 east = PD0.BAD_VELOCITY;
             }
-            if (east > 0)
+            if (east >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 12}", "+" + ((int)Math.Round(east)).ToString("0.00")));
             }
-            sb.Append(((int)Math.Round(east)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 12}", ((int)Math.Round(east)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // North
             float north = this.N;
@@ -1231,12 +1276,15 @@ namespace RTI
             {
                 north = PD0.BAD_VELOCITY;
             }
-            if (north > 0)
+            if (north >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 12}", "+" + ((int)Math.Round(north)).ToString("0.00")));
             }
-            sb.Append(((int)Math.Round(north)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 12}", ((int)Math.Round(north)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // Z
             float vertical = this.U;
@@ -1244,20 +1292,22 @@ namespace RTI
             {
                 vertical = PD0.BAD_VELOCITY;
             }
-            if (vertical > 0)
+            if (vertical >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 12}", "+" + ((int)Math.Round(vertical)).ToString("0.00")));
             }
-            sb.Append(((int)Math.Round(vertical)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 12}", ((int)Math.Round(vertical)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // Range to Center of WM
-            sb.Append(((int)Math.Round(this.RangeToWmCenter)).ToString());
-            sb.Append(", ");
+            sb.Append(String.Format("{0, 7}", ((int)Math.Round(this.RangeToWmCenter)).ToString("0.00")));
+            sb.Append(",");
 
             // Time
-            sb.Append(((int)Math.Round(this.Time)).ToString());
-
+            sb.Append(String.Format("{0, 6}", ((int)Math.Round(this.Time)).ToString("0.00")));
 
             // <CR><LF>
             sb.Append("\r\n");
@@ -1403,12 +1453,15 @@ namespace RTI
             {
                 x = PD0.BAD_VELOCITY;
             }
-            if (x > 0)
+            if (x >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(x)).ToString()));
             }
-            sb.Append(((int)Math.Round(x)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(x)).ToString()));
+            }
+            sb.Append(",");
 
             // Y
             float y = this.Y;
@@ -1416,12 +1469,15 @@ namespace RTI
             {
                 y = PD0.BAD_VELOCITY;
             }
-            if (y > 0)
+            if (y >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(y)).ToString()));
             }
-            sb.Append(((int)Math.Round(y)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(y)).ToString()));
+            }
+            sb.Append(",");
 
             // Z
             float z = this.Z;
@@ -1429,12 +1485,15 @@ namespace RTI
             {
                 z = PD0.BAD_VELOCITY;
             }
-            if (z > 0)
+            if (z >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(z)).ToString()));
             }
-            sb.Append(((int)Math.Round(z)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(z)).ToString()));
+            }
+            sb.Append(",");
 
             // Q
             float q = this.Q;
@@ -1442,12 +1501,15 @@ namespace RTI
             {
                 q = PD0.BAD_VELOCITY;
             }
-            if (q > 0)
+            if (q >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(q)).ToString()));
             }
-            sb.Append(((int)Math.Round(q)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(q)).ToString()));
+            }
+            sb.Append(",");
 
             // Is Good
             if (IsGood)
@@ -1589,12 +1651,15 @@ namespace RTI
             {
                 t = PD0.BAD_VELOCITY;
             }
-            if (t > 0)
+            if (t >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(t)).ToString()));
             }
-            sb.Append(((int)Math.Round(t)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(t)).ToString()));
+            }
+            sb.Append(",");
 
             // Longitudinal
             float l = this.L;
@@ -1602,12 +1667,15 @@ namespace RTI
             {
                 l = PD0.BAD_VELOCITY;
             }
-            if (l > 0)
+            if (l >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(l)).ToString()));
             }
-            sb.Append(((int)Math.Round(l)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(l)).ToString()));
+            }
+            sb.Append(",");
 
             // Vertical
             float n = this.N;
@@ -1615,12 +1683,15 @@ namespace RTI
             {
                 n = PD0.BAD_VELOCITY;
             }
-            if (n > 0)
+            if (n >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(n)).ToString()));
             }
-            sb.Append(((int)Math.Round(n)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(n)).ToString()));
+            }
+            sb.Append(",");
 
             // Is Good
             if (IsGood)
@@ -1762,12 +1833,15 @@ namespace RTI
             {
                 east = PD0.BAD_VELOCITY;
             }
-            if (east > 0)
+            if (east >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(east)).ToString()));
             }
-            sb.Append(((int)Math.Round(east)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(east)).ToString()));
+            }
+            sb.Append(",");
 
             // North
             float north = this.N;
@@ -1775,12 +1849,15 @@ namespace RTI
             {
                 north = PD0.BAD_VELOCITY;
             }
-            if (north > 0)
+            if (north >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(north)).ToString()));
             }
-            sb.Append(((int)Math.Round(north)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(north)).ToString()));
+            }
+            sb.Append(",");
 
             // Z
             float vertical = this.U;
@@ -1788,12 +1865,15 @@ namespace RTI
             {
                 vertical = PD0.BAD_VELOCITY;
             }
-            if (vertical > 0)
+            if (vertical >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 6}", "+" + ((int)Math.Round(vertical)).ToString()));
             }
-            sb.Append(((int)Math.Round(vertical)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 6}", ((int)Math.Round(vertical)).ToString()));
+            }
+            sb.Append(",");
 
             // Is Good
             if (IsGood)
@@ -1938,12 +2018,15 @@ namespace RTI
             {
                 east = PD0.BAD_VELOCITY;
             }
-            if (east > 0)
+            if (east >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 12}", "+" + ((int)Math.Round(east)).ToString("0.00")));
             }
-            sb.Append(((int)Math.Round(east)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 12}", ((int)Math.Round(east)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // North
             float north = this.N;
@@ -1951,12 +2034,15 @@ namespace RTI
             {
                 north = PD0.BAD_VELOCITY;
             }
-            if (north > 0)
+            if (north >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 12}", "+" + ((int)Math.Round(north)).ToString("0.00")));
             }
-            sb.Append(((int)Math.Round(north)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 12}", ((int)Math.Round(north)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             // Z
             float vertical = this.U;
@@ -1964,19 +2050,22 @@ namespace RTI
             {
                 vertical = PD0.BAD_VELOCITY;
             }
-            if (vertical > 0)
+            if (vertical >= 0)
             {
-                sb.Append("+");
+                sb.Append(String.Format("{0, 12}", "+" + ((int)Math.Round(vertical)).ToString("0.00")));
             }
-            sb.Append(((int)Math.Round(vertical)).ToString());
-            sb.Append(", ");
+            else
+            {
+                sb.Append(String.Format("{0, 12}", ((int)Math.Round(vertical)).ToString("0.00")));
+            }
+            sb.Append(",");
 
             float range = this.RangeToBottom;
-            sb.Append(((int)Math.Round(range)).ToString());
+            sb.Append(String.Format("{0, 7}", ((int)Math.Round(range)).ToString("0.00")));
             sb.Append(", ");
 
             float time = this.Time;
-            sb.Append(((int)Math.Round(time)).ToString());
+            sb.Append(String.Format("{0, 6}", ((int)Math.Round(time)).ToString("0.00")));
 
             // <CR><LF>
             sb.Append("\r\n");

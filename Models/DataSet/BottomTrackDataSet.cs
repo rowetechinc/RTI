@@ -1111,6 +1111,43 @@ namespace RTI
             }
 
             /// <summary>
+            /// Return whether any of the Ship Velocity values are bad.
+            /// If one is bad, they are all bad.
+            /// If we do not allow 3 Beam solution and Q is bad, then all is bad.
+            /// </summary>
+            /// <param name="allow3BeamSolution">Allow a 3 Beam solution. Default = true</param>
+            /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
+            public bool IsShipVelocityGood(bool allow3BeamSolution = true)
+            {
+                // Ensure at least a 4 beam system
+                if (NumBeams >= DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+                {
+                    // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
+                    if (ShipVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
+                    {
+                        return false;
+                    }
+
+                    if (ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        ShipVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
+                        ShipVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Vertical beam only
+                    if (NumBeams >= 1 && ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            /// <summary>
             /// This will calculate the average range value.
             /// If a value is bad, it will not include the value.
             /// </summary>

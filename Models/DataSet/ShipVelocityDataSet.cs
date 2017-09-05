@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 08/25/2017      RC          3.4.2      Initial coding
+ * 09/05/2017      RC          3.4.3      Added VelocityVectors.
  * 
  */
 
@@ -61,6 +62,22 @@ namespace RTI
             /// </summary>
             public float[,] ShipVelocityData { get; set; }
 
+            /// <summary>
+            /// Flag if the Velocity Vector Array is available.  This 
+            /// array is created if screening is turned on and an array
+            /// was created during the screening process.
+            /// </summary>
+            public bool IsVelocityVectorAvail { get; set; }
+
+            /// <summary>
+            /// Velocity Vector.  This is an array of VelocityVectors.
+            /// The VelocityVector holds the magnitude and direciton for the 
+            /// water velocity in a bin.  Each bin will have a VelocityVector.
+            /// During screening this array can be created.  The screening
+            /// will also remove the ship speed before creating the vector.
+            /// </summary>
+            public VelocityVector[] VelocityVectors { get; set; }
+
             #endregion
 
             /// <summary>
@@ -77,6 +94,8 @@ namespace RTI
             {
                 // Initialize data
                 ShipVelocityData = new float[NumElements, ElementsMultiplier];
+                IsVelocityVectorAvail = false;
+                VelocityVectors = new VelocityVector[NumElements];
             }
 
             /// <summary>
@@ -94,6 +113,8 @@ namespace RTI
             {
                 // Initialize data
                 ShipVelocityData = new float[NumElements, ElementsMultiplier];
+                IsVelocityVectorAvail = false;
+                VelocityVectors = new VelocityVector[NumElements];
             }
 
             /// <summary>
@@ -112,6 +133,8 @@ namespace RTI
             {
                 // Initialize data
                 ShipVelocityData = new float[NumElements, ElementsMultiplier];
+                IsVelocityVectorAvail = false;
+                VelocityVectors = new VelocityVector[NumElements];
 
                 // Decode the byte array for velocity data
                 Decode(velocityData);
@@ -145,6 +168,8 @@ namespace RTI
             {
                 // Initialize data
                 this.ShipVelocityData = ShipVelocityData;
+                this.IsVelocityVectorAvail = IsVelocityVectorAvail;
+                this.VelocityVectors = VelocityVectors;
             }
 
             /// <summary>

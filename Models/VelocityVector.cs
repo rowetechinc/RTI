@@ -40,6 +40,7 @@
  * 03/22/2013      RC          2.19       Fixed bug in GenerateAmplitudeVectors() where the VelociytVector was not created.      
  * 07/29/2014      RC          2.23.0     Added Instrument Velocity Vectors.  Made specific Earth and Instrument functions.
  * 04/16/2015      RC          3.0.4      Check how many beams in GenerateInstrumentVectors().
+ * 09/05/2017      RC          3.4.3      Added GenerateShipVectors().
  * 
  */
 
@@ -123,6 +124,9 @@ namespace RTI
 
                 // Generate the Instrument Velocity Vectors
                 GenerateInstrumentVectors(ref ensemble);
+
+                // Generate the Instrument Velocity Vectors
+                GenerateShipVectors(ref ensemble);
 
                 return true;
             }
@@ -248,6 +252,34 @@ namespace RTI
             }
 
             /// <summary>
+            /// Create an EnsembleVelocityVector based off the ensemble.
+            /// If the Velocity Vectors do not exist, create the vectors.
+            /// </summary>
+            /// <param name="adcpData">Ensemble data.</param>
+            /// <returns>EnsembleVelocityVector with the velocity vector data.</returns>
+            public static DataSet.EnsembleVelocityVectors GetShipVelocityVectors(DataSet.Ensemble adcpData)
+            {
+                // Create struct to hold the data
+                DataSet.EnsembleVelocityVectors ensVec = new DataSet.EnsembleVelocityVectors();
+                ensVec.Id = adcpData.EnsembleData.UniqueId;
+
+                // Check, if velocity vectors exist
+                if (adcpData.IsShipVelocityAvail && adcpData.ShipVelocityData.IsVelocityVectorAvail)
+                {
+                    ensVec.Vectors = adcpData.ShipVelocityData.VelocityVectors;
+                }
+                else if (adcpData.IsShipVelocityAvail)
+                {
+                    // Create the velocity vector data
+                    DataSet.VelocityVectorHelper.CreateVelocityVector(ref adcpData);
+
+                    ensVec.Vectors = adcpData.ShipVelocityData.VelocityVectors;
+                }
+
+                return ensVec;
+            }
+
+            /// <summary>
             /// Generate the Earth Velocity vector and store it to the
             /// give ensemble.
             /// </summary>
@@ -367,6 +399,72 @@ namespace RTI
                 }
             }
 
+            /// <summary>
+            /// Generate the Ship Velocity vector and store it to the
+            /// give ensemble.
+            /// </summary>
+            /// <param name="ensemble">Ensemble to create the Ship velocity vectors.</param>
+            public static void GenerateShipVectors(ref DataSet.Ensemble ensemble)
+            {
+                if (ensemble != null && ensemble.IsShipVelocityAvail)
+                {
+                    // Create array to store all the vectors
+                    ensemble.ShipVelocityData.IsVelocityVectorAvail = true;
+                    ensemble.ShipVelocityData.VelocityVectors = new VelocityVector[ensemble.InstrumentVelocityData.NumElements];
+
+                    // Create a vector for each bin
+                    for (int bin = 0; bin < ensemble.ShipVelocityData.NumElements; bin++)
+                    {
+                        // Create the object
+                        ensemble.ShipVelocityData.VelocityVectors[bin] = new VelocityVector();
+
+                        float east = DataSet.Ensemble.BAD_VELOCITY;
+                        float north = DataSet.Ensemble.BAD_VELOCITY;
+                        float vertical = DataSet.Ensemble.BAD_VELOCITY;
+
+                        // Get the velocity values
+                        if (ensemble.EnsembleData.NumBeams > 0)
+                        {
+                            east = ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX];
+                        }
+
+                        if (ensemble.EnsembleData.NumBeams > 1)
+                        {
+                            north = ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX];
+                        }
+
+                        if (ensemble.EnsembleData.NumBeams > 2)
+                        {
+                            vertical = ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX];
+                        }
+
+                        // If any of the velocities are bad, then set bad velocities for all the velocities and move to the next bin
+                        if (east == DataSet.Ensemble.BAD_VELOCITY ||
+                            north == DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            ensemble.ShipVelocityData.VelocityVectors[bin].Magnitude = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.ShipVelocityData.VelocityVectors[bin].DirectionXNorth = DataSet.Ensemble.BAD_VELOCITY;
+                            ensemble.ShipVelocityData.VelocityVectors[bin].DirectionYNorth = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+                        else
+                        {
+
+                            // Calculate the magnitude of the velocity
+                            //double mag = MathHelper.CalculateMagnitude(ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
+                            //                                           ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
+                            //                                           ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]);
+                            double mag = MathHelper.CalculateMagnitude(ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX],
+                                                                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX],
+                                                                        0);      // do not use Vertical
+
+                            // Set the values
+                            ensemble.ShipVelocityData.VelocityVectors[bin].Magnitude = Math.Abs(mag);
+                            ensemble.ShipVelocityData.VelocityVectors[bin].DirectionXNorth = MathHelper.CalculateDirection(east, north);
+                            ensemble.ShipVelocityData.VelocityVectors[bin].DirectionYNorth = MathHelper.CalculateDirection(north, east);
+                        }
+                    }
+                }
+            }
             /// <summary>
             /// Create an struct to hold bin vectors for the amplitude data.
             /// Average the amplitude value for each bin and store as the magnitude value.

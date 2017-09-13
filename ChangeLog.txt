@@ -6,6 +6,11 @@ RTI-3.4.3
  - In RemoveShipSpeed, added GetPreviousBottomTrackVelocity() to get the previous Bottom Track velocity to store for next iteration.
  - In ShipVelocityDataSet, added VelocityVectors.
  - In VelocityVector, added GenerateShipVectors().
+ - Added AdcpUdp.
+ - In BottomTrackDataSet, fixed bug if no beams in data.
+ - In RemoveShipSpeed, check if Bottom Track has no beams.
+ - In PD4_5Codec, fixed a bug where the thread lock holds in SearchForHeaderStart().
+ - In SerialNumber, added option to add new line in GetSerialNumberDescString().
 
 RTI-3.4.2
  - In Ensemble, added EnsembleWaterProfileTextOutput() to display all data as text.

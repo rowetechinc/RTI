@@ -42,6 +42,7 @@
  * 08/16/2013      RC          2.19.4     Added gpsHeadingOffset to account for the GPS not aligned with the ADCP.
  * 08/19/2014      RC          3.0.0      Get the heading from the GPS before using the bottom track heading to remove the ship speed when using GPS speed.
  * 09/05/2017      RC          3.4.3      Added GetPreviousBottomTrackVelocity() to get the previous Bottom Track velocity to store for next iteration.
+ * 09/13/2017      RC          3.4.3      Check if Bottom Track has no beams.
  * 
  */
 
@@ -588,7 +589,7 @@ namespace RTI
                             {
                                 // Check that it is not a 3 beam solution
                                 // All the Beam values should be good
-                                if (ensemble.BottomTrackData.IsBeamVelocityGood())
+                                if (ensemble.BottomTrackData.IsBeamVelocityGood() && ensemble.BottomTrackData.NumBeams >= 3)
                                 {
                                     result[0] = ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX];
                                     result[1] = ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX];
@@ -636,7 +637,7 @@ namespace RTI
                                     }
 
                                     // We do not have a vertical velocity using GPS speed, so try to use the Bottom Track
-                                    if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                                    if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY && ensemble.BottomTrackData.NumBeams >= 3)
                                     {
                                         result[2] = ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX];
                                     }
@@ -686,7 +687,7 @@ namespace RTI
                             {
                                 // Check that it is not a 3 beam solution
                                 // All the Beam values should be good
-                                if (ensemble.BottomTrackData.IsBeamVelocityGood())
+                                if (ensemble.BottomTrackData.IsBeamVelocityGood() && ensemble.BottomTrackData.NumBeams >= 3)
                                 {
                                     result[0] = ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_EAST_INDEX];
                                     result[1] = ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX];
@@ -734,7 +735,7 @@ namespace RTI
                                     }
 
                                     // We do not have a vertical velocity using GPS speed, so try to use the Bottom Track
-                                    if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                                    if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY && ensemble.BottomTrackData.NumBeams >= 3)
                                     {
                                         result[2] = ensemble.BottomTrackData.InstrumentVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX];
                                     }
@@ -784,7 +785,7 @@ namespace RTI
                             {
                                 // Check that it is not a 3 beam solution
                                 // All the Beam values should be good
-                                if (ensemble.BottomTrackData.IsBeamVelocityGood())
+                                if (ensemble.BottomTrackData.IsBeamVelocityGood() && ensemble.BottomTrackData.NumBeams >= 3)
                                 {
                                     result[0] = ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_EAST_INDEX];
                                     result[1] = ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX];
@@ -832,7 +833,7 @@ namespace RTI
                                     }
 
                                     // We do not have a vertical velocity using GPS speed, so try to use the Bottom Track
-                                    if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                                    if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY && ensemble.BottomTrackData.NumBeams >= 3)
                                     {
                                         result[2] = ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX];
                                     }

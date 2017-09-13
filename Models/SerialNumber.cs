@@ -57,6 +57,7 @@
  * 10/04/2013      RC          2.21.0     Changed SubSystemsDict to a list.  The key was never used.  Ensure the subsystem has not been added to the list in AddConfig().
  * 08/01/2015      RC          3.0.5      Added a base hardware list.
  * 09/23/2015      RC          3.1.0      Moved generating BaseHardwareList to the object declaration.
+ * 09/13/2017      RC          3.4.3      Added option to add new line in GetSerialNumberDescString().
  *
  */
 
@@ -808,8 +809,9 @@ namespace RTI
         /// for the serial number.  It will also list
         /// the serial number.
         /// </summary>
+        /// <param name="newLine">Add a new line between subsystems descriptions.</param>
         /// <returns></returns>
-        public string GetSerialNumberDescString()
+        public string GetSerialNumberDescString(bool newLine = false)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -817,11 +819,18 @@ namespace RTI
             foreach (Subsystem ss in SubSystemsList)
             {
                 sb.Append(string.Format("{0}: {1}", ss.Index, ss.DescString()));
-                sb.Append("; ");
+                if (!newLine)
+                {
+                    sb.Append("; ");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
             }
 
             // Set the serial number
-            sb.Append(string.Format("ADCP: {0}", SystemSerialNumber));
+            sb.Append(string.Format("ADCP Serial number: {0}", SystemSerialNumber));
 
 
             return sb.ToString();

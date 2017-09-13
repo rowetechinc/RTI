@@ -68,6 +68,7 @@
  * 11/11/2015      RC          3.2.1      Fixed bug in IsEarthVelocityGood.
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
  * 08/25/2017      RC          3.4.2      Added Ship Velocity.
+ * 09/13/2017      RC          3.4.3      Fixed bug if no beams in data.
  * 
  */
 
@@ -1024,7 +1025,7 @@ namespace RTI
                 // Vertical beam
                 else
                 {
-                    if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    if (NumBeams >= 1 && BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                     {
                         return false;
                     }

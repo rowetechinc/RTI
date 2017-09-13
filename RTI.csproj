@@ -117,11 +117,11 @@
     <Compile Include="Communications\AdcpEthernetOptions.cs" />
     <Compile Include="Communications\AdcpSerialPort.cs" />
     <Compile Include="Communications\AdcpTcpIp.cs" />
+    <Compile Include="Communications\AdcpUdp.cs" />
     <Compile Include="Communications\GpsSerialPort.cs" />
     <Compile Include="Communications\SerialConnection.cs" />
     <Compile Include="Communications\SerialOptions.cs" />
     <Compile Include="Communications\TcpServer.cs" />
-    <Compile Include="Communications\UdpMessages.cs" />
     <Compile Include="Models\DataSet\ShipWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\ShipVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\GageHeightDataSet.cs" />

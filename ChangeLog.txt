@@ -1,5 +1,7 @@
 RTI Changelog
 
+RTI-3.4.4
+
 RTI-3.4.3
  - Fixed bug by adding a line feed to the end EnsToPd6_13Codec.
  - Made the spacing for the PD6 data match the documentation.

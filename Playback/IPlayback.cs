@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 09/03/2014      RC          3.0.1      Initial coding
  * 07/27/2015      RC          3.0.5      Added Name of file playing back.
+ * 09/29/2017      RC          3.4.4      Added GetOrigDataFormat() to know the what format the data was recorded.
  *       
  * 
  */
@@ -105,5 +106,11 @@ namespace RTI
         /// </summary>
         /// <returns>Number of ensembles in the file.</returns>
         int GetNumberOfEnsembles();
+
+        /// <summary>
+        /// Get the original data format of the data recorded.
+        /// </summary>
+        /// <returns>Original data format the data was recorded.</returns>
+        AdcpCodec.CodecEnum GetOrigDataFormat();
     }
 }

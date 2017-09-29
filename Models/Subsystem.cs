@@ -52,7 +52,9 @@
  * 07/22/2013      RC          2.19.1     Added SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c, SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d and SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e
  * 08/14/2013      RC          2.19.4     Encode and Decode to JSON.
  * 03/17/2017      RC          3.4.2      Added IsVerticalBeam() to check if the code is for a vertical beam subsystem.
- *
+ * 09/26/2017      RC          3.4.4      Added GetBeamAngle() to give the beam angle for a given subsystem.
+ *                                        Added new subsystem codes based off User Guide AG.
+ * 
  */
 
 using System;
@@ -421,9 +423,11 @@ namespace RTI
         public const byte SUB_SPARE_a = 0x61;
 
         /// <summary>
-        /// Spare with value 0x62.
+        /// 2 MHz 4 beam 20 degree piston opposite facing
+        /// ASCII: c
+        /// Hex: 0x62
         /// </summary>
-        public const byte SUB_SPARE_b = 0x62;
+        public const byte SUB_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_b = 0x62;
 
         /// <summary>
         /// 1.2 MHz 4 beam 20 degree piston opposite facing
@@ -434,17 +438,157 @@ namespace RTI
 
         /// <summary>
         /// 600 KHz 4 beam 20 degree piston opposite facing
-        /// ASCII: c
-        /// Hex: 0x63
+        /// ASCII: d
+        /// Hex: 0x64
         /// </summary>
         public const byte SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d = 0x64;
 
         /// <summary>
         /// 300 KHz 4 beam 20 degree piston opposite facing
-        /// ASCII: c
-        /// Hex: 0x63
+        /// ASCII: e
+        /// Hex: 0x65
         /// </summary>
         public const byte SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e = 0x65;
+
+        /// <summary>
+        /// 150 KHz 4 beam 20 degree piston opposite facing
+        /// ASCII: f
+        /// Hex: 0x66
+        /// </summary>
+        public const byte SUB_150KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_f = 0x66;
+
+        /// <summary>
+        /// 75 KHz 4 beam 20 degree piston opposite facing
+        /// ASCII: f
+        /// Hex: 0x67
+        /// </summary>
+        public const byte SUB_75KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_g = 0x67;
+
+        /// <summary>
+        /// 38 KHz 4 beam 20 degree piston opposite facing
+        /// ASCII: h
+        /// Hex: 0x68
+        /// </summary>
+        public const byte SUB_38KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_h = 0x68;
+
+        /// <summary>
+        /// 20 KHz 4 beam 20 degree piston opposite facing
+        /// ASCII: i
+        /// Hex: 0x69
+        /// </summary>
+        public const byte SUB_20KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_i = 0x69;
+
+        /// <summary>
+        /// 2 MHz 4 beam 30 degree piston
+        /// ASCII: j
+        /// Hex: 0x70
+        /// </summary>
+        public const byte SUB_2MHZ_4BEAM_30DEG_PISTON_j = 0x6A;
+
+        /// <summary>
+        /// 1.2 MHz 4 beam 30 degree piston
+        /// ASCII: k
+        /// Hex: 0x71
+        /// </summary>
+        public const byte SUB_1_2MHZ_4BEAM_30DEG_PISTON_k = 0x6B;
+
+        /// <summary>
+        /// 600 KHz 4 beam 30 degree piston
+        /// ASCII: l
+        /// Hex: 0x72
+        /// </summary>
+        public const byte SUB_600KHZ_4BEAM_30DEG_PISTON_l = 0x6C;
+
+        /// <summary>
+        /// 300 KHz 4 beam 30 degree piston
+        /// ASCII: m
+        /// Hex: 0x6D
+        /// </summary>
+        public const byte SUB_300KHZ_4BEAM_30DEG_PISTON_m = 0x6D;
+
+        /// <summary>
+        /// 150 KHz 4 beam 30 degree piston
+        /// ASCII: n
+        /// Hex: 0x6E
+        /// </summary>
+        public const byte SUB_150KHZ_4BEAM_30DEG_PISTON_n = 0x6E;
+
+        /// <summary>
+        /// 75 KHz 4 beam 30 degree piston
+        /// ASCII: o
+        /// Hex: 0x6F
+        /// </summary>
+        public const byte SUB_75KHZ_4BEAM_30DEG_PISTON_o = 0x6F;
+
+        /// <summary>
+        /// 38 KHz 4 beam 30 degree piston
+        /// ASCII: p
+        /// Hex: 0x70
+        /// </summary>
+        public const byte SUB_38KHZ_4BEAM_30DEG_PISTON_p = 0x70;
+
+        /// <summary>
+        /// 20 KHz 4 beam 30 degree piston
+        /// ASCII: q
+        /// Hex: 0x71
+        /// </summary>
+        public const byte SUB_20KHZ_4BEAM_30DEG_PISTON_q = 0x71;
+
+        /// <summary>
+        /// 2 MHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: r
+        /// Hex: 0x72
+        /// </summary>
+        public const byte SUB_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_r = 0x72;
+
+        /// <summary>
+        /// 1.2 MHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: s
+        /// Hex: 0x73
+        /// </summary>
+        public const byte SUB_1_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_s = 0x73;
+
+        /// <summary>
+        /// 600 kHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: t
+        /// Hex: 0x74
+        /// </summary>
+        public const byte SUB_600KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_t = 0x74;
+
+        /// <summary>
+        /// 300 kHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: u
+        /// Hex: 0x75
+        /// </summary>
+        public const byte SUB_300KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_u = 0x75;
+
+        /// <summary>
+        /// 150 kHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: v
+        /// Hex: 0x76
+        /// </summary>
+        public const byte SUB_150KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_v = 0x76;
+
+        /// <summary>
+        /// 75 kHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: w
+        /// Hex: 0x77
+        /// </summary>
+        public const byte SUB_75KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_w = 0x77;
+
+        /// <summary>
+        /// 38 kHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: x
+        /// Hex: 0x78
+        /// </summary>
+        public const byte SUB_38KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_x = 0x78;
+
+        /// <summary>
+        /// 20 kHz 4 beam 30 degree piston oppositie facing
+        /// ASCII: y
+        /// Hex: 0x79
+        /// </summary>
+        public const byte SUB_20KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_y = 0x79;
 
         #endregion
 
@@ -702,8 +846,54 @@ namespace RTI
                     return "20 kHz 1 beam 0 degree array";
                 case SUB_SPARE_a:
                     return "Spare";
-                case SUB_SPARE_b:
-                    return "Spare";
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_b:
+                    return "2 MHz 4 Beam 20 degree piston opposite facing";
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c:
+                    return "1.2 MHz 4 Beam 20 degree piston opposite facing";
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d:
+                    return "600 kHz 4 Beam 20 degree piston opposite facing";
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e:
+                    return "300 kHz 4 Beam 20 degree piston opposite facing";
+                case SUB_150KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_f:
+                    return "150 kHz 4 Beam 20 degree piston opposite facing";
+                case SUB_75KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_g:
+                    return "75 kHz 4 Beam 20 degree piston opposite facing";
+                case SUB_38KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_h:
+                    return "38 kHz 4 Beam 20 degree piston opposite facing";
+                case SUB_20KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_i:
+                    return "20 kHz 4 Beam 20 degree piston opposite facing";
+                case SUB_2MHZ_4BEAM_30DEG_PISTON_j:
+                    return "2 MHz 4 Beam 30 degree piston";
+                case SUB_1_2MHZ_4BEAM_30DEG_PISTON_k:
+                    return "1.2 MHz 4 Beam 30 degree piston";
+                case SUB_600KHZ_4BEAM_30DEG_PISTON_l:
+                    return "600 kHz 4 Beam 30 degree piston";
+                case SUB_300KHZ_4BEAM_30DEG_PISTON_m:
+                    return "300 kHz 4 Beam 30 degree piston";
+                case SUB_150KHZ_4BEAM_30DEG_PISTON_n:
+                    return "150 kHz 4 Beam 30 degree piston";
+                case SUB_75KHZ_4BEAM_30DEG_PISTON_o:
+                    return "75 kHz 4 Beam 30 degree piston";
+                case SUB_38KHZ_4BEAM_30DEG_PISTON_p:
+                    return "38 kHz 4 Beam 30 degree piston";
+                case SUB_20KHZ_4BEAM_30DEG_PISTON_q:
+                    return "20 kHz 4 Beam 30 degree piston";
+                case SUB_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_r:
+                    return "2 MHz 4 Beam 30 degree piston opposite facing";
+                case SUB_1_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_s:
+                    return "1.2 MHz 4 Beam 30 degree piston opposite facing";
+                case SUB_600KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_t:
+                    return "600 kHz 4 Beam 30 degree piston opposite facing";
+                case SUB_300KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_u:
+                    return "300 kHz 4 Beam 30 degree piston opposite facing";
+                case SUB_150KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_v:
+                    return "150 kHz 4 Beam 30 degree piston opposite facing";
+                case SUB_75KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_w:
+                    return "75 kHz 4 Beam 30 degree piston opposite facing";
+                case SUB_38KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_x:
+                    return "38 kHz 4 Beam 30 degree piston opposite facing";
+                case SUB_20KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_y:
+                    return "20 kHz 4 Beam 30 degree piston opposite facing";
                 default:
                     return EMPTY;
             }
@@ -804,10 +994,57 @@ namespace RTI
                     return SystemFrequency.Freq_38kHz;
                 case SUB_20KHZ_1BEAM_0DEG_ARRAY_Z:
                     return SystemFrequency.Freq_20kHz;
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_b:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c:
+                    return SystemFrequency.Freq_1200kHz;
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_f:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_g:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_h:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_i:
+                    return SystemFrequency.Freq_20kHz;
+                case SUB_2MHZ_4BEAM_30DEG_PISTON_j:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_1_2MHZ_4BEAM_30DEG_PISTON_k:
+                    return SystemFrequency.Freq_1200kHz;
+                case SUB_600KHZ_4BEAM_30DEG_PISTON_l:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_30DEG_PISTON_m:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_4BEAM_30DEG_PISTON_n:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_4BEAM_30DEG_PISTON_o:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_4BEAM_30DEG_PISTON_p:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_4BEAM_30DEG_PISTON_q:
+                    return SystemFrequency.Freq_20kHz;
+                case SUB_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_r:
+                    return SystemFrequency.Freq_2000kHz;
+                case SUB_1_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_s:
+                    return SystemFrequency.Freq_1200kHz;
+                case SUB_600KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_t:
+                    return SystemFrequency.Freq_600kHz;
+                case SUB_300KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_u:
+                    return SystemFrequency.Freq_300kHz;
+                case SUB_150KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_v:
+                    return SystemFrequency.Freq_150kHz;
+                case SUB_75KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_w:
+                    return SystemFrequency.Freq_75kHz;
+                case SUB_38KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_x:
+                    return SystemFrequency.Freq_38kHz;
+                case SUB_20KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_y:
+                    return SystemFrequency.Freq_20kHz;
                 case SUB_SPARE_0:
                 case SUB_SPARE_H:
                 case SUB_SPARE_a:
-                case SUB_SPARE_b:
                 case EMPTY_CODE:
                 default:
                     return SystemFrequency.Freq_300kHz;
@@ -869,6 +1106,90 @@ namespace RTI
                     return false;
             }
 
+        }
+
+        /// <summary>
+        /// Get the Beam Angle based off the subsystem code given.
+        /// </summary>
+        /// <param name="code">Subsystem code.</param>
+        /// <returns>Beam angle for the given subsystem code.</returns>
+        public static float GetBeamAngle(byte code)
+        {
+            switch(code)
+            {
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_1:
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_2:
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_3:
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_4:
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_5:
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_45OFFSET_6:
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_45OFFSET_7:
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_45OFFSET_8:
+                    return 20.0f;
+                case SUB_2MHZ_VERT_PISTON_9:
+                case SUB_1_2MHZ_VERT_PISTON_A:
+                case SUB_600KHZ_VERT_PISTON_B:
+                case SUB_300KHZ_VERT_PISTON_C:
+                case SUB_150KHZ_VERT_PISTON_D:
+                case SUB_75KHZ_VERT_PISTON_E:
+                case SUB_38KHZ_VERT_PISTON_F:
+                case SUB_20KHZ_VERT_PISTON_G:
+                    return 0.0f;
+                case SUB_600KHZ_4BEAM_30DEG_ARRAY_I:
+                case SUB_300KHZ_4BEAM_30DEG_ARRAY_J:
+                case SUB_150KHZ_4BEAM_30DEG_ARRAY_K:
+                case SUB_75KHZ_4BEAM_30DEG_ARRAY_L:
+                case SUB_38KHZ_4BEAM_30DEG_ARRAY_M:
+                case SUB_20KHZ_4BEAM_30DEG_ARRAY_N:
+                    return 30.0f;
+                case SUB_600KHZ_4BEAM_15DEG_ARRAY_O:
+                case SUB_300KHZ_4BEAM_15DEG_ARRAY_P:
+                case SUB_150KHZ_4BEAM_15DEG_ARRAY_Q:
+                case SUB_75KHZ_4BEAM_15DEG_ARRAY_R:
+                case SUB_38KHZ_4BEAM_15DEG_ARRAY_S:
+                case SUB_20KHZ_4BEAM_15DEG_ARRAY_T:
+                    return 15.0f;
+                case SUB_600KHZ_1BEAM_0DEG_ARRAY_U:
+                case SUB_300KHZ_1BEAM_0DEG_ARRAY_V:
+                case SUB_150KHZ_1BEAM_0DEG_ARRAY_W:
+                case SUB_75KHZ_1BEAM_0DEG_ARRAY_X:
+                case SUB_38KHZ_1BEAM_0DEG_ARRAY_Y:
+                case SUB_20KHZ_1BEAM_0DEG_ARRAY_Z:
+                    return 0.0f;
+                case SUB_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_b:
+                case SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c:
+                case SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d:
+                case SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e:
+                case SUB_150KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_f:
+                case SUB_75KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_g:
+                case SUB_38KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_h:
+                case SUB_20KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_i:
+                    return 20.0f;
+                case SUB_2MHZ_4BEAM_30DEG_PISTON_j:
+                case SUB_1_2MHZ_4BEAM_30DEG_PISTON_k:
+                case SUB_600KHZ_4BEAM_30DEG_PISTON_l:
+                case SUB_300KHZ_4BEAM_30DEG_PISTON_m:
+                case SUB_150KHZ_4BEAM_30DEG_PISTON_n:
+                case SUB_75KHZ_4BEAM_30DEG_PISTON_o:
+                case SUB_38KHZ_4BEAM_30DEG_PISTON_p:
+                case SUB_20KHZ_4BEAM_30DEG_PISTON_q:
+                case SUB_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_r:
+                case SUB_1_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_s:
+                case SUB_600KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_t:
+                case SUB_300KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_u:
+                case SUB_150KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_v:
+                case SUB_75KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_w:
+                case SUB_38KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_x:
+                case SUB_20KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_y:
+                    return 30.0f;
+                case SUB_SPARE_0:
+                case SUB_SPARE_H:
+                case SUB_SPARE_a:
+                case EMPTY_CODE:
+                    return 20.0f;
+                default:
+                    return 20.0f; ;
+            }
         }
 
         /// <summary>
@@ -968,7 +1289,7 @@ namespace RTI
         #endregion
     }
 
-            /// <summary>
+        /// <summary>
         /// Information about the subsystem.
         /// </summary>
         public class SubsystemInfo
@@ -1524,6 +1845,30 @@ namespace RTI
             Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_1BEAM_0DEG_ARRAY_X));
             Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_1BEAM_0DEG_ARRAY_Y));
             Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_1BEAM_0DEG_ARRAY_Z));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_b));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_c));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_d));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_e));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_f));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_g));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_h));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_4BEAM_20DEG_PISTON_OPPOSITE_FACING_i));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_2MHZ_4BEAM_30DEG_PISTON_j));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_1_2MHZ_4BEAM_30DEG_PISTON_k));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_30DEG_PISTON_l));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_30DEG_PISTON_m));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_4BEAM_30DEG_PISTON_n));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_4BEAM_30DEG_PISTON_o));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_4BEAM_30DEG_PISTON_p));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_4BEAM_30DEG_PISTON_q));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_r));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_1_2MHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_s));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_600KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_t));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_300KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_u));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_150KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_v));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_75KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_w));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_38KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_x));
+            Add(new SubsystemCodeDesc(Subsystem.SUB_20KHZ_4BEAM_30DEG_PISTON_OPPOSITE_FACING_y));
         }
 
         /// <summary>

@@ -440,6 +440,16 @@ namespace RTI
                     Buffer.BlockCopy(data, 0, ens, 0, ensSize);
 
                     Header.Decode(ens);
+
+
+                    // Fix a bug with Water Profile Turned off and Bottom Track turned on
+                    // Fixed Leader sets number of beams to 0
+                    // But Bottom Track contains data, and it is assumed to be a 4 beam system
+                    // So this will set the number of beams in the Fixed Leader to 4 beams
+                    if(IsBottomTrackExist && !IsVelocityExist)
+                    {
+                        FixedLeader.NumberOfBeams = 4;
+                    }
                 }
             }
         }

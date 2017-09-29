@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/08/2017      RC          3.4.0      Initial coding
+ * 09/29/2017      RC          3.4.4      Added original data format.
  * 
  */
 

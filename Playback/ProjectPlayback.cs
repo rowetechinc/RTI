@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 08/29/2014      RC          3.0.1      Initial coding
  * 07/27/2015      RC          3.0.5      Set the project name.
+ * 09/29/2017      RC          3.4.4      Pass the data format the data was recorded.
  *       
  * 
  */
@@ -139,6 +140,7 @@ namespace RTI
 
             // Set the index
             args.Index = PlaybackIndex;
+            args.OrigDataFormat = AdcpCodec.CodecEnum.Binary;           // ****BAD, NEED TO DETERMINE CORRECT FORMAT
 
             return args;
         }
@@ -166,6 +168,7 @@ namespace RTI
 
             // Set the index
             args.Index = PlaybackIndex;
+            args.OrigDataFormat = AdcpCodec.CodecEnum.Binary;           // ****BAD, NEED TO DETERMINE CORRECT FORMAT
 
             return args;
         }
@@ -183,6 +186,7 @@ namespace RTI
             args.TotalEnsembles = TotalEnsembles;
             args.Index = index;
             args.Ensemble = GetEnsemble(index);
+            args.OrigDataFormat = AdcpCodec.CodecEnum.Binary;           // ****BAD, NEED TO DETERMINE CORRECT FORMAT
 
             // Set the new playback index
             PlaybackIndex = index;
@@ -197,6 +201,15 @@ namespace RTI
         public Cache<long, DataSet.Ensemble> GetAllEnsembles()
         {
             return _project.GetAllEnsembles();
+        }
+
+        /// <summary>
+        /// Return the format the data was originally recorded.
+        /// </summary>
+        /// <returns>Original format the data was recorded.</returns>
+        public AdcpCodec.CodecEnum GetOrigDataFormat()
+        {
+            return AdcpCodec.CodecEnum.Binary;          // ****BAD, NEED TO DETERMINE CORRECT FORMAT
         }
 
         /// <summary>

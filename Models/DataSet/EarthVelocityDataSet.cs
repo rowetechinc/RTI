@@ -55,6 +55,7 @@
  * 05/01/2013      RC          2.19       Added ability to handle single beam data in JSON.
  * 03/25/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 07/29/2014      RC          2.23.0     Changed the name of the VelocityVector functions.
+ * 09/26/2017      RC          3.4.4.     if no Water Profile, fix bug IsBinGood() to check if the bin is good.
  * 
  */
 
@@ -319,6 +320,12 @@ namespace RTI
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
             public bool IsBinGood(int bin, bool allow3BeamSolution = true)
             {
+                // Check if it contains any data
+                if(NumElements <= 0)
+                {
+                    return false;
+                }
+
                 if (ElementsMultiplier > DataSet.Ensemble.BEAM_Q_INDEX)
                 {
                     // If the Q is bad and we do not allow 3 Beam solution, then all is bad.

@@ -111,6 +111,11 @@ namespace RTI
             /// Ensemble object.
             /// </summary>
             public Ensemble Ensemble { get; set; }
+
+            /// <summary>
+            /// Original data format.
+            /// </summary>
+            public AdcpCodec.CodecEnum OrigDataFormat { get; set; }
         }
 
         /// <summary>

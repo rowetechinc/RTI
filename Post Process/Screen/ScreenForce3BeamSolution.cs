@@ -28,7 +28,8 @@ namespace RTI
             /// <param name="ensemble">Ensemble to set bad beam.</param>
             /// <param name="beam">Beam to mark bad.</param>
             /// <returns>TRUE = Screening could be done.</returns>
-            public static bool Force3BeamSolution(ref DataSet.Ensemble ensemble, int beam)
+            /// <param name="origDataFormat">Original Data format.</param>
+            public static bool Force3BeamSolution(ref DataSet.Ensemble ensemble, int beam, AdcpCodec.CodecEnum origDataFormat)
             {
                 // Verify the data exist
                 if (!ensemble.IsEnsembleAvail || !ensemble.IsBeamVelocityAvail || !ensemble.IsGoodBeamAvail)
@@ -50,7 +51,7 @@ namespace RTI
                 }
 
                 // Calculate the new Earth velocities
-                Transform.ProfileTransform(ref ensemble);
+                Transform.ProfileTransform(ref ensemble, origDataFormat);
 
                 return true;
             }
@@ -63,8 +64,9 @@ namespace RTI
             /// </summary>
             /// <param name="ensemble">Ensemble to set bad beam.</param>
             /// <param name="beam">Beam to mark bad.</param>
+            /// <param name="origDataFormat">Original Data Format.</param>
             /// <returns>TRUE = Screening could be done.</returns>
-            public static bool Force3BottomTrackBeamSolution(ref DataSet.Ensemble ensemble, int beam)
+            public static bool Force3BottomTrackBeamSolution(ref DataSet.Ensemble ensemble, int beam, AdcpCodec.CodecEnum origDataFormat)
             {
                 // Verify the data exist
                 if (!ensemble.IsEnsembleAvail || !ensemble.IsBottomTrackAvail)
@@ -83,7 +85,7 @@ namespace RTI
                 ensemble.BottomTrackData.BeamGood[beam] = 0;
                
                 // Calculate the new Earth velocities
-                Transform.BottomTrackTransform(ref ensemble);
+                Transform.BottomTrackTransform(ref ensemble, origDataFormat);
 
                 return true;
             }

@@ -44,6 +44,7 @@
  * 08/13/2015      RC          3.0.5      Read the file with a smaller buffer so large files will not take all the RAM in FindEnsembles().
  * 05/11/2016      RC          3.3.2      Changed from list to dictionary to prevent playback being out of order.
  * 03/28/2017      RC          3.4.2      Fixed bug in FindRtbEnsembles() when ensemble numbers are duplicated.
+ * 09/29/2017      RC          3.4.4      Pass the data format the data was recorded.
  * 
  */
 
@@ -87,14 +88,21 @@ namespace RTI
             public DataSet.Ensemble Ensemble { get; set; }
 
             /// <summary>
+            /// Original data format.
+            /// </summary>
+            public AdcpCodec.CodecEnum OrigDataFormat { get; set; }
+
+            /// <summary>
             /// Initialize the value.
             /// </summary>
             /// <param name="rawData">Raw binary data.</param>
             /// <param name="ensemble">Ensemble data.</param>
-            public EnsembleData(byte[] rawData, DataSet.Ensemble ensemble)
+            /// <param name="origDataFormat">Original Data format.</param>
+            public EnsembleData(byte[] rawData, DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat)
             {
                 RawData = rawData;
                 Ensemble = ensemble;
+                OrigDataFormat = origDataFormat;
             }
         }
 
@@ -277,6 +285,7 @@ namespace RTI
                 args.Index = PlaybackIndex;
                 args.Ensemble = _ensembleDict[_currEnsNum].Ensemble;
                 args.TotalEnsembles = TotalEnsembles;
+                args.OrigDataFormat = _ensembleDict[_currEnsNum].OrigDataFormat;
 
                 _currEnsNum++;
             }
@@ -323,6 +332,7 @@ namespace RTI
                 args.Index = PlaybackIndex;
                 args.Ensemble = _ensembleDict[_currEnsNum].Ensemble;
                 args.TotalEnsembles = TotalEnsembles;
+                args.OrigDataFormat = _ensembleDict[_currEnsNum].OrigDataFormat;
             }
 
             return args;
@@ -359,6 +369,7 @@ namespace RTI
                 args.Index = PlaybackIndex;
                 args.Ensemble = _ensembleDict[_currEnsNum].Ensemble;
                 args.TotalEnsembles = TotalEnsembles;
+                args.OrigDataFormat = _ensembleDict[_currEnsNum].OrigDataFormat;
             }
 
             return args;
@@ -380,6 +391,22 @@ namespace RTI
             }
 
             return list;
+        }
+
+        /// <summary>
+        /// Get the original data format.  This is the format
+        /// that the data was recorded in.
+        /// </summary>
+        /// <returns>Original data format the data was recorded.</returns>
+        public AdcpCodec.CodecEnum GetOrigDataFormat()
+        {
+            if(_ensembleDict.Count > 0)
+            {
+                return _ensembleDict.First().Value.OrigDataFormat;
+            }
+
+            // Default to binary
+            return AdcpCodec.CodecEnum.Binary;
         }
 
         /// <summary>
@@ -428,7 +455,7 @@ namespace RTI
             {
                 try
                 {
-                    AddEnsemble(ens.RawEnsemble, ens.Ensemble);
+                    AddEnsemble(ens.RawEnsemble, ens.Ensemble, ens.OrigDataFormat);
                 }
                 catch(Exception e)
                 {
@@ -514,7 +541,8 @@ namespace RTI
         /// </summary>
         /// <param name="ensembleRaw"></param>
         /// <param name="ensemble"></param>
-        public void AddEnsemble(byte[] ensembleRaw, DataSet.Ensemble ensemble)
+        /// <param name="origDataFormat">Originl Data format.</param>
+        public void AddEnsemble(byte[] ensembleRaw, DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat)
         {
             // **********
             // Moved this to eventhandler
@@ -533,7 +561,7 @@ namespace RTI
                 // Store the found ensemble to the dictionary
                 if (!_ensembleDict.ContainsKey(ensemble.EnsembleData.EnsembleNumber))
                 {
-                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble));
+                    _ensembleDict.Add(ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble, origDataFormat));
 
                     // Find the first ensemble number
                     if (_firstEnsNum == 0 || _firstEnsNum > ensemble.EnsembleData.EnsembleNumber)
@@ -550,7 +578,7 @@ namespace RTI
                 else
                 {
                     // Create a new ensemble number key based off the last ensemble and add 1
-                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble));
+                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble, origDataFormat));
                 }
             }
 
@@ -570,7 +598,8 @@ namespace RTI
         /// </summary>
         /// <param name="ensembleRaw">Ensemble binary data.</param>
         /// <param name="ensemble">Ensemble object.</param>
-        private void _adcpCodec_ProcessDataEvent(byte[] ensembleRaw, DataSet.Ensemble ensemble)
+        /// <param name="origDataFormat">Original Data format.</param>
+        private void _adcpCodec_ProcessDataEvent(byte[] ensembleRaw, DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat)
         {
             // Set the length of an ensemble to find the next ensemble
             // quicker
@@ -581,7 +610,7 @@ namespace RTI
             byte[] raw = new byte[ensembleRaw.Length];
             Buffer.BlockCopy(ensembleRaw, 0, raw, 0, ensembleRaw.Length);
 
-            AddEnsemble(raw, ens);
+            AddEnsemble(raw, ens, origDataFormat);
 
         }
 

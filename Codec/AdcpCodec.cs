@@ -39,6 +39,7 @@
  * 07/27/2015      RC          3.0.5      Check when to clear the codecs based on how many ensembles found.
  * 08/13/2015      RC          3.0.5      Check for complete event for all the codec.
  * 10/10/2016      RC          3.3.2      Changed binary codec to BinaryCodecNew.
+ * 09/28/2017      RC          3.4.4      Pass the original data format when the data is sent based off the codec used.
  * 
  */
 
@@ -61,7 +62,7 @@ namespace RTI
         /// <summary>
         /// Enum of all the codecs.
         /// </summary>
-        private enum CodecEnum
+        public enum CodecEnum
         {
             /// <summary>
             /// Binary codec.
@@ -438,7 +439,7 @@ namespace RTI
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
-                ProcessDataEvent(binaryEnsemble, ensemble);
+                ProcessDataEvent(binaryEnsemble, ensemble, CodecEnum.Binary);
             }
 
             _binaryCounter++;
@@ -474,7 +475,7 @@ namespace RTI
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
-                ProcessDataEvent(binaryEnsemble, ensemble);
+                ProcessDataEvent(binaryEnsemble, ensemble, CodecEnum.DVL);
             }
 
             _dvlCounter++;
@@ -514,7 +515,7 @@ namespace RTI
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
-                ProcessDataEvent(binaryEnsemble, rtiEns);
+                ProcessDataEvent(binaryEnsemble, rtiEns, CodecEnum.PD0);
             }
 
             _pd0Counter++;
@@ -550,7 +551,7 @@ namespace RTI
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
-                ProcessDataEvent(binaryEnsemble, ensemble);
+                ProcessDataEvent(binaryEnsemble, ensemble, CodecEnum.PD6_13);
             }
 
             _pd6_13Counter++;
@@ -586,7 +587,7 @@ namespace RTI
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
-                ProcessDataEvent(binaryEnsemble, ensemble);
+                ProcessDataEvent(binaryEnsemble, ensemble, CodecEnum.PD4_5);
             }
 
             _pd4_5Counter++;
@@ -620,7 +621,8 @@ namespace RTI
         /// </summary>
         /// <param name="binaryEnsemble">Byte array of raw ensemble data.</param>
         /// <param name="ensemble">Ensemble data as an object.</param>
-        public delegate void ProcessDataEventHandler(byte[] binaryEnsemble, DataSet.Ensemble ensemble);
+        /// <param name="dataFormat">Format of the data that was received.</param>
+        public delegate void ProcessDataEventHandler(byte[] binaryEnsemble, DataSet.Ensemble ensemble, CodecEnum dataFormat);
 
         /// <summary>
         /// Subscribe to receive event when data has been successfully

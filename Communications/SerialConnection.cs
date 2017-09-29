@@ -629,6 +629,56 @@ namespace RTI
         }
 
         /// <summary>
+        /// Send a break on the serial port.
+        /// This will take at least 100ms to complete.
+        /// The serial port turns on the break state, waits
+        /// 100ms then turns off the break state.
+        /// </summary>
+        /// <param name="waitStates">Number of wait states to wait.</param>
+        /// <param name="stateChangeWaitStates">Number of wait states after done with BREAK.</param>
+        /// <param name="softBreak">Flag if try soft BREAK if hardware BREAK fails.</param>
+        public void SendAdvancedBreak(int waitStates = 5, int stateChangeWaitStates = 4, bool softBreak = true)
+        {
+            try
+            {
+                if (IsAvailable())
+                {
+                    // Clear the buffer
+                    //_receiveBufferString = string.Empty;
+
+                    // Send a break to the serial port
+                    _serialPort.BreakState = true;
+
+                    // Wait for the state to change
+                    // and leave on a bit of time
+                    System.Threading.Thread.Sleep(WAIT_STATE * waitStates);
+
+                    // Change state back
+                    _serialPort.BreakState = false;
+
+                    // Wait for state to change back
+                    System.Threading.Thread.Sleep(WAIT_STATE * stateChangeWaitStates);
+
+                    if (softBreak)
+                    { 
+                        // Check if something is in the buffer
+                        if (string.IsNullOrEmpty(_receiveBufferString))
+                        {
+                            // Send a Text BREAK just incase the instrument cannot take a break
+                            // This is the case if using wireless serial communication or
+                            // ethernet
+                            SendDataWaitReply(Commands.AdcpCommands.CMD_BREAK, 2000);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                log.Warn("Error sending an Advanced BREAK to serial port.", e);
+            }
+        }
+
+        /// <summary>
         /// Reset the interval time.  If no value is given,
         /// the default value will be used.  This is the time
         /// in milliseconds to check the serial port for data.

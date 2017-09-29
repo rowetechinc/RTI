@@ -1,6 +1,15 @@
 RTI Changelog
 
 RTI-3.4.4
+ - In InstrumentVelocityDataSet and EarthVelocityDataSet, if no Water Profile, fix bug IsBinGood() to check if the bin is good.
+ - In Subsystem, added GetBeamAngle() to give the beam angle for a given subsystem.
+ - In Transform, get the correct Beam Angle based off the subsystem code.
+ - In Subsystem, added new Subsystem codes.
+ - In AdcpCodec, pass the original data format when the data is sent based off the codec used.
+ - In Transform, know the original data format to know which beam matrix to use to transform the data.
+ - In AdcpDvlCodecReadFile, AdcpBinaryCodecReadFile, AdcpPd0CodecReadFile, added original data format.
+ - In IPlayback, added GetOrigDataFormat() to know the what format the data was recorded.
+ - In FilePlayback and ProjectPlayback, pass the data format the data was recorded.
 
 RTI-3.4.3
  - Fixed bug by adding a line feed to the end EnsToPd6_13Codec.

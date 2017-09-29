@@ -39,6 +39,8 @@
  * 01/06/2016      RC          3.3.0      Added GPS heading and Heading offset.
  * 05/11/2016      RC          3.3.2      Fixed bug for Q value.
  * 08/25/2017      RC          3.4.2      Added Water Mass trasnformation.  Added Ship trasnformation to Bottom Track.
+ * 09/26/2017      RC          3.4.4      Get the correct Beam Angle based off the subsystem code.
+ * 09/28/2017      RC          3.4.4      Know the original data format to know which beam matrix to use to transform the data.
  * 
  */
 
@@ -211,7 +213,8 @@ namespace RTI
         /// <param name="headingSource">Get the heading from the selected heading source.</param>
         /// <param name="headingOffset">Heading offset to add to the heading.</param>
         /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        public static void ProfileTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.25f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
+        /// <param name="origDataFormat">Original Data format of the data.</param>
+        public static void ProfileTransform(ref DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat, float corrThresh = 0.25f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
         {
             // Create the array to hold the earth data
             int numBins = 0;
@@ -486,7 +489,7 @@ namespace RTI
                     }
 
                     // Values used to calculate nominal beam angle
-                    float beamAngle = 20.0f;                                        // This value should be found based off subsystem type
+                    float beamAngle = Subsystem.GetBeamAngle(ensemble.EnsembleData.SubsystemConfig.SubSystem.Code);     // This value should be found based off subsystem type
                     float[,] M = new float[4, 4];
                     float s = (float)Math.Sin(beamAngle / 180.0 * Math.PI);         // SIN of the beam angle
                     float c = (float)Math.Cos(beamAngle / 180.0 * Math.PI);         // COS of the beam angle
@@ -543,45 +546,92 @@ namespace RTI
                     // Z
                     ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = Z;
 
+                    if (origDataFormat != AdcpCodec.CodecEnum.PD0)
+                    {
+                        #region Binary
+                        // Ship Velocity Transform
+                        // Transverse 
+                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                            X * (SSH * CP)
+                                                                          - Y * (SCH * CR + SSH * SR * SP)
+                                                                          + Z * (SCH * SR - SSH * CR * SP));
 
-                    // Ship Velocity Transform
-                    // Transverse 
-                    ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
-                                                                        X * (SSH * CP)
-                                                                      - Y * (SCH * CR + SSH * SR * SP)
-                                                                      + Z * (SCH * SR - SSH * CR * SP));
+                        // Longitudinal 
+                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                            X * (SCH * CP)
+                                                                          + Y * (SSH * CR - SCH * SR * SP)
+                                                                          - Z * (SSH * SR + SCH * SP * CR));
 
-                    // Longitudinal 
-                    ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
-                                                                        X * (SCH * CP)
-                                                                      + Y * (SSH * CR - SCH * SR * SP)
-                                                                      - Z * (SSH * SR + SCH * SP * CR));
-
-                    // Normal
-                    ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
-                                                                        X * (SP)
-                                                                      + Y * (SR * CP)
-                                                                      + Z * (CP * CR));
+                        // Normal
+                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                            X * (SP)
+                                                                          + Y * (SR * CP)
+                                                                          + Z * (CP * CR));
 
 
-                    // Earth Velocity Transform
-                    // East
-                    ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
-                                                                        X * (SH * CP)
-                                                                      - Y * (CH * CR + SH * SR * SP)
-                                                                      + Z * (CH * SR - SH * CR * SP));
+                        // Earth Velocity Transform
+                        // East
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                            X * (SH * CP)
+                                                                          - Y * (CH * CR + SH * SR * SP)
+                                                                          + Z * (CH * SR - SH * CR * SP));
 
-                    // North
-                    ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
-                                                                        X * (CH * CP)
-                                                                      + Y * (SH * CR - CH * SR * SP)
-                                                                      - Z * (SH * SR + CH * SP * CR));
+                        // North
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                            X * (CH * CP)
+                                                                          + Y * (SH * CR - CH * SR * SP)
+                                                                          - Z * (SH * SR + CH * SP * CR));
 
-                    // Up
-                    ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
-                                                                        X * (SP)
-                                                                      + Y * (SR * CP)
-                                                                      + Z * (CP * CR));
+                        // Up
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                            X * (SP)
+                                                                          + Y * (SR * CP)
+                                                                          + Z * (CP * CR));
+                        #endregion
+                    }
+                    else
+                    {
+                        #region PD0
+                        // Ship Velocity Transform
+                        // Transverse 
+                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                            X * (SCH * CR + SSH * SR * SP)
+                                                                          + Y * (SSH * CP)
+                                                                          + Z * (SCH * SR - SSH * CR * SP));
+
+                        // Longitudinal 
+                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                            X * (-SSH * CR + SCH * SR * SP)
+                                                                          + Y * (SCH * CP)
+                                                                          + Z * (-SSH * SR - SCH * SP * CR));
+
+                        // Normal
+                        ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                            X * (SR * -CP)
+                                                                          + Y * (SP)
+                                                                          + Z * (CP * CR));
+
+
+                        // Earth Velocity Transform
+                        // East
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                            X * (CH * CR + SH * SR * SP)
+                                                                          + Y * (SH * CP)
+                                                                          + Z * (CH * SR - SH * CR * SP));
+
+                        // North
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                            X * (-SH * CR + CH * SR * SP)
+                                                                          + Y * (CH * CP)
+                                                                          + Z * (-SH * SR - CH * SP * CR));
+
+                        // Up
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                            X * (SR * -CP)
+                                                                          + Y * (SP)
+                                                                          + Z * (CP * CR));
+                        #endregion
+                    }
 
                     // Set the Good Earth data
                     ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = 1;
@@ -655,7 +705,8 @@ namespace RTI
         /// <param name="headingSource">Select the heading source.</param>
         /// <param name="headingOffset">Heading offset to add to the heading.</param>
         /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
+        /// <param name="origDataFormat">Original Data format of the data.</param>
+        public static void BottomTrackTransform(ref DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat, float corrThresh = 0.90f, float snrThresh = 10.0f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
         {
             // If there is no ensemble data, we cannot get the subsystem
             // If there is no Bottom Track data, we have nothing to transform
@@ -863,7 +914,7 @@ namespace RTI
                 }
 
                 // Values used to calculate nominal beam angle
-                float beamAngle = 20.0f;                                        // This value should be found based off subsystem type
+                float beamAngle = Subsystem.GetBeamAngle(ensemble.EnsembleData.SubsystemConfig.SubSystem.Code);     // This value should be found based off subsystem type
                 float[,] M = new float[4, 4];
                 float s = (float)Math.Sin(beamAngle / 180.0 * Math.PI);         // SIN of the beam angle
                 float c = (float)Math.Cos(beamAngle / 180.0 * Math.PI);         // COS of the beam angle
@@ -923,43 +974,89 @@ namespace RTI
 
                 // Ship Coordinate Transform
                 float[] shipVelocity = new float[4];
-                // Transverse (+ = Port Stbd ship movement rel. to water mass)
-                ensemble.BottomTrackData.ShipVelocity[0] = (float)(
+
+                if (origDataFormat != AdcpCodec.CodecEnum.PD0)
+                {
+                    #region Binary
+                    // Transverse (+ = Port Stbd ship movement rel. to water mass)
+                    ensemble.BottomTrackData.ShipVelocity[0] = (float)(
                                                                     X * (SSH * CP)
                                                                     - Y * (SCH * CR + SSH * SR * SP)
                                                                     + Z * (SCH * SR - SSH * CR * SP));
 
-                // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
-                ensemble.BottomTrackData.ShipVelocity[1] = (float)(
-                                                                    X * (SCH * CP)
-                                                                    + Y * (SSH * CR - SCH * SR * SP)
-                                                                    - Z * (SSH * SR + SCH * SP * CR));
+                    // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
+                    ensemble.BottomTrackData.ShipVelocity[1] = (float)(
+                                                                        X * (SCH * CP)
+                                                                        + Y * (SSH * CR - SCH * SR * SP)
+                                                                        - Z * (SSH * SR + SCH * SP * CR));
 
-                // Normal (+ = ship movement away from water mass)
-                ensemble.BottomTrackData.ShipVelocity[2] = (float)(
-                                                                    X * (SP)
-                                                                    + Y * (SR * CP)
-                                                                    + Z * (CP * CR));
+                    // Normal (+ = ship movement away from water mass)
+                    ensemble.BottomTrackData.ShipVelocity[2] = (float)(
+                                                                        X * (SP)
+                                                                        + Y * (SR * CP)
+                                                                        + Z * (CP * CR));
 
-                // Earth Coordinate Transform
-                // East
-                ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
-                                                                    X * (SH * CP)
-                                                                    - Y * (CH * CR + SH * SR * SP)
-                                                                    + Z * (CH * SR - SH * CR * SP));
+                    // Earth Coordinate Transform
+                    // East
+                    ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                        X * (SH * CP)
+                                                                        - Y * (CH * CR + SH * SR * SP)
+                                                                        + Z * (CH * SR - SH * CR * SP));
 
-                // North
-                ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
-                                                                    X * (CH * CP)
-                                                                    + Y * (SH * CR - CH * SR * SP)
-                                                                    - Z * (SH * SR + CH * SP * CR));
+                    // North
+                    ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                        X * (CH * CP)
+                                                                        + Y * (SH * CR - CH * SR * SP)
+                                                                        - Z * (SH * SR + CH * SP * CR));
 
-                // Up
-                ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
-                                                                    X * (SP)
-                                                                    + Y * (SR * CP)
-                                                                    + Z * (CP * CR));
+                    // Up
+                    ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                        X * (SP)
+                                                                        + Y * (SR * CP)
+                                                                        + Z * (CP * CR));
+                    #endregion
+                }
+                else
+                {
+                    #region PD0
+                    // Transverse (+ = Port Stbd ship movement rel. to water mass)
+                    ensemble.BottomTrackData.ShipVelocity[0] = (float)(
+                                                                      X * (SCH * CR + SSH * SR * SP)
+                                                                    + Y * (SSH * CP)
+                                                                    + Z * (SCH * SR - SSH * CR * SP));
 
+                    // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
+                    ensemble.BottomTrackData.ShipVelocity[1] = (float)(
+                                                                          X * (-SSH * CR + SCH * SR * SP)
+                                                                        + Y * (SCH * CP)
+                                                                        + Z * (-SSH * SR - SCH * SP * CR));
+
+                    // Normal (+ = ship movement away from water mass)
+                    ensemble.BottomTrackData.ShipVelocity[2] = (float)(
+                                                                          X * (SR * -CP)
+                                                                        + Y * (SP)
+                                                                        + Z * (CP * CR));
+
+                    // Earth Coordinate Transform
+                    // East
+                    ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                          X * (CH * CR + SH * SR * SP)
+                                                                        + Y * (SH * CP)
+                                                                        + Z * (CH * SR - SH * CR * SP));
+
+                    // North
+                    ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                          X * (-SH * CR + CH * SR * SP)
+                                                                        + Y * (CH * CP)
+                                                                        + Z * (-SH * SR - CH * SP * CR));
+
+                    // Up
+                    ensemble.BottomTrackData.EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                          X * (SR * -CP)
+                                                                        + Y * (SP)
+                                                                        + Z * (CP * CR));
+                    #endregion
+                }
 
                 // Set the Good Earth data
                 ensemble.BottomTrackData.EarthGood[DataSet.Ensemble.BEAM_EAST_INDEX] = 1;
@@ -1028,7 +1125,8 @@ namespace RTI
         /// <param name="headingSource">Select the heading source.</param>
         /// <param name="headingOffset">Heading offset to add to the heading.</param>
         /// <param name="shipXdcrOffset">The calcuate ship coordinate transform, i need to know the angle offset between Beam 0 and the front of the boat.</param>
-        public static void WaterMassTransform(ref DataSet.Ensemble ensemble, float corrThresh = 0.90f, float snrThresh = 10.0f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
+        /// <param name="origDataFormat">Original Data format of the data.</param>
+        public static void WaterMassTransform(ref DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat, float corrThresh = 0.90f, float snrThresh = 10.0f, HeadingSource headingSource = HeadingSource.ADCP, float headingOffset = 0.0f, float shipXdcrOffset = 0.0f)
         {
             if (ensemble.IsInstrumentWaterMassAvail)
             {
@@ -1183,7 +1281,7 @@ namespace RTI
             // If there were at least 3 good beams, we can do a 3 beam solution
 
             // Values used to calculate nominal beam angle
-            float beamAngle = 20.0f;                                        // This value should be found based off subsystem type
+            float beamAngle = Subsystem.GetBeamAngle(ensemble.EnsembleData.SubsystemConfig.SubSystem.Code);     // This value should be found based off subsystem type
             float[,] M = new float[4, 4];
             float s = (float)Math.Sin(beamAngle / 180.0 * Math.PI);         // SIN of the beam angle
             float c = (float)Math.Cos(beamAngle / 180.0 * Math.PI);         // COS of the beam angle
@@ -1223,26 +1321,96 @@ namespace RTI
 
             // Ship Coordinate Transform
             float[] shipVelocity = new float[3];
-            // Transverse (+ = Port Stbd ship movement rel. to water mass)
-            shipVelocity[0] = (float)(
+
+            // Earth Coordinate Transform
+            float[] earthVelocity = new float[4];
+
+            if (origDataFormat != AdcpCodec.CodecEnum.PD0)
+            {
+                #region Binary
+                // Transverse (+ = Port Stbd ship movement rel. to water mass)
+                shipVelocity[0] = (float)(
                                         X * (SSH * CP)
                                         - Y * (SCH * CR + SSH * SR * SP)
                                         + Z * (SCH * SR - SSH * CR * SP));
 
-            // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
-            shipVelocity[1] = (float)(
-                                        X * (SCH * CP)
-                                        + Y * (SSH * CR - SCH * SR * SP)
-                                        - Z * (SSH * SR + SCH * SP * CR));
+                // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
+                shipVelocity[1] = (float)(
+                                            X * (SCH * CP)
+                                            + Y * (SSH * CR - SCH * SR * SP)
+                                            - Z * (SSH * SR + SCH * SP * CR));
 
-            // Normal (+ = ship movement away from water mass)
-            shipVelocity[2] = (float)(
-                                        X * (SP)
-                                        + Y * (SR * CP)
-                                        + Z * (CP * CR));
+                // Normal (+ = ship movement away from water mass)
+                shipVelocity[2] = (float)(
+                                            X * (SP)
+                                            + Y * (SR * CP)
+                                            + Z * (CP * CR));
+
+
+                // East
+                earthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                    X * (SH * CP)
+                                                                    - Y * (CH * CR + SH * SR * SP)
+                                                                    + Z * (CH * SR - SH * CR * SP));
+
+                // North
+                earthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                    X * (CH * CP)
+                                                                    + Y * (SH * CR - CH * SR * SP)
+                                                                    - Z * (SH * SR + CH * SP * CR));
+
+                // Up
+                earthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                    X * (SP)
+                                                                    + Y * (SR * CP)
+                                                                    + Z * (CP * CR));
+                #endregion
+            }
+            else
+            {
+                #region PD0
+                // Transverse (+ = Port Stbd ship movement rel. to water mass)
+                shipVelocity[0] = (float)(
+                                          X * (SCH * CR + SSH * SR * SP)
+                                        + Y * (SSH * CP)
+                                        + Z * (SCH * SR - SSH * CR * SP));
+
+                // Longitudinal (+ = Aft Fwd ship movement rel. to water mass)
+                shipVelocity[1] = (float)(
+                                              X * (-SSH * CR + SCH * SR * SP)
+                                            + Y * (SCH * CP)
+                                            + Z * (-SSH * SR - SCH * SP * CR));
+
+                // Normal (+ = ship movement away from water mass)
+                shipVelocity[2] = (float)(
+                                              X * (SR * -CP)
+                                            + Y * (SP)
+                                            + Z * (CP * CR));
+
+
+
+                // East
+                earthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
+                                                                      X * (CH * CR + SH * SR * SP)
+                                                                    + Y * (SH * CP)
+                                                                    + Z * (CH * SR - SH * CR * SP));
+
+                // North
+                earthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
+                                                                      X * (-SH * CR + CH * SR * SP)
+                                                                    + Y * (CH * CP)
+                                                                    + Z * (-SH * SR - CH * SP * CR));
+
+                // Up
+                earthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
+                                                                      X * (SR * -CP)
+                                                                    + Y * (SP)
+                                                                    + Z * (CP * CR));
+                #endregion
+            }
 
             // Add Ship Water Mass if it is not already in the ensemble
-            if(!ensemble.IsShipWaterMassAvail)
+            if (!ensemble.IsShipWaterMassAvail)
             {
                 EnsembleHelper.AddWaterMassShip(ref ensemble);
             }
@@ -1250,27 +1418,7 @@ namespace RTI
             ensemble.ShipWaterMassData.VelocityLongitudinal = shipVelocity[1];
             ensemble.ShipWaterMassData.VelocityNormal = shipVelocity[2];
 
-
-            // Earth Coordinate Transform
-            float[] earthVelocity = new float[4];
-            // East
-            earthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] = (float)(
-                                                                X * (SH * CP)
-                                                                - Y * (CH * CR + SH * SR * SP)
-                                                                + Z * (CH * SR - SH * CR * SP));
-
-            // North
-            earthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] = (float)(
-                                                                X * (CH * CP)
-                                                                + Y * (SH * CR - CH * SR * SP)
-                                                                - Z * (SH * SR + CH * SP * CR));
-
-            // Up
-            earthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] = (float)(
-                                                                X * (SP)
-                                                                + Y * (SR * CP)
-                                                                + Z * (CP * CR));
-            if(!ensemble.IsEarthWaterMassAvail)
+            if (!ensemble.IsEarthWaterMassAvail)
             {
                 EnsembleHelper.AddWaterMassEarth(ref ensemble);
             }

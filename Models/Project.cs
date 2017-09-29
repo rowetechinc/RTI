@@ -1141,8 +1141,9 @@ namespace RTI
         /// Record to the database project file.
         /// </summary>
         /// <param name="ensemble">Ensemble to record.</param>
+        /// <param name="origDataFormat">Original Data format.</param>
         /// <returns>True if ensemble could be recorded.</returns>
-        public bool RecordDbEnsemble(DataSet.Ensemble ensemble)
+        public bool RecordDbEnsemble(DataSet.Ensemble ensemble, AdcpCodec.CodecEnum origDataFormat)
         {
             if (_dbWriter != null)
             {

@@ -370,7 +370,7 @@ namespace RTI
                 {
                     // Block until awoken when data is received
                     // Timeout every 60 seconds to see if shutdown occured
-                    _eventWaitData.WaitOne();
+                    _eventWaitData.WaitOne(1000);
 
                     _processingData = true;
 

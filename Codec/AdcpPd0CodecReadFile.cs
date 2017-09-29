@@ -1,4 +1,43 @@
-﻿using System;
+﻿/*
+ * Copyright 2011, Rowe Technology Inc. 
+ * All rights reserved.
+ * http://www.rowetechinc.com
+ * https://github.com/rowetechinc
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
+ * 
+ *  1. Redistributions of source code must retain the above copyright notice, this list of
+ *      conditions and the following disclaimer.
+ *      
+ *  2. Redistributions in binary form must reproduce the above copyright notice, this list
+ *      of conditions and the following disclaimer in the documentation and/or other materials
+ *      provided with the distribution.
+ *      
+ *  THIS SOFTWARE IS PROVIDED BY Rowe Technology Inc. ''AS IS'' AND ANY EXPRESS OR IMPLIED 
+ *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ *  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ *  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *  
+ * The views and conclusions contained in the software and documentation are those of the
+ * authors and should not be interpreted as representing official policies, either expressed
+ * or implied, of Rowe Technology Inc.
+ * 
+ * HISTORY
+ * -----------------------------------------------------------------
+ * Date            Initials    Version    Comments
+ * -----------------------------------------------------------------
+ * 02/08/2017      RC          3.4.0      Initial coding
+ * 09/29/2017      RC          3.4.4      Added original data format.
+ * 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -125,32 +164,42 @@ namespace RTI
                             fileStream.Seek(start, SeekOrigin.Begin);
                             if (fileStream.Read(buffer, 0, buffer.Length) >= DataSet.Ensemble.ENSEMBLE_HEADER_LEN)// Always true, buffer always size of variable, this loads in bytes to Buffer, however
                             {
-                            // Get the payload size
-                            int payloadSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE; //When referencing positions in buffer, uses "start" Which implies it is looking for the position in the actual file. (Error?)
+                                // Get the payload size
+                                int payloadSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE; //When referencing positions in buffer, uses "start" Which implies it is looking for the position in the actual file. (Error?)
 
-                            // Get the ensemble size
-                            int ensSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE;// Same equation as payload size, but the LsbMsbInt Might change buffer itself?
+                                // Get the ensemble size
+                                int ensSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE;// Same equation as payload size, but the LsbMsbInt Might change buffer itself?
 
-                            // Sanity check
-                            if (ensSize > DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
+                                // Sanity check
+                                if (ensSize > DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
                                 {
                                     // Get the entire ensemble
                                     var rawEns = new byte[ensSize];
                                     fileStream.Seek(start, SeekOrigin.Begin);
                                     fileStream.Read(rawEns, 0, rawEns.Length);
 
-                                // Check the checksum
+                                    // Check the checksum
 
-                                ushort calculatedChecksum = PD0.CalculateChecksum(rawEns, ensSize- PD0.CHECKSUM_NUM_BYTE);
-                                ushort ensembleChecksum = MathHelper.LsbMsbUShort(rawEns[rawEns.Length - 2], rawEns[rawEns.Length - 1]);
+                                    ushort calculatedChecksum = PD0.CalculateChecksum(rawEns, ensSize- PD0.CHECKSUM_NUM_BYTE);
+                                    ushort ensembleChecksum = MathHelper.LsbMsbUShort(rawEns[rawEns.Length - 2], rawEns[rawEns.Length - 1]);
 
-                                //long calculatedChecksum = DataSet.Ensemble.CalculateEnsembleChecksum(rawEns);
-                                //long ensembleChecksum = DataSet.Ensemble.RetrieveEnsembleChecksum(rawEns);
+                                    //long calculatedChecksum = DataSet.Ensemble.CalculateEnsembleChecksum(rawEns);
+                                    //long ensembleChecksum = DataSet.Ensemble.RetrieveEnsembleChecksum(rawEns);
 
-                                if (calculatedChecksum == ensembleChecksum)
+                                    if (calculatedChecksum == ensembleChecksum)
                                     {
-                                        Pd0Codec _pd0Codec = new Pd0Codec();
-                                        _pd0Codec.DecodePd0Data(rawEns);
+                                        //Pd0Codec _pd0Codec = new Pd0Codec();
+                                        //PD0 pd0 = _pd0Codec.DecodePd0Data(rawEns);
+                                        PD0 pd0Ensemble = new PD0(rawEns);
+                                        DataSet.Ensemble ens = new DataSet.Ensemble(pd0Ensemble);
+
+                                        // Package the data
+                                        var ensPak = new DataSet.EnsemblePackage();
+                                        ensPak.Ensemble = ens;
+                                        ensPak.RawEnsemble = rawEns;
+                                        ensPak.OrigDataFormat = AdcpCodec.CodecEnum.PD0;
+                                        list.Add(ensPak);
+
                                     }
                                 }
                             }

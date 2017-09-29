@@ -66,6 +66,11 @@ namespace RTI
         public DataSet.Ensemble Ensemble { get; set; }
 
         /// <summary>
+        /// Original data format of the ensemble.
+        /// </summary>
+        public AdcpCodec.CodecEnum OrigDataFormat { get; set; }
+
+        /// <summary>
         /// Initialize the values.
         /// </summary>
         public PlaybackArgs()
@@ -73,6 +78,7 @@ namespace RTI
             Index = 0;
             TotalEnsembles = 0;
             Ensemble = null;
+            OrigDataFormat = AdcpCodec.CodecEnum.Binary;
         }
 
     }

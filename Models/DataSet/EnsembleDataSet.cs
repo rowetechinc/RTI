@@ -941,16 +941,44 @@ namespace RTI
                         ss = new Subsystem(Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K);
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_300kHz:
-                        ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4);
+                        if (fl.BeamAngle == 20.0f)
+                        {
+                            ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4);
+                        }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_30DEG_PISTON_m);
+                        }
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_600kHz:
-                        ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3);
+                        if (fl.BeamAngle == 20.0f)
+                        {
+                            ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3);
+                        }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_30DEG_PISTON_l);
+                        }
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_1200kHz:
-                        ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2);
+                        if (fl.BeamAngle == 20.0f)
+                        {
+                            ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2);
+                        }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_30DEG_PISTON_k);
+                        }
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_2400kHz:
+                        if(fl.BeamAngle == 20.0f)
+                        { 
                         ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_1);
+                        }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_30DEG_PISTON_j);
+                        }
                         break;
                 }
 

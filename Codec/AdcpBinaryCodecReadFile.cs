@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 02/08/2017      RC          3.4.0      Initial coding
  * 02/23/2017      RC          3.4.1      Changed to ReadBytes to read in from the file to improve performance.
+ * 09/29/2017      RC          3.4.4      Set the original data format in the data.
  * 
  */
 
@@ -223,6 +224,7 @@ namespace RTI
                                         var ensPak = new DataSet.EnsemblePackage();
                                         ensPak.Ensemble = ens;
                                         ensPak.RawEnsemble = rawEns;
+                                        ensPak.OrigDataFormat = AdcpCodec.CodecEnum.Binary;
                                         list.Add(ensPak);
                                         //Debug.WriteLine("Ens: " + ens.EnsembleData.EnsembleNumber + " Count: " + count + " " + System.DateTime.Now);
                                     }

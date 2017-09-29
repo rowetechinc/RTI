@@ -52,6 +52,7 @@
  * 05/07/2014      RC          2.21.4     Fixed bug in DecodePd0Ensemble() looking for bad velocity.
  * 07/29/2014      RC          2.23.0     Added VelocityVector.
  * 04/16/2015      RC          3.0.4      Check for the number of beams in IsBinGood().
+ * 09/26/2017      RC          3.4.4.     if no Water Profile, fix bug IsBinGood() to check if the bin is good.
  * 
  */
 
@@ -251,6 +252,11 @@ namespace RTI
             /// <returns>TRUE = All values good / False = One or more of the values are bad.</returns>
             public bool IsBinGood(int bin, bool allow3BeamSolution = true)
             {
+                if(NumElements <= 0)
+                {
+                    return false;
+                }
+
                 // If the Q is bad and we do not allow 3 Beam solution, then all is bad.
                 if (InstrumentVelocityData.GetLength(1) > 3 && InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] == DataSet.Ensemble.BAD_VELOCITY && !allow3BeamSolution)
                 {

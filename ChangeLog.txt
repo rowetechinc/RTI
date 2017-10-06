@@ -10,6 +10,7 @@ RTI-3.4.4
  - In AdcpDvlCodecReadFile, AdcpBinaryCodecReadFile, AdcpPd0CodecReadFile, added original data format.
  - In IPlayback, added GetOrigDataFormat() to know the what format the data was recorded.
  - In FilePlayback and ProjectPlayback, pass the data format the data was recorded.
+ - Added EnsExporterWriter.
 
 RTI-3.4.3
  - Fixed bug by adding a line feed to the end EnsToPd6_13Codec.

@@ -122,6 +122,7 @@
     <Compile Include="Communications\SerialConnection.cs" />
     <Compile Include="Communications\SerialOptions.cs" />
     <Compile Include="Communications\TcpServer.cs" />
+    <Compile Include="Exporter\EnsExporterWriter.cs" />
     <Compile Include="Models\DataSet\ShipWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\ShipVelocityDataSet.cs" />
     <Compile Include="Models\DataSet\GageHeightDataSet.cs" />

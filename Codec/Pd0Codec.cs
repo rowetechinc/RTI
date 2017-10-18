@@ -209,7 +209,7 @@ namespace RTI
                 try
                 {
                     // Block until awoken when data is received
-                    _eventWaitData.WaitOne();
+                    _eventWaitData.WaitOne(10000);
 
                     // If wakeup was called to kill thread
                     if (!_continue)

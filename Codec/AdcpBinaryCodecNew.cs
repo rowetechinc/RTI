@@ -36,6 +36,7 @@
  * 09/12/2016      RC          3.3.2      Initial coding
  * 10/21/2016      RC          3.3.2      Fixed bug missing GPS data when connected to computer.
  * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
+ * 10/18/2017      RC          3.4.4      Made the class public.
  * 
  */
 
@@ -128,7 +129,7 @@ namespace RTI
     /// <summary>
     /// Search for pattern in the data to find the beginning of an ensemble.
     /// </summary>
-    class AdcpBinaryCodecNew: ICodec, IDisposable
+    public class AdcpBinaryCodecNew: ICodec, IDisposable
     {
 
         #region Variables
@@ -232,13 +233,19 @@ namespace RTI
         /// </summary>
         public struct EnsInfo
         {
-            // Ensemble size.
+            /// <summary>
+            /// Ensemble size.
+            /// </summary>
             public int EnsSize { get; set; }
 
-            // Good Ensemble
+            /// <summary>
+            /// Good Ensemble.
+            /// </summary>
             public bool EnsGood { get; set; }
 
-            // Ensemble Byte array
+            /// <summary>
+            /// Ensemble Byte array.
+            /// </summary>
             public byte[] RawEnsemble { get; set; }
 
             /// <summary>

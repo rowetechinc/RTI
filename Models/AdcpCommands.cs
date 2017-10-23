@@ -5962,7 +5962,7 @@ namespace RTI
                 {
                     // Only add the ENS files to the list
                     // Ignore the txt and bin files
-                    if (lines[x].Contains("ENS") || lines[x].Contains("RAW") || lines[x].Contains("EN"))
+                    if (lines[x].Contains("ENS") || lines[x].Contains("RAW") || lines[x].Contains(".EN"))
                     {
                         listing.DirListing.Add(new AdcpEnsFileInfo(lines[x]));
                     }

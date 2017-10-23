@@ -11,6 +11,8 @@ RTI-3.4.4
  - In IPlayback, added GetOrigDataFormat() to know the what format the data was recorded.
  - In FilePlayback and ProjectPlayback, pass the data format the data was recorded.
  - Added EnsExporterWriter.
+ - Fixed bug in Pd6_13Codec where _buffer was not initialized and threw an exception.
+ - Fixed bug in DvlCodec where _buffer was not initialized and threw an exception.
 
 RTI-3.4.3
  - Fixed bug by adding a line feed to the end EnsToPd6_13Codec.

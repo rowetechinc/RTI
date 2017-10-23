@@ -45,6 +45,7 @@
  * 08/11/2015      RC          3.0.5      Verfiy the sentences are correct before processing them.
  * 10/07/2015      RC          3.2.0      Set the BT range values in SetBD().
  * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
+ * 10/23/2017      RC          3.4.4      Fixed bug in Pd6_13Codec where _buffer was not initialized and threw an exception.
  * 
  * 
  */
@@ -232,6 +233,7 @@ namespace RTI
         {
             _prevEns = new DataSet.Ensemble();
             _incomingDataTimeout = 0;
+            _buffer = "";
 
             // Clear the values
             Clear();

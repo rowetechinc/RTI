@@ -55,6 +55,7 @@
  * 07/09/2015      RC          3.0.5      Made the codec its own thread.
  * 08/13/2015      RC          3.0.5      Added complete event.
  * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
+ * 10/23/2017      RC          3.4.4      Fixed bug in DvlCodec where _buffer was not initialized and threw an exception.
  * 
  */
 
@@ -203,6 +204,7 @@ namespace RTI
             // Initialize values
             //_adcpData = null;
             _prti01 = null;
+            _buffer = "";
 
             // Default to use BT Heading, Pitch and Roll
             IsUseBtHpr = true;

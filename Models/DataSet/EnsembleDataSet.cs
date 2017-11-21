@@ -75,7 +75,7 @@
  * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements.
  * 08/13/2015      RC          3.0.5      Added Try/Catch block in Decode().
- * 
+ * 11/21/2017      RC          3.4.4      Made the default beam angle for PD0 20 degree.
  */
 
 using System;
@@ -932,6 +932,8 @@ namespace RTI
 
                 // Get the Subsystem
                 Subsystem ss = new Subsystem();
+                Debug.WriteLine("Beam Angle: " + fl.BeamAngle);
+                Debug.WriteLine("Freq: " + fl.GetSystemFrequency());
                 switch(fl.GetSystemFrequency())
                 {
                     case Pd0FixedLeader.SystemFrequency.Freq_75kHz:
@@ -941,43 +943,43 @@ namespace RTI
                         ss = new Subsystem(Subsystem.SUB_150KHZ_4BEAM_30DEG_ARRAY_K);
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_300kHz:
-                        if (fl.BeamAngle == 20.0f)
-                        {
-                            ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4);
-                        }
-                        else
+                        if (fl.BeamAngle == 30.0f)
                         {
                             ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_30DEG_PISTON_m);
                         }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4);
+                        }
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_600kHz:
-                        if (fl.BeamAngle == 20.0f)
-                        {
-                            ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3);
-                        }
-                        else
+                        if (fl.BeamAngle == 30.0f)
                         {
                             ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_30DEG_PISTON_l);
                         }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3);
+                        }
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_1200kHz:
-                        if (fl.BeamAngle == 20.0f)
-                        {
-                            ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2);
-                        }
-                        else
+                        if (fl.BeamAngle == 30.0f)
                         {
                             ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_30DEG_PISTON_k);
                         }
+                        else
+                        {
+                            ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_20DEG_PISTON_2);
+                        }
                         break;
                     case Pd0FixedLeader.SystemFrequency.Freq_2400kHz:
-                        if(fl.BeamAngle == 20.0f)
+                        if(fl.BeamAngle == 30.0f)
                         { 
-                        ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_1);
+                        ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_30DEG_PISTON_j);
                         }
                         else
                         {
-                            ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_30DEG_PISTON_j);
+                            ss = new Subsystem(Subsystem.SUB_2MHZ_4BEAM_20DEG_PISTON_1);
                         }
                         break;
                 }

@@ -855,7 +855,7 @@ namespace RTI
                 {
                     ensemble.EarthWaterMassData.VelocityEast = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;         // mm/s to m/s
                     ensemble.DvlData.WmEastVelocity = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;                  // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // North
@@ -868,7 +868,7 @@ namespace RTI
                 {
                     ensemble.EarthWaterMassData.VelocityNorth = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;        // mm/s to m/s
                     ensemble.DvlData.WmNorthVelocity = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;                 // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Vertical
@@ -881,7 +881,7 @@ namespace RTI
                 {
                     ensemble.EarthWaterMassData.VelocityVertical = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;     // mm/s to m/s
                     ensemble.DvlData.WmUpwardVelocity = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;                // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Depth layer
@@ -914,7 +914,7 @@ namespace RTI
                 {
                     ensemble.InstrumentWaterMassData.VelocityX = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;               // mm/s to m/s
                     ensemble.DvlData.WmXVelocity = MathHelper.LsbMsbShort(binaryEnsemble[22], binaryEnsemble[23]) * 0.001f;                             // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Y
@@ -927,7 +927,7 @@ namespace RTI
                 {
                     ensemble.InstrumentWaterMassData.VelocityY = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;               // mm/s to m/s
                     ensemble.DvlData.WmYVelocity = MathHelper.LsbMsbShort(binaryEnsemble[24], binaryEnsemble[25]) * 0.001f;                             // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Z
@@ -940,7 +940,7 @@ namespace RTI
                 {
                     ensemble.InstrumentWaterMassData.VelocityZ = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;               // mm/s to m/s
                     ensemble.DvlData.WmZVelocity = MathHelper.LsbMsbShort(binaryEnsemble[26], binaryEnsemble[27]) * 0.001f;                             // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Error
@@ -951,7 +951,7 @@ namespace RTI
                 else
                 {
                     ensemble.InstrumentWaterMassData.VelocityQ = MathHelper.LsbMsbShort(binaryEnsemble[28], binaryEnsemble[29]) * 0.001f;               // mm/s to m/s
-                    ensemble.EnsembleData.NumBeams++;   // Number of beams
+                    //ensemble.EnsembleData.NumBeams++;   // Number of beams
                 }
 
                 // Depth layer

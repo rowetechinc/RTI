@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.5
+ - Added Previous BT Range to ScreenMarkBadBelowBottom.
+
 RTI-3.4.4
  - In InstrumentVelocityDataSet and EarthVelocityDataSet, if no Water Profile, fix bug IsBinGood() to check if the bin is good.
  - In Subsystem, added GetBeamAngle() to give the beam angle for a given subsystem.

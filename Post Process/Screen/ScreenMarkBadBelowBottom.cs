@@ -36,6 +36,7 @@
  * 12/24/2012      RC          2.17       Moved SetVelocitiesBad() to EnsembleHelper.
  * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
  * 08/13/2013      RC          2.19.4     Get the AverageRange from BottomTrackDataSet.
+ * 01/31/2018      RC          3.4.5      Added Previous BT Range.
  * 
  */
 
@@ -64,8 +65,9 @@ namespace RTI
             /// Then mark all the velocities at and below the bottom bad.
             /// </summary>
             /// <param name="ensemble">Ensemble to screen.</param>
+            /// <param name="prevBottom">Previous Good Bottom.</param>
             /// <returns>True = Screen could be done.</returns>
-            public static bool Screen(ref DataSet.Ensemble ensemble)
+            public static bool Screen(ref DataSet.Ensemble ensemble, double prevBottom = DataSet.Ensemble.BAD_RANGE)
             {
                 if (ensemble != null)
                 {
@@ -79,9 +81,14 @@ namespace RTI
                         double bottom = ensemble.BottomTrackData.GetAverageRange();
 
                         // Ensure we found a bottom
-                        if (bottom == DataSet.Ensemble.BAD_RANGE)
+                        if (bottom == DataSet.Ensemble.BAD_RANGE && prevBottom == DataSet.Ensemble.BAD_RANGE)
                         {
                             return false;
+                        }
+                        else if(bottom == DataSet.Ensemble.BAD_RANGE && prevBottom != DataSet.Ensemble.BAD_RANGE)
+                        {
+                            // PrevBottom is good, so use it
+                            bottom = prevBottom;
                         }
 
                         // Get the bottom bin

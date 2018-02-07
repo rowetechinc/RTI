@@ -274,7 +274,18 @@ namespace RTI
                 // Then clear some of the buffer
                 if (_receiveBufferString.Length > 16000)
                 {
-                    _receiveBufferString = _receiveBufferString.Remove(0, _receiveBufferString.Length - MAX_DISPLAY_BUFFER);
+                    try
+                    {
+                        _receiveBufferString = _receiveBufferString.Remove(0, _receiveBufferString.Length - MAX_DISPLAY_BUFFER);
+                    }
+                    catch(System.OutOfMemoryException ex)
+                    {
+                        _receiveBufferString = ex.ToString();
+                    }
+                    catch(Exception e)
+                    {
+                        _receiveBufferString = e.ToString();
+                    }
                 }
             }
         }

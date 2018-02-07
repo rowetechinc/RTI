@@ -69,6 +69,7 @@
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
  * 08/25/2017      RC          3.4.2      Added Ship Velocity.
  * 09/13/2017      RC          3.4.3      Fixed bug if no beams in data.
+ * 02/07/2018      RC          3.4.5      Added IsUpwardFacing() to know the direction the ADCP is facing.
  * 
  */
 
@@ -1257,6 +1258,27 @@ namespace RTI
                     }
                 }
                 return -1;
+            }
+
+            /// <summary>
+            /// Check if the ADCP is upward facing or downward facing.
+            /// 
+            /// The ADCP is Upward facing if the Roll is around 0 degrees.
+            /// The ADCP is Downward facing if the Roll is around 180 degrees.
+            /// </summary>
+            /// <returns></returns>
+            public bool IsUpwardFacing()
+            {
+                float roll = Math.Abs(Roll);
+
+                if (roll > 0 && roll < 30)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             /// <summary>

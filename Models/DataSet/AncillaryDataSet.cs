@@ -51,6 +51,7 @@
  * 02/06/2014      RC          2.21.3     Added constructor that takes a PRTI03 sentence.
  * 03/26/2014      RC          2.21.4     Added a simpler constructor and added DecodePd0Ensemble().
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements.
+ * 02/07/2018      RC          3.4.5      Added IsUpwardFacing() to know the direction the ADCP is facing.
  * 
  */
 
@@ -443,6 +444,27 @@ namespace RTI
             private int GeneratePayloadIndex(int index)
             {
                 return index * Ensemble.BYTES_IN_FLOAT;
+            }
+
+            /// <summary>
+            /// Check if the ADCP is upward facing or downward facing.
+            /// 
+            /// The ADCP is Upward facing if the Roll is around 0 degrees.
+            /// The ADCP is Downward facing if the Roll is around 180 degrees.
+            /// </summary>
+            /// <returns></returns>
+            public bool IsUpwardFacing()
+            {
+                float roll = Math.Abs(Roll);
+
+                if(roll > 0 && roll < 30)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             /// <summary>

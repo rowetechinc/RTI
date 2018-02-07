@@ -36,7 +36,8 @@
  * 06/18/2014      RC          2.22.1     Initial coding
  * 09/24/2014      RC          3.0.2      Added DMG data.
  * 12/07/2015      RC          3.3.0      Added Ship Error velocity.
- * 03/03/2016      RC          3.3.2      Fixed bug with JSON decoding Pressure.      
+ * 03/03/2016      RC          3.3.2      Fixed bug with JSON decoding Pressure.
+ * 02/07/2018      RC          3.4.5      Added IsUpwardFacing() to know the direction the ADCP is facing.
  * 
  */
 
@@ -754,6 +755,27 @@ namespace RTI
                 this.DmgRefError = DmgRefError;
 
                 this.LeakDetection = LeakDetection;
+            }
+
+            /// <summary>
+            /// Check if the ADCP is upward facing or downward facing.
+            /// 
+            /// The ADCP is Upward facing if the Roll is around 0 degrees.
+            /// The ADCP is Downward facing if the Roll is around 180 degrees.
+            /// </summary>
+            /// <returns></returns>
+            public bool IsUpwardFacing()
+            {
+                float roll = Math.Abs(Roll);
+
+                if (roll > 0 && roll < 30)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             #region Init

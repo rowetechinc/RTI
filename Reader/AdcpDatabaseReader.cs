@@ -265,6 +265,12 @@ namespace RTI
             // the ensemble.
             if (project != null)
             {
+                // Verify the connection is open
+                if(_cnn == null && _cnn.State != System.Data.ConnectionState.Open)
+                {
+                    OpenConnection(project);
+                }
+
                 // Query for ensemble data
                 DataSet.Ensemble ensemble = _adcpDbCodec.QueryForDataSet(_cnn, project, index);
 

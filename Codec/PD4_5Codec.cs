@@ -359,7 +359,7 @@ namespace RTI
                 catch (Exception e)
                 {
                     log.Error("Error processing PD4/PD5 codec data.", e);
-                    return;
+                    //return;
                 }
 
                 // Send an event that processing is complete
@@ -1037,19 +1037,16 @@ namespace RTI
         /// </summary>
         private void SearchForHeaderStart()
         {
-            //lock (_headerStartLock)
-            //{
-                //Debug.WriteLine("PD4_5Codec: SearchHeaderStart() Lock Open");
-                if(!_continue)
-                {
-                    return;
-                }
+            if(!_continue)
+            {
+                return;
+            }
 
-                lock (_headerStartLock)
-                {
-                    // Clear the header
-                    _headerStart.Clear();
-                }
+            lock (_headerStartLock)
+            {
+                // Clear the header
+                _headerStart.Clear();
+
 
                 // Find the beginning of an ensemble
                 // Also make sure we are still running with _continue
@@ -1058,26 +1055,20 @@ namespace RTI
                     // Populate the buffer if its empty
                     if (_headerStart.Count < ID_SIZE)
                     {
-                        lock (_headerStartLock)
+                        // Get the header start from the buffer
+                        for (int x = 0; x < ID_SIZE; x++)
                         {
-                            // Get the header start from the buffer
-                            for (int x = 0; x < ID_SIZE; x++)
-                            {
-                                // Store the value to the header start array
-                                _headerStart.Add(_incomingDataBuffer.Take());
-                            }
+                            // Store the value to the header start array
+                            _headerStart.Add(_incomingDataBuffer.Take());
                         }
                     }
 
                     // Find a start
                     if (_headerStart.Count >= ID_SIZE && (_headerStart[0] == ID && (_headerStart[1] == ID_PD4 || _headerStart[1] == ID_PD5)) && _continue)
                     {
-                        lock (_headerStartLock)
-                        {
-                            // Get the next 2 bytes for the ensemble size
-                            _headerStart.Add(_incomingDataBuffer.Take());
-                            _headerStart.Add(_incomingDataBuffer.Take());
-                        }
+                        // Get the next 2 bytes for the ensemble size
+                        _headerStart.Add(_incomingDataBuffer.Take());
+                        _headerStart.Add(_incomingDataBuffer.Take());
 
                         break;
                     }
@@ -1086,16 +1077,20 @@ namespace RTI
                     {
                         if (_headerStart.Count > 0 && _continue)
                         {
-                            lock (_headerStartLock)
+                            try
                             {
                                 _headerStart.RemoveAt(0);
                                 _headerStart.Add(_incomingDataBuffer.Take());
                             }
+                            catch(Exception e)
+                            {
+                                log.Error("Error removing the first byte in header in PD4/5.", e);
+                            }
+
                         }
                     }
                 }
-            //}
-            //Debug.WriteLine("PD4_5Codec: SearchHeaderStart() Lock Closed");
+            }
         }
 
         /// <summary>

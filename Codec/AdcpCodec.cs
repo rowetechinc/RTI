@@ -40,6 +40,7 @@
  * 08/13/2015      RC          3.0.5      Check for complete event for all the codec.
  * 10/10/2016      RC          3.3.2      Changed binary codec to BinaryCodecNew.
  * 09/28/2017      RC          3.4.4      Pass the original data format when the data is sent based off the codec used.
+ * 03/12/2018      RC          3.4.5      Fixed Data Complete event handler settings.
  * 
  */
 
@@ -55,7 +56,7 @@ namespace RTI
     /// This will use all the available codecs to determine which codec
     /// is in use and decode the data.
     /// </summary>
-    public class AdcpCodec: ICodec, IDisposable
+    public class AdcpCodec: IDisposable
     {
         #region Enum
 
@@ -93,6 +94,11 @@ namespace RTI
         #endregion
 
         #region Variables
+
+        /// <summary>
+        ///  Setup logger
+        /// </summary>
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Binary Codec for binary files.
@@ -220,7 +226,7 @@ namespace RTI
             if (_pd0Codec != null)
             {
                 Pd0Codec.ProcessDataEvent -= _pd0Codec_ProcessDataEvent;
-                Pd0Codec.ProcessDataCompleteEvent -= pd6_13Codec_ProcessDataCompleteEvent;
+                Pd0Codec.ProcessDataCompleteEvent -= pd0Codec_ProcessDataCompleteEvent;
                 _pd0Codec.Dispose();
             }
 
@@ -236,7 +242,7 @@ namespace RTI
             if (_pd4_5Codec != null)
             {
                 _pd4_5Codec.ProcessDataEvent -= _pd4_5Codec_ProcessDataEvent;
-                _pd4_5Codec.ProcessDataCompleteEvent -= pd6_13Codec_ProcessDataCompleteEvent;
+                _pd4_5Codec.ProcessDataCompleteEvent -= pd4_5Codec_ProcessDataCompleteEvent;
                 _pd4_5Codec.Dispose();
             }
         }
@@ -247,13 +253,77 @@ namespace RTI
         /// Add the incoming data.
         /// </summary>
         /// <param name="data">Data to add.</param>
-        public void AddIncomingData(byte[] data)
+        /// <param name="isBinaryData">Flag if Binary data should be decoded.</param>
+        /// <param name="isDvlData">Flag if DVL data should be decoded.</param>
+        /// <param name="isPd0Data">Flag if PD0 data should be decoded.</param>
+        /// <param name="isPd6_13Data">Flag if PD6/PD13 data should be decoded.</param>
+        /// <param name="isPd4_5Data">Flag if PD4/PD5 data should be decoded.</param>
+        public void AddIncomingData(byte[] data, bool isBinaryData = true, bool isDvlData = true, bool isPd0Data = true, bool isPd6_13Data = true, bool isPd4_5Data = true)
         {
-            _binaryCodec.AddIncomingData(data);
-            _dvlCodec.AddIncomingData(data);
-            _pd0Codec.AddIncomingData(data);
-            _pd6_13Codec.AddIncomingData(data);
-            _pd4_5Codec.AddIncomingData(data);
+            // Binary data
+            if (isBinaryData)
+            {
+                try
+                {
+                    _binaryCodec.AddIncomingData(data);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error decoding Binary data.", e);
+                }
+            }
+
+            // DVL data
+            if (isDvlData)
+            {
+                try
+                {
+                    _dvlCodec.AddIncomingData(data);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error decoding the DVL data.", e);
+                }
+            }
+
+            // PD0 data
+            if (isPd0Data)
+            {
+                try
+                {
+                    _pd0Codec.AddIncomingData(data);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error decoding the PD0 data.", e);
+                }
+            }
+
+            // PD6 / PD13 data
+            if (isPd6_13Data)
+            {
+                try
+                {
+                    _pd6_13Codec.AddIncomingData(data);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error decoding PD6/13 data.", e);
+                }
+            }
+
+            // PD4 / PD5 data
+            if (isPd4_5Data)
+            {
+                try
+                {
+                    _pd4_5Codec.AddIncomingData(data);
+                }
+                catch (Exception e)
+                {
+                    log.Error("Error decoding PD4/5 data.", e);
+                }
+            }
         }
 
         /// <summary>

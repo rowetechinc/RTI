@@ -468,6 +468,22 @@ namespace RTI
             }
 
             /// <summary>
+            /// Get the depth for a specific bin.
+            /// Assume that the first bin is bin 0.
+            /// </summary>
+            /// <param name="binNum">Bin number to get the depth.</param>
+            /// <returns>Depth for a specific bin.</returns>
+            public float GetBinToDepth(int binNum)
+            {
+                if(binNum >= 0)
+                {
+                    return (this.FirstBinRange + (binNum * this.BinSize));
+                }
+
+                return 0;
+            }
+
+            /// <summary>
             /// Override the ToString to return all the Ancillary data as a string.
             /// </summary>
             /// <returns></returns>

@@ -1154,10 +1154,10 @@ namespace RTI
             /// If a value is bad, it will not include the value.
             /// </summary>
             /// <returns>Average range to the bottom.</returns>
-            public double GetAverageRange()
+            public float GetAverageRange()
             {
                 int count = 0;
-                double result = 0;
+                float result = 0.0f;
                 for (int beam = 0; beam < Range.Length; beam++)
                 {
                     if (Range[beam] > DataSet.Ensemble.BAD_RANGE)
@@ -1183,13 +1183,33 @@ namespace RTI
             /// Return a negative number if it is not good.
             /// </summary>
             /// <param name="binSize">Bins size.</param>
+            /// <param name="blank">Blank distance.</param>
             /// <returns>Bottom Track bin.</returns>
-            public int GetRangeBin(float binSize)
+            public int GetRangeBin(float binSize, float blank)
             {
                 int bin = -1;
 
                 // Get the bottom track depth
                 double depth = GetAverageRange();
+
+                // If no depth found, return 0
+                if(depth == 0)
+                {
+                    return 0;
+                }
+
+                // Range = BtDepth * cos(BeamAngle)
+                // Max Bin = (Range / binLength) - 1Bin
+                //double range = GetAverageRange() * Math.Cos(beamAngle);
+
+                //// Check for an error
+                //if (binSize != 0)
+                //{
+                //    bin = (int)Math.Round((range / binSize) - 1.0);
+                //}
+
+                // Remove the blanking distance
+                depth -= blank;
 
                 // Ensure a depth is given
                 if (depth > 0.0)

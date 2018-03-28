@@ -4,6 +4,7 @@ RTI-3.4.5
  - Added Previous BT Range to ScreenMarkBadBelowBottom.
  - In BottomTrackDataSet, DvlDataSet and AncillaryDataSet, added IsUpwardFacing() to know the direction the ADCP is facing.
  - In AncillaryDataSet, added BinToDepth().
+ - In AdcpCodec, clear the buffer if the format is not being used.
 
 RTI-3.4.4
  - In InstrumentVelocityDataSet and EarthVelocityDataSet, if no Water Profile, fix bug IsBinGood() to check if the bin is good.

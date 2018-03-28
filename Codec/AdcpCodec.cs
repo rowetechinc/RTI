@@ -272,6 +272,11 @@ namespace RTI
                     log.Error("Error decoding Binary data.", e);
                 }
             }
+            else
+            {
+                // Clear buffer, format not needed
+                _binaryCodec.ClearIncomingData();
+            }
 
             // DVL data
             if (isDvlData)
@@ -284,6 +289,11 @@ namespace RTI
                 {
                     log.Error("Error decoding the DVL data.", e);
                 }
+            }
+            else
+            {
+                // Clear buffer, format not needed
+                _dvlCodec.ClearIncomingData();
             }
 
             // PD0 data
@@ -298,6 +308,11 @@ namespace RTI
                     log.Error("Error decoding the PD0 data.", e);
                 }
             }
+            else
+            {
+                // Clear buffer, format not needed
+                _pd0Codec.ClearIncomingData();
+            }
 
             // PD6 / PD13 data
             if (isPd6_13Data)
@@ -311,6 +326,11 @@ namespace RTI
                     log.Error("Error decoding PD6/13 data.", e);
                 }
             }
+            else
+            {
+                // Clear buffer, format not needed
+                _pd6_13Codec.ClearIncomingData();
+            }
 
             // PD4 / PD5 data
             if (isPd4_5Data)
@@ -323,6 +343,11 @@ namespace RTI
                 {
                     log.Error("Error decoding PD4/5 data.", e);
                 }
+            }
+            else
+            {
+                // Clear buffer, format not needed
+                _pd4_5Codec.ClearIncomingData();
             }
         }
 

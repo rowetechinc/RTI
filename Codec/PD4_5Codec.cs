@@ -46,6 +46,7 @@
  * 08/13/2015      RC          3.0.5      Added complete event.
  * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 09/13/2017      RC          3.4.3      Fixed a bug where the thread lock holds in SearchForHeaderStart().
+ * 03/29/2018      RC          3.4.5      Lock the headerStart when clearing the codec.
  * 
  */
 
@@ -303,11 +304,11 @@ namespace RTI
             _incomingDataBuffer = new BlockingCollection<Byte>();
             
 
-            //lock (_headerStartLock)
-            //{
+            lock (_headerStartLock)
+            {
                 //Debug.WriteLine("PD4_5Codec: ClearIncomingData() Lock Open");
                 _headerStart.Clear();
-            //}
+            }
 
             //Debug.WriteLine("PD4_5Codec: ClearIncomingData() Lock Closed");
 
@@ -1084,7 +1085,7 @@ namespace RTI
                             }
                             catch(Exception e)
                             {
-                                log.Error("Error removing the first byte in header in PD4/5.", e);
+                                log.Error(string.Format("Error removing the first byte in header in PD4/5. : {0}  :  {1}", _headerStart.Count, _headerStart), e);
                             }
 
                         }

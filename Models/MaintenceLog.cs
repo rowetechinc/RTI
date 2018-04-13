@@ -587,7 +587,11 @@ namespace RTI
 
                 // Decode the log file of all its content
                 // and add it to the list
-                maintList.AddRange(DecodeLog(maintLog));
+                List<MaintenceEntry> decodedLog = DecodeLog(maintLog);
+                if (decodedLog != null)
+                {
+                    maintList.AddRange(decodedLog);
+                }
             }
 
             // Add the new list to the one from the file

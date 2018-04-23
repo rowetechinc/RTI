@@ -6,6 +6,7 @@ RTI-3.4.5
  - In AncillaryDataSet, added BinToDepth().
  - In AdcpCodec, clear the buffer if the format is not being used.
  - In Pd4_5Codec, lock the headerStart when clearing the codec.
+ - In PD4_5Codec, made it match PD0 style.
 
 RTI-3.4.4
  - In InstrumentVelocityDataSet and EarthVelocityDataSet, if no Water Profile, fix bug IsBinGood() to check if the bin is good.

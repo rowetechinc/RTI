@@ -360,45 +360,51 @@ namespace RTI
         {
             try
             {
-                byte[] received = _udpClient.EndReceive(res, ref _endPoint);
-
-                // Convert received message to a string
-                string message = "";
-                if (received[0] == 0xFF)
+                if (res != null)
                 {
-                    message = _endPoint.Address.ToString() + ":" + _endPoint.Port.ToString() + "\r\n";
-                    for (int i = 1; i < received.Length; i++)
-                        message += received[i].ToString("X2");
+                    byte[] received = _udpClient.EndReceive(res, ref _endPoint);
 
-                    message += "\r\n";
+                    if (received != null && _endPoint != null)
+                    {
+                        // Convert received message to a string
+                        string message = "";
+                        if (received[0] == 0xFF)
+                        {
+                            message = _endPoint.Address.ToString() + ":" + _endPoint.Port.ToString() + "\r\n";
+                            for (int i = 1; i < received.Length; i++)
+                                message += received[i].ToString("X2");
+
+                            message += "\r\n";
+                        }
+                        else
+                        {
+                            message = System.Text.ASCIIEncoding.ASCII.GetString(received, 0, received.Length);
+                        }
+
+                        // Pass the data to all subscribers
+                        AdcpUdp.Datagram datagram = new AdcpUdp.Datagram()
+                        {
+                            RawMessage = received,
+                            Message = message,
+                            Sender = _endPoint
+                        };
+
+                        // Publish the data
+                        PublishRawUdpData(datagram);
+
+                        // Set the Receive Buffer
+                        ReceiveBufferString += message;
+
+                        // Keep the Buffer to a set limit
+                        if (ReceiveBufferString.Length > 5000)
+                        {
+                            ReceiveBufferString = ReceiveBufferString.Substring(ReceiveBufferString.Length - 5000);
+                        }
+
+                        // Check for the next message
+                        _udpClient.BeginReceive(new AsyncCallback(recv), null);
+                    }
                 }
-                else
-                {
-                    message = System.Text.ASCIIEncoding.ASCII.GetString(received, 0, received.Length);
-                }
-
-                // Pass the data to all subscribers
-                AdcpUdp.Datagram datagram = new AdcpUdp.Datagram()
-                {
-                    RawMessage = received,
-                    Message = message,
-                    Sender = _endPoint
-                };
-
-                // Publish the data
-                PublishRawUdpData(datagram);
-
-                // Set the Receive Buffer
-                ReceiveBufferString += message;
-
-                // Keep the Buffer to a set limit
-                if (ReceiveBufferString.Length > 5000)
-                {
-                    ReceiveBufferString = ReceiveBufferString.Substring(ReceiveBufferString.Length - 5000);
-                }
-
-                // Check for the next message
-                _udpClient.BeginReceive(new AsyncCallback(recv), null);
             }
             catch(Exception e) 
             {

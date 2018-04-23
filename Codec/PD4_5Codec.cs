@@ -47,7 +47,6 @@
  * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 09/13/2017      RC          3.4.3      Fixed a bug where the thread lock holds in SearchForHeaderStart().
  * 03/29/2018      RC          3.4.5      Lock the headerStart when clearing the codec.
- * 04/23/2018      RC          3.4.5      Updated codec decoding to match PD0 style.
  * 
  */
 
@@ -137,25 +136,12 @@ namespace RTI
         /// Buffer for the incoming data.
         /// This buffer holds all the individual bytes to be processed.
         /// </summary>
-        private BlockingCollection<Byte> _incomingDataBuffer;
+        private List<Byte> _incomingDataBuffer;
 
         /// <summary>
-        /// List containing the beginning of the ensemble.
-        /// This will contain the header start, ensemble number and payload.
+        /// Lock for the buffer list.
         /// </summary>
-        private List<byte> _headerStart;
-
-        /// <summary>
-        /// Lock for the header start list.
-        /// </summary>
-        private object _headerStartLock = new object();
-
-        /// <summary>
-        /// Current size of the ensemble being processed.
-        /// This is calculated while decoding the current
-        /// ensemble.
-        /// </summary>
-        private int _currentEnsembleSize;
+        private object _bufferLock = new object();
 
         /// <summary>
         /// Previous time in seconds.
@@ -236,11 +222,7 @@ namespace RTI
             //_nmeaBuffer = new LinkedList<string>();
 
             // Initialize buffer
-            _incomingDataBuffer = new BlockingCollection<Byte>();
-            _headerStart = new List<byte>();
-
-            // Initialize the ensemble size to at least the HDRLEN
-            _currentEnsembleSize = MIN_ENS_SIZE;
+            _incomingDataBuffer = new List<Byte>();
 
             _prevTime = 0.0f;
             _ensembleIndex = 0;
@@ -261,7 +243,7 @@ namespace RTI
             StopThread();
 
             //ClearIncomingData();
-            _incomingDataBuffer.Dispose();
+            //_incomingDataBuffer.Dispose();
         }
 
 
@@ -274,12 +256,15 @@ namespace RTI
         /// <param name="data">Data to add to incoming buffer.</param>
         public void AddIncomingData(byte[] data)
         {
-            if (data != null)
+            if (data != null && data.Length > 0)
             {
                 // Add all the data to the buffer
                 for (int x = 0; x < data.Length; x++)
                 {
-                    _incomingDataBuffer.Add(data[x]);
+                    lock (_bufferLock)
+                    {
+                        _incomingDataBuffer.Add(data[x]);
+                    }
                 }
             }
 
@@ -302,17 +287,28 @@ namespace RTI
         public void ClearIncomingData()
         {
             // Clear the buffer
-            _incomingDataBuffer = new BlockingCollection<Byte>();
-            
-
-            lock (_headerStartLock)
+            lock (_bufferLock)
             {
-                Debug.WriteLine("PD4_5Codec: ClearIncomingData() Lock Open");
-                _headerStart.Clear();
+                _incomingDataBuffer.Clear();
             }
 
-            Debug.WriteLine("PD4_5Codec: ClearIncomingData() Lock Closed");
+            //Debug.WriteLine("PD4_5Codec: ClearIncomingData() Lock Closed");
 
+        }
+
+        /// <summary>
+        /// Stop the thread.
+        /// </summary>
+        private void StopThread()
+        {
+            _continue = false;
+
+            // Wake up the thread to stop thread
+            _eventWaitData.Set();
+
+            // Force the thread to stop
+            //_processDataThread.Abort();
+            _processDataThread.Join(1000);
         }
 
         #region Parse Data
@@ -372,20 +368,9 @@ namespace RTI
             }
         }
 
-        /// <summary>
-        /// Stop the thread.
-        /// </summary>
-        private void StopThread()
-        {
-            _continue = false;
+        #endregion
 
-            // Wake up the thread to stop thread
-            _eventWaitData.Set();
-
-            // Force the thread to stop
-            //_processDataThread.Abort();
-            _processDataThread.Join(1000);
-        }
+        #region Decode
 
         /// <summary>
         /// Decode the incoming data for ensemble data.
@@ -409,60 +394,58 @@ namespace RTI
             if (_incomingDataBuffer.Count >= MIN_ENS_SIZE - HEADER_SIZE)
             {
                 // Get the size
-                if (GetEnsembleSize())
+                int currentEnsembleSize = GetEnsembleSize();
+
+                // Ensure the entire ensemble is present
+                // before preceeding
+                if (currentEnsembleSize >= HEADER_SIZE && _incomingDataBuffer.Count >= currentEnsembleSize)
                 {
-                    // Ensure the entire ensemble is present
-                    // before preceeding
-                    if (_currentEnsembleSize >= HEADER_SIZE && _incomingDataBuffer.Count + _headerStart.Count >= _currentEnsembleSize)
+                    // Create an array to hold the ensemble
+                    byte[] ensemble = new byte[currentEnsembleSize];
+
+                    // Lock the buffer, to ensure the same data is copied
+                    lock (_bufferLock)
                     {
-                        // Create an array to hold the ensemble
-                        byte[] ensemble = new byte[_currentEnsembleSize];
-
-                        lock (_headerStartLock)
+                        // Check one more time just in case the buffer was modified
+                        if (_incomingDataBuffer.Count >= currentEnsembleSize)
                         {
-                            Debug.WriteLine("PD4_5Codec: DecodeIncomingData() Lock Open");
-                            // Copy the header start to the ensemble
-                            Buffer.BlockCopy(_headerStart.ToArray(), 0, ensemble, 0, HEADER_SIZE);
-                            _headerStart.Clear();
-                        }
-                        Debug.WriteLine("PD4_5Codec: DecodeIncomingData() Lock Closed");
+                            // Copy the ensemble to a byte array
+                            _incomingDataBuffer.CopyTo(0, ensemble, 0, currentEnsembleSize);
 
-                        // Copy the remainder of the ensemble 
-                        for (int x = HEADER_SIZE; x < _currentEnsembleSize; x++)
-                        {
-                            ensemble[x] = _incomingDataBuffer.Take();
+                            // Remove ensemble from buffer
+                            _incomingDataBuffer.RemoveRange(0, currentEnsembleSize);
                         }
-
-                        // Get the checksum values
-                        long calculatedChecksum = PD0.CalculateChecksum(ensemble, _currentEnsembleSize - 2);
-                        long ensembleChecksum = RetrieveEnsembleChecksum(ensemble);
-
-                        // Verify the checksum match
-                        if (calculatedChecksum == ensembleChecksum)
-                        {
-                            // Decode the binary data
-                            DecodeAdcpData(ensemble);
-                        }
-                        //else
-                        //{
-                        //    Debug.WriteLine(string.Format("Checksums do not match Cal: {0}  Actual:{1}", calculatedChecksum, ensembleChecksum));
-                        //}
                     }
+
+                    // Get the checksum values
+                    long calculatedChecksum = PD0.CalculateChecksum(ensemble, currentEnsembleSize - CHECKSUM_SIZE);
+                    long ensembleChecksum = RetrieveEnsembleChecksum(ensemble);
+
+                    // Verify the checksum match
+                    if (calculatedChecksum == ensembleChecksum)
+                    {
+                        // Decode the binary data
+                        DecodeAdcpData(ensemble);
+                    }
+                    //else
+                    //{
+                    //    Debug.WriteLine(string.Format("Checksums do not match Cal: {0}  Actual:{1}", calculatedChecksum, ensembleChecksum));
+                    //}
 
                 }
                 // Checksum or Ensemble failed
                 else
                 {
-                    lock (_headerStartLock)
+                    // Lock the buffer while removing
+                    lock (_bufferLock)
                     {
-                        Debug.WriteLine("PD4_5Codec: DecodingIncomingData() Else Lock Open");
-                        // Remove the first element to continue searching
-                        if (_headerStart.Count > 0)
+                        if (_incomingDataBuffer.Count > 0)
                         {
-                            _headerStart.RemoveAt(0);
+                            // Remove the first element to continue searching
+                            _incomingDataBuffer.RemoveAt(0);
                         }
                     }
-                    Debug.WriteLine("PD4_5Codec: DecodeIncomingData() Else Lock Closed");
+                    //Debug.WriteLine("PD4_5Codec: DecodeIncomingData() Else Lock Closed");
                 }
             }
         }
@@ -1031,70 +1014,39 @@ namespace RTI
 
         /// <summary>
         /// Search for the beginning of the header.
-        /// The header will contain MAX_HEADER_COUNT of
-        /// 0x80 at the beginning.  Try to find the 
+        /// The header will contain 7D 00 or 7D 01
+        /// at the beginning.  Try to find the 
         /// beginning before processing.  If it is not
         /// the beginning, remove the value from the
         /// list until the beginning is found.
         /// </summary>
         private void SearchForHeaderStart()
         {
-            if(!_continue)
+            lock (_bufferLock)
             {
-                return;
-            }
-
-            lock (_headerStartLock)
-            {
-                Debug.WriteLine("PD4_5Codec: SearchForHeaderStart() Lock Open");
-                // Clear the header
-                _headerStart.Clear();
-
-
                 // Find the beginning of an ensemble
-                // Also make sure we are still running with _continue
-                while (_incomingDataBuffer.Count > ID_SIZE && _continue)
+                // It will contain 16 0x80 at the start
+                while (_incomingDataBuffer.Count > 2)
                 {
-                    // Populate the buffer if its empty
-                    if (_headerStart.Count < ID_SIZE)
+                    // Check if shutting down
+                    if (!_continue)
                     {
-                        // Get the header start from the buffer
-                        for (int x = 0; x < ID_SIZE; x++)
-                        {
-                            // Store the value to the header start array
-                            _headerStart.Add(_incomingDataBuffer.Take());
-                        }
+                        return;
                     }
 
                     // Find a start
-                    if (_headerStart.Count >= ID_SIZE && (_headerStart[0] == ID && (_headerStart[1] == ID_PD4 || _headerStart[1] == ID_PD5)) && _continue)
+                    if (_incomingDataBuffer[0] == ID && (_incomingDataBuffer[1] == ID_PD4 || _incomingDataBuffer[1] == ID_PD5))
                     {
-                        // Get the next 2 bytes for the ensemble size
-                        _headerStart.Add(_incomingDataBuffer.Take());
-                        _headerStart.Add(_incomingDataBuffer.Take());
-
                         break;
                     }
                     // Remove the first byte until you find the start
                     else
                     {
-                        if (_headerStart.Count > 0 && _continue)
-                        {
-                            try
-                            {
-                                _headerStart.RemoveAt(0);
-                                _headerStart.Add(_incomingDataBuffer.Take());
-                            }
-                            catch(Exception e)
-                            {
-                                log.Error(string.Format("Error removing the first byte in header in PD4/5. : {0}  :  {1}", _headerStart.Count, _headerStart), e);
-                            }
-
-                        }
+                        // Lock the buffer while removing
+                        _incomingDataBuffer.RemoveAt(0);
                     }
                 }
             }
-            Debug.WriteLine("PD4_5Codec: SearchForHeaderStart() Lock Closed");
         }
 
         /// <summary>
@@ -1103,23 +1055,16 @@ namespace RTI
         /// include the checksum.
         /// </summary>
         /// <returns>If the size can be found, return true.</returns>
-        private bool GetEnsembleSize()
+        private int GetEnsembleSize()
         {
-            lock (_headerStartLock)
+            if (_incomingDataBuffer.Count >= 4)
             {
-                Debug.WriteLine("PD4_5Codec: GetEnsembleSize() Lock Open");
-                if (_headerStart.Count >= HEADER_SIZE)
-                {
-                    byte[] ensSize = new byte[2];
-                    ensSize[0] = _headerStart[2];
-                    ensSize[1] = _headerStart[3];
-                    _currentEnsembleSize = MathHelper.ByteArrayToUInt16(ensSize, 0) + CHECKSUM_SIZE;
-                    Debug.WriteLine("PD4_5Codec: GetEnsembleSize() Internal Lock Closed");
-                    return true;
-                }
+                byte[] ensSize = new byte[2];
+                ensSize[0] = _incomingDataBuffer[2];
+                ensSize[1] = _incomingDataBuffer[3];
+                return MathHelper.ByteArrayToUInt16(ensSize, 0) + CHECKSUM_SIZE; ;
             }
-            Debug.WriteLine("PD4_5Codec: GetEnsembleSize() Lock Closed");
-            return false;
+            return 0;
         }
 
         /// <summary>

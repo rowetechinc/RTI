@@ -1183,6 +1183,7 @@ namespace RTI
             /// <param name="Adcp2InfoDataSet">ADCP 2 Info data.</param>
             /// <param name="ShipVelocityData">Ship Velocity data.</param>
             /// <param name="ShipWaterMassData">Water Mass Ship data.</param>
+            /// <param name="FileName">File name of the ensemble.</param>
             [JsonConstructor]
             public Ensemble(bool IsBeamVelocityAvail, bool IsInstrumentVelocityAvail, bool IsEarthVelocityAvail, bool IsAmplitudeAvail, bool IsCorrelationAvail,
                             bool IsGoodBeamAvail, bool IsGoodEarthAvail, bool IsEnsembleAvail, bool IsAncillaryAvail, bool IsBottomTrackAvail,

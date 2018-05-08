@@ -140,6 +140,7 @@ namespace RTI
         /// project file.
         /// </summary>
         /// <param name="project">Project to check.</param>
+        /// <param name="revision">Revision of the project.</param>
         /// <returns>Number of rows in the table.</returns>
         public static void UpdateProjectVersion(Project project, string revision)
         {

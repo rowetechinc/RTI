@@ -354,8 +354,8 @@ namespace RTI
 
         /// <summary>
         /// Search for the beginning of the header.
-        /// The header will contain MAX_HEADER_COUNT of
-        /// 0x80 at the beginning.  Try to find the 
+        /// The header will contain 7F 7F
+        /// at the beginning.  Try to find the 
         /// beginning before processing.  If it is not
         /// the beginning, remove the value from the
         /// list until the beginning is found.

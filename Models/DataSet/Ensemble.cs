@@ -83,6 +83,7 @@
  * 02/08/2017      RC          3.4.0      Add AddAdditionalBottomTrackData for PRTI03 sentence.
  * 03/03/2017      RC          3.4.2      Added EnsembleWaterProfileTextOutput() to display all data as text.
  * 08/25/2017      RC          3.4.2      Added ShipVelocityDataSet.
+ * 04/30/2018      RC          3.4.5      Added FileName to ensemble dataset.
  * 
  */
 
@@ -616,6 +617,11 @@ namespace RTI
 
             #endregion
 
+            /// <summary>
+            /// String for File Name.
+            /// </summary>
+            public const string JSON_STR_FILENAME = "FileName";
+
             #region DataSets
 
             /// <summary>
@@ -903,6 +909,12 @@ namespace RTI
             #region Data Sets Properties
 
             /// <summary>
+            /// File name if file uploaded to read this ensemble.
+            /// This can be used to separate by bursts or files.
+            /// </summary>
+            public string FileName { get; set; } 
+
+            /// <summary>
             /// Beam Velocity Data set for this data set.
             /// </summary>
             public BeamVelocityDataSet BeamVelocityData { get; set; }
@@ -1054,6 +1066,9 @@ namespace RTI
             /// </summary>
             public Ensemble()
             {
+                // Initialize the file name
+                FileName = "";
+
                 // Set ensemble number
                 //EnsembleNumber = ensNum;
 
@@ -1181,8 +1196,11 @@ namespace RTI
                             InstrumentWaterMassDataSet InstrumentWaterMassData, NmeaDataSet NmeaData, ProfileEngineeringDataSet ProfileEngineeringData, BottomTrackEngineeringDataSet BottomTrackEngineeringData,
                             SystemSetupDataSet SystemSetupData, RangeTrackingDataSet RangeTrackingData, GageHeightDataSet GageHeightData, Adcp2InfoDataSet Adcp2InfoDataSet,
                             DvlDataSet DvlData, ShipVelocityDataSet ShipVelocityData, ShipWaterMassDataSet ShipWaterMassData,
-                            string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data)
+                            string AdcpGpsData, string Gps1Data, string Gps2Data, string Nmea1Data, string Nmea2Data, string FileName)
             {
+                // Initialize the file name
+                this.FileName = FileName;
+
                 // Initialize all ranges
                 this.IsBeamVelocityAvail = IsBeamVelocityAvail;
                 this.IsInstrumentVelocityAvail = IsInstrumentVelocityAvail;
@@ -4088,6 +4106,10 @@ namespace RTI
                 writer.WriteValue(ensemble.IsShipWaterMassAvail);
 
                 #endregion
+
+                // File Name
+                writer.WritePropertyName(DataSet.Ensemble.JSON_STR_FILENAME);
+                writer.WriteRawValue(Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.FileName));
 
                 #region DataSet
 

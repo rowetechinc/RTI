@@ -37,6 +37,7 @@
  * 07/03/2012      RC          2.12       Made the object smaller.  Make the options static.
  * 08/21/2012      RC          2.13       Added IsPortAvailable() to check if a port is usable.
  * 04/30/2013      RC          2.19       Define the default values.
+ * 05/07/2018      RC          3.4.5      Added 57600 baud rate.
  */
 
 using System.Collections.Generic;
@@ -119,6 +120,7 @@ namespace RTI
                 list.Add(460800);
                 list.Add(230400);
                 list.Add(115200);
+                list.Add(57600);
                 list.Add(38400);
                 list.Add(19200);
                 list.Add(9600);

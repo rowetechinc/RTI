@@ -44,6 +44,7 @@
  * 02/28/2013      RC          2.18       Added JSON encoding and Decoding.
  * 10/03/2013      RC          2.20.2     Fixed bug in constructor where the data type was not set correctly.  It is a byte type.
  * 02/11/2014      RC          2.21.3     Added GPHDT.
+ * 05/07/2018      RC          3.4.5      Check for exceptions in SetValue() and SetNmeaStringArray().
  *       
  * 
  */
@@ -70,6 +71,12 @@ namespace RTI
         public class NmeaDataSet : BaseDataSet
         {
             #region Variables
+
+            /// <summary>
+            /// Setup logger to report errors.
+            /// </summary>
+            private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
 
             /// <summary>
             /// All NMEA sentences should end with this.
@@ -599,15 +606,22 @@ namespace RTI
 
                     if (nmea.Length > 0)
                     {
-                        // Create a NMEA sentence and verify its valid
-                        NmeaSentence sentence = new NmeaSentence(nmea);
-                        if (sentence.IsValid)
+                        try
                         {
-                            // Add the nmea data to list
-                            NmeaStrings.Add(sentence.Sentence);
+                            // Create a NMEA sentence and verify its valid
+                            NmeaSentence sentence = new NmeaSentence(nmea);
+                            if (sentence.IsValid)
+                            {
+                                // Add the nmea data to list
+                                NmeaStrings.Add(sentence.Sentence);
 
-                            // Set values from the NMEA data
-                            SetValues(sentence);
+                                // Set values from the NMEA data
+                                SetValues(sentence);
+                            }
+                        }
+                        catch(Exception e)
+                        {
+                            log.Error("Error decoding NMEA sentence.", e);
                         }
                     }
                 }
@@ -632,47 +646,54 @@ namespace RTI
                  * characters.
                  */
 
-                if (sentence.CommandWord.EndsWith("GGA", StringComparison.Ordinal))
+                try
                 {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPGGA = new GpggaSentence(sentence.Sentence);
+                    if (sentence.CommandWord.EndsWith("GGA", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPGGA = new GpggaSentence(sentence.Sentence);
 
-                    // Set the Lat and Lon and time
+                        // Set the Lat and Lon and time
+                    }
+                    if (sentence.CommandWord.EndsWith("VTG", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPVTG = new GpvtgSentence(sentence.Sentence);
+                    }
+                    if (sentence.CommandWord.EndsWith("RMC", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPRMC = new GprmcSentence(sentence.Sentence);
+                    }
+                    if (sentence.CommandWord.EndsWith("RMF", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        PGRMF = new PgrmfSentence(sentence.Sentence);
+                    }
+                    if (sentence.CommandWord.EndsWith("GLL", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPGLL = new GpgllSentence(sentence.Sentence);
+                    }
+                    if (sentence.CommandWord.EndsWith("GSV", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPGSV = new GpgsvSentence(sentence.Sentence);
+                    }
+                    if (sentence.CommandWord.EndsWith("GSA", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPGSA = new GpgsaSentence(sentence.Sentence);
+                    }
+                    if (sentence.CommandWord.EndsWith("HDT", StringComparison.Ordinal))
+                    {
+                        // Yes.  Convert it using the fast pre-parseed constructor
+                        GPHDT = new GphdtSentence(sentence.Sentence);
+                    }
                 }
-                if (sentence.CommandWord.EndsWith("VTG", StringComparison.Ordinal))
+                catch(Exception e)
                 {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPVTG = new GpvtgSentence(sentence.Sentence);
-                }
-                if (sentence.CommandWord.EndsWith("RMC", StringComparison.Ordinal))
-                {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPRMC = new GprmcSentence(sentence.Sentence);
-                }
-                if (sentence.CommandWord.EndsWith("RMF", StringComparison.Ordinal))
-                {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    PGRMF = new PgrmfSentence(sentence.Sentence);
-                }
-                if (sentence.CommandWord.EndsWith("GLL", StringComparison.Ordinal))
-                {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPGLL = new GpgllSentence(sentence.Sentence);
-                }
-                if (sentence.CommandWord.EndsWith("GSV", StringComparison.Ordinal))
-                {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPGSV = new GpgsvSentence(sentence.Sentence);
-                }
-                if (sentence.CommandWord.EndsWith("GSA", StringComparison.Ordinal))
-                {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPGSA = new GpgsaSentence(sentence.Sentence);
-                }
-                if (sentence.CommandWord.EndsWith("HDT", StringComparison.Ordinal))
-                {
-                    // Yes.  Convert it using the fast pre-parseed constructor
-                    GPHDT = new GphdtSentence(sentence.Sentence);
+                    log.Error("Error decoding a NMEA sentance.", e);
                 }
             }
 

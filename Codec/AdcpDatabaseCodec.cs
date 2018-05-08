@@ -136,6 +136,21 @@ namespace RTI
         }
 
         /// <summary>
+        /// Update the tblOptions for the revision of the
+        /// project file.
+        /// </summary>
+        /// <param name="project">Project to check.</param>
+        /// <returns>Number of rows in the table.</returns>
+        public static void UpdateProjectVersion(Project project, string revision)
+        {
+            if (project != null)
+            {
+                string query = String.Format("UPDATE tblOptions SET {0} = {1} WHERE ID=1;", DbCommon.COL_CMD_REV, revision);
+                DbCommon.RunStatmentOnProjectDb(project, query);
+            }
+        }
+
+        /// <summary>
         /// Retrieve the dataset based off the index and project.  Limit it
         /// to the first dataset found with the correct index.  The index is
         /// auto incremented so there should only be 1 ensemble per index.
@@ -536,5 +551,7 @@ namespace RTI
         }
 
         #endregion
+
+
     }
 }

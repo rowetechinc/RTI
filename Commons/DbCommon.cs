@@ -62,6 +62,7 @@
  * 06/19/2014      RC          2.22.1     Added COL_DVL.
  * 09/02/2014      RC          3.0.1      Removed DataTransaction from GetDataTableFromProjectDb(cnn,...) and RunQueryOnProjectDb(cnn,...) and RunQueryOnProjectDb().
  * 10/31/2014      RC          3.0.2      Added COL_RangeTracking_DS and RangeTracking.
+ * 04/30/2018      RC          3.4.5      Added COL_ENS_SUBSYSTEM, COL_ENS_CEPO_INDEX, and COL_ENS_FILE.
  * 
  */
 
@@ -145,6 +146,27 @@ namespace RTI
         /// TEXT
         /// </summary>
         public const string COL_ENS_POSITION = "Position";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Subsystem.
+        /// TEXT
+        /// </summary>
+        public const string COL_ENS_SUBSYSTEM = "Subsystem";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// CEPO Index.
+        /// TEXT
+        /// </summary>
+        public const string COL_ENS_CEPO_INDEX = "CepoIndex";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// File name.
+        /// TEXT
+        /// </summary>
+        public const string COL_ENS_FILENAME = "FileName";
 
 
         #region DataSet Columns
@@ -500,6 +522,52 @@ namespace RTI
             return result;
         }
 
+        /// <summary>
+        /// Run a query on the project database that will not return a result.
+        /// </summary>
+        /// <param name="project">Project to run the query.</param>
+        /// <param name="statement">SQL Statement.</param>
+        public static void RunStatmentOnProjectDb(Project project, string statement)
+        {
+            try
+            {
+                // Open a connection to the database
+                using (SQLiteConnection cnn = DbCommon.OpenProjectDB(project))
+                {
+                    // Ensure a connection can be made
+                    if (cnn == null)
+                    {
+                        return;
+                    }
+
+                    using (DbTransaction dbTrans = cnn.BeginTransaction())
+                    {
+                        using (DbCommand cmd = cnn.CreateCommand())
+                        {
+                            cmd.CommandText = statement;
+
+                            // Run the query
+                            cmd.ExecuteNonQuery();
+
+                        }
+                        // Add all the data
+                        dbTrans.Commit();
+                    }
+                    // Close the connection to the database
+                    cnn.Close();
+                }
+            }
+            catch (SQLiteException e)
+            {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, statement), e);
+                return;
+            }
+            catch (Exception e)
+            {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, statement), e);
+                return;
+            }
+        }
 
         /// <summary>
         /// Run a query that will return an object.  Give the
@@ -752,12 +820,14 @@ namespace RTI
                     cnn.Close();
                 }
             }
-            catch (SQLiteException)
+            catch (SQLiteException e)
             {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
                 return false;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
                 return false;
             }
 
@@ -814,12 +884,14 @@ namespace RTI
                     //cnn.Close();
                 //}
             }
-            catch (SQLiteException)
+            catch (SQLiteException e)
             {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
                 return false;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                log.Error(string.Format("Unknown Error running query on database: {0} \n{1}", project.ProjectName, query), e);
                 return false;
             }
 
@@ -828,17 +900,17 @@ namespace RTI
 
         #endregion
 
-        #region Utilities
+            #region Utilities
 
-        /// <summary>
-        /// SQLite is not converting boolean ranges correctly.
-        /// It is storing the text value for true or false when
-        /// giving a boolean value.  It should store 1 or 0.
-        /// This will convert a boolean value to 1 or 0.
-        /// </summary>
-        /// <param name="value">Boolean to convert.</param>
-        /// <returns>True = 1 / False = 0</returns>
-        public static int ConvertBool(bool value)
+            /// <summary>
+            /// SQLite is not converting boolean ranges correctly.
+            /// It is storing the text value for true or false when
+            /// giving a boolean value.  It should store 1 or 0.
+            /// This will convert a boolean value to 1 or 0.
+            /// </summary>
+            /// <param name="value">Boolean to convert.</param>
+            /// <returns>True = 1 / False = 0</returns>
+            public static int ConvertBool(bool value)
         {
             if (value)
             {

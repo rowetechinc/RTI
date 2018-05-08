@@ -87,18 +87,23 @@ namespace RTI
             // Check Binary Codec
             var binList = _binaryCodec.GetEnsembles(files);
             if (binList.Count > 0)
+            {
                 return binList;
+            }
 
             // Check Pd0 Codec
             var pd0List = _pd0Codec.GetEnsembles(files);
-            if (binList.Count > 0)
+            if (pd0List.Count > 0)
+            {
                 return pd0List;
+            }
 
             // Check DVL Codec
             var dvlList = _dvlCodec.GetEnsembles(files);
             if (dvlList.Count > 0)
+            {
                 return dvlList;
-
+            }
 
             return new List<DataSet.EnsemblePackage>();
         }

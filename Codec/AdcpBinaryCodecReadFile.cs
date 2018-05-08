@@ -220,6 +220,9 @@ namespace RTI
                                         // Decode the ensemble and add it to the list
                                         var ens = DataSet.Ensemble.DecodeRawAdcpData(rawEns);
 
+                                        // Set the file name
+                                        ens.FileName = file;
+
                                         // Package the data
                                         var ensPak = new DataSet.EnsemblePackage();
                                         ensPak.Ensemble = ens;

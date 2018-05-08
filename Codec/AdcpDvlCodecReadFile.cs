@@ -88,7 +88,7 @@ namespace RTI
                     var sentList = FindSentence(file);
 
                     // Decode the sentences found
-                    return FindCompleteEnsembles(sentList);
+                    return FindCompleteEnsembles(sentList, file);
                 }
                 catch (Exception e)
                 {
@@ -164,8 +164,9 @@ namespace RTI
         /// PRTI01 message, pass all the groupped messages together and pass it as an ensemble.
         /// </summary>
         /// <param name="nmea">List of all the NMEA sentences.</param>
+        /// <param name="file">File name to add to the ensemble.</param>
         /// <returns>List of all the ensembles in the file.</returns>
-        protected List<DataSet.EnsemblePackage> FindCompleteEnsembles(List<NmeaSentence> nmea)
+        protected List<DataSet.EnsemblePackage> FindCompleteEnsembles(List<NmeaSentence> nmea, string file)
         {
             var list = new List<DataSet.EnsemblePackage>();
             var buffer = new List<NmeaSentence>();
@@ -178,6 +179,9 @@ namespace RTI
                     // Pass the buffer to create an ensemble
                     // and add it to the list
                     var ens = CreateEnsemble(buffer);
+
+                    // Set the file name
+                    ens.Ensemble.FileName = file;
                     if (ens.RawEnsemble != null)
                     {
                         list.Add(ens);

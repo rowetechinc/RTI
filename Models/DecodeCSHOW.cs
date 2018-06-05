@@ -39,6 +39,8 @@
  * 10/04/2012      RC          2.15       Added CBI command.
  * 09/17/2013      RC          2.20.0     Updated DecodeCERECORD() with the new CERECORD command.
  * 09/18/2014      RC          3.0.2      Added DecodeCTRIG().
+ * 06/05/2018      RC          3.4.7      Fixed bug with DecodeCWPRT() and only 2 parameters.
+ *                                        Fixed bug with DecodeCBI() and added the interleave flag.
  * 
  */
 namespace RTI
@@ -1466,6 +1468,15 @@ namespace RTI
                             ssConfig.Commands.CWPRT_LastBin = (UInt16)cwpRTValues[2];
 
                         }
+                        // Pressure mode only uses 2 parameters
+                        else if(cwpRTValues.Length >= 2)
+                        {
+                            // Mode
+                            ssConfig.Commands.CWPRT_Mode = (UInt16)cwpRTValues[0];
+
+                            // Pressure range
+                            ssConfig.Commands.CWPRT_FirstBin = (UInt16)cwpRTValues[1];
+                        }
                     }
 
                 }
@@ -1938,6 +1949,20 @@ namespace RTI
                             if (UInt16.TryParse(cbiValues[1], out cbi_NumEnsembles))
                             {
                                 ssConfig.Commands.CBI_NumEnsembles = cbi_NumEnsembles;
+                            }
+
+                            // Get the CBI interleave flag
+                            UInt16 cbi_InterleaveFlag = 0;
+                            if (UInt16.TryParse(cbiValues[2], out cbi_InterleaveFlag))
+                            {
+                                if(cbi_InterleaveFlag == 0)
+                                {
+                                    ssConfig.Commands.CBI_BurstPairFlag = false;
+                                }
+                                else
+                                {
+                                    ssConfig.Commands.CBI_BurstPairFlag = true;
+                                }
                             }
 
                         }

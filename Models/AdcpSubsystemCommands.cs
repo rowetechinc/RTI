@@ -62,6 +62,7 @@
  * 09/22/2014      RC          3.0.2      Added CBTFILT.
  * 11/03/2015      RC          3.2.1      Update GetWavesCommandList() to include CBTON.
  * 06/04/2018      RC          3.4.6      Added CBTON and CBI to deployment command list.
+ * 06/04/2018      RC          3.4.7      Increased the number of paramater for CBI from 2 to 3. AdcpSubsystemCommands.CBI_NUM_PARAM
  *
  */
 
@@ -1616,7 +1617,7 @@ namespace RTI
             /// <summary>
             /// Number of parameters for the CBI command.
             /// </summary>
-            public const int CBI_NUM_PARAM = 2;
+            public const int CBI_NUM_PARAM = 3;
 
             #endregion
 

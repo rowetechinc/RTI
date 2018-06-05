@@ -143,7 +143,10 @@ namespace DotSpatial.Positioning
         public DilutionOfPrecision(float value)
         {
             if (value <= 0)
-                throw new ArgumentException("Dillution of precision value must be > 0");
+            {
+                //throw new ArgumentException("Dillution of precision value must be > 0");
+                _value = float.NaN;
+            }
 
             _value = value;
         }

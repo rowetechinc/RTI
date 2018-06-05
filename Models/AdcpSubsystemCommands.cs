@@ -61,6 +61,7 @@
  *                                         Removed the CBI command from the GetDeploymentCommandList().
  * 09/22/2014      RC          3.0.2      Added CBTFILT.
  * 11/03/2015      RC          3.2.1      Update GetWavesCommandList() to include CBTON.
+ * 06/04/2018      RC          3.4.6      Added CBTON and CBI to deployment command list.
  *
  */
 
@@ -4552,13 +4553,14 @@ namespace RTI
             {
                 List<string> list = new List<string>();
 
-                //list.Add(CBI_CmdStr());                // CBI
-                list.Add(CWPBB_CmdStr());              // CWPBB
-                list.Add(CWPBL_CmdStr());              // CWPBL
-                list.Add(CWPBS_CmdStr());              // CWPBS
-                list.Add(CWPBN_CmdStr());              // CWPBN
-                list.Add(CWPP_CmdStr());               // CWPP
-                list.Add(CWPTBP_CmdStr());             // CWPTBP
+                list.Add(CWPBB_CmdStr());               // CWPBB
+                list.Add(CWPBL_CmdStr());               // CWPBL
+                list.Add(CWPBS_CmdStr());               // CWPBS
+                list.Add(CWPBN_CmdStr());               // CWPBN
+                list.Add(CWPP_CmdStr());                // CWPP
+                list.Add(CWPTBP_CmdStr());              // CWPTBP
+                list.Add(CBTON_CmdStr());               // CWPTBP
+                list.Add(CBI_CmdStr());               // CBI
 
                 return list;
             }

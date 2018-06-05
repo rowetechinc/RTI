@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-3.4.6
+ * Changed DilutionOfPrecision to not throw an exception but pass NaN.
+ * Added CBTON and CBI to deployment command list.
+
 RTI-3.4.5
  - Added Previous BT Range to ScreenMarkBadBelowBottom.
  - In BottomTrackDataSet, DvlDataSet and AncillaryDataSet, added IsUpwardFacing() to know the direction the ADCP is facing.

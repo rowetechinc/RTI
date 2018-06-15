@@ -41,6 +41,7 @@
  * 10/10/2016      RC          3.3.2      Changed binary codec to BinaryCodecNew.
  * 09/28/2017      RC          3.4.4      Pass the original data format when the data is sent based off the codec used.
  * 03/12/2018      RC          3.4.5      Fixed Data Complete event handler settings.
+ * 06/15/2018      RC          3.4.7      Add VelocityVector to ensemble.
  * 
  */
 
@@ -531,6 +532,9 @@ namespace RTI
         /// <param name="ensemble">Ensemble object.</param>
         void _binaryCodec_ProcessDataEvent(byte[] binaryEnsemble, DataSet.Ensemble ensemble)
         {
+            // Create the velocity vector
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
@@ -567,6 +571,9 @@ namespace RTI
         /// <param name="ensemble">Ensemble object.</param>
         void _dvlCodec_ProcessDataEvent(byte[] binaryEnsemble, DataSet.Ensemble ensemble)
         {
+            // Create the velocity vector
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
@@ -643,6 +650,9 @@ namespace RTI
         /// <param name="ensemble">Ensemble object.</param>
         void _pd6_13Codec_ProcessDataEvent(byte[] binaryEnsemble, DataSet.Ensemble ensemble)
         {
+            // Create the velocity vector
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers
@@ -679,6 +689,9 @@ namespace RTI
         /// <param name="ensemble">Ensemble object.</param>
         void _pd4_5Codec_ProcessDataEvent(byte[] binaryEnsemble, DataSet.Ensemble ensemble)
         {
+            // Create the velocity vector
+            DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
             if (ProcessDataEvent != null)
             {
                 // Pass the data to the subscribers

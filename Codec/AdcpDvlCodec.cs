@@ -497,7 +497,7 @@ namespace RTI
                 }
                 catch (Exception e)
                 {
-                    log.Error("Error processing binary codec data.", e);
+                    log.Error("Error processing DVL codec data.", e);
                     return;
                 }
 

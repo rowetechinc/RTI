@@ -56,7 +56,7 @@ namespace RTI
         #region Variables
 
         // Setup logger
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Sub-file name to be used for each
@@ -917,9 +917,9 @@ namespace RTI
             {
                 File.WriteAllBytes(filename, matrix);
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                log.Error(string.Format("Error writing matlab file {0}", filename), e);
+                //log.Error(string.Format("Error writing matlab file {0}", filename), e);
             }
         }
 
@@ -1045,41 +1045,41 @@ namespace RTI
             return encodedData;
         }
 
-        /// <summary>
-        /// Generate a byte array representing the
-        /// dataset.  The byte array is in the binary format.
-        /// The format can be found in the RTI ADCP User Guide.
-        /// It contains a header and payload.  This byte array 
-        /// will be combined with the other dataset byte arrays
-        /// to form an ensemble.
-        /// </summary>
-        /// <returns>Byte array of the ensemble.</returns>
-        private byte[] EncodeMatrix(int NumElements, int ElementsMultiplier, string Name, int NameLength)
-        {
-            // Calculate the payload size
-            int payloadSize = (NumElements * ElementsMultiplier * DataSet.Ensemble.BYTES_IN_FLOAT);
+        ///// <summary>
+        ///// Generate a byte array representing the
+        ///// dataset.  The byte array is in the binary format.
+        ///// The format can be found in the RTI ADCP User Guide.
+        ///// It contains a header and payload.  This byte array 
+        ///// will be combined with the other dataset byte arrays
+        ///// to form an ensemble.
+        ///// </summary>
+        ///// <returns>Byte array of the ensemble.</returns>
+        //private byte[] EncodeMatrix(int NumElements, int ElementsMultiplier, string Name, int NameLength)
+        //{
+        //    // Calculate the payload size
+        //    int payloadSize = (NumElements * ElementsMultiplier * DataSet.Ensemble.BYTES_IN_FLOAT);
 
-            // The size of the array is the header of the dataset
-            // and the binxbeams value with each value being a float.
-            byte[] result = new byte[DataSet.BaseDataSet.GetBaseDataSize(NameLength) + payloadSize];
+        //    // The size of the array is the header of the dataset
+        //    // and the binxbeams value with each value being a float.
+        //    byte[] result = new byte[DataSet.BaseDataSet.GetBaseDataSize(NameLength) + payloadSize];
 
-            // Add the header to the byte array
-            byte[] header = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, ElementsMultiplier, 0, NameLength, Name, NumElements);
-            System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+        //    // Add the header to the byte array
+        //    byte[] header = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, ElementsMultiplier, 0, NameLength, Name, NumElements);
+        //    System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
 
-            // Add the payload to the results
-            int index = 0;
-            for (int beam = 0; beam < ElementsMultiplier; beam++)
-            {
-                for (int bin = 0; bin < NumElements; bin++)
-                {
-                    // Get the index for the next element and add to the array
-                    index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocityData[bin, beam]), 0, result, index, DataSet.Ensemble.BYTES_IN_FLOAT);
-                }
-            }
+        //    // Add the payload to the results
+        //    int index = 0;
+        //    for (int beam = 0; beam < ElementsMultiplier; beam++)
+        //    {
+        //        for (int bin = 0; bin < NumElements; bin++)
+        //        {
+        //            // Get the index for the next element and add to the array
+        //            index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
+        //            System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocityData[bin, beam]), 0, result, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+        //        }
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
     }
 }

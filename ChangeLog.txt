@@ -1,25 +1,8 @@
 RTI Changelog
 
-RTI-3.4.7
- * Fixed bug in DecodeCSHOW with DecodeCWPRT and only 2 parameters.
- * In AdcpSubsystemCommand, increased the number of paramater for CBI from 2 to 3. AdcpSubsystemCommands.CBI_NUM_PARAM
- * Fixed bug in DecodeCSHOW with DecodeCBI() and added the interleave flag.
- - In AdcpCodec, add VelocityVector to ensemble.
-
-RTI-3.4.6
- * Changed DilutionOfPrecision to not throw an exception but pass NaN.
- * Added CBTON and CBI to deployment command list.
-
 RTI-3.4.5
  - Added Previous BT Range to ScreenMarkBadBelowBottom.
- - In BottomTrackDataSet, DvlDataSet and AncillaryDataSet, added IsUpwardFacing() to know the direction the ADCP is facing.
- - In AncillaryDataSet, added BinToDepth().
- - In AdcpCodec, clear the buffer if the format is not being used.
- - In Pd4_5Codec, lock the headerStart when clearing the codec.
- - In PD4_5Codec, made it match PD0 style.
- - In Ensemble added FileName.
- - In NmeaDataSet, check for exceptions in SetValue() and SetNmeaStringArray().
- - In SerialOptions, added 57600 baud rate.
+ - In BaseDataSet, added static methods for getting the heading and data to byte array.
 
 RTI-3.4.4
  - In InstrumentVelocityDataSet and EarthVelocityDataSet, if no Water Profile, fix bug IsBinGood() to check if the bin is good.

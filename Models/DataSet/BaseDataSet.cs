@@ -1492,6 +1492,11 @@ namespace RTI
                 return GetBaseDataSize(nameLength) + (beam * numBins * Ensemble.BYTES_IN_FLOAT) + (bin * Ensemble.BYTES_IN_FLOAT);
             }
 
+            public static int GetBinBeamIndexStatic(int nameLength, int numBins, int beam, int bin)
+            {
+                return GetBaseDataSize(nameLength) + (beam * numBins * Ensemble.BYTES_IN_FLOAT) + (bin * Ensemble.BYTES_IN_FLOAT);
+            }
+
             /// <summary>
             /// Generate the header for this data set.  This is used to
             /// encode the dataset back to binary form.
@@ -1500,7 +1505,7 @@ namespace RTI
             /// </summary>
             /// <param name="numElments">Number of elements in the dataset.  For NMEA its the payload size.</param>
             /// <returns>Byte array of the header for the the dataset.</returns>
-            protected byte[] GenerateHeader(int numElments)
+            public byte[] GenerateHeader(int numElments)
             {
                 byte[] result = new byte[DataSet.Ensemble.PAYLOAD_HEADER_LEN];
 
@@ -1524,6 +1529,45 @@ namespace RTI
                 byte[] nameLen = MathHelper.Int32ToByteArray(NameLength);
                 System.Buffer.BlockCopy(nameLen, 0, result, 16, 4);
  
+                // Add Name (E0000XX\0)
+                byte[] name = System.Text.Encoding.ASCII.GetBytes(Name);
+                System.Buffer.BlockCopy(name, 0, result, 20, NameLength);
+
+                return result;
+            }
+
+            /// <summary>
+            /// Generate the header for this data set.  This is used to
+            /// encode the dataset back to binary form.
+            /// [HEADER][PAYLOAD]
+            /// Header = 28 bytes.  
+            /// </summary>
+            /// <param name="numElments">Number of elements in the dataset.  For NMEA its the payload size.</param>
+            /// <returns>Byte array of the header for the the dataset.</returns>
+            public static byte[] GenerateHeader(int ValueType, int ElementsMultiplier, int Imag, int NameLength, string Name, int numElments)
+            {
+                byte[] result = new byte[DataSet.Ensemble.PAYLOAD_HEADER_LEN];
+
+                // Add Data Type (Byte)
+                byte[] dataType = MathHelper.Int32ToByteArray(ValueType);
+                System.Buffer.BlockCopy(dataType, 0, result, 0, 4);
+
+                // Add Bins or data length
+                byte[] len = MathHelper.Int32ToByteArray(numElments);
+                System.Buffer.BlockCopy(len, 0, result, 4, 4);
+
+                // Add Beams (1 for Ensemble, Ancillary and Nmea, 4 for all other data sets.  )
+                byte[] beams = MathHelper.Int32ToByteArray(ElementsMultiplier);
+                System.Buffer.BlockCopy(beams, 0, result, 8, 4);
+
+                // Add Image (default 0)
+                byte[] image = MathHelper.Int32ToByteArray(Imag);
+                System.Buffer.BlockCopy(image, 0, result, 12, 4);
+
+                // Add NameLen (default 8)
+                byte[] nameLen = MathHelper.Int32ToByteArray(NameLength);
+                System.Buffer.BlockCopy(nameLen, 0, result, 16, 4);
+
                 // Add Name (E0000XX\0)
                 byte[] name = System.Text.Encoding.ASCII.GetBytes(Name);
                 System.Buffer.BlockCopy(name, 0, result, 20, NameLength);

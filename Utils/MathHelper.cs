@@ -58,6 +58,7 @@
  * 10/30/0215      RC          3.2.1      Added AngleDiff() to calculate the difference between 2 heading values.
  * 12/09/2015      RC          3.3.0      Added AdcpCorrection() to calculate the fudge factor number.
  * 07/05/2016      RC          3.3.2      Fixed PercentError() to calculate order correctly.
+ * 06/25/2018      RC          3.4.7      Added AddColumn and AddRow for 2D arrays.
  * 
  * 
  */
@@ -1437,6 +1438,68 @@ namespace RTI
         public static bool IsBitSet(int value, int position)
         {
             return (value & (1 << position)) != 0;
+        }
+
+        #endregion
+
+        #region 2D Array
+
+        /// <summary>
+        /// Add a new row to the end of the 2D array.
+        /// [Columns x Rows]
+        /// </summary>
+        /// <param name="original">Original array.</param>
+        /// <param name="added">New row to add.</param>
+        /// <returns>New 2D array with data added.</returns>
+        public static double[,] AddRow(double[,] original, double[] added)
+        {
+            int columns = original.GetLength(0);
+            int rows = original.GetLength(1);
+            // Create new array.
+            double[,] result = new double[columns, rows + 1];
+            // Copy the array.
+            for (int i = 0; i < columns; i++)
+            {
+                for (int x = 0; x < rows; x++)
+                {
+                    result[i, x] = original[i, x];
+                }
+            }
+            // Add the new row.
+            for (int i = 0; i < added.Length; i++)
+            {
+                result[i, rows] = added[i];
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Add a new column to the 2D array.
+        /// [Columns x Rows]
+        /// </summary>
+        /// <param name="original">Original Array.</param>
+        /// <param name="added">New column data to add to the array.</param>
+        /// <returns>New 2D array with the new data.</returns>
+        public static double[,] AddColumn(double[,] original, double[] added)
+        {
+            int columns = original.GetLength(0);
+            int rows = original.GetLength(1);
+            // Create new array.
+            double[,] result = new double[columns + 1, rows];
+            // Copy the array.
+            for (int i = 0; i < columns; i++)
+            {
+                for (int x = 0; x < rows; x++)
+                {
+                    result[i, x] = original[i, x];
+                }
+            }
+            // Add the new column.
+            for (int i = 0; i < added.Length; i++)
+            {
+                result[columns, i] = added[i];     // [ens x bins]
+            }
+            return result;
         }
 
         #endregion

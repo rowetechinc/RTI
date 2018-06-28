@@ -1492,6 +1492,14 @@ namespace RTI
                 return GetBaseDataSize(nameLength) + (beam * numBins * Ensemble.BYTES_IN_FLOAT) + (bin * Ensemble.BYTES_IN_FLOAT);
             }
 
+            /// <summary>
+            /// Static version of BetBinBeamIndex.
+            /// </summary>
+            /// <param name="nameLength"></param>
+            /// <param name="numBins"></param>
+            /// <param name="beam"></param>
+            /// <param name="bin"></param>
+            /// <returns></returns>
             public static int GetBinBeamIndexStatic(int nameLength, int numBins, int beam, int bin)
             {
                 return GetBaseDataSize(nameLength) + (beam * numBins * Ensemble.BYTES_IN_FLOAT) + (bin * Ensemble.BYTES_IN_FLOAT);
@@ -1543,6 +1551,11 @@ namespace RTI
             /// Header = 28 bytes.  
             /// </summary>
             /// <param name="numElments">Number of elements in the dataset.  For NMEA its the payload size.</param>
+            /// <param name="ElementsMultiplier">Element Multipler.</param>
+            /// <param name="ValueType">Type of data.  String, Float, Int or String</param>
+            /// <param name="Imag">Null</param>
+            /// <param name="Name">Name of the data.</param>
+            /// <param name="NameLength">Name length.</param>
             /// <returns>Byte array of the header for the the dataset.</returns>
             public static byte[] GenerateHeader(int ValueType, int ElementsMultiplier, int Imag, int NameLength, string Name, int numElments)
             {

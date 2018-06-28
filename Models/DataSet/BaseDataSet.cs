@@ -1546,7 +1546,9 @@ namespace RTI
             /// <returns>Byte array of the header for the the dataset.</returns>
             public static byte[] GenerateHeader(int ValueType, int ElementsMultiplier, int Imag, int NameLength, string Name, int numElments)
             {
-                byte[] result = new byte[DataSet.Ensemble.PAYLOAD_HEADER_LEN];
+                int payloadHeaderLen = 20 + NameLength;         // Each element is = 4. 20 = ValueType + ElementsMultiplier + Imag + NameLength + numElements
+
+                byte[] result = new byte[payloadHeaderLen];
 
                 // Add Data Type (Byte)
                 byte[] dataType = MathHelper.Int32ToByteArray(ValueType);

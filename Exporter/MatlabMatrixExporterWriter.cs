@@ -312,6 +312,162 @@ namespace RTI
         }
 
         /// <summary>
+        /// Velocity data.
+        /// </summary>
+        public class VelDataEncode
+        {
+            /// <summary>
+            /// Beam 0 velocity
+            /// </summary>
+            public byte[] Beam0 { get; set; }
+
+            /// <summary>
+            /// Beam 0 Name.
+            /// </summary>
+            public const string BEAM_0_NAME = "BEAM_VEL_0\0";
+
+            /// <summary>
+            /// Beam 0 Name length.
+            /// </summary>
+            public const int BEAM_0_NAMELENGTH = 11;
+
+            /// <summary>
+            /// Beam 1 velocity.
+            /// </summary>
+            public byte[] Beam1 { get; set; }
+
+            /// <summary>
+            /// Beam 1 Name.
+            /// </summary>
+            public const string BEAM_1_NAME = "BEAM_VEL_1\0";
+
+            /// <summary>
+            /// Beam 1 Name length.
+            /// </summary>
+            public const int BEAM_1_NAMELENGTH = 11;
+
+            /// <summary>
+            /// Beam 2 velocity.
+            /// </summary>
+            public byte[] Beam2 { get; set; }
+
+            /// <summary>
+            /// Beam 2 Name.
+            /// </summary>
+            public const string BEAM_2_NAME = "BEAM_VEL_2\0";
+
+            /// <summary>
+            /// Beam 2 Name length.
+            /// </summary>
+            public const int BEAM_2_NAMELENGTH = 11;
+
+            /// <summary>
+            /// Beam 3 velocity
+            /// </summary>
+            public byte[] Beam3 { get; set; }
+
+            /// <summary>
+            /// Beam 3 Name.
+            /// </summary>
+            public const string BEAM_3_NAME = "BEAM_VEL_3\0";
+
+            /// <summary>
+            /// Beam 3 Name length.
+            /// </summary>
+            public const int BEAM_3_NAMELENGTH = 11;
+
+            /// <summary>
+            /// Earth East velocity.
+            /// </summary>
+            public byte[] EarthEast { get; set; }
+
+            /// <summary>
+            /// Earth Velocity U Name.
+            /// </summary>
+            public const string EARTH_VEL_U_NAME = "EARTH_VEL_U\0";
+
+            /// <summary>
+            /// Earth Velocity U Name length.
+            /// </summary>
+            public const int EARTH_VEL_U_NAMELENGTH = 12;
+
+            /// <summary>
+            /// Earth North velocity.
+            /// </summary>
+            public byte[] EarthNorth { get; set; }
+
+            /// <summary>
+            /// Earth Velocity V Name.
+            /// </summary>
+            public const string EARTH_VEL_V_NAME = "EARTH_VEL_V\0";
+
+            /// <summary>
+            /// Earth Velocity V Name length.
+            /// </summary>
+            public const int EARTH_VEL_V_NAMELENGTH = 12;
+
+            /// <summary>
+            /// Earth Vertical velocity.
+            /// </summary>
+            public byte[] EarthVert { get; set; }
+
+            /// <summary>
+            /// Earth Velocity Z Name.
+            /// </summary>
+            public const string EARTH_VEL_Z_NAME = "EARTH_VEL_Z\0";
+
+            /// <summary>
+            /// Earth Velocity Z Name length.
+            /// </summary>
+            public const int EARTH_VEL_Z_NAMELENGTH = 12;
+
+            /// <summary>
+            /// Earth Error velocity.
+            /// </summary>
+            public byte[] EarthError { get; set; }
+
+            /// <summary>
+            /// Earth Velocity Err Name.
+            /// </summary>
+            public const string EARTH_VEL_ERR_NAME = "EARTH_VEL_ERR\0";
+
+            /// <summary>
+            /// Earth Velocity Err Name length.
+            /// </summary>
+            public const int EARTH_VEL_ERR_NAMELENGTH = 14;
+
+            /// <summary>
+            /// Water magnitude.
+            /// </summary>
+            public byte[] Magnitude { get; set; }
+
+            /// <summary>
+            /// Velocity Magnitude Name.
+            /// </summary>
+            public const string VEL_MAG_NAME = "VEL_MAG\0";
+
+            /// <summary>
+            /// Velocity Magnitude Name length.
+            /// </summary>
+            public const int VEL_MAG_NAMELENGTH = 8;
+
+            /// <summary>
+            /// Water Direction.
+            /// </summary>
+            public byte[] Direction { get; set; }
+
+            /// <summary>
+            /// Velocity Direction Name.
+            /// </summary>
+            public const string VEL_DIR_NAME = "VEL_DIR\0";
+
+            /// <summary>
+            /// Velocity Direction Name length.
+            /// </summary>
+            public const int VEL_DIR_NAMELENGTH = 8;
+        }
+
+        /// <summary>
         /// Bottom Track data.
         /// </summary>
         public class BtData
@@ -430,8 +586,6 @@ namespace RTI
         /// </summary>
         public class BtDataEncode
         {
-
-
             /// <summary>
             /// Beam 0 velocity.
             /// </summary>
@@ -849,6 +1003,7 @@ namespace RTI
         public ExportOptions Close()
         {
             List<BtData> btData = new List<BtData>();
+            List<VelData> velData = new List<VelData>();
 
             // Write all the data to the files
             // Go through each subsystem
@@ -868,7 +1023,28 @@ namespace RTI
 
                     // Accumulate the data
                     btData.Add(ens.BtData);
+                    velData.Add(ens.VelData);
                 }
+
+                #region Write Vel Data
+
+                // Convert data to byte[]
+                VelDataEncode encodedVelData = EncodeVelData(velData);
+
+                WriteFile(encodedVelData.Beam0, serialNumber, ss.Key, "Beam0");
+                WriteFile(encodedVelData.Beam1, serialNumber, ss.Key, "Beam1");
+                WriteFile(encodedVelData.Beam2, serialNumber, ss.Key, "Beam2");
+                WriteFile(encodedVelData.Beam3, serialNumber, ss.Key, "Beam3");
+                WriteFile(encodedVelData.EarthEast, serialNumber, ss.Key, "U");
+                WriteFile(encodedVelData.EarthNorth, serialNumber, ss.Key, "V");
+                WriteFile(encodedVelData.EarthVert, serialNumber, ss.Key, "Z");
+                WriteFile(encodedVelData.EarthError, serialNumber, ss.Key, "Err");
+                WriteFile(encodedVelData.Magnitude, serialNumber, ss.Key, "Mag");
+                WriteFile(encodedVelData.Direction, serialNumber, ss.Key, "Dir");
+
+                #endregion
+
+                #region Write BT Data
 
                 // Convert data to byte[]
                 BtDataEncode encodedBtData = EncodeBtData(btData);
@@ -887,6 +1063,9 @@ namespace RTI
                 WriteFile(encodedBtData.Range2, serialNumber, ss.Key, "BT_Range2");
                 WriteFile(encodedBtData.Range3, serialNumber, ss.Key, "BT_Range3");
                 WriteFile(encodedBtData.Status, serialNumber, ss.Key, "BT_Status");
+
+                #endregion
+
             }
 
 
@@ -924,14 +1103,125 @@ namespace RTI
         }
 
         /// <summary>
+        /// Encode the Velocity data to byte arrays to write to the files. 
+        /// </summary>
+        /// <param name="btData">Velocity data accumulated.</param>
+        /// <returns>All the MATLAB format byte array data.</returns>
+        public VelDataEncode EncodeVelData(List<VelData> velData)
+        {
+            if(velData.Count < 0)
+            {
+                return new VelDataEncode();
+            }
+
+            int numElements = velData.First().EarthEast.Length;     // Number of bins
+            int elementsMultiplier = velData.Count;                 // Number of ensembles
+            VelDataEncode encodedData = new VelDataEncode();
+
+            // Calculate the payload size
+            int payloadSize = (numElements * elementsMultiplier * DataSet.Ensemble.BYTES_IN_FLOAT);
+
+            // The size of the array is the header of the dataset
+            // and the binxbeams value with each value being a float.
+            encodedData.Beam0 = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.BEAM_0_NAMELENGTH) + payloadSize];
+            encodedData.Beam1 = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.BEAM_1_NAMELENGTH) + payloadSize];
+            encodedData.Beam2 = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.BEAM_2_NAMELENGTH) + payloadSize];
+            encodedData.Beam3 = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.BEAM_3_NAMELENGTH) + payloadSize];
+            encodedData.EarthEast = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.EARTH_VEL_U_NAMELENGTH) + payloadSize];
+            encodedData.EarthNorth = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.EARTH_VEL_V_NAMELENGTH) + payloadSize];
+            encodedData.EarthVert = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.EARTH_VEL_Z_NAMELENGTH) + payloadSize];
+            encodedData.EarthError = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.EARTH_VEL_ERR_NAMELENGTH) + payloadSize];
+            encodedData.Magnitude = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.VEL_MAG_NAMELENGTH) + payloadSize];
+            encodedData.Direction = new byte[DataSet.BaseDataSet.GetBaseDataSize(VelDataEncode.VEL_DIR_NAMELENGTH) + payloadSize];
+
+            #region Header
+            // Add the header to the byte array
+            byte[] headerBeam0 = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.BEAM_0_NAMELENGTH, VelDataEncode.BEAM_0_NAME, numElements);
+            System.Buffer.BlockCopy(headerBeam0, 0, encodedData.Beam0, 0, headerBeam0.Length);
+
+            byte[] headerBeam1 = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.BEAM_1_NAMELENGTH, VelDataEncode.BEAM_1_NAME, numElements);
+            System.Buffer.BlockCopy(headerBeam1, 0, encodedData.Beam1, 0, headerBeam1.Length);
+
+            byte[] headerBeam2 = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.BEAM_2_NAMELENGTH, VelDataEncode.BEAM_2_NAME, numElements);
+            System.Buffer.BlockCopy(headerBeam2, 0, encodedData.Beam2, 0, headerBeam2.Length);
+
+            byte[] headerBeam3 = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.BEAM_3_NAMELENGTH, VelDataEncode.BEAM_3_NAME, numElements);
+            System.Buffer.BlockCopy(headerBeam3, 0, encodedData.Beam3, 0, headerBeam0.Length);
+
+            byte[] headerEast = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.EARTH_VEL_U_NAMELENGTH, VelDataEncode.EARTH_VEL_U_NAME, numElements);
+            System.Buffer.BlockCopy(headerEast, 0, encodedData.EarthEast, 0, headerEast.Length);
+
+            byte[] headerNorth = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.EARTH_VEL_V_NAMELENGTH, VelDataEncode.EARTH_VEL_V_NAME, numElements);
+            System.Buffer.BlockCopy(headerNorth, 0, encodedData.EarthNorth, 0, headerNorth.Length);
+
+            byte[] headerVert = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.EARTH_VEL_Z_NAMELENGTH, VelDataEncode.EARTH_VEL_Z_NAME, numElements);
+            System.Buffer.BlockCopy(headerVert, 0, encodedData.EarthVert, 0, headerVert.Length);
+
+            byte[] headerErr = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.EARTH_VEL_ERR_NAMELENGTH, VelDataEncode.EARTH_VEL_ERR_NAME, numElements);
+            System.Buffer.BlockCopy(headerErr, 0, encodedData.EarthError, 0, headerErr.Length);
+
+            byte[] headerMag = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.VEL_MAG_NAMELENGTH, VelDataEncode.VEL_MAG_NAME, numElements);
+            System.Buffer.BlockCopy(headerMag, 0, encodedData.Magnitude, 0, headerMag.Length);
+
+            byte[] headerDir = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, VelDataEncode.VEL_DIR_NAMELENGTH, VelDataEncode.VEL_DIR_NAME, numElements);
+            System.Buffer.BlockCopy(headerDir, 0, encodedData.Direction, 0, headerDir.Length);
+
+            #endregion
+
+            #region Payload
+
+            // Add the payload to the result
+            int index = 0;
+            for (int ens = 0; ens < elementsMultiplier; ens++)
+            {
+                for (int bin = 0; bin < numElements; bin++)
+                {
+                    // Get the index for the next element and add to the array
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_0_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam0[bin]), 0, encodedData.Beam0, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_1_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam1[bin]), 0, encodedData.Beam1, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_2_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam2[bin]), 0, encodedData.Beam2, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_3_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam3[bin]), 0, encodedData.Beam3, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_U_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthEast[bin]), 0, encodedData.EarthEast, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_V_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthNorth[bin]), 0, encodedData.EarthNorth, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_Z_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthVert[bin]), 0, encodedData.EarthVert, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_ERR_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthError[bin]), 0, encodedData.EarthError, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.VEL_MAG_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Magnitude[bin]), 0, encodedData.Magnitude, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.VEL_DIR_NAMELENGTH, numElements, ens, bin);
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Direction[bin]), 0, encodedData.Direction, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                }
+            }
+            #endregion
+
+            return encodedData;
+        }
+
+        /// <summary>
         /// Encode the Bottom Track data to byte arrays to write to the files. 
         /// </summary>
         /// <param name="btData">Bottom Track data accumulated.</param>
         /// <returns>All the MATLAB format byte array data.</returns>
         public BtDataEncode EncodeBtData(List<BtData> btData)
         {
-            int numElements = btData.Count;
-            int elementsMultiplier = 1;
+            int numElements = 1;
+            int elementsMultiplier = btData.Count;
             BtDataEncode encodedData = new BtDataEncode();
 
             // Calculate the payload size
@@ -997,47 +1287,48 @@ namespace RTI
 
             #region Payload
             // Add the payload to the results
+            const int ELEMENT_INDEX = 0;
             int index = 0;
             for (int ens = 0; ens < numElements; ens++)
             {
                 // Get the index for the next element and add to the array
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_0_NAMELENGTH, numElements, elementsMultiplier, ens); 
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_0_NAMELENGTH, numElements, ens, ELEMENT_INDEX); 
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Beam0), 0, encodedData.Beam0, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_1_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_1_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Beam1), 0, encodedData.Beam1, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_2_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_2_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Beam2), 0, encodedData.Beam2, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_3_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BEAM_3_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Beam3), 0, encodedData.Beam3, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_EAST_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_EAST_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].EarthEast), 0, encodedData.EarthEast, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_NORTH_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_NORTH_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].EarthNorth), 0, encodedData.EarthNorth, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_VERT_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_VERT_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].EarthVertical), 0, encodedData.EarthVertical, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_ERROR_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.EARTH_ERROR_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].EarthError), 0, encodedData.EarthError, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_0_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_0_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Range0), 0, encodedData.Range0, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_1_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_1_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Range1), 0, encodedData.Range1, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_2_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_2_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Range2), 0, encodedData.Range2, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_3_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.RANGE_3_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Range3), 0, encodedData.Range3, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
-                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BT_STATUS_NAMELENGTH, numElements, elementsMultiplier, ens);
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(BtDataEncode.BT_STATUS_NAMELENGTH, numElements, ens, ELEMENT_INDEX);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(btData[ens].Status), 0, encodedData.Status, index, DataSet.Ensemble.BYTES_IN_FLOAT);
             }
             #endregion

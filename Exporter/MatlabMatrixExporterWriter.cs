@@ -32,7 +32,7 @@
  * -----------------------------------------------------------------
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
- * 06/23/2018      RC          3.4.5      Initial coding
+ * 06/23/2018      RC          3.4.7      Initial coding
  * 
  * 
  * 
@@ -312,7 +312,7 @@ namespace RTI
         }
 
         /// <summary>
-        /// Velocity data.
+        /// Encoded Velocity data.
         /// </summary>
         public class VelDataEncode
         {
@@ -838,6 +838,32 @@ namespace RTI
         }
 
         /// <summary>
+        /// Encoded NMEA data.
+        /// </summary>
+        public class NmeaDataEncode
+        {
+            /// <summary>
+            /// Number of elements in the data set.
+            /// </summary>
+            public const int NUM_ELEMENTS = 4;
+
+            /// <summary>
+            /// NMEA data encoded.
+            /// </summary>
+            public byte[] NmeaData { get; set; }
+
+            /// <summary>
+            /// NMEA Name.
+            /// </summary>
+            public const string NMEA_NAME = "NMEA\0";
+
+            /// <summary>
+            /// NMEA Name length.
+            /// </summary>
+            public const int NMEA_NAMELENGTH = 5;
+        }
+
+        /// <summary>
         /// Ensemble data.
         /// </summary>
         public class EnsData
@@ -940,6 +966,32 @@ namespace RTI
             }
         }
 
+        /// <summary>
+        /// Encoded Ens data.
+        /// </summary>
+        public class EnsDataEncode
+        {
+            /// <summary>
+            /// Number of elements in the data set.
+            /// </summary>
+            public const int NUM_ELEMENTS = 13;
+
+            /// <summary>
+            /// ENS data encoded.
+            /// </summary>
+            public byte[] EnsData { get; set; }
+
+            /// <summary>
+            /// ENS Name.
+            /// </summary>
+            public const string ENS_NAME = "ENS\0";
+
+            /// <summary>
+            /// ENS Name length.
+            /// </summary>
+            public const int ENS_NAMELENGTH = 4;
+        }
+
         #endregion
 
         /// <summary>
@@ -1004,6 +1056,8 @@ namespace RTI
         {
             List<BtData> btData = new List<BtData>();
             List<VelData> velData = new List<VelData>();
+            List<NmeaData> nmeaData = new List<NmeaData>();
+            List<EnsData> ensData = new List<EnsData>();
 
             // Write all the data to the files
             // Go through each subsystem
@@ -1024,6 +1078,8 @@ namespace RTI
                     // Accumulate the data
                     btData.Add(ens.BtData);
                     velData.Add(ens.VelData);
+                    nmeaData.Add(ens.NmeaData);
+                    ensData.Add(ens.EnsData);
                 }
 
                 #region Write Vel Data
@@ -1066,6 +1122,25 @@ namespace RTI
 
                 #endregion
 
+                #region Write NMEA Data
+
+                // Convert data to byte[]
+                NmeaDataEncode encodedNmeaData = EncodeNmeaData(nmeaData);
+
+                // Write the data
+                WriteFile(encodedNmeaData.NmeaData, serialNumber, ss.Key, "NMEA");
+
+                #endregion
+
+                #region Write ENS Data
+
+                // Convert data to byte[]
+                EnsDataEncode encodedEnsData = EncodeEnsData(ensData);
+
+                // Write the data
+                WriteFile(encodedEnsData.EnsData, serialNumber, ss.Key, "ENS");
+
+                #endregion
             }
 
 
@@ -1086,7 +1161,7 @@ namespace RTI
             // Create a file name
             string filename = _filePath + _fileName;
             filename += "_" + serialNumber;
-            filename += "_" + Convert.ToString(subsystem.CepoIndex) + "_" + subsystem.SubSystem.CodeToString();
+            filename += "_" + Convert.ToString(subsystem.CepoIndex) + "_" + subsystem.SubSystem.CodeToString() + "_";
             filename += name;
 
             // Get the extension
@@ -1105,7 +1180,7 @@ namespace RTI
         /// <summary>
         /// Encode the Velocity data to byte arrays to write to the files. 
         /// </summary>
-        /// <param name="btData">Velocity data accumulated.</param>
+        /// <param name="velData">Velocity data accumulated.</param>
         /// <returns>All the MATLAB format byte array data.</returns>
         public VelDataEncode EncodeVelData(List<VelData> velData)
         {
@@ -1336,41 +1411,135 @@ namespace RTI
             return encodedData;
         }
 
-        ///// <summary>
-        ///// Generate a byte array representing the
-        ///// dataset.  The byte array is in the binary format.
-        ///// The format can be found in the RTI ADCP User Guide.
-        ///// It contains a header and payload.  This byte array 
-        ///// will be combined with the other dataset byte arrays
-        ///// to form an ensemble.
-        ///// </summary>
-        ///// <returns>Byte array of the ensemble.</returns>
-        //private byte[] EncodeMatrix(int NumElements, int ElementsMultiplier, string Name, int NameLength)
-        //{
-        //    // Calculate the payload size
-        //    int payloadSize = (NumElements * ElementsMultiplier * DataSet.Ensemble.BYTES_IN_FLOAT);
+        /// <summary>
+        /// Encode the NMEA data to byte arrays to write to the files. 
+        /// </summary>
+        /// <param name="nmeaData">NMEA data accumulated.</param>
+        /// <returns>All the MATLAB format byte array data.</returns>
+        public NmeaDataEncode EncodeNmeaData(List<NmeaData> nmeaData)
+        {
+            int numElements = NmeaDataEncode.NUM_ELEMENTS;
+            int elementsMultiplier = nmeaData.Count;
+            NmeaDataEncode encodedData = new NmeaDataEncode();
 
-        //    // The size of the array is the header of the dataset
-        //    // and the binxbeams value with each value being a float.
-        //    byte[] result = new byte[DataSet.BaseDataSet.GetBaseDataSize(NameLength) + payloadSize];
+            // Calculate the payload size
+            int payloadSize = (numElements * elementsMultiplier * DataSet.Ensemble.BYTES_IN_FLOAT);
 
-        //    // Add the header to the byte array
-        //    byte[] header = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, ElementsMultiplier, 0, NameLength, Name, NumElements);
-        //    System.Buffer.BlockCopy(header, 0, result, 0, header.Length);
+            // The size of the array is the header of the dataset
+            // and the binxbeams value with each value being a float.
+            encodedData.NmeaData = new byte[DataSet.BaseDataSet.GetBaseDataSize(NmeaDataEncode.NMEA_NAMELENGTH) + payloadSize];
 
-        //    // Add the payload to the results
-        //    int index = 0;
-        //    for (int beam = 0; beam < ElementsMultiplier; beam++)
-        //    {
-        //        for (int bin = 0; bin < NumElements; bin++)
-        //        {
-        //            // Get the index for the next element and add to the array
-        //            index = GetBinBeamIndex(NameLength, NumElements, beam, bin);
-        //            System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BeamVelocityData[bin, beam]), 0, result, index, DataSet.Ensemble.BYTES_IN_FLOAT);
-        //        }
-        //    }
+            #region Header
 
-        //    return result;
-        //}
+            // Add the header to the byte array
+            byte[] header = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, NmeaDataEncode.NMEA_NAMELENGTH, NmeaDataEncode.NMEA_NAME, numElements);
+            System.Buffer.BlockCopy(header, 0, encodedData.NmeaData, 0, header.Length);
+
+            #endregion
+
+            #region Payload
+
+            // Add the payload to the results
+            int index = 0;
+            for (int ens = 0; ens < elementsMultiplier; ens++)
+            {
+                // Get the index for the next element and add to the array
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(NmeaDataEncode.NMEA_NAMELENGTH, numElements, ens, 0);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(nmeaData[ens].Lat), 0, encodedData.NmeaData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(NmeaDataEncode.NMEA_NAMELENGTH, numElements, ens, 1);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(nmeaData[ens].Lon), 0, encodedData.NmeaData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(NmeaDataEncode.NMEA_NAMELENGTH, numElements, ens, 2);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(nmeaData[ens].Heading), 0, encodedData.NmeaData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(NmeaDataEncode.NMEA_NAMELENGTH, numElements, ens, 3);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(nmeaData[ens].Speed), 0, encodedData.NmeaData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+            }
+
+            #endregion
+
+            return encodedData;
+        }
+
+        /// <summary>
+        /// Encode the ENS data to byte arrays to write to the files. 
+        /// </summary>
+        /// <param name="ensData">ENS data accumulated.</param>
+        /// <returns>All the MATLAB format byte array data.</returns>
+        public EnsDataEncode EncodeEnsData(List<EnsData> ensData)
+        {
+            int numElements = EnsDataEncode.NUM_ELEMENTS;
+            int elementsMultiplier = ensData.Count;
+            EnsDataEncode encodedData = new EnsDataEncode();
+
+            // Calculate the payload size
+            int payloadSize = (numElements * elementsMultiplier * DataSet.Ensemble.BYTES_IN_FLOAT);
+
+            // The size of the array is the header of the dataset
+            // and the binxbeams value with each value being a float.
+            encodedData.EnsData = new byte[DataSet.BaseDataSet.GetBaseDataSize(EnsDataEncode.ENS_NAMELENGTH) + payloadSize];
+
+            #region Header
+
+            // Add the header to the byte array
+            byte[] header = DataSet.BaseDataSet.GenerateHeader(DataSet.Ensemble.DATATYPE_FLOAT, elementsMultiplier, 0, EnsDataEncode.ENS_NAMELENGTH, EnsDataEncode.ENS_NAME, numElements);
+            System.Buffer.BlockCopy(header, 0, encodedData.EnsData, 0, header.Length);
+
+            #endregion
+
+            #region Payload
+
+            // Add the payload to the results
+            int index = 0;
+            for (int ens = 0; ens < elementsMultiplier; ens++)
+            {
+                // Get the index for the next element and add to the array
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 0);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Year), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 1);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Month), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 2);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Day), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 3);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Hour), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 4);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Minute), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 5);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Second), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 6);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].HSecond), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 7);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].NumBeams), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 8);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].NumBins), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 9);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Heading), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 10);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Pitch), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 11);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Roll), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 12);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Status), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+            }
+
+            #endregion
+
+            return encodedData;
+        }
     }
 }

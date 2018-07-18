@@ -8,6 +8,7 @@ RTI-3.4.7
  - Added Matlab Matrix exporter.
  - In Project, added RecordDbEnsemble() which takes a cache of ensembles.
  - In AdcpDatabaseWriter, Since no one uses the Ensemble ID in AddEnsembleToDatabase(), when adding an ensemble to the database, made it no ExecuteNonQuery.
+ - Updated Events to use Sender and EventArgs.
 
 RTI-3.4.6
  * Changed DilutionOfPrecision to not throw an exception but pass NaN.

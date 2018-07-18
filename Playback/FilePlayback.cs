@@ -434,9 +434,16 @@ namespace RTI
         /// <param name="files">List of files.</param>
         public void FindRtbEnsembles(string[] files)
         {
-            foreach (var file in files)
+            for(int x = 0; x < files.Length; x++)
             {
-                FindRtbEnsembles(file);
+                // Find the ensembles in the file
+                FindRtbEnsembles(files[x]);
+
+                // Publish events that file is complete
+                if(ProcessFileEvent != null)
+                {
+                    ProcessFileEvent(files.Length, x+1, files[x]);
+                }
             }
         }
 
@@ -623,5 +630,24 @@ namespace RTI
         }
 
         #endregion
+
+        /// <summary>
+        /// Processing the File event.
+        /// </summary>
+        /// <param name="fileCount">Total number of files.</param>
+        /// <param name="fileIndex">Index of process.</param>
+        /// <param name="fileName">File name.</param>
+        public delegate void ProcessFileEventHandler(int fileCount, int fileIndex, string fileName);
+
+        /// <summary>
+        /// Subscribe to receive event when a file has completed being processed.
+        /// 
+        /// To subscribe:
+        /// fpb.ProcessFileEvent += new fpb.ProcessFileEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// fpb.ProcessFileEvent -= (method to call)
+        /// </summary>
+        public event ProcessFileEventHandler ProcessFileEvent;
     }
 }

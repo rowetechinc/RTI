@@ -6,6 +6,8 @@ RTI-3.4.7
  * Fixed bug in DecodeCSHOW with DecodeCBI() and added the interleave flag.
  - In MathHelper, added AddColumn and AddRow for 2D arrays.
  - Added Matlab Matrix exporter.
+ - In Project, added RecordDbEnsemble() which takes a cache of ensembles.
+ - In AdcpDatabaseWriter, Since no one uses the Ensemble ID in AddEnsembleToDatabase(), when adding an ensemble to the database, made it no ExecuteNonQuery.
 
 RTI-3.4.6
  * Changed DilutionOfPrecision to not throw an exception but pass NaN.

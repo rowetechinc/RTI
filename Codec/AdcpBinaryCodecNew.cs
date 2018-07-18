@@ -415,6 +415,7 @@ namespace RTI
                 catch (Exception e)
                 {
                     log.Error("Error processing binary codec data.", e);
+                    Debug.WriteLine(e);
                     return;
                 }
 

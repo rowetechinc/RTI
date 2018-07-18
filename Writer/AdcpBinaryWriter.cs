@@ -85,6 +85,33 @@ namespace RTI
         #region Enum and Classes
 
         /// <summary>
+        /// Event to handle bytes written.
+        /// </summary>
+        public class WriteEventArgs: EventArgs
+        {
+            /// <summary>
+            /// Number of bytes written.
+            /// </summary>
+            private long _Count;
+            /// <summary>
+            /// Number of bytes written.
+            /// </summary>
+            public long Count
+            {
+                get { return _Count; }
+            }
+
+            /// <summary>
+            /// Set the number of bytes written.
+            /// </summary>
+            /// <param name="writeCount">Bytes written.</param>
+            public WriteEventArgs(long writeCount)
+            {
+                _Count = writeCount;
+            }
+        }
+
+        /// <summary>
         /// File type that will be written.
         /// This will determine the file name and
         /// the file extension.
@@ -351,6 +378,14 @@ namespace RTI
         public void Dispose()
         {
             Flush();
+
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+
         }
 
         /// <summary>
@@ -383,7 +418,7 @@ namespace RTI
                 _writeBufferIndex += data.Length;
 
                 // Publish the number of bytes written
-                PublishEnsembleWrite(data.Length);
+                PublishEnsembleWrite(this, new WriteEventArgs(data.Length));
             //}
         }
 
@@ -644,8 +679,8 @@ namespace RTI
         /// <summary>
         /// Event To subscribe to. 
         /// </summary>
-        /// <param name="count">Number of ensembles in the database.</param>
-        public delegate void EnsembleWriteEventHandler(long count);
+        /// <param name="WriteEventArgs">Number of bytes written to the file.</param>
+        public delegate void EnsembleWriteEventHandler(object sender, WriteEventArgs e);
 
         /// <summary>
         /// Subscribe to this event.  This will hold all subscribers.
@@ -662,11 +697,11 @@ namespace RTI
         /// Verify there is a subscriber before calling the
         /// subscribers with the new event.
         /// </summary>
-        private void PublishEnsembleWrite(long count)
+        private void PublishEnsembleWrite(object sender, WriteEventArgs e)
         {
             if (EnsembleWriteEvent != null)
             {
-                EnsembleWriteEvent(count);
+                EnsembleWriteEvent(sender, e);
             }
         }
 

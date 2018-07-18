@@ -201,8 +201,15 @@ namespace RTI
             ClearIncomingData();
             _incomingDataBuffer.Dispose();
             _eventWaitData.Dispose();
+
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+
+        }
 
         /// <summary>
         /// Take incoming data and add it to the

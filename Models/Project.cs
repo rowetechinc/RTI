@@ -75,6 +75,7 @@
  * 06/19/2014      RC          2.22.1     Added DVL column to CreateProjectTables().  Bump rev to D8.
  * 02/12/2016      RC          3.3.1      Added RangeTracking column to CreateProjectTables().  Bump rev to D9.
  * 04/30/2018      RC          3.4.5      Added Subsystem and File column.  Bump rev to E.
+ * 07/05/2018      RC          3.4.7      Added RecordDbEnsemble() which takes a cache of ensembles.
  * 
  */
 
@@ -101,6 +102,37 @@ namespace RTI
     /// </summary>
     public class Project: IDisposable
     {
+        #region Classes
+
+        /// <summary>
+        /// Event to handle bytes written.
+        /// </summary>
+        public class WriteEventArgs : EventArgs
+        {
+            /// <summary>
+            /// Number of bytes written.
+            /// </summary>
+            private long _Count;
+            /// <summary>
+            /// Number of bytes written.
+            /// </summary>
+            public long Count
+            {
+                get { return _Count; }
+            }
+
+            /// <summary>
+            /// Set the number of bytes written.
+            /// </summary>
+            /// <param name="writeCount">Bytes written.</param>
+            public WriteEventArgs(long writeCount)
+            {
+                _Count = writeCount;
+            }
+        }
+
+        #endregion
+
         #region Variables
 
         /// <summary>
@@ -1155,6 +1187,26 @@ namespace RTI
             return true;
         }
 
+        /// <summary>
+        /// Record the ensembles the database.  
+        /// </summary>
+        /// <param name="ensembles">Ensemble to record.</param>
+        /// <returns>True if ensemble could be recorded.</returns>
+        public bool RecordDbEnsemble(Cache<long, DataSet.Ensemble> ensembles)
+        {
+            if (_dbWriter != null)
+            {
+                // Go through each ensemble
+                for (int x = 0; x < ensembles.Count(); x++)
+                {
+                    // Get the ensemble and write it
+                    _dbWriter.AddIncomingData(ensembles.IndexValue(x));
+                }
+            }
+
+            return true;
+        }
+
         #endregion
 
         #region Record GPS/NMEA Writers
@@ -1575,10 +1627,10 @@ namespace RTI
         /// the project.
         /// </summary>
         /// <param name="count">Number of ensembles in the database.</param>
-        void _dbWriter_EnsembleWriteEvent(long count)
+        void _dbWriter_EnsembleWriteEvent(object sender, AdcpDatabaseWriter.WriteEventArgs e)
         {
             // Publish that the project has been written to
-            PublishProjectEnsembleWrite(count);
+            PublishProjectEnsembleWrite(this, new WriteEventArgs(e.Count));
         }
 
         /// <summary>
@@ -1587,10 +1639,10 @@ namespace RTI
         /// binary file.
         /// </summary>
         /// <param name="count">File size of the binary file in bytes.</param>
-        void _binaryWriter_EnsembleWriteEvent(long count)
+        void _binaryWriter_EnsembleWriteEvent(object sender, AdcpBinaryWriter.WriteEventArgs e)
         {
             // Publish that the project has been written to
-            PublishBinaryEnsembleWrite(count);
+            PublishBinaryEnsembleWrite(e.Count);
         }
 
         /// <summary>
@@ -1599,9 +1651,9 @@ namespace RTI
         /// backup binary file.
         /// </summary>
         /// <param name="count">File size of the backup binary file in bytes.</param>
-        void _binaryWriterBackup_EnsembleWriteEvent(long count)
+        void _binaryWriterBackup_EnsembleWriteEvent(object sender, AdcpBinaryWriter.WriteEventArgs e)
         {
-            PublishBinaryBackupEnsembleWrite(count);
+            PublishBinaryBackupEnsembleWrite(e.Count);
         }
 
         #endregion
@@ -1613,8 +1665,8 @@ namespace RTI
         /// <summary>
         /// Event To subscribe to. 
         /// </summary>
-        /// <param name="count">Number of ensembles in the database.</param>
-        public delegate void ProjectEnsembleWriteEventHandler(long count);
+        /// <param name="e">Number of ensembles in the database.</param>
+        public delegate void ProjectEnsembleWriteEventHandler(object sender, WriteEventArgs e);
 
         /// <summary>
         /// Subscribe to this event.  This will hold all subscribers.
@@ -1634,11 +1686,11 @@ namespace RTI
         /// Verify there is a subscriber before calling the
         /// subscribers with the new event.
         /// </summary>
-        private void PublishProjectEnsembleWrite(long count)
+        private void PublishProjectEnsembleWrite(object sender, WriteEventArgs e)
         {
             if (ProjectEnsembleWriteEvent != null)
             {
-                ProjectEnsembleWriteEvent(count);
+                ProjectEnsembleWriteEvent(sender, e);
             }
         }
 

@@ -80,6 +80,7 @@
  * 06/19/2014      RC          2.22.1     Added writing the DVL dataset in WriteEnsembleDataToDatabase().
  * 02/12/2016      RC          3.3.1      Added RangeTracking column.
  * 02/27/2017      RC          3.4.1      Added WriteFileToDatabase() to write all the ensembles at once.
+ * 07/12/2018      RC          3.4.7      Since no one uses the Ensemble ID in AddEnsembleToDatabase(), when adding an ensemble to the database, made it no ExecuteNonQuery.
  * 
  */
 
@@ -111,6 +112,37 @@ namespace RTI
     /// </summary>
     public class AdcpDatabaseWriter: IDisposable
     {
+        #region Classes
+
+        /// <summary>
+        /// Event to handle bytes written.
+        /// </summary>
+        public class WriteEventArgs : EventArgs
+        {
+            /// <summary>
+            /// Number of bytes written.
+            /// </summary>
+            private int _Count;
+            /// <summary>
+            /// Number of bytes written.
+            /// </summary>
+            public int Count
+            {
+                get { return _Count; }
+            }
+
+            /// <summary>
+            /// Set the number of bytes written.
+            /// </summary>
+            /// <param name="writeCount">Bytes written.</param>
+            public WriteEventArgs(int writeCount)
+            {
+                _Count = writeCount;
+            }
+        }
+
+        #endregion
+
         #region Variables
 
         /// <summary>
@@ -260,6 +292,42 @@ namespace RTI
         }
 
         /// <summary>
+        /// Shutdown this object.
+        /// 
+        /// Stop the thread.
+        /// </summary>
+        public void Dispose()
+        {
+            // Check if remaining configurations need to be written
+            if (_isAdcpConfigurationNeedUpdate)
+            {
+                UpdateAppConfiguration();
+            }
+
+            // Stop the thread
+            _continue = false;
+
+            // Wake up the thread to kill thread
+            _eventWaitData.Set();
+
+            // Write the remaining data in the queue
+            while (_datasetQueue.Count > 0)
+            {
+                Flush();
+            }
+
+            _eventWaitData.Dispose();
+
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+
+        }
+
+        /// <summary>
         /// Record the data to the database.  This
         /// will take the data and add it to the queue.
         /// When the queue becomes full, it will flush it
@@ -284,7 +352,7 @@ namespace RTI
             {
                 // Publish the Ensemble ID that was written to the database
                 // This ID is the ensemble number
-                PublishEnsembleWrite(adcpData.EnsembleData.EnsembleNumber);
+                PublishEnsembleWrite(this, new WriteEventArgs(adcpData.EnsembleData.EnsembleNumber));
             }
         }
 
@@ -300,14 +368,18 @@ namespace RTI
             // Then wake up the thread to update the commands to the database
             SelectedProject.Configuration = config;
 
-            // Update the flag
-            lock (_lockIsAdcpConfigurationNeedUpdate)
+            // Check if the thread is alive
+            if (_continue)
             {
-                _isAdcpConfigurationNeedUpdate = true;
-            }
+                // Update the flag
+                lock (_lockIsAdcpConfigurationNeedUpdate)
+                {
+                    _isAdcpConfigurationNeedUpdate = true;
+                }
 
-            // Wake up the thread to process data
-            _eventWaitData.Set();
+                // Wake up the thread to process data
+                _eventWaitData.Set();
+            }
         }
 
         /// <summary>
@@ -432,6 +504,28 @@ namespace RTI
             }
         }
 
+        /// <summary>
+        /// Calling this maninly on shutdown if a configuration needs to be written and the
+        /// the thread is shutdown already.
+        /// </summary>
+        private void UpdateAppConfiguration()
+        {
+            try
+            {
+                // Open a connection to the database
+                SQLiteConnection cnn = DbCommon.OpenProjectDB(_selectedProject);
+
+                if (cnn != null)
+                {
+                    UpdateAppConfiguration(cnn, _selectedProject);
+                }
+            }
+            catch (Exception e)
+            {
+                log.Error("Error writing the configuration to the database.", e);
+            }
+        }
+
         #endregion
 
         #region Project Options
@@ -516,7 +610,7 @@ namespace RTI
             while (_continue)
             {
                 // Block until awoken when data is received
-                _eventWaitData.WaitOne();
+                _eventWaitData.WaitOne(1000);
 
                 // If wakeup was called to kill thread
                 if (!_continue)
@@ -661,25 +755,7 @@ namespace RTI
             Flush();
         }
 
-        /// <summary>
-        /// Shutdown this object.
-        /// 
-        /// Stop the thread.
-        /// </summary>
-        public void Dispose()
-        {
-            // Write the remaining data in the queue
-            while (_datasetQueue.Count > 0 || _isAdcpConfigurationNeedUpdate)
-            {
-                Flush();
-            }
 
-            // Stop the thread
-            _continue = false;
-
-            // Wake up the thread to kill thread
-            _eventWaitData.Set();
-        }
 
         /// <summary>
         /// Firmware 2.12 and older:
@@ -725,7 +801,7 @@ namespace RTI
             // Check if the project is set
             if (_selectedProject != null && data != null)
             {
-                int ensId = WriteEnsembleDataToDatabase(data, cnn);       // Write data
+                WriteEnsembleDataToDatabase(data, cnn);       // Write data
 
                 // Publish the Ensemble ID that was written to the database
                 // This ID is also the last count of the number of ensembles in the database
@@ -743,11 +819,11 @@ namespace RTI
         /// <param name="ensemble">Data to write to the database.</param>
         /// <param name="cnn">Connection to the database.</param>
         /// <returns>Returns the ID for the row where data was added.</returns>
-        private int WriteEnsembleDataToDatabase(DataSet.Ensemble ensemble, SQLiteConnection cnn)
+        private void WriteEnsembleDataToDatabase(DataSet.Ensemble ensemble, SQLiteConnection cnn)
         {
             //Stopwatch watch = new Stopwatch();
             //watch.Start();
-            int ensId = 0;
+            //int ensId = 0;
             //if (Validator.ValidateEnsembleDataSet(ensemble))
             //{
             try
@@ -1088,21 +1164,22 @@ namespace RTI
                     }
 
                     // Run the query and get the result for the last row
-                    object cmdExecuteScalar = cmd.ExecuteScalar();
-                    ensId = Convert.ToInt32(cmdExecuteScalar);
+                    //object cmdExecuteScalar = cmd.ExecuteScalar();
+                    //ensId = Convert.ToInt32(cmdExecuteScalar);
+                    cmd.ExecuteNonQuery();
                 }
             }
             catch (SQLiteException e)
             {
                 log.Error("Error adding Ensemble data to database.", e);
-                return ensId;
+                //return ensId;
             }
             //}
 
             //watch.Stop();
             //long result = watch.ElapsedMilliseconds;
             //Debug.WriteLine("Wrtier 1 Result: {0}", result);
-            return ensId;
+            //return ensId;
         }
 
         #endregion
@@ -1273,8 +1350,8 @@ namespace RTI
         /// <summary>
         /// Event To subscribe to. 
         /// </summary>
-        /// <param name="count">Number of ensembles in the database.</param>
-        public delegate void EnsembleWriteEventHandler(long count);
+        /// <param name="e">Number of ensembles in the database.</param>
+        public delegate void EnsembleWriteEventHandler(object sender, WriteEventArgs e);
 
         /// <summary>
         /// Subscribe to this event.  This will hold all subscribers.
@@ -1291,11 +1368,11 @@ namespace RTI
         /// Verify there is a subscriber before calling the
         /// subscribers with the new event.
         /// </summary>
-        private void PublishEnsembleWrite(long count)
+        private void PublishEnsembleWrite(object sender, WriteEventArgs e)
         {
             if (EnsembleWriteEvent != null)
             {
-                EnsembleWriteEvent(count);
+                EnsembleWriteEvent(sender, e);
             }
         }
 

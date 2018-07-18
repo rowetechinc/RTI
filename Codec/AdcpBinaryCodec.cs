@@ -206,6 +206,10 @@ namespace RTI
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Close the object.
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
 

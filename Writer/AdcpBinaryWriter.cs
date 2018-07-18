@@ -383,6 +383,10 @@ namespace RTI
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Dispose the object.
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
 
@@ -679,7 +683,8 @@ namespace RTI
         /// <summary>
         /// Event To subscribe to. 
         /// </summary>
-        /// <param name="WriteEventArgs">Number of bytes written to the file.</param>
+        /// <param name="sender"></param>
+        /// <param name="e">Number of bytes written to the file.</param>
         public delegate void EnsembleWriteEventHandler(object sender, WriteEventArgs e);
 
         /// <summary>

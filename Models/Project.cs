@@ -1626,7 +1626,8 @@ namespace RTI
         /// ensemble.  The row ID is also the number of ensembles in
         /// the project.
         /// </summary>
-        /// <param name="count">Number of ensembles in the database.</param>
+        /// <param name="sender"></param>
+        /// <param name="e">Number of ensembles in the database.</param>
         void _dbWriter_EnsembleWriteEvent(object sender, AdcpDatabaseWriter.WriteEventArgs e)
         {
             // Publish that the project has been written to
@@ -1638,7 +1639,8 @@ namespace RTI
         /// binary file.  This will also return the file size of the
         /// binary file.
         /// </summary>
-        /// <param name="count">File size of the binary file in bytes.</param>
+        /// <param name="sender"></param>
+        /// <param name="e">File size of the binary file in bytes.</param>
         void _binaryWriter_EnsembleWriteEvent(object sender, AdcpBinaryWriter.WriteEventArgs e)
         {
             // Publish that the project has been written to
@@ -1650,7 +1652,8 @@ namespace RTI
         /// backup binary file.  This will also return the file size of the
         /// backup binary file.
         /// </summary>
-        /// <param name="count">File size of the backup binary file in bytes.</param>
+        /// <param name="sender"></param>
+        /// <param name="e">File size of the backup binary file in bytes.</param>
         void _binaryWriterBackup_EnsembleWriteEvent(object sender, AdcpBinaryWriter.WriteEventArgs e)
         {
             PublishBinaryBackupEnsembleWrite(e.Count);
@@ -1665,6 +1668,7 @@ namespace RTI
         /// <summary>
         /// Event To subscribe to. 
         /// </summary>
+        /// <param name="sender"></param>
         /// <param name="e">Number of ensembles in the database.</param>
         public delegate void ProjectEnsembleWriteEventHandler(object sender, WriteEventArgs e);
 

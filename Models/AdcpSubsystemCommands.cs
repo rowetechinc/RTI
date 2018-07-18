@@ -63,6 +63,7 @@
  * 11/03/2015      RC          3.2.1      Update GetWavesCommandList() to include CBTON.
  * 06/04/2018      RC          3.4.6      Added CBTON and CBI to deployment command list.
  * 06/04/2018      RC          3.4.7      Increased the number of paramater for CBI from 2 to 3. AdcpSubsystemCommands.CBI_NUM_PARAM
+ * 07/18/2018      RC          3.4.7      Changed the CepoIndex in the command to a Hex value.
  *
  */
 
@@ -427,7 +428,7 @@ namespace RTI
             /// <summary>
             /// Default value for CBI_BurstPairFlag.
             /// </summary>
-            public const bool DEFAULT_CBI_BURST_PAIR_FLAG = true;
+            public const bool DEFAULT_CBI_BURST_PAIR_FLAG = false;
 
             #region Water Profile
 
@@ -4756,7 +4757,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPON_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPON, cepoIndex, CWPON_ToString());
+                return String.Format("{0}[{1}] {2}", CMD_CWPON, cepoIndex.ToString("X1"), CWPON_ToString());
             }
 
             /// <summary>
@@ -4790,11 +4791,11 @@ namespace RTI
                 {
                     default:
                     case 0:
-                        return String.Format("{0}[{1}] {2}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString());
+                        return String.Format("{0}[{1}] {2}", CMD_CWPRT, cepoIndex.ToString("X1"), CWPRT_Mode.ToString());
                     case 1:
-                        return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString(), CWPRT_LastBin.ToString());
+                        return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPRT, cepoIndex.ToString("X1"), CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString(), CWPRT_LastBin.ToString());
                     case 2:
-                        return String.Format("{0}[{1}] {2},{3}", CMD_CWPRT, cepoIndex, CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString());
+                        return String.Format("{0}[{1}] {2},{3}", CMD_CWPRT, cepoIndex.ToString("X1"), CWPRT_Mode.ToString(), CWPRT_FirstBin.ToString());
 
                 }
             }
@@ -4826,7 +4827,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBB_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3}", CMD_CWPBB, cepoIndex, ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3}", CMD_CWPBB, cepoIndex.ToString("X1"), ((int)CWPBB_TransmitPulseType).ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                     CWPBB_LagLength.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
@@ -4857,7 +4858,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPAP_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CWPAP, cepoIndex, CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CWPAP, cepoIndex.ToString("X1"), CWPAP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                                             CWPAP_Lag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                                             CWPAP_Blank.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                                             CWPAP_BinSize.ToString(CultureInfo.CreateSpecificCulture("en-US")),
@@ -4892,7 +4893,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBP_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3}", CMD_CWPBP, cepoIndex, CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3}", CMD_CWPBP, cepoIndex.ToString("X1"), CWPBP_NumPingsAvg.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                     CWPBP_TimeBetweenBasePings.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
@@ -4924,7 +4925,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPST_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPST, cepoIndex, CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CWPST, cepoIndex.ToString("X1"), CWPST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         CWPST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         CWPST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
@@ -4957,7 +4958,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBL_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPBL, cepoIndex, CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWPBL, cepoIndex.ToString("X1"), CWPBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -4987,7 +4988,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBS_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPBS, cepoIndex, CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWPBS, cepoIndex.ToString("X1"), CWPBS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5017,7 +5018,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPX_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPX, cepoIndex, CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWPX, cepoIndex.ToString("X1"), CWPX.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5047,7 +5048,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPBN_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPBN, cepoIndex, CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWPBN, cepoIndex.ToString("X1"), CWPBN.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5077,7 +5078,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPP_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPP, cepoIndex, CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWPP, cepoIndex.ToString("X1"), CWPP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5127,7 +5128,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPAI_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPAI, cepoIndex, CWPAI.ToString());
+                return String.Format("{0}[{1}] {2}", CMD_CWPAI, cepoIndex.ToString("X1"), CWPAI.ToString());
             }
 
             /// <summary>
@@ -5157,7 +5158,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWPTBP_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWPTBP, cepoIndex, CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWPTBP, cepoIndex.ToString("X1"), CWPTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5194,7 +5195,7 @@ namespace RTI
                     pairFlag = "1";
                 }
 
-                return string.Format("{0}[{1}] {2},{3},{4}", CMD_CBI, cepoIndex, CBI_BurstInterval.ToString(),
+                return string.Format("{0}[{1}] {2},{3},{4}", CMD_CBI, cepoIndex.ToString("X1"), CBI_BurstInterval.ToString(),
                                                                                 CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                 pairFlag);
             }
@@ -5274,7 +5275,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTON_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CBTON, cepoIndex, CBTON_ToString());
+                return String.Format("{0}[{1}] {2}", CMD_CBTON, cepoIndex.ToString("X1"), CBTON_ToString());
             }
 
             /// <summary>
@@ -5321,7 +5322,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTBB_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTBB, cepoIndex, ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTBB, cepoIndex.ToString("X1"), ((int)CBTBB_Mode).ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         CBTBB_PulseToPulseLag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         CBTBB_LongRangeDepth.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         ((int)CBTBB_BeamMultiplex).ToString(CultureInfo.CreateSpecificCulture("en-US")));
@@ -5354,7 +5355,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTST_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTST, cepoIndex, CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3},{4}", CMD_CBTST, cepoIndex.ToString("X1"), CBTST_CorrelationThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         CBTST_QVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                         CBTST_VVelocityThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
@@ -5386,7 +5387,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTBL_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CBTBL, cepoIndex, CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CBTBL, cepoIndex.ToString("X1"), CBTBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5416,7 +5417,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTMX_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CBTMX, cepoIndex, CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CBTMX, cepoIndex.ToString("X1"), CBTMX.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5446,7 +5447,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTTBP_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CBTTBP, cepoIndex, CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CBTTBP, cepoIndex.ToString("X1"), CBTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5476,7 +5477,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTT_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTT, cepoIndex, CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBTT, cepoIndex.ToString("X1"), CBTT_SNRShallowDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                             CBTT_DepthSNR.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                             CBTT_SNRDeepDetectionThresh.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                             CBTT_DepthGain.ToString(CultureInfo.CreateSpecificCulture("en-US")));
@@ -5509,7 +5510,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CBTFILT_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CBTFILT, cepoIndex, CBTFILT_OutputLPF.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                return String.Format("{0}[{1}] {2},{3},{4},{5},{6}", CMD_CBTFILT, cepoIndex.ToString("X1"), CBTFILT_OutputLPF.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                             CBTFILT_ReferenceLPF.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                             CBTFILT_ReferenceOutlierCount.ToString(CultureInfo.CreateSpecificCulture("en-US")),
                                                                                             CBTFILT_ReferenceOutlierThreshold.ToString(CultureInfo.CreateSpecificCulture("en-US")),
@@ -5543,7 +5544,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTON_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWTON, cepoIndex, CWTON_ToString());
+                return String.Format("{0}[{1}] {2}", CMD_CWTON, cepoIndex.ToString("X1"), CWTON_ToString());
             }
 
             /// <summary>
@@ -5573,7 +5574,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTBB_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWTBB, cepoIndex, CWTBB_ToString());
+                return String.Format("{0}[{1}] {2}", CMD_CWTBB, cepoIndex.ToString("X1"), CWTBB_ToString());
             }
 
             /// <summary>
@@ -5603,7 +5604,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTBL_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWTBL, cepoIndex, CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWTBL, cepoIndex.ToString("X1"), CWTBL.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5633,7 +5634,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTBS_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWTBS, cepoIndex, CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWTBS, cepoIndex.ToString("X1"), CWTBS.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>
@@ -5663,7 +5664,7 @@ namespace RTI
             /// <returns>Command to send to the ADCP with the parameters.</returns>
             public string CWTTBP_CmdStr(int cepoIndex)
             {
-                return String.Format("{0}[{1}] {2}", CMD_CWTTBP, cepoIndex, CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
+                return String.Format("{0}[{1}] {2}", CMD_CWTTBP, cepoIndex.ToString("X1"), CWTTBP.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>

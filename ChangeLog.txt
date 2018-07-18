@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.8
+ * In AdcpSubsystemCommands, changed the CepoIndex in the command to a Hex value.
+
 RTI-3.4.7
  * Fixed bug in DecodeCSHOW with DecodeCWPRT and only 2 parameters.
  * In AdcpSubsystemCommand, increased the number of paramater for CBI from 2 to 3. AdcpSubsystemCommands.CBI_NUM_PARAM

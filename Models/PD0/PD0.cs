@@ -641,6 +641,11 @@ namespace RTI
                 default:
                     break;
             }
+
+            if(ensemble.IsNmeaAvail)
+            {
+                this.AddDataType(new Pd0NmeaData(ensemble.NmeaData));
+            }
         }
 
         #endregion

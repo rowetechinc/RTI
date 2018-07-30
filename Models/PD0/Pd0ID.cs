@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 03/03/2014      RC          2.21.4     Initial coding
  * 03/28/2014      RC          2.21.4     Added unknown data type.  Added GetType().  Added Default IDs.
+ * 07/24/2018      RC          3.4.8      Added NmeaData data type.
  * 
  * 
  * 
@@ -98,6 +99,11 @@ namespace RTI
             /// Percent Good.
             /// </summary>
             PercentGood,
+
+            /// <summary>
+            /// NMEA data.
+            /// </summary>
+            NmeaData,
 
             /// <summary>
             /// Unknown data type given.
@@ -167,6 +173,11 @@ namespace RTI
         /// Velocity ID.
         /// </summary>
         public static Pd0ID VelocityID = new Pd0ID(Pd0Velocity.ID_LSB, Pd0Velocity.ID_MSB, Pd0Types.Velocity);
+
+        /// <summary>
+        /// NMEA Data ID.
+        /// </summary>
+        public static Pd0ID NmeaDataID = new Pd0ID(Pd0NmeaData.ID_LSB, Pd0NmeaData.ID_MSB, Pd0Types.NmeaData);
 
         #endregion
 
@@ -250,6 +261,12 @@ namespace RTI
             if (lsb == Pd0Velocity.ID_LSB && msb == Pd0Velocity.ID_MSB)
             {
                 return VelocityID;
+            }
+
+            // NMEA Data 
+            if (lsb == Pd0NmeaData.ID_LSB && msb == Pd0NmeaData.ID_MSB)
+            {
+                return NmeaDataID;
             }
 
             // Unknown type

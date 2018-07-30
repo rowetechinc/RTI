@@ -2,6 +2,8 @@ RTI Changelog
 
 RTI-3.4.8
  * In AdcpSubsystemCommands, changed the CepoIndex in the command to a Hex value.
+ - Added PD0NmeaData.
+ - Export PD0 NMEA data.
 
 RTI-3.4.7
  * Fixed bug in DecodeCSHOW with DecodeCWPRT and only 2 parameters.

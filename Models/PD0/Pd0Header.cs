@@ -177,8 +177,35 @@ namespace RTI
                 // Set the offset value
                 dt.Value.Offset = (ushort)start;
 
-                // Add in the size plus the last location
-                start += GetDataTypeSize(dt.Value);
+                if (dt.Key != Pd0ID.Pd0Types.NmeaData)
+                {
+                    // Add in the size plus the last location
+                    start += GetDataTypeSize(dt.Value);
+                }
+                else
+                {
+                    if (dt.Key == Pd0ID.Pd0Types.NmeaData)
+                    {
+                        // Set the offset value
+                        dt.Value.Offset = (ushort)start;
+
+                        // Loop through all the NMEA strings to create an offset for each
+                        Pd0NmeaData nmeaDS = (Pd0NmeaData)dt.Value;
+                        foreach(var nmea in nmeaDS.NmeaStrings)
+                        {
+                            // Add in the size plus the last location
+                            start += Pd0NmeaData.GetDataTypeSize(nmea);
+
+                            // Set each NMEA string offset
+                            MathHelper.LsbMsb(start, out lsb, out msb);
+                            data[x++] = lsb;
+                            data[x++] = msb;
+                        }
+
+                        // Move the start location to the end now
+                        //start += GetDataTypeSize(dt.Value);
+                    }
+                }
             }
 
             return data;
@@ -338,6 +365,29 @@ namespace RTI
                                         AddDataType(new Pd0PercentGood(pgBuffer, offset));
                                     }
                                     break;
+                                case Pd0ID.Pd0Types.NmeaData:
+
+                                    // Get the Dataset Size
+                                    // Get the first 6 bytes to determine the size
+                                    // Number of bytes to read for NMEA size
+                                    byte[] nmeaSize = new byte[6];
+                                    Buffer.BlockCopy(data, offset, nmeaSize, 0, 6);
+                                    int nmeaDsSize = Pd0NmeaData.GetNmeaDataSize(nmeaSize);
+
+                                    // Copy the buffer
+                                    byte[] nmeaBuffer = new byte[nmeaDsSize];
+                                    Buffer.BlockCopy(data, offset, nmeaBuffer, 0, nmeaBuffer.Length);
+
+                                    // Decode the data
+                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.NmeaData))
+                                    {
+                                        GetNmeaData().Decode(nmeaBuffer);
+                                    }
+                                    else
+                                    {
+                                        AddDataType(new Pd0NmeaData(nmeaBuffer, offset));
+                                    }
+                                    break;
                                 default:
                                     Debug.WriteLine(string.Format("Unknown PD0 ID {0}", id.Type));
                                     break;
@@ -394,6 +444,9 @@ namespace RTI
                 case Pd0ID.Pd0Types.EchoIntensity:
                 case Pd0ID.Pd0Types.PercentGood:
                     return GetCorrEchoPerGdSize();                  // 1 Byte for every beam, 4 beams for every depth cell
+                case Pd0ID.Pd0Types.NmeaData:
+                    //return GetNmeaDataSize();                       // Varies based of NMEA data
+                    return dataType.GetDataTypeSize();
                 default:
                     return 0;
             }
@@ -410,6 +463,15 @@ namespace RTI
 
             // Count all the data types
             int count = DataTypes.Count;
+
+            if(DataTypes.ContainsKey(Pd0ID.Pd0Types.NmeaData) && DataTypes[Pd0ID.Pd0Types.NmeaData] != null)
+            {
+                //count -= 1;     // Remove the NMEA data as a whole
+
+                // Add a count for each NMEA string
+                // Each NMEA string is counted as 1 datatype
+                count += ((Pd0NmeaData)DataTypes[Pd0ID.Pd0Types.NmeaData]).GetNumOfHeaderOffsets();
+            }
 
             // Each data type requires 2 bytes
             return size + (count * SHORT_NUM_BYTE);
@@ -463,6 +525,18 @@ namespace RTI
         private int GetCorrEchoPerGdSize()
         {
             return 2 + (NumberOfDepthCells * 4);
+        }
+
+        /// <summary>
+        /// Get the data type size for the Nmea Data.
+        /// 
+        /// 14 Bytes for the header plus the NMEA string.
+        /// There can be multiple NMEA messages for a single ensemble.
+        /// </summary>
+        /// <returns>Number of bytes for the data type.</returns>
+        private int GetNmeaDataSize()
+        {
+            return GetNmeaData().GetDataTypeSize();
         }
 
         #endregion
@@ -530,6 +604,15 @@ namespace RTI
         public Pd0BottomTrack GetBottomTrack()
         {
             return (Pd0BottomTrack)DataTypes[Pd0ID.Pd0Types.BottomTrack];
+        }
+
+        /// <summary>
+        /// Get the NMEA data from the header.
+        /// </summary>
+        /// <returns>NMEA data.</returns>
+        public Pd0NmeaData GetNmeaData()
+        {
+            return (Pd0NmeaData)DataTypes[Pd0ID.Pd0Types.NmeaData];
         }
 
         #endregion

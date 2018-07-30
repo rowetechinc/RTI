@@ -106,6 +106,20 @@ namespace RTI
             _options = options;
             _fileSize = 0;
 
+            int timeout = 0;
+            string origFilePath = _filePath;
+            while (File.Exists(_filePath + _fileName))
+            {
+                _filePath = origFilePath + @"\" + timeout.ToString() + "_";
+
+                timeout++;
+
+                if(timeout > 10)
+                {
+                    break;
+                }
+            }
+
             _writer = new BinaryWriter(File.Open(_filePath + _fileName, FileMode.Append, FileAccess.Write));
         }
 

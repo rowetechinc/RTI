@@ -64,6 +64,7 @@
  * 06/04/2018      RC          3.4.6      Added CBTON and CBI to deployment command list.
  * 06/04/2018      RC          3.4.7      Increased the number of paramater for CBI from 2 to 3. AdcpSubsystemCommands.CBI_NUM_PARAM
  * 07/18/2018      RC          3.4.7      Changed the CepoIndex in the command to a Hex value.
+ * 08/01/2018      RC          3.4.8      Add CBI to all the command list.
  *
  */
 
@@ -4562,7 +4563,7 @@ namespace RTI
                 list.Add(CWPP_CmdStr());                // CWPP
                 list.Add(CWPTBP_CmdStr());              // CWPTBP
                 list.Add(CBTON_CmdStr());               // CWPTBP
-                list.Add(CBI_CmdStr());               // CBI
+                list.Add(CBI_CmdStr());                 // CBI
 
                 return list;
             }
@@ -4629,10 +4630,10 @@ namespace RTI
                     list.Add(CWPTBP_CmdStr());             // CWPTBP
                 }
 
-                if (CBI_BurstInterval.ToSeconds() > 0)
-                {
+                //if (CBI_BurstInterval.ToSeconds() > 0)
+                //{
                     list.Add(CBI_CmdStr());                // CBI
-                }
+                //}
 
                 //// Bottom Track
                 list.Add(CBTON_CmdStr());              // CBTON
@@ -4679,7 +4680,9 @@ namespace RTI
                     list.Add(CWPBN_CmdStr());               // CWPBN
                     list.Add(CWPP_CmdStr());                // CWPP
                     list.Add(CWPTBP_CmdStr());              // CWPTBP
-                }  
+                }
+
+                list.Add(CBI_CmdStr());                     // CBI
 
                 // Only display BT if on
                 list.Add(CBTON_CmdStr());                   // CBTON

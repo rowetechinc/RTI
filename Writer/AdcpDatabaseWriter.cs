@@ -81,6 +81,7 @@
  * 02/12/2016      RC          3.3.1      Added RangeTracking column.
  * 02/27/2017      RC          3.4.1      Added WriteFileToDatabase() to write all the ensembles at once.
  * 07/12/2018      RC          3.4.7      Since no one uses the Ensemble ID in AddEnsembleToDatabase(), when adding an ensemble to the database, made it no ExecuteNonQuery.
+ * 08/01/2018      RC          3.4.8      Put a try/catch in Dispose if the writer is closed while still writing.
  * 
  */
 
@@ -304,19 +305,26 @@ namespace RTI
                 UpdateAppConfiguration();
             }
 
-            // Stop the thread
-            _continue = false;
-
-            // Wake up the thread to kill thread
-            _eventWaitData.Set();
-
-            // Write the remaining data in the queue
-            while (_datasetQueue.Count > 0)
+            try
             {
-                Flush();
-            }
+                // Stop the thread
+                _continue = false;
 
-            _eventWaitData.Dispose();
+                // Wake up the thread to kill thread
+                _eventWaitData.Set();
+
+                // Write the remaining data in the queue
+                while (_datasetQueue.Count > 0)
+                {
+                    Flush();
+                }
+
+                _eventWaitData.Dispose();
+            }
+            catch(Exception e)
+            {
+                log.Error("Error shutting down ADCP Database Writer", e);
+            }
 
             Dispose(true);
             GC.SuppressFinalize(this);

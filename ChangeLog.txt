@@ -4,6 +4,8 @@ RTI-3.4.8
  * In AdcpSubsystemCommands, changed the CepoIndex in the command to a Hex value.
  - Added PD0NmeaData.
  - Export PD0 NMEA data.
+ * In AdcpDatabaseWriter, put a try/catch in Dispose if the writer is closed while still writing.
+ * In AdcpSubsystemCommands, add CBI to all the command list.
 
 RTI-3.4.7
  * Fixed bug in DecodeCSHOW with DecodeCWPRT and only 2 parameters.

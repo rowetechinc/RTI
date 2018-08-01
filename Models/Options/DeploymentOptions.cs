@@ -61,6 +61,11 @@ namespace RTI
             Alkaline_38C = 440,
 
             /// <summary>
+            /// Doppler Ltd cell Lithium: 2100 Wh-hr.
+            /// </summary>
+            Lithium_DopplerLtd = 2100,
+
+            /// <summary>
             /// 14D Alkaline: 360 Wh-hr.
             /// </summary>
             Alkaline_14D = 360,
@@ -74,6 +79,8 @@ namespace RTI
             /// 7 DD cell Lithium: 800 Wh-hr.
             /// </summary>
             Lithium_7DD = 800
+
+            
         }
 
 
@@ -126,7 +133,7 @@ namespace RTI
         /// <summary>
         /// Minimum Duration Value.
         /// </summary>
-        public const int MIN_DURATION = 1;
+        public const double MIN_DURATION = 1.0;
 
         /// <summary>
         /// Miniumum Number of batteries.
@@ -145,7 +152,7 @@ namespace RTI
         /// <summary>
         /// Default Duration value.
         /// </summary>
-        public const UInt32 DEFAULT_DURATION = 1;
+        public const double DEFAULT_DURATION = 1.0;
 
         /// <summary>
         /// Default number of batteries.
@@ -184,7 +191,7 @@ namespace RTI
         /// <summary>
         /// Number of days for the deployment.
         /// </summary>
-        public UInt32 Duration { get; set; }
+        public double Duration { get; set; }
 
         /// <summary>
         /// Number of batteries in the system.
@@ -238,7 +245,7 @@ namespace RTI
         /// <param name="mode">Deployment mode.</param>
         /// <param name="memoryCardUsed">Total bytes used on the memory card.</param>
         /// <param name="memoryCardTotal">Total size in bytes of the memory card.</param>
-        public DeploymentOptions(UInt32 duration, UInt32 numBatt, AdcpBatteryType battType, UInt32 depthBottom, AdcpDeploymentMode mode, long memoryCardUsed, long memoryCardTotal)
+        public DeploymentOptions(double duration, UInt32 numBatt, AdcpBatteryType battType, UInt32 depthBottom, AdcpDeploymentMode mode, long memoryCardUsed, long memoryCardTotal)
         {
             Duration = duration;
             NumBatteries = numBatt;

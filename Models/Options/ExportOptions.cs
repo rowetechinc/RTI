@@ -372,8 +372,8 @@ namespace RTI
             CorrelationThreshold = 0.0f;
             PressureOffset = 0.0f;
             IsRetransformData = false;
-            IsMarkBadBelowBottom = true;
-            IsRemoveShipSpeed = true;
+            IsMarkBadBelowBottom = false;
+            IsRemoveShipSpeed = false;
         }
 
         /// <summary>

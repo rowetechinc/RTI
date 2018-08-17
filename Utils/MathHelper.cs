@@ -1482,8 +1482,25 @@ namespace RTI
         /// <returns>New 2D array with the new data.</returns>
         public static double[,] AddColumn(double[,] original, double[] added)
         {
+            // Verify data
+            if(original.GetLength(0) != added.GetLength(0))
+            {
+                // Remove the original and only return the new data
+                int numRows = added.GetLength(0);
+                double[,] newResult = new double[1, numRows];
+
+                // Move all the data
+                for (int row = 0; row < numRows; row++)
+                {
+                    newResult[0, row] = added[row];
+                }
+
+                return newResult;
+            }
+
             int columns = original.GetLength(0);
             int rows = original.GetLength(1);
+
             // Create new array.
             double[,] result = new double[columns + 1, rows];
             // Copy the array.

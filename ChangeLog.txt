@@ -2,6 +2,9 @@ RTI Changelog
 
 RTI-3.4.9
  * In Pd0BottomTrack, inverted the sign of the Bottom Track Velocity when converting from RTI to PD0.
+ * In AdcpDatabaseWriter, verify _eventWaitData is safe to use before setting.
+ * Check _eventWaitData is closed for calling set. 
+ * Added SyncRoot to Ensemble to lock it when modifying it.
 
 RTI-3.4.8
  * In AdcpSubsystemCommands, changed the CepoIndex in the command to a Hex value.

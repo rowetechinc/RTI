@@ -234,7 +234,10 @@ namespace RTI
             }
 
             // Wake up the thread to process data
-            _eventWaitData.Set();
+            if (!_eventWaitData.SafeWaitHandle.IsClosed)
+            {
+                _eventWaitData.Set();
+            }
         }
 
         /// <summary>
@@ -339,7 +342,10 @@ namespace RTI
             try
             {
                 // Wake up the thread to stop thread
-                _eventWaitData.Set();
+                if (!_eventWaitData.SafeWaitHandle.IsClosed)
+                {
+                    _eventWaitData.Set();
+                }
                 //_eventWaitData.Dispose();
 
                 // Force the thread to stop

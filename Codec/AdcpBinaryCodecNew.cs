@@ -319,7 +319,7 @@ namespace RTI
             {
                 //_buffer.Add(data);
 
-                lock (_incomingBuffer)
+                lock (_incomingBufferLock)
                 {
                     // Reset buffer timeout
                     _timeoutBuffer = 0;
@@ -335,7 +335,10 @@ namespace RTI
             if (!_processingData)
             {
                 // Wake up the thread to process data
-                _eventWaitData.Set();
+                if (!_eventWaitData.SafeWaitHandle.IsClosed)
+                {
+                    _eventWaitData.Set();
+                }
             }
 
             // Check timeout
@@ -439,7 +442,10 @@ namespace RTI
             try
             {
                 // Wake up the thread to stop thread
-                _eventWaitData.Set();
+                if (!_eventWaitData.SafeWaitHandle.IsClosed)
+                {
+                    _eventWaitData.Set();
+                }
                 //_eventWaitData.Dispose();
 
                 // Force the thread to stop

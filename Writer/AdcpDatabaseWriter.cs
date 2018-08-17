@@ -82,6 +82,7 @@
  * 02/27/2017      RC          3.4.1      Added WriteFileToDatabase() to write all the ensembles at once.
  * 07/12/2018      RC          3.4.7      Since no one uses the Ensemble ID in AddEnsembleToDatabase(), when adding an ensemble to the database, made it no ExecuteNonQuery.
  * 08/01/2018      RC          3.4.8      Put a try/catch in Dispose if the writer is closed while still writing.
+ * 08/14/2018      RC          3.4.9      Verify _eventWaitData is safe to use before setting.
  * 
  */
 
@@ -311,7 +312,10 @@ namespace RTI
                 _continue = false;
 
                 // Wake up the thread to kill thread
-                _eventWaitData.Set();
+                if (!_eventWaitData.SafeWaitHandle.IsClosed)
+                {
+                    _eventWaitData.Set();
+                }
 
                 // Write the remaining data in the queue
                 while (_datasetQueue.Count > 0)
@@ -357,7 +361,10 @@ namespace RTI
             if (_datasetQueue.Count > MAX_QUEUE_SIZE)
             {
                 // Wake up the thread to process data
-                _eventWaitData.Set();
+                if (!_eventWaitData.SafeWaitHandle.IsClosed)
+                {
+                    _eventWaitData.Set();
+                }
             }
 
             if (adcpData.IsEnsembleAvail)
@@ -390,7 +397,10 @@ namespace RTI
                 }
 
                 // Wake up the thread to process data
-                _eventWaitData.Set();
+                if (!_eventWaitData.SafeWaitHandle.IsClosed)
+                {
+                    _eventWaitData.Set();
+                }
             }
         }
 
@@ -469,7 +479,10 @@ namespace RTI
             }
 
             // Wake up the thread to process data
-            _eventWaitData.Set();
+            if (!_eventWaitData.SafeWaitHandle.IsClosed)
+            {
+                _eventWaitData.Set();
+            }
         }
 
         /// <summary>
@@ -561,7 +574,10 @@ namespace RTI
             }
 
             // Wake up the thread to process data
-            _eventWaitData.Set();
+            if (!_eventWaitData.SafeWaitHandle.IsClosed)
+            {
+                _eventWaitData.Set();
+            }
         }
 
         /// <summary>
@@ -752,7 +768,10 @@ namespace RTI
         public void Flush()
         {
             // Wake up the thread to process data
-            _eventWaitData.Set();
+            if (!_eventWaitData.SafeWaitHandle.IsClosed)
+            {
+                _eventWaitData.Set();
+            }
         }
 
         /// <summary>

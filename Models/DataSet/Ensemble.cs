@@ -84,6 +84,7 @@
  * 03/03/2017      RC          3.4.2      Added EnsembleWaterProfileTextOutput() to display all data as text.
  * 08/25/2017      RC          3.4.2      Added ShipVelocityDataSet.
  * 04/30/2018      RC          3.4.5      Added FileName to ensemble dataset.
+ * 08/17/2018      RC          3.4.9      Added SyncRoot to lock the ensemble if modifying.
  * 
  */
 
@@ -130,6 +131,15 @@ namespace RTI
         public class Ensemble
         {
             #region Variables
+
+            #region SyncRoot
+
+            /// <summary>
+            /// Lock the ensemble
+            /// </summary>
+            public readonly object SyncRoot = new object();
+
+            #endregion
 
             #region Data Set IDs Variables
 

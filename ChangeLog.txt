@@ -5,6 +5,7 @@ RTI-3.4.9
  * In AdcpDatabaseWriter, verify _eventWaitData is safe to use before setting.
  * Check _eventWaitData is closed for calling set. 
  * Added SyncRoot to Ensemble to lock it when modifying it.
+ * In AdcpBinaryCodecNew, fixed bug with miss spelling of _incomingBufferLock as _incomingBuffer.  Then fixed thread handling of data.
 
 RTI-3.4.8
  * In AdcpSubsystemCommands, changed the CepoIndex in the command to a Hex value.

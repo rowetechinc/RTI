@@ -37,6 +37,7 @@
  * 10/21/2016      RC          3.3.2      Fixed bug missing GPS data when connected to computer.
  * 04/27/2017      RC          3.4.2      Check for buffer overflow with _incomingDataTimeout.
  * 10/18/2017      RC          3.4.4      Made the class public.
+ * 10/29/2018      RC          3.4.9      Fixed bug with miss spelling of _incomingBufferLock as _incomingBuffer.  Then fixed thread handling of data.
  * 
  */
 
@@ -205,7 +206,7 @@ namespace RTI
         /// <summary>
         /// Buffer timeout.
         /// </summary>
-        private const int BUFFER_TIMEOUT = 5;
+        private const int BUFFER_TIMEOUT = 50;
 
         /// <summary>
         /// Set a timeout if the incoming data is accumulating and
@@ -356,7 +357,7 @@ namespace RTI
         /// </summary>
         public void ClearIncomingData()
         {
-            lock (_incomingBuffer)
+            lock (_incomingBufferLock)
             {
                 _incomingBuffer = new byte[0];
             }
@@ -395,12 +396,18 @@ namespace RTI
                     // Lock it so the buffer is not modified while decoding
                     lock (_incomingBufferLock)
                     {
-
+                        int timeout = 5;
                         // Continue decoding if there is data in the buffer
                         while (_incomingBuffer.Length > 1000)
                         {
                             // Process all data in the buffer
                             DecodeIncomingData();
+
+                            // Timeout if tried multiple times
+                            if(timeout-- <= 0)
+                            {
+                                break;
+                            }
                         }
                     }
 
@@ -545,13 +552,17 @@ namespace RTI
                         //Debug.WriteLine("Ens: " + ens.Ensemble.EnsembleData.EnsembleNumber);
                     }
                 }
+                else
+                {
+                    return;
+                }
 
                 // Reset the position list
                 posList = _incomingBuffer.Locate(pattern);
             }
 
             // Clear the buffer
-            _incomingBuffer = new byte[0];
+            //_incomingBuffer = new byte[0];
         }
 
         /// <summary>
@@ -986,13 +997,19 @@ namespace RTI
                     // we do not have enough data in the buffer for the entire ensemble
                     // Clear the buffer
                     _incomingBuffer = new byte[0];
+
+                    // Reset timeout
+                    _timeoutBuffer = 0;
                 }
                 else
                 {
                     _timeoutBuffer++;
 
                     // Wait for data in the buffer
-                    Thread.Sleep(250);
+                    //Thread.Sleep(250);
+
+                    // Return bad ensemble because not enough data in buffer
+                    return ensInfo;
                 }
             }
             else

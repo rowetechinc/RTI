@@ -43,6 +43,7 @@
  * 08/19/2014      RC          3.0.0      Get the heading from the GPS before using the bottom track heading to remove the ship speed when using GPS speed.
  * 09/05/2017      RC          3.4.3      Added GetPreviousBottomTrackVelocity() to get the previous Bottom Track velocity to store for next iteration.
  * 09/13/2017      RC          3.4.3      Check if Bottom Track has no beams.
+ * 09/04/2018      RC          3.4.10     In RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 
  * 
  */
 
@@ -259,7 +260,7 @@ namespace RTI
             {
                 if (ensemble != null)
                 {
-                    if (ensemble.IsEarthVelocityAvail)
+                    if (ensemble.IsInstrumentVelocityAvail)
                     {
                         bool isBTVelGood = false;
                         bool isGpsVelGood = false;

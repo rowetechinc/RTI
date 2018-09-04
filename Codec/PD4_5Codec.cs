@@ -1048,8 +1048,11 @@ namespace RTI
                     // Remove the first byte until you find the start
                     else
                     {
-                        // Lock the buffer while removing
-                        _incomingDataBuffer.RemoveAt(0);
+                        if (_incomingDataBuffer.Count > 0)
+                        {
+                            //Lock the buffer while removing
+                            _incomingDataBuffer.RemoveAt(0);
+                        }
                     }
                 }
             }

@@ -3,6 +3,7 @@ RTI Changelog
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 
  * In PD4_5Codec, check if the buffer has at least 1 byte when removing, in SearchForHeaderStart().
+ * In MatlabMatrixExporterWriter, check if the data exist before trying to write it. 
 
 RTI-3.4.9
  * In Pd0BottomTrack, inverted the sign of the Bottom Track Velocity when converting from RTI to PD0.

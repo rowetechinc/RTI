@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 06/23/2018      RC          3.4.7      Initial coding
+ * 09/14/2018      RC          3.4.10     Check if the data exist before trying to write it. 
  * 
  * 
  * 
@@ -1252,35 +1253,65 @@ namespace RTI
                 for (int bin = 0; bin < numElements; bin++)
                 {
                     // Get the index for the next element and add to the array
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_0_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam0[bin]), 0, encodedData.Beam0, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].Beam0 != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_0_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam0[bin]), 0, encodedData.Beam0, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_1_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam1[bin]), 0, encodedData.Beam1, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].Beam1 != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_1_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam1[bin]), 0, encodedData.Beam1, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_2_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam2[bin]), 0, encodedData.Beam2, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].Beam2 != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_2_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam2[bin]), 0, encodedData.Beam2, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_3_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam3[bin]), 0, encodedData.Beam3, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].Beam3 != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.BEAM_3_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Beam3[bin]), 0, encodedData.Beam3, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_U_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthEast[bin]), 0, encodedData.EarthEast, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].EarthEast != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_U_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthEast[bin]), 0, encodedData.EarthEast, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_V_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthNorth[bin]), 0, encodedData.EarthNorth, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].EarthNorth != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_V_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthNorth[bin]), 0, encodedData.EarthNorth, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_Z_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthVert[bin]), 0, encodedData.EarthVert, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].EarthVert != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_Z_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthVert[bin]), 0, encodedData.EarthVert, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_ERR_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthError[bin]), 0, encodedData.EarthError, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].EarthError != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.EARTH_VEL_ERR_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].EarthError[bin]), 0, encodedData.EarthError, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.VEL_MAG_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Magnitude[bin]), 0, encodedData.Magnitude, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].Magnitude != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.VEL_MAG_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Magnitude[bin]), 0, encodedData.Magnitude, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
 
-                    index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.VEL_DIR_NAMELENGTH, numElements, ens, bin);
-                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Direction[bin]), 0, encodedData.Direction, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    if (velData[ens].Direction != null)
+                    {
+                        index = DataSet.BaseDataSet.GetBinBeamIndexStatic(VelDataEncode.VEL_DIR_NAMELENGTH, numElements, ens, bin);
+                        System.Buffer.BlockCopy(MathHelper.FloatToByteArray(velData[ens].Direction[bin]), 0, encodedData.Direction, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+                    }
                 }
             }
             #endregion

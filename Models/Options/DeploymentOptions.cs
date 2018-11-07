@@ -33,6 +33,7 @@
  * 10/14/2013      RC          2.21.0     Added InternalMemoryCardUsed and InternalMemoryCardTotal.
  * 11/13/2014      RC          2.21.0     Added DVL and VM deployment modes.
  * 10/19/2016      RC          3.3.2      Changed default battery to 38C.
+ * 11/05/2018      RC          3.4.10     Updated the GetBatteryList() to only list the 2 available types, alkaline and lithium.
  * 
  */
 
@@ -278,9 +279,7 @@ namespace RTI
         {
             List<AdcpBatteryType> list = new List<AdcpBatteryType>();
             list.Add(AdcpBatteryType.Alkaline_38C);
-            list.Add(AdcpBatteryType.Alkaline_14D);
-            list.Add(AdcpBatteryType.Alkaline_21D);
-            list.Add(AdcpBatteryType.Lithium_7DD);
+            list.Add(AdcpBatteryType.Lithium_DopplerLtd);
 
             return list;
         }

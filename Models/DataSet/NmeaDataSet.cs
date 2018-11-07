@@ -45,6 +45,7 @@
  * 10/03/2013      RC          2.20.2     Fixed bug in constructor where the data type was not set correctly.  It is a byte type.
  * 02/11/2014      RC          2.21.3     Added GPHDT.
  * 05/07/2018      RC          3.4.5      Check for exceptions in SetValue() and SetNmeaStringArray().
+ * 10/03/2018      RC          3.4.10     Fixed checking for a NaN GPS speed value and if GPS Speed is valid.
  *       
  * 
  */
@@ -727,7 +728,10 @@ namespace RTI
             {
                 if (IsGpvtgAvail())
                 {
-                    if (GPVTG.Speed.Value != DotSpatial.Positioning.Speed.Invalid.Value)
+                    if (!Double.IsNaN(GPVTG.Speed.Value) &&
+                        !Double.IsInfinity(GPVTG.Speed.Value) &&
+                        !Double.IsPositiveInfinity(GPVTG.Speed.Value) &&
+                        !Double.IsNegativeInfinity(GPVTG.Speed.Value))
                     {
                         // GPS speed good
                         return true;

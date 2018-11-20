@@ -107,6 +107,7 @@
     <Compile Include="Communications\SerialOptions.cs" />
     <Compile Include="Communications\TcpServer.cs" />
     <Compile Include="Exporter\EnsExporterWriter.cs" />
+    <Compile Include="Exporter\ExportWriter.cs" />
     <Compile Include="Exporter\MatlabMatrixExporterWriter.cs" />
     <Compile Include="Models\DataSet\ShipWaterMassDataSet.cs" />
     <Compile Include="Models\DataSet\ShipVelocityDataSet.cs" />

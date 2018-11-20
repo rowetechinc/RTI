@@ -392,5 +392,67 @@ namespace RTI
             GoodEarthMaxBin = maxBin;
         }
 
+        /// <summary>
+        /// Clone the options.
+        /// </summary>
+        /// <param name="options">Options to clone.</param>
+        /// <returns>Cloned options.</returns>
+        public ExportOptions Clone()
+        {
+            ExportOptions newOptions = new ExportOptions();
+
+            MinEnsembleNumber = this.MinEnsembleNumber;
+            MaxEnsembleNumber = this.MaxEnsembleNumber;
+            MaxFileSize = this.MaxFileSize;
+            IsAmplitudeDataSetOn = this.IsAmplitudeDataSetOn;
+            IsAncillaryDataSetOn = this.IsAncillaryDataSetOn;
+            IsBeamVelocityDataSetOn = this.IsBeamVelocityDataSetOn;
+            IsBottomTrackDataSetOn = this.IsBottomTrackDataSetOn;
+            IsCorrelationDataSetOn = this.IsCorrelationDataSetOn;
+            IsEarthVelocityDataSetOn = this.IsEarthVelocityDataSetOn;
+            IsVelocityVectorDataSetOn = this.IsVelocityVectorDataSetOn;
+            IsEarthWaterMassDataSetOn = this.IsEarthWaterMassDataSetOn;
+            IsEnsembleDataSetOn = this.IsEnsembleDataSetOn;
+            IsGoodBeamDataSetOn = this.IsGoodBeamDataSetOn;
+            IsGoodEarthDataSetOn = this.IsGoodEarthDataSetOn;
+            IsInstrumentVelocityDataSetOn = this.IsInstrumentVelocityDataSetOn;
+            IsInstrumentWaterMassDataSetOn = this.IsInstrumentWaterMassDataSetOn;
+            IsNmeaDataSetOn = this.IsNmeaDataSetOn;
+            IsProfileEngineeringDataSetOn = this.IsProfileEngineeringDataSetOn;
+            IsBottomTrackEngineeringDataSetOn = this.IsBottomTrackEngineeringDataSetOn;
+            IsSystemSetupDataSetOn = this.IsSystemSetupDataSetOn;
+            IsRangeTrackingDataSetOn = this.IsRangeTrackingDataSetOn;
+            IsGageHeightDataSetOn = this.IsGageHeightDataSetOn;
+            IsAdcpGpsDataSetOn = this.IsAdcpGpsDataSetOn;
+            IsGps1DataSetOn = this.IsGps1DataSetOn;
+            IsGps2DataSetOn = this.IsGps2DataSetOn;
+            IsNmea1DataSetOn = this.IsNmea1DataSetOn;
+            IsNmea2DataSetOn = this.IsNmea2DataSetOn;
+            CoordinateTransform = this.CoordinateTransform;
+            BeamMinBin = this.BeamMinBin;
+            BeamMaxBin = this.BeamMaxBin;
+            InstrumentMinBin = this.InstrumentMinBin;
+            InstrumentMaxBin = this.InstrumentMaxBin;
+            EarthMinBin = this.EarthMinBin;
+            EarthMaxBin = this.EarthMaxBin;
+            VelVectorMinBin = this.VelVectorMinBin;
+            VelVectorMaxBin = this.VelVectorMaxBin;
+            CorrelationMinBin = this.CorrelationMinBin;
+            CorrelationMaxBin = this.CorrelationMaxBin;
+            AmplitudeMinBin = this.AmplitudeMinBin;
+            AmplitudeMaxBin = this.AmplitudeMaxBin;
+            GoodBeamMinBin = this.GoodBeamMinBin;
+            GoodBeamMaxBin = this.GoodBeamMaxBin;
+            GoodEarthMinBin = this.GoodEarthMinBin;
+            GoodEarthMaxBin = this.GoodEarthMaxBin;
+            CorrelationThreshold = this.CorrelationThreshold;
+            PressureOffset = this.PressureOffset;
+            IsRetransformData = this.IsRetransformData;
+            IsMarkBadBelowBottom = this.IsMarkBadBelowBottom;
+            IsRemoveShipSpeed = this.IsRemoveShipSpeed;
+
+            return newOptions;
+        }
+
     }
 }

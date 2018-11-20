@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-3.4.11
+ * In PD0ExporterWriter, fixed bug in PD0 Exporter with multiple configurations.
+ - Added ExportWriter to handle writing a configuration in exporter.
+
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 
  * In PD4_5Codec, check if the buffer has at least 1 byte when removing, in SearchForHeaderStart().

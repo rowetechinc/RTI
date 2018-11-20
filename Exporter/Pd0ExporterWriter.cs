@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 04/02/2014      RC          2.21.4     Initial coding
  * 05/01/2014      RC          3.2.4      Select which datasets to export to the PD0 file.
+ * 11/20/2018      RC          3.4.11     Fixed bug in PD0 Exporter with multiple configurations.
  * 
  * 
  * 

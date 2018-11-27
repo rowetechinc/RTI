@@ -5,6 +5,7 @@ RTI-3.4.11
  - Added ExportWriter to handle writing a configuration in exporter.
  * In Pd0NmeaData, fixed the ID in the constructor.
  * In Pd0NmeaData, initialized the string list of NMEA data.
+ - In Pd0ExporterWriter, removed the bin selection.
 
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 

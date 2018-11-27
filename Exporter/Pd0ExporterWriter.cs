@@ -35,6 +35,7 @@
  * 04/02/2014      RC          2.21.4     Initial coding
  * 05/01/2014      RC          3.2.4      Select which datasets to export to the PD0 file.
  * 11/20/2018      RC          3.4.11     Fixed bug in PD0 Exporter with multiple configurations.
+ * 11/27/2018      RC          3.4.11     Removed the bin selection.
  * 
  * 
  * 
@@ -142,27 +143,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsAmplitudeAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.AmplitudeMinBin != 0 || _options.AmplitudeMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.AmplitudeMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.AmplitudeMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.AmplitudeMaxBin - _options.AmplitudeMinBin) + 1;
-
-                        // Truncate the data
-                        float[,] tempAmp = ensemble.AmplitudeData.AmplitudeData;
-                        ensemble.AmplitudeData.AmplitudeData = new float[numBins, tempAmp.GetLength(1)];
-                        Buffer.BlockCopy(tempAmp, _options.AmplitudeMinBin, ensemble.AmplitudeData.AmplitudeData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsAmplitudeAvail)
                 {
                     // Set that data set was not used
                     _options.IsAmplitudeDataSetOn = false;
@@ -174,27 +155,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsBeamVelocityAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.BeamMinBin != 0 || _options.BeamMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.BeamMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.BeamMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.BeamMaxBin - _options.BeamMinBin) + 1;
-
-                        // Truncate the data
-                        float[,] tempBeam = ensemble.BeamVelocityData.BeamVelocityData;
-                        ensemble.BeamVelocityData.BeamVelocityData = new float[numBins, tempBeam.GetLength(1)];
-                        Buffer.BlockCopy(tempBeam, _options.BeamMinBin, ensemble.BeamVelocityData.BeamVelocityData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsBeamVelocityAvail)
                 {
                     // Set that data set was not used
                     _options.IsBeamVelocityDataSetOn = false;
@@ -206,27 +167,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsEarthVelocityAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.EarthMinBin != 0 || _options.EarthMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.EarthMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.EarthMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.EarthMaxBin - _options.EarthMinBin) + 1;
-
-                        // Truncate the data
-                        float[,] tempEarth = ensemble.EarthVelocityData.EarthVelocityData;
-                        ensemble.EarthVelocityData.EarthVelocityData = new float[numBins, tempEarth.GetLength(1)];
-                        Buffer.BlockCopy(tempEarth, _options.EarthMinBin, ensemble.EarthVelocityData.EarthVelocityData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsEarthVelocityAvail)
                 {
                     // Set that data set was not used
                     _options.IsEarthVelocityDataSetOn = false;
@@ -238,28 +179,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsInstrumentVelocityAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.InstrumentMinBin != 0 || _options.InstrumentMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.InstrumentMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.InstrumentMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                            
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.InstrumentMaxBin - _options.InstrumentMinBin) + 1;
-
-                        // Truncate the data
-                        float[,] tempInstr = ensemble.InstrumentVelocityData.InstrumentVelocityData;
-                        ensemble.InstrumentVelocityData.InstrumentVelocityData = new float[numBins, tempInstr.GetLength(1)];
-                        Buffer.BlockCopy(tempInstr, _options.InstrumentMinBin, ensemble.InstrumentVelocityData.InstrumentVelocityData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsInstrumentVelocityAvail)
                 {
                     // Set that data set was not used
                     _options.IsInstrumentVelocityDataSetOn = false;
@@ -271,27 +191,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsCorrelationAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.CorrelationMinBin != 0 || _options.CorrelationMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.CorrelationMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.CorrelationMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.CorrelationMaxBin - _options.CorrelationMinBin) + 1;
-
-                        // Truncate the data
-                        float[,] tempCorr = ensemble.CorrelationData.CorrelationData;
-                        ensemble.CorrelationData.CorrelationData = new float[numBins, tempCorr.GetLength(1)];
-                        Buffer.BlockCopy(tempCorr, _options.CorrelationMinBin, ensemble.CorrelationData.CorrelationData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsCorrelationAvail)
                 {
                     // Set that data set was not used
                     _options.IsCorrelationDataSetOn = false;
@@ -303,27 +203,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsGoodBeamAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.GoodBeamMinBin != 0 || _options.GoodBeamMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.GoodBeamMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.GoodBeamMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.GoodBeamMaxBin - _options.GoodBeamMinBin) + 1;
-
-                        // Truncate the data
-                        int[,] tempGB = ensemble.GoodBeamData.GoodBeamData;
-                        ensemble.GoodBeamData.GoodBeamData = new int[numBins, tempGB.GetLength(1)];
-                        Buffer.BlockCopy(tempGB, _options.GoodBeamMinBin, ensemble.GoodBeamData.GoodBeamData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsGoodBeamAvail)
                 {
                     // Set that data set was not used
                     _options.IsGoodBeamDataSetOn = false;
@@ -335,27 +215,7 @@ namespace RTI
             else
             {
                 // Verify the dataset exist
-                if (ensemble.IsGoodEarthAvail)
-                {
-                    // Verify a change in the bins
-                    if (_options.GoodEarthMinBin != 0 || _options.GoodEarthMaxBin != 0)
-                    {
-                        // Verify the max bin
-                        if (_options.GoodEarthMaxBin > ensemble.EnsembleData.NumBins - 1)
-                        {
-                            _options.GoodEarthMaxBin = (byte)(ensemble.EnsembleData.NumBins - 1);
-                        }
-
-                        // If min or max bin has been set, then get the new number of bins
-                        int numBins = (_options.GoodEarthMaxBin - _options.GoodEarthMinBin) + 1;
-
-                        // Truncate the data
-                        int[,] tempGB = ensemble.GoodEarthData.GoodEarthData;
-                        ensemble.GoodEarthData.GoodEarthData = new int[numBins, tempGB.GetLength(1)];
-                        Buffer.BlockCopy(tempGB, _options.GoodEarthMinBin, ensemble.GoodEarthData.GoodEarthData, 0, numBins);
-                    }
-                }
-                else
+                if (!ensemble.IsGoodEarthAvail)
                 {
                     // Set that data set was not used
                     _options.IsGoodEarthDataSetOn = false;

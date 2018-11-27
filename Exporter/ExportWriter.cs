@@ -74,31 +74,25 @@ namespace RTI
             pd0 = new Pd0ExporterWriter();
             ensEx = new EnsExporterWriter();
 
-            // Clone the options for this object
-            // Each configuration needs its one options clone
-            // because the bin number or other settings can change
-            // between configurations
-            ExportOptions clonedOptions = options.Clone();
-
             if (isCsvSelected)
             {
-                csv.Open(folderPath, filename + ".csv", clonedOptions);
+                csv.Open(folderPath, filename + ".csv", options);
             }
             if (IsMatlabSelected)
             {
-                matlab.Open(folderPath, filename, clonedOptions);
+                matlab.Open(folderPath, filename, options);
             }
             if (isMatlabMatrixSelected)
             {
-                matlabMatrix.Open(folderPath, filename, clonedOptions);
+                matlabMatrix.Open(folderPath, filename, options);
             }
             if (isPd0Selected)
             {
-                pd0.Open(folderPath, filename + ".pd0", clonedOptions);
+                pd0.Open(folderPath, filename + ".pd0", options);
             }
             if (isEnsSelected)
             {
-                ensEx.Open(folderPath, filename + ".ens", clonedOptions);
+                ensEx.Open(folderPath, filename + ".ens", options);
             }
         }
 

@@ -3,6 +3,7 @@ RTI Changelog
 RTI-3.4.11
  * In PD0ExporterWriter, fixed bug in PD0 Exporter with multiple configurations.
  - Added ExportWriter to handle writing a configuration in exporter.
+ - In Pd0ExporterWriter, removed the bin selection.
 
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 

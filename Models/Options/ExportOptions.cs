@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 07/23/2017      RC          1.0.0      Initial coding
  * 10/06/2017      RC          1.1.0      Added screening options.
+ * 11/20/2018      RC          3.4.11     Clone and screen the options.
  * 
  */
 
@@ -401,57 +402,120 @@ namespace RTI
         {
             ExportOptions newOptions = new ExportOptions();
 
-            MinEnsembleNumber = this.MinEnsembleNumber;
-            MaxEnsembleNumber = this.MaxEnsembleNumber;
-            MaxFileSize = this.MaxFileSize;
-            IsAmplitudeDataSetOn = this.IsAmplitudeDataSetOn;
-            IsAncillaryDataSetOn = this.IsAncillaryDataSetOn;
-            IsBeamVelocityDataSetOn = this.IsBeamVelocityDataSetOn;
-            IsBottomTrackDataSetOn = this.IsBottomTrackDataSetOn;
-            IsCorrelationDataSetOn = this.IsCorrelationDataSetOn;
-            IsEarthVelocityDataSetOn = this.IsEarthVelocityDataSetOn;
-            IsVelocityVectorDataSetOn = this.IsVelocityVectorDataSetOn;
-            IsEarthWaterMassDataSetOn = this.IsEarthWaterMassDataSetOn;
-            IsEnsembleDataSetOn = this.IsEnsembleDataSetOn;
-            IsGoodBeamDataSetOn = this.IsGoodBeamDataSetOn;
-            IsGoodEarthDataSetOn = this.IsGoodEarthDataSetOn;
-            IsInstrumentVelocityDataSetOn = this.IsInstrumentVelocityDataSetOn;
-            IsInstrumentWaterMassDataSetOn = this.IsInstrumentWaterMassDataSetOn;
-            IsNmeaDataSetOn = this.IsNmeaDataSetOn;
-            IsProfileEngineeringDataSetOn = this.IsProfileEngineeringDataSetOn;
-            IsBottomTrackEngineeringDataSetOn = this.IsBottomTrackEngineeringDataSetOn;
-            IsSystemSetupDataSetOn = this.IsSystemSetupDataSetOn;
-            IsRangeTrackingDataSetOn = this.IsRangeTrackingDataSetOn;
-            IsGageHeightDataSetOn = this.IsGageHeightDataSetOn;
-            IsAdcpGpsDataSetOn = this.IsAdcpGpsDataSetOn;
-            IsGps1DataSetOn = this.IsGps1DataSetOn;
-            IsGps2DataSetOn = this.IsGps2DataSetOn;
-            IsNmea1DataSetOn = this.IsNmea1DataSetOn;
-            IsNmea2DataSetOn = this.IsNmea2DataSetOn;
-            CoordinateTransform = this.CoordinateTransform;
-            BeamMinBin = this.BeamMinBin;
-            BeamMaxBin = this.BeamMaxBin;
-            InstrumentMinBin = this.InstrumentMinBin;
-            InstrumentMaxBin = this.InstrumentMaxBin;
-            EarthMinBin = this.EarthMinBin;
-            EarthMaxBin = this.EarthMaxBin;
-            VelVectorMinBin = this.VelVectorMinBin;
-            VelVectorMaxBin = this.VelVectorMaxBin;
-            CorrelationMinBin = this.CorrelationMinBin;
-            CorrelationMaxBin = this.CorrelationMaxBin;
-            AmplitudeMinBin = this.AmplitudeMinBin;
-            AmplitudeMaxBin = this.AmplitudeMaxBin;
-            GoodBeamMinBin = this.GoodBeamMinBin;
-            GoodBeamMaxBin = this.GoodBeamMaxBin;
-            GoodEarthMinBin = this.GoodEarthMinBin;
-            GoodEarthMaxBin = this.GoodEarthMaxBin;
-            CorrelationThreshold = this.CorrelationThreshold;
-            PressureOffset = this.PressureOffset;
-            IsRetransformData = this.IsRetransformData;
-            IsMarkBadBelowBottom = this.IsMarkBadBelowBottom;
-            IsRemoveShipSpeed = this.IsRemoveShipSpeed;
+            newOptions.MinEnsembleNumber = this.MinEnsembleNumber;
+            newOptions.MaxEnsembleNumber = this.MaxEnsembleNumber;
+            newOptions.MaxFileSize = this.MaxFileSize;
+            newOptions.IsAmplitudeDataSetOn = this.IsAmplitudeDataSetOn;
+            newOptions.IsAncillaryDataSetOn = this.IsAncillaryDataSetOn;
+            newOptions.IsBeamVelocityDataSetOn = this.IsBeamVelocityDataSetOn;
+            newOptions.IsBottomTrackDataSetOn = this.IsBottomTrackDataSetOn;
+            newOptions.IsCorrelationDataSetOn = this.IsCorrelationDataSetOn;
+            newOptions.IsEarthVelocityDataSetOn = this.IsEarthVelocityDataSetOn;
+            newOptions.IsVelocityVectorDataSetOn = this.IsVelocityVectorDataSetOn;
+            newOptions.IsEarthWaterMassDataSetOn = this.IsEarthWaterMassDataSetOn;
+            newOptions.IsEnsembleDataSetOn = this.IsEnsembleDataSetOn;
+            newOptions.IsGoodBeamDataSetOn = this.IsGoodBeamDataSetOn;
+            newOptions.IsGoodEarthDataSetOn = this.IsGoodEarthDataSetOn;
+            newOptions.IsInstrumentVelocityDataSetOn = this.IsInstrumentVelocityDataSetOn;
+            newOptions.IsInstrumentWaterMassDataSetOn = this.IsInstrumentWaterMassDataSetOn;
+            newOptions.IsNmeaDataSetOn = this.IsNmeaDataSetOn;
+            newOptions.IsProfileEngineeringDataSetOn = this.IsProfileEngineeringDataSetOn;
+            newOptions.IsBottomTrackEngineeringDataSetOn = this.IsBottomTrackEngineeringDataSetOn;
+            newOptions.IsSystemSetupDataSetOn = this.IsSystemSetupDataSetOn;
+            newOptions.IsRangeTrackingDataSetOn = this.IsRangeTrackingDataSetOn;
+            newOptions.IsGageHeightDataSetOn = this.IsGageHeightDataSetOn;
+            newOptions.IsAdcpGpsDataSetOn = this.IsAdcpGpsDataSetOn;
+            newOptions.IsGps1DataSetOn = this.IsGps1DataSetOn;
+            newOptions.IsGps2DataSetOn = this.IsGps2DataSetOn;
+            newOptions.IsNmea1DataSetOn = this.IsNmea1DataSetOn;
+            newOptions.IsNmea2DataSetOn = this.IsNmea2DataSetOn;
+            newOptions.CoordinateTransform = this.CoordinateTransform;
+            newOptions.BeamMinBin = this.BeamMinBin;
+            newOptions.BeamMaxBin = this.BeamMaxBin;
+            newOptions.InstrumentMinBin = this.InstrumentMinBin;
+            newOptions.InstrumentMaxBin = this.InstrumentMaxBin;
+            newOptions.EarthMinBin = this.EarthMinBin;
+            newOptions.EarthMaxBin = this.EarthMaxBin;
+            newOptions.VelVectorMinBin = this.VelVectorMinBin;
+            newOptions.VelVectorMaxBin = this.VelVectorMaxBin;
+            newOptions.CorrelationMinBin = this.CorrelationMinBin;
+            newOptions.CorrelationMaxBin = this.CorrelationMaxBin;
+            newOptions.AmplitudeMinBin = this.AmplitudeMinBin;
+            newOptions.AmplitudeMaxBin = this.AmplitudeMaxBin;
+            newOptions.GoodBeamMinBin = this.GoodBeamMinBin;
+            newOptions.GoodBeamMaxBin = this.GoodBeamMaxBin;
+            newOptions.GoodEarthMinBin = this.GoodEarthMinBin;
+            newOptions.GoodEarthMaxBin = this.GoodEarthMaxBin;
+            newOptions.CorrelationThreshold = this.CorrelationThreshold;
+            newOptions.PressureOffset = this.PressureOffset;
+            newOptions.IsRetransformData = this.IsRetransformData;
+            newOptions.IsMarkBadBelowBottom = this.IsMarkBadBelowBottom;
+            newOptions.IsRemoveShipSpeed = this.IsRemoveShipSpeed;
 
             return newOptions;
+        }
+
+        /// <summary>
+        /// Update the options based off the ensemble.
+        /// </summary>
+        /// <param name="ens">Ensemble to get the options.</param>
+        public void UpdateOptions(DataSet.Ensemble ens)
+        {
+            // Get the maxmimum number of bins
+            int maxNumBins = RTI.DataSet.Ensemble.MAX_NUM_BINS;
+            if (ens.IsEnsembleAvail)
+            {
+                maxNumBins = ens.EnsembleData.NumBins - 1;
+            }
+
+            // Set max number of bins if not set
+            if (this.AmplitudeMaxBin == 0 || this.AmplitudeMaxBin > maxNumBins)
+            {
+
+                this.AmplitudeMaxBin = maxNumBins;
+            }
+
+            if (this.BeamMaxBin == 0 || this.BeamMaxBin > maxNumBins)
+            {
+
+                this.BeamMaxBin = maxNumBins;
+            }
+
+            if (this.CorrelationMaxBin == 0 || this.CorrelationMaxBin > maxNumBins)
+            {
+
+                this.CorrelationMaxBin = maxNumBins;
+            }
+
+            if (this.EarthMaxBin == 0 || this.EarthMaxBin > maxNumBins)
+            {
+
+                this.EarthMaxBin = maxNumBins;
+            }
+
+            if (this.GoodBeamMaxBin == 0 || this.GoodBeamMaxBin > maxNumBins)
+            {
+
+                this.GoodBeamMaxBin = maxNumBins;
+            }
+
+            if (this.GoodEarthMaxBin == 0 || this.GoodEarthMaxBin > maxNumBins)
+            {
+
+                this.GoodEarthMaxBin = maxNumBins;
+            }
+
+            if (this.InstrumentMaxBin == 0 || this.InstrumentMaxBin > maxNumBins)
+            {
+
+                this.InstrumentMaxBin = maxNumBins;
+            }
+
+            if (this.VelVectorMaxBin == 0 || this.VelVectorMaxBin > maxNumBins)
+            {
+
+                this.VelVectorMaxBin = maxNumBins;
+            }
         }
 
     }

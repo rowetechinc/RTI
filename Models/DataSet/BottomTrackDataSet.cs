@@ -70,6 +70,7 @@
  * 08/25/2017      RC          3.4.2      Added Ship Velocity.
  * 09/13/2017      RC          3.4.3      Fixed bug if no beams in data.
  * 02/07/2018      RC          3.4.5      Added IsUpwardFacing() to know the direction the ADCP is facing.
+ * 11/27/2018      RC          3.4.11     Fixed the sign for PD0 data in DecodePd0Ensemble() Earth Velocity.
  * 
  */
 
@@ -1627,7 +1628,7 @@ namespace RTI
                         // Beam 0
                         if(bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
                         {
-                            EarthVelocity[0] = bt.BtVelocityBeam0 / 1000.0f;
+                            EarthVelocity[0] = -1.0f * (bt.BtVelocityBeam0 / 1000.0f);
                         }
                         else
                         {
@@ -1637,7 +1638,7 @@ namespace RTI
                         // Beam 1
                         if(bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
                         {
-                            EarthVelocity[1] = bt.BtVelocityBeam1 / 1000.0f;
+                            EarthVelocity[1] = -1.0f * (bt.BtVelocityBeam1 / 1000.0f);
                         }
                         else
                         {
@@ -1647,7 +1648,7 @@ namespace RTI
                         // Beam 2
                         if(bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
                         {
-                            EarthVelocity[2] = bt.BtVelocityBeam2 / 1000.0f;
+                            EarthVelocity[2] = -1.0f * (bt.BtVelocityBeam2 / 1000.0f);
                         }
                         else
                         {
@@ -1657,7 +1658,7 @@ namespace RTI
                         // Beam 3
                         if(bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
                         {
-                            EarthVelocity[3] = bt.BtVelocityBeam3 / 1000.0f;
+                            EarthVelocity[3] = -1.0f * (bt.BtVelocityBeam3 / 1000.0f);
                         }
                         else
                         {

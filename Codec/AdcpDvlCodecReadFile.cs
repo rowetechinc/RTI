@@ -45,6 +45,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 using DotSpatial.Positioning;
+using System.Windows.Forms;
 
 namespace RTI
 {
@@ -89,6 +90,10 @@ namespace RTI
 
                     // Decode the sentences found
                     return FindCompleteEnsembles(sentList, file);
+                }
+                catch(System.IO.IOException ex)
+                {
+                    MessageBox.Show("Error Loading File\n" + ex.ToString(), "Error Loading File", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (Exception e)
                 {

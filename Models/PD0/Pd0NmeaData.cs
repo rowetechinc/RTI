@@ -33,6 +33,8 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/12/2014      RC          3.4.8      Initial coding
+ * 11/20/2018      RC          3.4.11     Fixed the ID in the constructor.
+ *                                        Initialized the string list of NMEA data.
  * 
  * 
  * 
@@ -280,7 +282,7 @@ namespace RTI
         public Pd0NmeaData()
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.NmeaData)
         {
-
+            NmeaStrings = new List<string>();
         }
 
         /// <summary>
@@ -289,10 +291,13 @@ namespace RTI
         /// <param name="data">PD0 Binary data.</param>
         /// <param name="offset">Offset in the binary data.</param>
         public Pd0NmeaData(byte[] data, ushort offset)
-            : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.BottomTrack)
+            : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.NmeaData)
         {
             // Initialize and decode the data
             this.Offset = offset;
+
+            NmeaStrings = new List<string>();
+
             Decode(data);
         }
 
@@ -303,6 +308,8 @@ namespace RTI
         public Pd0NmeaData(DataSet.NmeaDataSet nmea)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.NmeaData)
         {
+            NmeaStrings = new List<string>();
+
             DecodeRtiEnsemble(nmea);
         }
         /// <summary>

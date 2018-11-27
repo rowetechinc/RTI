@@ -416,8 +416,15 @@ namespace RTI
             // Add 2 for the offset added to the header
             NumberOfBytes += GetDataTypeSize(dataType) + 2;
 
-            // Add the offset to the list
-            DataTypes.Add(dataType.ID.Type, dataType);
+            if (!DataTypes.ContainsKey(dataType.ID.Type))
+            {
+                // Add the offset to the list
+                DataTypes.Add(dataType.ID.Type, dataType);
+            }
+            else
+            {
+                Debug.WriteLine("Data type already exist." + dataType.ID.Type);
+            }
         }
 
         /// <summary>

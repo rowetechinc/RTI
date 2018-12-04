@@ -205,15 +205,21 @@ namespace RTI
                             // Bottom Track velocity is INVERTED from Profile velocity so the values MUST BE ADDED TOGETHER to remove ship speed
                             // So add bottom track velocity to remove velocity
                             // Check if the velocity is good before removing the ship speed
-                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != PD0.BAD_VELOCITY && 
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f)
                             {
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] += btEast;
                             }
-                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f)
                             {
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] += btNorth;
                             }
-                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f)
                             {
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] += btVertical;
                             }
@@ -374,15 +380,21 @@ namespace RTI
                             // Bottom Track velocity is INVERTED from Profile velocity so the values MUST BE ADDED TOGETHER to remove ship speed
                             // So add bottom track velocity to remove velocity
                             // Check if the velocity is good before removing the ship speed
-                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f)
                             {
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] += btX;
                             }
-                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f)
                             {
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] += btY;
                             }
-                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f)
                             {
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] += btZ;
                             }
@@ -537,15 +549,21 @@ namespace RTI
                             // Bottom Track velocity is INVERTED from Profile velocity so the values MUST BE ADDED TOGETHER to remove ship speed
                             // So add bottom track velocity to remove velocity
                             // Check if the velocity is good before removing the ship speed
-                            if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f)
                             {
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] += btTrans;
                             }
-                            if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f)
                             {
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] += btLong;
                             }
-                            if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY)
+                            if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != PD0.BAD_VELOCITY &&
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f)
                             {
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] += btNorm;
                             }

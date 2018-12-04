@@ -41,6 +41,7 @@
  * 08/25/2017      RC          3.4.2      Added Water Mass trasnformation.  Added Ship trasnformation to Bottom Track.
  * 09/26/2017      RC          3.4.4      Get the correct Beam Angle based off the subsystem code.
  * 09/28/2017      RC          3.4.4      Know the original data format to know which beam matrix to use to transform the data.
+ * 12/03/2018      RC          3.4.11     Set the velocity bad in ProfileTransform() and BottomTrackTransform() if not good data.
  * 
  */
 
@@ -457,6 +458,7 @@ namespace RTI
                     else
                     {
                         badBeam = beam;                                                                         // Store the last bad beam
+                        tempVel[beam] = DataSet.Ensemble.BAD_VELOCITY;                                          // Set velocity BAD
                     }
                 }
 
@@ -882,6 +884,7 @@ namespace RTI
                 else
                 {
                     badBeam = beam;                                                                         // Store the last bad beam
+                    tempVel[beam] = DataSet.Ensemble.BAD_VELOCITY;                                          // Set the velocity BAD
                 }
             }
 

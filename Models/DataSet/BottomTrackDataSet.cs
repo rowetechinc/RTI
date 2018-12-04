@@ -1015,6 +1015,7 @@ namespace RTI
                 // Ensure at least a 4 beam system
                 if (NumBeams >= DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
                 {
+                    // Check for RTB Bad Velocity
                     if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
@@ -1023,11 +1024,44 @@ namespace RTI
 
                         return false;
                     }
+
+                    // Check for PD0 Bad Velocity
+                    if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == PD0.BAD_VELOCITY ||
+                        BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == PD0.BAD_VELOCITY ||
+                        BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == PD0.BAD_VELOCITY ||
+                        BeamVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == PD0.BAD_VELOCITY)
+                    {
+
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == 0.0f &&
+                        BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == 0.0f &&
+                        BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == 0.0f &&
+                        BeamVelocity[DataSet.Ensemble.BEAM_Q_INDEX] == 0.0f)
+                    {
+
+                        return false;
+                    }
                 }
                 // Vertical beam
                 else
                 {
+                    // Check for RTB Bad Velocity
                     if (NumBeams >= 1 && BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Check for PD0 Bad Velocity
+                    if (NumBeams >= 1 && BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == PD0.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (NumBeams >= 1 && BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == 0.0f)
                     {
                         return false;
                     }
@@ -1055,9 +1089,28 @@ namespace RTI
                         return false;
                     }
 
+                    // Check for RTB Bad Velocity
                     if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+
+                        return false;
+                    }
+
+                    // Check for PD0 Bad Velocity
+                    if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == PD0.BAD_VELOCITY ||
+                        EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == PD0.BAD_VELOCITY ||
+                        EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == PD0.BAD_VELOCITY)
+                    {
+
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == 0.0f &&
+                        EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX] == 0.0f &&
+                        EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] == 0.0f)
                     {
 
                         return false;
@@ -1066,11 +1119,24 @@ namespace RTI
                 // If a vertical beam
                 else
                 {
+                    // Check for RTB Bad Velocity
                     if (NumBeams >= 1 && EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                     {
                         return false;
                     }
-                    
+
+                    // Check for PD0 Bad Velocity
+                    if (NumBeams >= 1 && EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == PD0.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (NumBeams >= 1 && EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == 0.0f)
+                    {
+                        return false;
+                    }
+
                 }
 
                 return true;
@@ -1094,17 +1160,47 @@ namespace RTI
                         return false;
                     }
 
+                    // Check for RTB Bad Velocity
                     if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                     {
                         return false;
                     }
+
+                    // Check for PD0 Bad Velocity
+                    if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == PD0.BAD_VELOCITY ||
+                        InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == PD0.BAD_VELOCITY ||
+                        InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == PD0.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == 0.0f &&
+                        InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == 0.0f &&
+                        InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == 0.0f)
+                    {
+
+                        return false;
+                    }
                 }
                 else
                 {
-                    // Vertical beam only
+                    // Vertical beam only for RTB Bad Velocity
                     if (NumBeams >= 1 && InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Vertical beam only for PD0 Bad Velocity
+                    if (NumBeams >= 1 && InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == PD0.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Vertical beam only for 0.0 Velocity
+                    if (NumBeams >= 1 && InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == 0.0f)
                     {
                         return false;
                     }
@@ -1131,17 +1227,47 @@ namespace RTI
                         return false;
                     }
 
+                    // Check for RTB Bad Velocity
                     if (ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         ShipVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == DataSet.Ensemble.BAD_VELOCITY ||
                         ShipVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
                     {
                         return false;
                     }
+
+                    // Check for PD0 Bad Velocity
+                    if (ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == PD0.BAD_VELOCITY ||
+                        ShipVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == PD0.BAD_VELOCITY ||
+                        ShipVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == PD0.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == 0.0f &&
+                        ShipVelocity[DataSet.Ensemble.BEAM_Y_INDEX] == 0.0f &&
+                        ShipVelocity[DataSet.Ensemble.BEAM_Z_INDEX] == 0.0f)
+                    {
+
+                        return false;
+                    }
                 }
                 else
                 {
-                    // Vertical beam only
+                    // Vertical beam only for RTB Bad Velocity
                     if (NumBeams >= 1 && ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == DataSet.Ensemble.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Vertical beam only for PD0 Bad Velocity
+                    if (NumBeams >= 1 && ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == PD0.BAD_VELOCITY)
+                    {
+                        return false;
+                    }
+
+                    // Vertical beam only for 0.0 Velocity
+                    if (NumBeams >= 1 && ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == 0.0f)
                     {
                         return false;
                     }

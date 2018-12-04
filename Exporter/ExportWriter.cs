@@ -88,11 +88,11 @@ namespace RTI
             }
             if (isPd0Selected)
             {
-                pd0.Open(folderPath, filename + ".pd0", options);
+                pd0.Open(folderPath, filename + "_pd0" + ".pd0", options);
             }
             if (isEnsSelected)
             {
-                ensEx.Open(folderPath, filename + ".ens", options);
+                ensEx.Open(folderPath, filename + "_rtb" + ".ens", options);
             }
         }
 

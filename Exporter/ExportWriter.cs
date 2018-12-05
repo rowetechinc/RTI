@@ -64,7 +64,7 @@ namespace RTI
         /// <param name="isMatlabMatrixSelected">MATLAB matrix selected.</param>
         /// <param name="isPd0Selected">PD0 exporter selected.</param>
         /// <param name="isEnsSelected">ENS exporter selected.</param>
-        public void Open(string folderPath, string filename, ExportOptions options, bool isCsvSelected, bool IsMatlabSelected, bool isMatlabMatrixSelected, bool isPd0Selected, bool isEnsSelected)
+        public void Open(string folderPath, string filename, ExportOptions options, bool isCsvSelected, bool isMatlabSelected, bool isMatlabMatrixSelected, bool isPd0Selected, bool isEnsSelected)
         {            
             // Open all the exporters that are selected
             // The filename is name without the extension
@@ -78,7 +78,7 @@ namespace RTI
             {
                 csv.Open(folderPath, filename + ".csv", options);
             }
-            if (IsMatlabSelected)
+            if (isMatlabSelected)
             {
                 matlab.Open(folderPath, filename, options);
             }

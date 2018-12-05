@@ -396,7 +396,6 @@ namespace RTI
         /// <summary>
         /// Clone the options.
         /// </summary>
-        /// <param name="options">Options to clone.</param>
         /// <returns>Cloned options.</returns>
         public ExportOptions Clone()
         {

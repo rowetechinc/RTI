@@ -7,6 +7,7 @@ RTI-3.4.11
  * In Pd0NmeaData, initialized the string list of NMEA data.
  - In Pd0ExporterWriter, removed the bin selection.
  * In Transform, set the velocity bad in ProfileTransform() and BottomTrackTransform() if not good data.
+ - In MatlabMatrixExporter,  added Range of First Bin and Bin Size to ENS data.
 
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 

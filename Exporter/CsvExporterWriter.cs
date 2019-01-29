@@ -127,6 +127,7 @@ namespace RTI
             {
                 _writer.Close();
                 _writer.Dispose();
+                _writer = null;
             }
 
             return _options;

@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 06/23/2018      RC          3.4.7      Initial coding
  * 09/14/2018      RC          3.4.10     Check if the data exist before trying to write it. 
+ * 01/28/2019      RC          3.4.11     Added Range of First Bin and Bin Size to ENS data.
  * 
  * 
  * 
@@ -935,6 +936,16 @@ namespace RTI
             public float Status { get; set; }
 
             /// <summary>
+            /// Blank.  Range of first bin. In Meters.
+            /// </summary>
+            public float RangeFirstBin { get; set; }
+
+            /// <summary>
+            /// Bin size in meter.
+            /// </summary>
+            public float BinSize { get; set; }
+
+            /// <summary>
             /// Intiialize the data.
             /// </summary>
             /// <param name="ensemble"></param>
@@ -963,6 +974,9 @@ namespace RTI
                     Heading = ensemble.AncillaryData.Heading;
                     Pitch = ensemble.AncillaryData.Pitch;
                     Roll = ensemble.AncillaryData.Roll;
+
+                    RangeFirstBin = ensemble.AncillaryData.FirstBinRange;
+                    BinSize = ensemble.AncillaryData.BinSize;
                 }
             }
         }
@@ -975,7 +989,7 @@ namespace RTI
             /// <summary>
             /// Number of elements in the data set.
             /// </summary>
-            public const int NUM_ELEMENTS = 13;
+            public const int NUM_ELEMENTS = 15;
 
             /// <summary>
             /// ENS data encoded.
@@ -1190,7 +1204,23 @@ namespace RTI
                 return new VelDataEncode();
             }
 
-            int numElements = velData.First().EarthEast.Length;     // Number of bins
+            // Number of bins
+            int numElements = 0;
+            if(velData.First().EarthEast != null)
+            {
+                numElements = velData.First().EarthEast.Length;
+            }
+            else if(velData.First().Beam0 != null)
+            {
+                numElements = velData.First().Beam0.Length;
+            }
+
+            // Verify data is found
+            if (numElements < 0)
+            {
+                return new VelDataEncode();
+            }
+
             int elementsMultiplier = velData.Count;                 // Number of ensembles
             VelDataEncode encodedData = new VelDataEncode();
 
@@ -1565,6 +1595,12 @@ namespace RTI
 
                 index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 12);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].Status), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 13);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].RangeFirstBin), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
+
+                index = DataSet.BaseDataSet.GetBinBeamIndexStatic(EnsDataEncode.ENS_NAMELENGTH, numElements, ens, 14);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(ensData[ens].BinSize), 0, encodedData.EnsData, index, DataSet.Ensemble.BYTES_IN_FLOAT);
 
             }
 

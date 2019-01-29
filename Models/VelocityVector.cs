@@ -41,6 +41,7 @@
  * 07/29/2014      RC          2.23.0     Added Instrument Velocity Vectors.  Made specific Earth and Instrument functions.
  * 04/16/2015      RC          3.0.4      Check how many beams in GenerateInstrumentVectors().
  * 09/05/2017      RC          3.4.3      Added GenerateShipVectors().
+ * 01/29/2019      RC          3.4.11     In GenerateShipVectors, fixed bug with getting the size.
  * 
  */
 
@@ -410,7 +411,7 @@ namespace RTI
                 {
                     // Create array to store all the vectors
                     ensemble.ShipVelocityData.IsVelocityVectorAvail = true;
-                    ensemble.ShipVelocityData.VelocityVectors = new VelocityVector[ensemble.InstrumentVelocityData.NumElements];
+                    ensemble.ShipVelocityData.VelocityVectors = new VelocityVector[ensemble.ShipVelocityData.NumElements];
 
                     // Create a vector for each bin
                     for (int bin = 0; bin < ensemble.ShipVelocityData.NumElements; bin++)

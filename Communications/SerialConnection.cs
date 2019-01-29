@@ -79,6 +79,7 @@
  * 08/05/2014      RC          2.23.0     Force the thread to shutdown by sending an abort in Dispose().
  * 05/29/2015      RC          3.0.5      Moved displaying of the data to move the bottom.
  * 10/27/2015      RC          3.2.1      In Connect(), reinitialize the Read thread when reconnecting.
+ * 12/12/2018      RC          3.4.11     Made the Wait States for Advanced BREAK doubles in SendAdvancedBreak().
  * 
  */
 
@@ -648,7 +649,7 @@ namespace RTI
         /// <param name="waitStates">Number of wait states to wait.</param>
         /// <param name="stateChangeWaitStates">Number of wait states after done with BREAK.</param>
         /// <param name="softBreak">Flag if try soft BREAK if hardware BREAK fails.</param>
-        public void SendAdvancedBreak(int waitStates = 5, int stateChangeWaitStates = 4, bool softBreak = true)
+        public void SendAdvancedBreak(double waitStates = 5.0, double stateChangeWaitStates = 4.0, bool softBreak = true)
         {
             try
             {
@@ -662,13 +663,13 @@ namespace RTI
 
                     // Wait for the state to change
                     // and leave on a bit of time
-                    System.Threading.Thread.Sleep(WAIT_STATE * waitStates);
+                    System.Threading.Thread.Sleep((int)Math.Round(WAIT_STATE * waitStates));
 
                     // Change state back
                     _serialPort.BreakState = false;
 
                     // Wait for state to change back
-                    System.Threading.Thread.Sleep(WAIT_STATE * stateChangeWaitStates);
+                    System.Threading.Thread.Sleep((int)Math.Round(WAIT_STATE * stateChangeWaitStates));
 
                     if (softBreak)
                     { 

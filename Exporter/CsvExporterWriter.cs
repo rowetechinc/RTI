@@ -42,6 +42,7 @@
  * 10/27/2015      RC          3.2.1      Fixed bug in EncodeCSV() if bin sizes were different between configurations.
  * 10/28/2015      RC          3.2.1      Fixed missing Range Tracking Header.  Fixed Correlation header.  Fixed Bottom Track extra ,.  Made it handle any number of beams in BT.
  * 09/28/2016      RC          3.3.2      Added export of Velocity Vectors in CSV.
+ * 03/13/2019      RC          3.4.11     Fixed bug with exporting CSV data with a 3 beam system.
  * 
  */
 
@@ -706,10 +707,16 @@ namespace RTI
                         sb.Append(string.Format("{0},", ensemble.BeamVelocityData.BeamVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
+                    // 3 Beam System
+                    if(ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");                                                 // Handle the missing beam
+                    }
+
                     // If a vertical beam
                     if (ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,,");                                               // Handle the missing 3 beams
                     }
                 }
             }
@@ -769,6 +776,12 @@ namespace RTI
                     for (int beam = 0; beam < ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(1); beam++)
                     {
                         sb.Append(string.Format("{0},", ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
+                    }
+
+                    // 3 Beam System
+                    if (ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");                                                 // Handle the missing beam
                     }
 
                     // If a vertical beam
@@ -831,6 +844,12 @@ namespace RTI
                     for (int beam = 0; beam < ensemble.EarthVelocityData.EarthVelocityData.GetLength(1); beam++)
                     {
                         sb.Append(string.Format("{0},", ensemble.EarthVelocityData.EarthVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
+                    }
+
+                    // 3 Beam System
+                    if (ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");                                                 // Handle the missing beam
                     }
 
                     // If a vertical beam
@@ -955,6 +974,12 @@ namespace RTI
                         sb.Append(string.Format("{0},", ensemble.CorrelationData.CorrelationData[bin, beam].ToString(new CultureInfo("en-US"))));
                     }
 
+                    // 3 Beam System
+                    if (ensemble.CorrelationData.CorrelationData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");
+                    }
+
                     // If a vertical beam
                     if (ensemble.CorrelationData.CorrelationData.GetLength(1) <= 1)
                     {
@@ -1015,6 +1040,12 @@ namespace RTI
                     for (int beam = 0; beam < ensemble.AmplitudeData.AmplitudeData.GetLength(1); beam++)
                     {
                         sb.Append(string.Format("{0},", ensemble.AmplitudeData.AmplitudeData[bin, beam].ToString(new CultureInfo("en-US"))));
+                    }
+
+                    // 3 Beam System
+                    if (ensemble.AmplitudeData.AmplitudeData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");
                     }
 
                     // If a vertical beam
@@ -1175,6 +1206,12 @@ namespace RTI
                         sb.Append(string.Format("{0},", ensemble.GoodBeamData.GoodBeamData[bin, beam]));
                     }
 
+                    // 3 Beam System
+                    if (ensemble.GoodBeamData.GoodBeamData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");
+                    }
+
                     // If a vertical beam
                     if (ensemble.GoodBeamData.GoodBeamData.GetLength(1) <= 1)
                     {
@@ -1235,6 +1272,12 @@ namespace RTI
                     for (int beam = 0; beam < ensemble.GoodEarthData.GoodEarthData.GetLength(1); beam++)
                     {
                         sb.Append(string.Format("{0},", ensemble.GoodEarthData.GoodEarthData[bin, beam]));
+                    }
+
+                    // 3 Beam System
+                    if (ensemble.GoodEarthData.GoodEarthData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");
                     }
 
                     // If a vertical beam

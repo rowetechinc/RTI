@@ -10,6 +10,7 @@ RTI-3.4.11
  - Made the Wait States for Advanced BREAK doubles in SendAdvancedBreak().
  - In MatlabMatrixExporter,  added Range of First Bin and Bin Size to ENS data.
  * In VelocityVector, in GenerateShipVectors, fixed bug with getting the size.
+ * In CsvExporterWriter, fixed bug with exporting CSV data with a 3 beam system.
  * In Pd0BottomTrack and BottomTrackDataSet, remove screening the correlation data for PD0.
  * In FilePlayback, if the ensemble number is the same, then use datetime ticks for the key for the ensemble.
 

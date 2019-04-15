@@ -45,6 +45,7 @@
  * 05/11/2016      RC          3.3.2      Changed from list to dictionary to prevent playback being out of order.
  * 03/28/2017      RC          3.4.2      Fixed bug in FindRtbEnsembles() when ensemble numbers are duplicated.
  * 09/29/2017      RC          3.4.4      Pass the data format the data was recorded.
+ * 04/15/2019      RC          3.4.11     If the ensemble number is the same, then use datetime ticks for the key for the ensemble.
  * 
  */
 
@@ -584,8 +585,16 @@ namespace RTI
                 }
                 else
                 {
-                    // Create a new ensemble number key based off the last ensemble and add 1
-                    _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble, origDataFormat));
+                    if (!_ensembleDict.ContainsKey(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber))
+                    {
+                        // Create a new ensemble number key based off the last ensemble and add 1
+                        _ensembleDict.Add(_lastEnsNum + ensemble.EnsembleData.EnsembleNumber, new EnsembleData(ensembleRaw, ensemble, origDataFormat));
+                    }
+                    else
+                    {
+                        // Generate the key from the datetime
+                        _ensembleDict.Add((int)DateTime.Now.Ticks, new EnsembleData(ensembleRaw, ensemble, origDataFormat));
+                    }
                 }
             }
 

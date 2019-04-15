@@ -71,6 +71,7 @@
  * 09/13/2017      RC          3.4.3      Fixed bug if no beams in data.
  * 02/07/2018      RC          3.4.5      Added IsUpwardFacing() to know the direction the ADCP is facing.
  * 11/27/2018      RC          3.4.11     Fixed the sign for PD0 data in DecodePd0Ensemble() Earth Velocity.
+ * 03/06/2019      RC          3.4.11     Remove screening the correlation data for PD0.
  * 
  */
 
@@ -1612,44 +1613,16 @@ namespace RTI
 
                 // Correlation
                 // PD0 Beam 2, RTI Beam 0
-                if (bt.BtCorrelationMagnitudeBeam2 < PD0.BAD_CORRELATION)
-                {
-                    Correlation[0] = bt.BtCorrelationMagnitudeBeam2 / 255.0f;
-                }
-                else
-                {
-                    Correlation[0] = DataSet.Ensemble.BAD_VELOCITY;
-                }
+                Correlation[0] = bt.BtCorrelationMagnitudeBeam2 / 255.0f;
 
                 // PD0 Beam 3, RTI Beam 1
-                if (bt.BtCorrelationMagnitudeBeam3 < PD0.BAD_CORRELATION)
-                {
-                    Correlation[1] = bt.BtCorrelationMagnitudeBeam3 / 255.0f;
-                }
-                else
-                {
-                    Correlation[1] = DataSet.Ensemble.BAD_VELOCITY;
-                }
+                Correlation[1] = bt.BtCorrelationMagnitudeBeam3 / 255.0f;
 
                 // PD0 Beam 1, RTI Beam 2
-                if (bt.BtCorrelationMagnitudeBeam1 < PD0.BAD_CORRELATION)
-                {
-                    Correlation[2] = bt.BtCorrelationMagnitudeBeam1 / 255.0f;
-                }
-                else
-                {
-                    Correlation[2] = DataSet.Ensemble.BAD_VELOCITY;
-                }
+                Correlation[2] = bt.BtCorrelationMagnitudeBeam1 / 255.0f;
 
                 // PD0 Beam 0, RTI Beam 3
-                if (bt.BtCorrelationMagnitudeBeam0 < PD0.BAD_CORRELATION)
-                {
-                    Correlation[3] = bt.BtCorrelationMagnitudeBeam0 / 255.0f;
-                }
-                else
-                {
-                    Correlation[3] = DataSet.Ensemble.BAD_VELOCITY;
-                }
+                Correlation[3] = bt.BtCorrelationMagnitudeBeam0 / 255.0f;
 
                 #endregion
 

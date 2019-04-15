@@ -35,6 +35,7 @@
  * 03/03/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
  * 08/14/2018      RC          3.4.9      Inverted the sign of the Bottom Track Velocity when converting from RTI to PD0.
+ * 03/06/2019      RC          3.4.11     Remove screening the correlation data for PD0.
  * 
  * 
  */
@@ -1406,37 +1407,14 @@ namespace RTI
                 // beam order 3,2,0,1
 
                 BtCorrelationMagnitudeBeam0 = (byte)(Math.Round(bt.Correlation[3] * 255.0f));
-                if (BtCorrelationMagnitudeBeam0 > PD0.BAD_CORRELATION)
-                {
-                    BtCorrelationMagnitudeBeam0 = PD0.BAD_CORRELATION;
-                }
-
                 BtCorrelationMagnitudeBeam1 = (byte)(Math.Round(bt.Correlation[2] * 255.0f));
-                if (BtCorrelationMagnitudeBeam1 > PD0.BAD_CORRELATION)
-                {
-                    BtCorrelationMagnitudeBeam1 = PD0.BAD_CORRELATION;
-                }
-
                 BtCorrelationMagnitudeBeam2 = (byte)(Math.Round(bt.Correlation[0] * 255.0f));
-                if (BtCorrelationMagnitudeBeam2 > PD0.BAD_CORRELATION)
-                {
-                    BtCorrelationMagnitudeBeam2 = PD0.BAD_CORRELATION;
-                }
-
                 BtCorrelationMagnitudeBeam3 = (byte)(Math.Round(bt.Correlation[1] * 255.0f));
-                if (BtCorrelationMagnitudeBeam3 > PD0.BAD_CORRELATION)
-                {
-                    BtCorrelationMagnitudeBeam3 = PD0.BAD_CORRELATION;
-                }
             }
             // Vertical Beam
             else if (bt.NumBeams == 1)
             {
                 BtCorrelationMagnitudeBeam0 = (byte)(Math.Round(bt.Correlation[0] * 255.0f));
-                if (BtCorrelationMagnitudeBeam0 > PD0.BAD_CORRELATION)
-                {
-                    BtCorrelationMagnitudeBeam0 = PD0.BAD_CORRELATION;
-                }
             }
 
             #endregion

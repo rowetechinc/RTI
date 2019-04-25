@@ -38,6 +38,7 @@
  * 04/03/2015      RC          3.0.3      Fixed bug with Encode().
  * 09/25/2015      RC          3.1.1      Added missing variables.
  * 10/07/2015      RC          3.2.0      Check for missing JSON values in ReadJson.
+ * 04/22/2019      RC          3.4.11     Updated all values to Rev AK User guide.
  * 
  */
 
@@ -62,7 +63,7 @@ namespace RTI
             /// <summary>
             /// Number of elements in this data set.
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = 21;
+            public const int NUM_DATA_ELEMENTS = 23;
 
             #endregion
 
@@ -135,24 +136,24 @@ namespace RTI
             public float Voltage { get; set; }
 
             /// <summary>
-            /// Transmit Voltage.
+            /// Transmitter Boost Positive Voltage.
             /// </summary>
-            public float XmtVoltage { get; set; }
+            public float TransmitterBoostPositiveVoltage { get; set; }
 
             /// <summary>
-            /// BT Broadband.
+            /// BT Broadband Mode.
             /// </summary>
             public float BtBroadband { get; set; }
 
             /// <summary>
-            /// BT Lag Length.
+            /// BT Lag Length in meters.
             /// </summary>
             public float BtLagLength { get; set; }
 
             /// <summary>
-            /// BT Narrowband.
+            /// BT Narrowband Switch Depth in meters.
             /// </summary>
-            public float BtNarrowband { get; set; }
+            public float BtNarrowbandSwitchDepth { get; set; }
 
             /// <summary>
             /// Bottom Track Beam MUX.
@@ -160,7 +161,7 @@ namespace RTI
             public float BtBeamMux { get; set; }
 
             /// <summary>
-            /// WP Broadband.
+            /// WP Broadband Mode.
             /// </summary>
             public float WpBroadband { get; set; }
 
@@ -170,14 +171,24 @@ namespace RTI
             public float WpLagLength { get; set; }
 
             /// <summary>
-            /// WP Bandwidth.
+            /// WP Transmit Bandwidth.
             /// </summary>
             public float WpTransmitBandwidth { get; set; }
 
             /// <summary>
-            /// WP Bandwidth.
+            /// WP Receive Bandwidth.
             /// </summary>
             public float WpReceiveBandwidth { get; set; }
+
+            /// <summary>
+            /// Transmitter Boost Negative Voltage.
+            /// </summary>
+            public float TransmitterBoostNegativeVoltage { get; set; }
+
+            /// <summary>
+            /// Water Profile Beam MUX.
+            /// </summary>
+            public float WpBeamMux { get; set; }
 
             #endregion
 
@@ -268,11 +279,24 @@ namespace RTI
             /// <param name="WpRepeatN">WP Repeat N.</param>
             /// <param name="WpLagSamples">WP Lag Samples.</param>
             /// <param name="Voltage">Voltage</param>
+            /// <param name="BtBeamMux">Bottom Track Beam Mux</param>
+            /// <param name="BtBroadband">BT Broadband Mode</param>
+            /// <param name="BtLagLength">BT Lag Length in meters</param>
+            /// <param name="BtNarrowbandSwitchDepth">BT Narrowband switch depth.</param>
+            /// <param name="TransmitterBoostNegativeVoltage">Transmitter Boost Negative voltage.</param>
+            /// <param name="TransmitterBoostPositiveVoltage">Transmitter Boost Positive voltage.</param>
+            /// <param name="WpBeamMux">WP Beam Mux</param>
+            /// <param name="WpBroadband">WP Broadband mode.</param>
+            /// <param name="WpLagLength">WP Lag length in meters.</param>
+            /// <param name="WpReceiveBandwidth">WP Receive Bandwidth</param>
+            /// <param name="WpTransmitBandwidth">WP Transmit bandwidth.</param>
             [JsonConstructor]
             public SystemSetupDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
                 float BtSamplesPerSecond, float BtSystemFreqHz, float BtCPCE, float BtNCE, float BtRepeatN, 
                 float WpSamplesPerSecond, float WpSystemFreqHz, float WpCPCE, float WpNCE, float WpRepeatN, float WpLagSamples,
-                float Voltage)
+                float Voltage, float TransmitterBoostPositiveVoltage, float BtBroadband, float BtLagLength, float BtNarrowbandSwitchDepth,
+                float BtBeamMux, float WpBroadband, float WpLagLength, float WpTransmitBandwidth, float WpReceiveBandwidth, 
+                float TransmitterBoostNegativeVoltage, float WpBeamMux)
                 : base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
                 this.BtSamplesPerSecond = BtSamplesPerSecond;
@@ -289,6 +313,19 @@ namespace RTI
                 this.WpLagSamples = WpLagSamples;
 
                 this.Voltage = Voltage;
+
+                this.TransmitterBoostPositiveVoltage = TransmitterBoostPositiveVoltage;
+                this.BtBroadband = BtBroadband;
+                this.BtLagLength = BtLagLength;
+                this.BtNarrowbandSwitchDepth = BtNarrowbandSwitchDepth;
+                this.BtBeamMux = BtBeamMux;
+                this.WpBroadband = WpBroadband;
+                this.WpLagLength = WpLagLength;
+                this.WpTransmitBandwidth = WpTransmitBandwidth;
+                this.WpReceiveBandwidth = WpReceiveBandwidth;
+
+                this.TransmitterBoostNegativeVoltage = TransmitterBoostNegativeVoltage;
+                this.WpBeamMux = WpBeamMux;
             }
 
             #endregion
@@ -317,6 +354,19 @@ namespace RTI
                 this.WpLagSamples = 0.0f;
 
                 this.Voltage = 0.0f;
+
+                this.TransmitterBoostPositiveVoltage = 0.0f;
+                this.BtBroadband = 0.0f;
+                this.BtLagLength = 0.0f;
+                this.BtNarrowbandSwitchDepth = 0.0f;
+                this.BtBeamMux = 0.0f;
+                this.WpBroadband = 0.0f;
+                this.WpLagLength = 0.0f;
+                this.WpTransmitBandwidth = 0.0f;
+                this.WpReceiveBandwidth = 0.0f;
+
+                this.TransmitterBoostNegativeVoltage = 0.0f;
+                this.WpBeamMux = 0.0f;
             }
 
             #endregion
@@ -371,19 +421,22 @@ namespace RTI
 
                 if (NumElements >= 21)
                 {
-                    XmtVoltage = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
+                    TransmitterBoostPositiveVoltage = MathHelper.ByteArrayToFloat(data, GenerateIndex(12));
                     BtBroadband = MathHelper.ByteArrayToFloat(data, GenerateIndex(13));
                     BtLagLength = MathHelper.ByteArrayToFloat(data, GenerateIndex(14));
-                    BtNarrowband = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
+                    BtNarrowbandSwitchDepth = MathHelper.ByteArrayToFloat(data, GenerateIndex(15));
                     BtBeamMux = MathHelper.ByteArrayToFloat(data, GenerateIndex(16));
                     WpBroadband = MathHelper.ByteArrayToFloat(data, GenerateIndex(17));
                     WpLagLength = MathHelper.ByteArrayToFloat(data, GenerateIndex(18));
                     WpTransmitBandwidth = MathHelper.ByteArrayToFloat(data, GenerateIndex(19));
                     WpReceiveBandwidth = MathHelper.ByteArrayToFloat(data, GenerateIndex(20));
-
                 }
 
-
+                if(NumElements >= 23)
+                {
+                    TransmitterBoostNegativeVoltage = MathHelper.ByteArrayToFloat(data, GenerateIndex(21));
+                    WpBeamMux = MathHelper.ByteArrayToFloat(data, GenerateIndex(22));
+                }
             }
 
             /// <summary>
@@ -415,15 +468,17 @@ namespace RTI
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpLagSamples), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(Voltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(XmtVoltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(TransmitterBoostPositiveVoltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtBroadband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtLagLength), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
-                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtNarrowband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtNarrowbandSwitchDepth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(BtBeamMux), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBroadband), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpLagLength), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpTransmitBandwidth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpReceiveBandwidth), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(TransmitterBoostNegativeVoltage), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                System.Buffer.BlockCopy(MathHelper.FloatToByteArray(WpBeamMux), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
@@ -465,7 +520,20 @@ namespace RTI
                 sb.Append(" WP RepeatN: " + WpRepeatN);
                 sb.Append(" WP LagSamples: " + WpLagSamples);
 
-                sb.Append(" Voltage: " + Voltage);
+                sb.Append(" Input Voltage: " + Voltage);
+
+                sb.Append(" Transmitter Boost Positive Voltage: " + TransmitterBoostPositiveVoltage);
+                sb.Append(" BT mode: " + BtBroadband);
+                sb.Append(" BT Lag Length: " + BtLagLength);
+                sb.Append(" BT Narrowband Switch Depth: " + BtNarrowbandSwitchDepth);
+                sb.Append(" BT Beam MUX: " + BtBeamMux);
+                sb.Append(" WP Mode: " + WpBroadband);
+                sb.Append(" WP Lag Length: " + WpLagLength);
+                sb.Append(" WP Transmit Bandwidth: " + WpTransmitBandwidth);
+                sb.Append(" WP Receive Bandwidth: " + WpReceiveBandwidth);
+
+                sb.Append(" Transmitter Boost Negative Voltage: " + TransmitterBoostNegativeVoltage);
+                sb.Append(" WP Beam MUX: " + WpBeamMux);
 
                 return sb.ToString();
             }
@@ -564,8 +632,8 @@ namespace RTI
                 writer.WriteValue(data.Voltage);
 
                 // XmtVoltage
-                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE);
-                writer.WriteValue(data.XmtVoltage);
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_XMTBSTPOSVOLTAGE);
+                writer.WriteValue(data.TransmitterBoostPositiveVoltage);
 
                 // BtBroadband
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND);
@@ -577,7 +645,7 @@ namespace RTI
 
                 // BtNarrowband
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND);
-                writer.WriteValue(data.BtNarrowband);
+                writer.WriteValue(data.BtNarrowbandSwitchDepth);
 
                 // BtBeamMux
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX);
@@ -591,13 +659,21 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH);
                 writer.WriteValue(data.WpLagLength);
 
-                // WpBandWidth
-                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH);
+                // WpTransmitBandWidth
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPXMTBANDWIDTH);
                 writer.WriteValue(data.WpTransmitBandwidth);
 
-                // WpBandWidth1
-                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1);
+                // WpReceiveBandWidth
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPRCVBANDWIDTH);
                 writer.WriteValue(data.WpReceiveBandwidth);
+
+                // TransmitterBoostNegativeVoltage
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_XMTBSTNEGVOLTAGE);
+                writer.WriteValue(data.TransmitterBoostNegativeVoltage);
+
+                // WpBeamMux
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_SS_WPBEAMMUX);
+                writer.WriteValue(data.WpBeamMux);
 
                 // End the object
                 writer.WriteEndObject();
@@ -628,7 +704,7 @@ namespace RTI
                     int ElementsMultiplier = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_ELEMENTSMULTIPLIER];
 
                     // Create the object
-                    var data = new SystemSetupDataSet(DataSet.Ensemble.DATATYPE_FLOAT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.SystemSetupID);
+                    SystemSetupDataSet data = new SystemSetupDataSet(DataSet.Ensemble.DATATYPE_FLOAT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.SystemSetupID);
 
                     // BT SamplesPerSecond
                     data.BtSamplesPerSecond = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BT_SAMPLESPERSECOND];
@@ -666,10 +742,10 @@ namespace RTI
                     // Voltage
                     data.Voltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE];
 
-                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE] != null)
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTBSTPOSVOLTAGE] != null)
                     {
                         // XmtVoltage
-                        data.XmtVoltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTVOLTAGE];
+                        data.TransmitterBoostPositiveVoltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTBSTPOSVOLTAGE];
                     }
 
                     if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBROADBAND] != null)
@@ -687,7 +763,7 @@ namespace RTI
                     if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND] != null)
                     {
                         // BtNarrowband
-                        data.BtNarrowband = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND];
+                        data.BtNarrowbandSwitchDepth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTNARROWBAND];
                     }
 
                     if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_BTBEAMMUX] != null)
@@ -708,16 +784,28 @@ namespace RTI
                         data.WpLagLength = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPLAGLENGTH];
                     }
 
-                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH] != null)
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPXMTBANDWIDTH] != null)
                     {
-                        // WpBandWidth
-                        data.WpTransmitBandwidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH];
+                        // WpTransmitBandWidth
+                        data.WpTransmitBandwidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPXMTBANDWIDTH];
                     }
 
-                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1] != null)
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPRCVBANDWIDTH] != null)
                     {
-                        // WpBandWidth1
-                        data.WpReceiveBandwidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBANDWIDTH1];
+                        // WpRcvBandWidth
+                        data.WpReceiveBandwidth = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPRCVBANDWIDTH];
+                    }
+
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTBSTNEGVOLTAGE] != null)
+                    {
+                        // TransmitterBoostNegativeVoltage
+                        data.TransmitterBoostNegativeVoltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTBSTNEGVOLTAGE];
+                    }
+
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBEAMMUX] != null)
+                    {
+                        // WpBeamMux
+                        data.WpBeamMux = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WPBEAMMUX];
                     }
 
                     return data;

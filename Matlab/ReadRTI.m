@@ -44,6 +44,7 @@
 % Date         Initials    Version    Comments
 % -----------------------------------------------------------------
 % 05/05/2015   RC          0.0.1      Initial Coding
+% 04/25/2019   RC          0.0.2      Check if all the data is available.
 %
 %
 %
@@ -168,6 +169,11 @@ for x = 1 : numEnsFound
             
             ensStart = index + HDRLEN;                                      % Index to start of ensemble
             ensEnd = index + HDRLEN + payloadSize;							% Index to end of ensemble
+			
+			% Verify all the data is available
+			if length(data) < ensEnd + 3
+                break;
+            end
             
             % Get the checksum, the last 4 bytes after the payload
             % The last 2 bytes should be 0x00

@@ -13,6 +13,7 @@ RTI-3.4.11
  * In CsvExporterWriter, fixed bug with exporting CSV data with a 3 beam system.
  * In Pd0BottomTrack and BottomTrackDataSet, remove screening the correlation data for PD0.
  * In FilePlayback, if the ensemble number is the same, then use datetime ticks for the key for the ensemble.
+ - IN SystemSetupDataSet, updated all values to Rev AK User guide.
 
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 

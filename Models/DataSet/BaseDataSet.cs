@@ -51,6 +51,7 @@
  * 10/31/2014      RC          3.0.2      Added Range Tracking values.
  * 03/09/2015      RC          3.0.3      Added Gage Height.
  * 07/22/2016      RC          3.3.2      Added additional Range Tracking values.
+ * 04/22/2019      RC          3.4.11     Added SystemSetup Boost Pos and Neg Voltage.
  * 
  */
 
@@ -804,54 +805,64 @@ namespace RTI
             public const string JSON_STR_SS_WP_LAGSAMPLES = "WpLagSamples";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for Input Voltage.
             /// </summary>
-            public const string JSON_STR_SS_VOLTAGE = "Voltage";
+            public const string JSON_STR_SS_VOLTAGE = "InputVoltage";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for Transmitter Boost Positive Voltage.
             /// </summary>
-            public const string JSON_STR_SS_XMTVOLTAGE = "XmtVoltage";
+            public const string JSON_STR_SS_XMTBSTPOSVOLTAGE = "XmtBoostPosVoltage";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for BT Broadband Mode.
             /// </summary>
             public const string JSON_STR_SS_BTBROADBAND = "BtBroadband";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for BT Lag Length.
             /// </summary>
             public const string JSON_STR_SS_BTLAGLENGTH = "BtLagLength";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for BT Narrowband Switch Depth.
             /// </summary>
             public const string JSON_STR_SS_BTNARROWBAND = "BtNarrowband";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for Bt Beam Mux.
             /// </summary>
             public const string JSON_STR_SS_BTBEAMMUX = "BtBeamMux";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for Broadband Mode.
             /// </summary>
             public const string JSON_STR_SS_WPBROADBAND = "WpBroadband";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for WP Lag Length.
             /// </summary>
             public const string JSON_STR_SS_WPLAGLENGTH = "WpLagLength";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for Transmit Bandwidth.
             /// </summary>
-            public const string JSON_STR_SS_WPBANDWIDTH = "WpBandWidth";
+            public const string JSON_STR_SS_WPXMTBANDWIDTH = "WpXmtBandWidth";
 
             /// <summary>
-            /// String for Voltage.
+            /// String for Receive Bandwidth.
             /// </summary>
-            public const string JSON_STR_SS_WPBANDWIDTH1 = "WpBandWidth1";
+            public const string JSON_STR_SS_WPRCVBANDWIDTH = "WpRcvBandWidth";
+
+            /// <summary>
+            /// String for Transmitter Boost Negative Voltage.
+            /// </summary>
+            public const string JSON_STR_SS_XMTBSTNEGVOLTAGE = "XmtBoostNegVoltage";
+
+            /// <summary>
+            /// String for WP Beam Mux.
+            /// </summary>
+            public const string JSON_STR_SS_WPBEAMMUX = "WpBeamMux";
 
             #endregion
 

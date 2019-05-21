@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 03/12/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
+ * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams
  * 
  * 
  */
@@ -61,13 +62,6 @@ namespace RTI
         /// MSB for the ID for the PD0 Percent Good data type.
         /// </summary>
         public const byte ID_MSB = 0x04;
-
-        /// <summary>
-        /// Number of bytes in a depth cell.
-        /// 4 Beams per depth cell.
-        /// 1 Bytes per beam.
-        /// </summary>
-        public const int BYTES_PER_DEPTHCELL = 4;
 
         /// <summary>
         /// Number of bytes for the header.
@@ -147,17 +141,23 @@ namespace RTI
         public Pd0PercentGood()
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.PercentGood)
         {
-
+            NumBeams = 4;
+            NumDepthCells = 0;
         }
 
         /// <summary>
         /// Initialize the object.
         /// </summary>
         /// <param name="data">Decode the data.</param>
-        public Pd0PercentGood(byte[] data)
+        /// <param name="numDepthCells">Number of depth cells (bins).</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0PercentGood(byte[] data, int numDepthCells, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.PercentGood)
         {
-            Decode(data);
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Decode(data, numDepthCells, numBeams);
         }
 
         /// <summary>
@@ -165,21 +165,31 @@ namespace RTI
         /// </summary>
         /// <param name="data">Decode the data.</param>
         /// <param name="offset">Offset in the binary data.</param>
-        public Pd0PercentGood(byte[] data, ushort offset)
+        /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0PercentGood(byte[] data, ushort offset, int numDepthCells, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.PercentGood)
         {
             this.Offset = offset;
-            Decode(data);
+
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Decode(data, numDepthCells, numBeams);
         }
 
         /// <summary>
         /// Initialize the object.
         /// </summary>
-        /// <param name="numDepthCells">Number of depth cells.</param>
-        public Pd0PercentGood(int numDepthCells)
+        /// <param name="numDepthCells">Number of depth cells (bins).</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0PercentGood(int numDepthCells, int numBeams=4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.PercentGood)
         {
-            PercentGood = new byte[numDepthCells, 4];
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            PercentGood = new byte[numDepthCells, numBeams];
         }
 
         /// <summary>
@@ -190,6 +200,9 @@ namespace RTI
         public Pd0PercentGood(DataSet.GoodEarthDataSet goodEarth, int pingsPerEnsemble)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.PercentGood)
         {
+            NumDepthCells = goodEarth.NumElements;
+            NumBeams = goodEarth.ElementsMultiplier;
+
             DecodeRtiEnsemble(goodEarth, pingsPerEnsemble);
         }
 
@@ -201,6 +214,9 @@ namespace RTI
         public Pd0PercentGood(DataSet.GoodBeamDataSet goodBeam, int pingsPerEnsemble)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.PercentGood)
         {
+            NumDepthCells = goodBeam.NumElements;
+            NumBeams = goodBeam.ElementsMultiplier;
+
             DecodeRtiEnsemble(goodBeam, pingsPerEnsemble);
         }
 
@@ -213,7 +229,7 @@ namespace RTI
             // Start with the first 2 bytes for the header
             // Then determine how many depth cells exist
             int numBytes = BYTES_PER_HEADER;
-            numBytes += (PercentGood.GetLength(0) * BYTES_PER_DEPTHCELL);
+            numBytes += (PercentGood.GetLength(0) * BytesPerDepthCell());
 
             byte[] data = new byte[numBytes];
 
@@ -226,11 +242,29 @@ namespace RTI
 
             for (int x = 0; x < PercentGood.GetLength(0); x++)
             {
-                // Add the data to the array
-                data[loc++] = PercentGood[x, 0];
-                data[loc++] = PercentGood[x, 1];
-                data[loc++] = PercentGood[x, 2];
-                data[loc++] = PercentGood[x, 3];
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    if (beam == 0)
+                    {
+                        // Add the data to the array
+                        data[loc++] = PercentGood[x, 0];
+                    }
+
+                    if (beam == 1)
+                    {
+                        data[loc++] = PercentGood[x, 1];
+                    }
+
+                    if (beam == 2)
+                    {
+                        data[loc++] = PercentGood[x, 2];
+                    }
+
+                    if (beam == 3)
+                    {
+                        data[loc++] = PercentGood[x, 3];
+                    }
+                }
             }
 
             return data;
@@ -240,26 +274,40 @@ namespace RTI
         /// Decode the given binary PD0 data in the object.
         /// </summary>
         /// <param name="data">Binary PD0 data.</param>
-        public override void Decode(byte[] data)
+        /// <param name="numDepthCells">Number of depth cells (bins).</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public void Decode(byte[] data, int numDepthCells, int numBeams = 4)
         {
             // Remove the first 2 bytes for the header
             // Divide by 8, because there are 8 bytes per depth cell
             // 2 bytes per beam in a depth cell.
             // 4 beams per depth cells
-            int numDepthCells = (int)Math.Round(((double)(data.Length - BYTES_PER_HEADER) / BYTES_PER_DEPTHCELL));
+            //int numDepthCells = (int)Math.Round(((double)(data.Length - BYTES_PER_HEADER) / (1 * numBeams)));
+
+            NumBeams = numBeams;
+            NumDepthCells = numDepthCells;
 
             // Create the array to hold all the depth cells
-            PercentGood = new byte[numDepthCells, PD0.NUM_BEAMS];
+            PercentGood = new byte[numDepthCells, numBeams];
 
             // Start after the header
-            for (int x = 2; x < data.Length; x += BYTES_PER_DEPTHCELL)
-            {
-                int depthCell = (int)Math.Round((double)(x / BYTES_PER_DEPTHCELL));
+            //for (int x = 2; x < data.Length; x += BytesPerDepthCell())
+            //{
+            //int depthCell = (int)Math.Round((double)(x / BytesPerDepthCell()));
 
-                PercentGood[depthCell, 0] = data[x + 0];
-                PercentGood[depthCell, 1] = data[x + 1];
-                PercentGood[depthCell, 2] = data[x + 2];
-                PercentGood[depthCell, 3] = data[x + 3];
+            // Start the index after the first 2 bytes
+            // The first 2 bytes are the ID
+            int x = 2;
+
+            for (int depthCell = 0; depthCell < NumDepthCells; depthCell++)
+            {
+                for (int beam = 0; beam < numBeams; beam++)
+                {
+                    PercentGood[depthCell, beam] = data[x];
+
+                    // Increment the index for the data
+                    x++;
+                }
             }
         }
 
@@ -295,7 +343,7 @@ namespace RTI
             // Start with the first 2 bytes for the header
             // Then determine how many depth cells exist
             int numBytes = BYTES_PER_HEADER;
-            numBytes += (PercentGood.GetLength(0) * BYTES_PER_DEPTHCELL);
+            numBytes += (PercentGood.GetLength(0) * BytesPerDepthCell());
 
             return numBytes;
         }
@@ -305,10 +353,11 @@ namespace RTI
         /// off the number of depth cells.
         /// </summary>
         /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeam">Number of beams.</param>
         /// <returns>Number of byte in a Percent Good Data Type.</returns>
-        public static int GetPercentGoodSize(int numDepthCells)
+        public static int GetPercentGoodSize(int numDepthCells, int numBeam=4)
         {
-            return 2 + (4 * numDepthCells);
+            return 2 + (numBeam * numDepthCells);
         }
 
         #region RTI Ensemble
@@ -322,33 +371,40 @@ namespace RTI
         {
             if (goodEarth.GoodEarthData != null)
             {
-                PercentGood = new byte[goodEarth.GoodEarthData.GetLength(0), PD0.NUM_BEAMS];
+                PercentGood = new byte[goodEarth.GoodEarthData.GetLength(0), NumBeams];
 
                 for (int bin = 0; bin < goodEarth.GoodEarthData.GetLength(0); bin++)
                 {
                     // 4 Beam System
-                    if (goodEarth.GoodEarthData.GetLength(1) >= PD0.NUM_BEAMS)
+                    if (goodEarth.GoodEarthData.GetLength(1) >= 3)
                     {
                         for (int beam = 0; beam < goodEarth.GoodEarthData.GetLength(1); beam++)
                         {
                             // beam order 3,2,0,1; XYZ order 1,0,-2,3, ENU order 0,1,2,3
                             int newBeam = 0;
-                            switch (beam)
+                            if (goodEarth.GoodEarthData.GetLength(1) >= 4)
+                            { 
+                                switch (beam)
+                                {
+                                    case 0:
+                                        newBeam = 3;
+                                        break;
+                                    case 1:
+                                        newBeam = 2;
+                                        break;
+                                    case 2:
+                                        newBeam = 0;
+                                        break;
+                                    case 3:
+                                        newBeam = 1;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else
                             {
-                                case 0:
-                                    newBeam = 3;
-                                    break;
-                                case 1:
-                                    newBeam = 2;
-                                    break;
-                                case 2:
-                                    newBeam = 0;
-                                    break;
-                                case 3:
-                                    newBeam = 1;
-                                    break;
-                                default:
-                                    break;
+                                newBeam = beam;
                             }
 
                             PercentGood[bin, beam] = (byte)(Math.Round((goodEarth.GoodEarthData[bin, newBeam] * 100.0) / pingsPerEnsemble));
@@ -372,12 +428,12 @@ namespace RTI
         {
             if (goodBeam.GoodBeamData != null)
             {
-                PercentGood = new byte[goodBeam.GoodBeamData.GetLength(0), PD0.NUM_BEAMS];
+                PercentGood = new byte[goodBeam.GoodBeamData.GetLength(0), NumBeams];
 
                 for (int bin = 0; bin < goodBeam.GoodBeamData.GetLength(0); bin++)
                 {
                     // 4 Beam System
-                    if (goodBeam.GoodBeamData.GetLength(1) >= PD0.NUM_BEAMS)
+                    if (goodBeam.GoodBeamData.GetLength(1) >= NumBeams)
                     {
                         for (int beam = 0; beam < goodBeam.GoodBeamData.GetLength(1); beam++)
                         {

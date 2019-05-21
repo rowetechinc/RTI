@@ -740,7 +740,10 @@ namespace RTI
                     data.WpLagSamples = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_WP_LAGSAMPLES];
 
                     // Voltage
-                    data.Voltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE];
+                    if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE] != null)
+                    {
+                        data.Voltage = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_SS_VOLTAGE];
+                    }
 
                     if (jsonObject[DataSet.BaseDataSet.JSON_STR_SS_XMTBSTPOSVOLTAGE] != null)
                     {

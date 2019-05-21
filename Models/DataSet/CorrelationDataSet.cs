@@ -247,6 +247,9 @@ namespace RTI
             /// <param name="numRepeats">Number of code repeats from the fixed leader.</param>
             public void DecodePd0Ensemble(Pd0Correlation corr, float numRepeats)
             {
+                NumElements = corr.NumDepthCells;
+                ElementsMultiplier = corr.NumBeams;
+
                 if (corr.Correlation != null)
                 {
                     CorrelationData = new float[corr.Correlation.GetLength(0), corr.Correlation.GetLength(1)];
@@ -257,22 +260,30 @@ namespace RTI
                     {
                         for (int beam = 0; beam < corr.Correlation.GetLength(1); beam++)
                         {
-                            // PD0 beam order 3,2,0,1
+                            // Remap only for 4 beam systems
                             int newBeam = 0;
-                            switch (beam)
+                            if (corr.Correlation.GetLength(1) >= 4)
                             {
-                                case 3:
-                                    newBeam = 0;
-                                    break;
-                                case 2:
-                                    newBeam = 1;
-                                    break;
-                                case 0:
-                                    newBeam = 2;
-                                    break;
-                                case 1:
-                                    newBeam = 3;
-                                    break;
+                                // PD0 beam order 3,2,0,1
+                                switch (beam)
+                                {
+                                    case 3:
+                                        newBeam = 0;
+                                        break;
+                                    case 2:
+                                        newBeam = 1;
+                                        break;
+                                    case 0:
+                                        newBeam = 2;
+                                        break;
+                                    case 1:
+                                        newBeam = 3;
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                newBeam = beam;
                             }
 
                             //CorrelationData[bin, beam] = corr.Correlation[bin, newBeam] / 255.0f;

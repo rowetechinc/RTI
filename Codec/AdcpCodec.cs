@@ -42,6 +42,7 @@
  * 09/28/2017      RC          3.4.4      Pass the original data format when the data is sent based off the codec used.
  * 03/12/2018      RC          3.4.5      Fixed Data Complete event handler settings.
  * 06/15/2018      RC          3.4.7      Add VelocityVector to ensemble.
+ * 05/21/2019      RC          3.4.11     In FindCompleteEnsembles(), generate a Subsystem Config so the subsystems configurations are seperate.
  * 
  */
 
@@ -130,6 +131,11 @@ namespace RTI
         /// </summary>
         private PD4_5Codec _pd4_5Codec;
 
+        /// <summary>
+        /// PD0 Subsystem generator.
+        /// </summary>
+        private Pd0SubsystemGen _pd0SubsystemGen;
+
         #region Decode Counters
 
         /// <summary>
@@ -172,6 +178,9 @@ namespace RTI
             _pd0Counter = 0;
             _pd6_13Counter = 0;
             _pd4_5Counter = 0;
+
+            //PD0 Subsystem Generator
+            _pd0SubsystemGen = new Pd0SubsystemGen();
 
             // Binary Codecs
             _binaryCodec = new AdcpBinaryCodecNew();
@@ -613,6 +622,13 @@ namespace RTI
             // Convert to a RTI ensemble
             DataSet.Ensemble rtiEns = new DataSet.Ensemble(ensemble);
             DataSet.VelocityVectorHelper.CreateVelocityVector(ref rtiEns);
+
+            // Generate a subsystem so that multiple configurations can be seprated
+            // PD0 does not contain the CEPO index or CEPO Configuraiton Index
+            if(rtiEns.IsEnsembleAvail)
+            {
+                rtiEns.EnsembleData.SubsystemConfig = _pd0SubsystemGen.GenSubsystem(rtiEns);
+            }
 
             if (ProcessDataEvent != null)
             {

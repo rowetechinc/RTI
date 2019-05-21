@@ -963,7 +963,7 @@ namespace RTI
         /// Decode the binary data to the Fixed Leader.
         /// </summary>
         /// <param name="data">PD0 Binary Fixed Leader data type.</param>
-        public override void Decode(byte[] data)
+        public void Decode(byte[] data)
         {
             CpuFirmwareVersion = data[2];                                                   // CPU Firmware Version
             CpuFirmwareRevision = data[3];                                                  // CPU Firmware Revision

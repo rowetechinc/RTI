@@ -1029,7 +1029,7 @@ namespace RTI
         /// Decode the binary data to the a Variable Leader.
         /// </summary>
         /// <param name="data">Data to decode.</param>
-        public override void Decode(byte[] data)
+        public void Decode(byte[] data)
         {
             EnsembleNumber = MathHelper.LsbMsbUShort(data[2], data[3]);              // Ensemble Number
             RtcYear = data[4];                                                      // RTC Year

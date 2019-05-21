@@ -281,6 +281,9 @@ namespace RTI
             /// <param name="vel">PD0 Velocity.</param>
             public void DecodePd0Ensemble(Pd0Velocity vel)
             {
+                NumElements = vel.NumDepthCells;
+                ElementsMultiplier = vel.NumBeams;
+
                 if (vel.Velocities != null)
                 {
                     EarthVelocityData = new float[vel.Velocities.GetLength(0), vel.Velocities.GetLength(1)];

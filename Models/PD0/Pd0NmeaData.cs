@@ -358,7 +358,7 @@ namespace RTI
         /// Decode the given binary PD0 data in the object.
         /// </summary>
         /// <param name="data">Binary PD0 data.</param>
-        public override void Decode(byte[] data)
+        public void Decode(byte[] data)
         {
             // Message size is without the header
             // Or it is bytes data[4] and data[5].

@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 03/12/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
+ * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams
  * 
  * 
  */
@@ -61,13 +62,6 @@ namespace RTI
         /// MSB for the ID for the PD0 Velocity data type.
         /// </summary>
         public const byte ID_MSB = 0x01;
-
-        /// <summary>
-        /// Number of bytes in a depth cell.
-        /// 4 Beams per depth cell.
-        /// 2 Bytes per beam.
-        /// </summary>
-        public const int BYTES_PER_DEPTHCELL = 8;
 
         /// <summary>
         /// Number of bytes for the header.
@@ -118,17 +112,23 @@ namespace RTI
         public Pd0Velocity()
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
-
+            NumBeams = 4;
+            NumDepthCells = 0;
         }
 
         /// <summary>
         /// Initialize the data type.
         /// </summary>
         /// <param name="data">Binary data to decode.</param>
-        public Pd0Velocity(byte[] data)
+        /// <param name="numDepthCells">Number of depth cells (bins).</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0Velocity(byte[] data, int numDepthCells, int numBeams=4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
-            Decode(data);
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Decode(data, numDepthCells, numBeams);
         }
 
         /// <summary>
@@ -136,22 +136,32 @@ namespace RTI
         /// </summary>
         /// <param name="data">Binary data to decode.</param>
         /// <param name="offset">Offset in the binary data.</param>
-        public Pd0Velocity(byte[] data, ushort offset)
+        /// <param name="numDepthCells">Number of depth cells (bins).</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0Velocity(byte[] data, ushort offset, int numDepthCells, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
             this.Offset = offset;
-            Decode(data);
+
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Decode(data, numDepthCells, numBeams);
         }
 
         /// <summary>
         /// Initialize the data type.
         /// </summary>
         /// <param name="numDepthCells">Number of depth cells.</param>
-        public Pd0Velocity(int numDepthCells)
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0Velocity(int numDepthCells, int numBeams=4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
             // Create the array to hold all the depth cells
-            Velocities = new short[numDepthCells, 4];
+            Velocities = new short[numDepthCells, numBeams];
         }
 
         /// <summary>
@@ -161,6 +171,9 @@ namespace RTI
         public Pd0Velocity(DataSet.BeamVelocityDataSet beamVelocity)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
+            NumDepthCells = beamVelocity.NumElements;
+            NumBeams = beamVelocity.ElementsMultiplier;
+
             // Decode Beam Velocity
             DecodeRtiEnsemble(beamVelocity);
         }
@@ -172,6 +185,9 @@ namespace RTI
         public Pd0Velocity(DataSet.InstrumentVelocityDataSet instrumentVelocity)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
+            NumDepthCells = instrumentVelocity.NumElements;
+            NumBeams = instrumentVelocity.ElementsMultiplier;
+
             // Decode Beam Velocity
             DecodeRtiEnsemble(instrumentVelocity);
         }
@@ -183,6 +199,9 @@ namespace RTI
         public Pd0Velocity(DataSet.EarthVelocityDataSet earthVelocity)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Velocity)
         {
+            NumDepthCells = earthVelocity.NumElements;
+            NumBeams = earthVelocity.ElementsMultiplier;
+
             // Decode Beam Velocity
             DecodeRtiEnsemble(earthVelocity);
         }
@@ -196,7 +215,7 @@ namespace RTI
             // Start with the first 2 bytes for the header
             // Then determine how many depth cells exist
             int numBytes = BYTES_PER_HEADER;
-            numBytes += (Velocities.GetLength(0) * BYTES_PER_DEPTHCELL);
+            numBytes += (Velocities.GetLength(0) * BytesPerDepthCell());
 
             byte[] data = new byte[numBytes];
 
@@ -209,31 +228,52 @@ namespace RTI
 
             for (int x = 0; x < Velocities.GetLength(0); x++)
             {
-                // Beam 0
-                byte b0Lsb, b0Msb;
-                MathHelper.LsbMsbShort(Velocities[x, 0], out b0Lsb, out b0Msb);
-                
-                // Beam 1
-                byte b1Lsb, b1Msb;
-                MathHelper.LsbMsbShort(Velocities[x, 1], out b1Lsb, out b1Msb);
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    if (beam == 0)
+                    {
+                        // Beam 0
+                        byte b0Lsb, b0Msb;
+                        MathHelper.LsbMsbShort(Velocities[x, 0], out b0Lsb, out b0Msb);
 
-                // Beam 2
-                byte b2Lsb, b2Msb;
-                MathHelper.LsbMsbShort(Velocities[x, 2], out b2Lsb, out b2Msb);
+                        // Add the data to the array
+                        data[loc++] = b0Lsb;
+                        data[loc++] = b0Msb;
+                    }
 
-                // Beam 3
-                byte b3Lsb, b3Msb;
-                MathHelper.LsbMsbShort(Velocities[x, 3], out b3Lsb, out b3Msb);
+                    if (beam == 1)
+                    {
+                        // Beam 1
+                        byte b1Lsb, b1Msb;
+                        MathHelper.LsbMsbShort(Velocities[x, 1], out b1Lsb, out b1Msb);
 
-                // Add the data to the array
-                data[loc++] = b0Lsb;
-                data[loc++] = b0Msb;
-                data[loc++] = b1Lsb;
-                data[loc++] = b1Msb;
-                data[loc++] = b2Lsb;
-                data[loc++] = b2Msb;
-                data[loc++] = b3Lsb;
-                data[loc++] = b3Msb;
+                        // Add the data to the array
+                        data[loc++] = b1Lsb;
+                        data[loc++] = b1Msb;
+                    }
+
+                    if (beam == 2)
+                    {
+                        // Beam 2
+                        byte b2Lsb, b2Msb;
+                        MathHelper.LsbMsbShort(Velocities[x, 2], out b2Lsb, out b2Msb);
+
+                        // Add the data to the array
+                        data[loc++] = b2Lsb;
+                        data[loc++] = b2Msb;
+                    }
+
+                    if (beam == 3)
+                    {
+                        // Beam 3
+                        byte b3Lsb, b3Msb;
+                        MathHelper.LsbMsbShort(Velocities[x, 3], out b3Lsb, out b3Msb);
+
+                        // Add the data to the array
+                        data[loc++] = b3Lsb;
+                        data[loc++] = b3Msb;
+                    }
+                }
             }
 
             return data;
@@ -243,26 +283,35 @@ namespace RTI
         /// Decode the given binary PD0 data in the object.
         /// </summary>
         /// <param name="data">Binary PD0 data.</param>
-        public override void Decode(byte[] data)
+        /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public void Decode(byte[] data, int numDepthCells, int numBeams=4)
         {
             // Remove the first 2 bytes for the header
             // Divide by 8, because there are 8 bytes per depth cell
             // 2 bytes per beam in a depth cell.
             // 4 beams per depth cells
-            int numDepthCells = (int)Math.Round(((double)(data.Length - BYTES_PER_HEADER) / BYTES_PER_DEPTHCELL));
+            //int numDepthCells = (int)Math.Round(((double)(data.Length - BYTES_PER_HEADER) / BYTES_PER_DEPTHCELL));
+
+            NumBeams = numBeams;
+            NumDepthCells = numDepthCells;
 
             // Create the array to hold all the depth cells
-            Velocities = new short[numDepthCells, 4];
+            Velocities = new short[numDepthCells, numBeams];
 
-            // Start after the header
-            for (int x = 2; x < data.Length; x += BYTES_PER_DEPTHCELL)
+            // Start the index after the first 2 bytes
+            // The first 2 bytes are the ID
+            int x = 2;
+
+            for (int depthCell = 0; depthCell < NumDepthCells; depthCell++)
             {
-                int depthCell = (int)Math.Round((double)(x / BYTES_PER_DEPTHCELL));
+                for (int beam = 0; beam < numBeams; beam++)
+                {
+                    Velocities[depthCell, beam] = MathHelper.LsbMsbShort(data[x], data[x + 1]);
 
-                Velocities[depthCell, 0] = MathHelper.LsbMsbShort(data[x + 0], data[x + 1]);
-                Velocities[depthCell, 1] = MathHelper.LsbMsbShort(data[x + 2], data[x + 3]);
-                Velocities[depthCell, 2] = MathHelper.LsbMsbShort(data[x + 4], data[x + 5]);
-                Velocities[depthCell, 3] = MathHelper.LsbMsbShort(data[x + 6], data[x + 7]);
+                    // Increment the index in the data
+                    x += 2;
+                }
             }
         }
 
@@ -298,7 +347,7 @@ namespace RTI
             // Start with the first 2 bytes for the header
             // Then determine how many depth cells exist
             int numBytes = BYTES_PER_HEADER;
-            numBytes += (Velocities.GetLength(0) * BYTES_PER_DEPTHCELL);
+            numBytes += (Velocities.GetLength(0) * (2 * NumBeams));
 
             return numBytes;
         }
@@ -308,10 +357,11 @@ namespace RTI
         /// off the number of depth cells.
         /// </summary>
         /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
         /// <returns>Number of byte in a Velocity Data Type.</returns>
-        public static int GetVelocitySize(int numDepthCells)
+        public static int GetVelocitySize(int numDepthCells, int numBeams = 4)
         {
-            return 2 + (4 * 2 * numDepthCells);
+            return 2 + (numBeams * 2 * numDepthCells);
         }
 
         #region RTI Ensemble
@@ -324,12 +374,12 @@ namespace RTI
         {
             if (vel.BeamVelocityData != null)
             {
-                Velocities = new short[vel.BeamVelocityData.GetLength(0), PD0.NUM_BEAMS];
+                Velocities = new short[vel.BeamVelocityData.GetLength(0), NumBeams];
 
                 for (int bin = 0; bin < vel.BeamVelocityData.GetLength(0); bin++)
                 {
                     // 4 Beam System
-                    if (vel.BeamVelocityData.GetLength(1) >= PD0.NUM_BEAMS)
+                    if (vel.BeamVelocityData.GetLength(1) >= NumBeams)
                     {
                         for (int beam = 0; beam < vel.BeamVelocityData.GetLength(1); beam++)
                         {
@@ -391,12 +441,12 @@ namespace RTI
         {
             if (vel.EarthVelocityData != null)
             {
-                Velocities = new short[vel.EarthVelocityData.GetLength(0), PD0.NUM_BEAMS];
+                Velocities = new short[vel.EarthVelocityData.GetLength(0), NumBeams];
 
                 for (int bin = 0; bin < vel.EarthVelocityData.GetLength(0); bin++)
                 {
                     // 4 Beam System
-                    if (vel.EarthVelocityData.GetLength(1) >= PD0.NUM_BEAMS)
+                    if (vel.EarthVelocityData.GetLength(1) >= NumBeams)
                     {
                         for (int beam = 0; beam < vel.EarthVelocityData.GetLength(1); beam++)
                         {
@@ -439,12 +489,12 @@ namespace RTI
         {
             if (vel.InstrumentVelocityData != null)
             {
-                Velocities = new short[vel.InstrumentVelocityData.GetLength(0), PD0.NUM_BEAMS];
+                Velocities = new short[vel.InstrumentVelocityData.GetLength(0), NumBeams];
 
                 for (int bin = 0; bin < vel.InstrumentVelocityData.GetLength(0); bin++)
                 {
                     // 4 Beam System
-                    if (vel.InstrumentVelocityData.GetLength(1) >= PD0.NUM_BEAMS)
+                    if (vel.InstrumentVelocityData.GetLength(1) >= NumBeams)
                     {
                         for (int beam = 0; beam < vel.InstrumentVelocityData.GetLength(1); beam++)
                         {

@@ -55,6 +55,11 @@ namespace RTI
         #region Variable
 
         /// <summary>
+        ///  Setup logger
+        /// </summary>
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
         /// LSB for the ID for the PD0 data type.
         /// </summary>
         public const byte ID_LSB = 0x7F;
@@ -98,6 +103,17 @@ namespace RTI
             get
             {
                 return GetFixedLeader().NumberOfCells;
+            }
+        }
+
+        /// <summary>
+        /// Number of beams in the ensemble.
+        /// </summary>
+        public int NumberOfBeams
+        {
+            get
+            {
+                return GetFixedLeader().NumberOfBeams;
             }
         }
 
@@ -219,186 +235,195 @@ namespace RTI
         /// Decode the given data into an object.
         /// </summary>
         /// <param name="data">Data to decode.</param>
-        public override void Decode(byte[] data)
+        /// <param name="numDepthCells">NOT USED.</param>
+        /// <param name="numBeams">NOT USED</param>
+        public void Decode(byte[] data, int numDepthCells=0, int numBeams=4)
         {
-            if (data.Length > HEADER_MIN_BYTE)
+            try
             {
-                // Ensure the correct data type is given
-                if (data[0] == ID_LSB && data[1] == ID_MSB)
+                if (data.Length > HEADER_MIN_BYTE)
                 {
-                    // Number of bytes
-                    NumberOfBytes = MathHelper.LsbMsbInt(data[2], data[3]);
-
-                    //DataTypes.Clear();                                  // Clear anything currently stored
-                    int numDT = data[5];                                // Number of Data types
-                    int dtOffset = HEADER_MIN_BYTE;                  // Start of the offsets
-                    RTI.PD0.CoordinateTransforms xform = RTI.PD0.CoordinateTransforms.Coord_Earth;
-
-                    // Determine the size of each data type.
-                    // This will start at the end of the header
-                    //int prevOffset = dtOffset + (numDT * SHORT_NUM_BYTE);            
-
-                    // Collect each offset
-                    for (int x = 0; x < numDT; x++)
+                    // Ensure the correct data type is given
+                    if (data[0] == ID_LSB && data[1] == ID_MSB)
                     {
-                        // Get the offset and add it to the list
-                        byte lsb = data[dtOffset];
-                        byte msb = data[dtOffset + 1];
-                        ushort offset = MathHelper.LsbMsbUShort(lsb, msb);
+                        // Number of bytes
+                        NumberOfBytes = MathHelper.LsbMsbInt(data[2], data[3]);
 
-                        if (data.Length > offset)
+                        //DataTypes.Clear();                                  // Clear anything currently stored
+                        int numDT = data[5];                                // Number of Data types
+                        int dtOffset = HEADER_MIN_BYTE;                  // Start of the offsets
+                        RTI.PD0.CoordinateTransforms xform = RTI.PD0.CoordinateTransforms.Coord_Earth;
+
+                        // Determine the size of each data type.
+                        // This will start at the end of the header
+                        //int prevOffset = dtOffset + (numDT * SHORT_NUM_BYTE);            
+
+                        // Collect each offset
+                        for (int x = 0; x < numDT; x++)
                         {
-                            // Determine the data type
-                            byte lsbID = data[offset];
-                            byte msbID = data[offset + 1];
-                            Pd0ID id = Pd0ID.GetType(lsbID, msbID);
+                            // Get the offset and add it to the list
+                            byte lsb = data[dtOffset];
+                            byte msb = data[dtOffset + 1];
+                            ushort offset = MathHelper.LsbMsbUShort(lsb, msb);
 
-                            // Set the XFORM
-                            
-
-                            // Create and add the data type to the ensemble
-                            switch(id.Type)
+                            if (data.Length > offset)
                             {
-                                case Pd0ID.Pd0Types.FixedLeader:
-                                    // Copy the buffer
-                                    byte[] flBuffer = new byte[Pd0FixedLeader.DATATYPE_SIZE];
-                                    Buffer.BlockCopy(data, offset, flBuffer, 0, flBuffer.Length);
+                                // Determine the data type
+                                byte lsbID = data[offset];
+                                byte msbID = data[offset + 1];
+                                Pd0ID id = Pd0ID.GetType(lsbID, msbID);
 
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.FixedLeader))
-                                    {
-                                        GetFixedLeader().Decode(flBuffer);
-                                        xform = GetFixedLeader().GetCoordinateTransform();
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0FixedLeader(flBuffer, offset));
-                                    }
+                                // Set the XFORM
 
-                                    break;
-                                case Pd0ID.Pd0Types.VariableLeader:
-                                    // Copy the buffer
-                                    byte[] vlBuffer = new byte[Pd0VariableLeader.DATATYPE_SIZE];
-                                    Buffer.BlockCopy(data, offset, vlBuffer, 0, vlBuffer.Length);
 
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.VariableLeader))
-                                    {
-                                        GetVariableLeader().Decode(vlBuffer);   
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0VariableLeader(vlBuffer, offset));
-                                    }
+                                // Create and add the data type to the ensemble
+                                switch (id.Type)
+                                {
+                                    case Pd0ID.Pd0Types.FixedLeader:
+                                        // Copy the buffer
+                                        byte[] flBuffer = new byte[Pd0FixedLeader.DATATYPE_SIZE];
+                                        Buffer.BlockCopy(data, offset, flBuffer, 0, flBuffer.Length);
 
-                                    break;
-                                case Pd0ID.Pd0Types.BottomTrack:
-                                    // Copy the buffer
-                                    byte[] btBuffer = new byte[Pd0BottomTrack.DATATYPE_SIZE];
-                                    Buffer.BlockCopy(data, offset, btBuffer, 0, btBuffer.Length);
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.FixedLeader))
+                                        {
+                                            GetFixedLeader().Decode(flBuffer);
+                                            xform = GetFixedLeader().GetCoordinateTransform();
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0FixedLeader(flBuffer, offset));
+                                        }
 
-                                    // Decode the data
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.BottomTrack))
-                                    {
-                                        GetBottomTrack().Decode(btBuffer);
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0BottomTrack(btBuffer, offset));
-                                    }
-                                    break;
-                                case Pd0ID.Pd0Types.Velocity:
-                                    // Copy the buffer
-                                    byte[] velBuffer = new byte[Pd0Velocity.GetVelocitySize(GetFixedLeader().NumberOfCells)];
-                                    Buffer.BlockCopy(data, offset, velBuffer, 0, velBuffer.Length);
+                                        break;
+                                    case Pd0ID.Pd0Types.VariableLeader:
+                                        // Copy the buffer
+                                        byte[] vlBuffer = new byte[Pd0VariableLeader.DATATYPE_SIZE];
+                                        Buffer.BlockCopy(data, offset, vlBuffer, 0, vlBuffer.Length);
 
-                                    // Decode the data
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.Velocity))
-                                    {
-                                        GetVelocity().Decode(velBuffer);
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0Velocity(velBuffer, offset));
-                                    }
-                                    break;
-                                case Pd0ID.Pd0Types.Correlation:
-                                    // Copy the buffer
-                                    byte[] corrBuffer = new byte[Pd0Correlation.GetCorrelationSize(GetFixedLeader().NumberOfCells)];
-                                    Buffer.BlockCopy(data, offset, corrBuffer, 0, corrBuffer.Length);
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.VariableLeader))
+                                        {
+                                            GetVariableLeader().Decode(vlBuffer);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0VariableLeader(vlBuffer, offset));
+                                        }
 
-                                    // Decode the data
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.Correlation))
-                                    {
-                                        GetCorrelation().Decode(corrBuffer);
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0Correlation(corrBuffer, offset));
-                                    }
-                                    break;
-                                case Pd0ID.Pd0Types.EchoIntensity:
-                                    // Copy the buffer
-                                    byte[] eiBuffer = new byte[Pd0EchoIntensity.GetEchoIntensitySize(GetFixedLeader().NumberOfCells)];
-                                    Buffer.BlockCopy(data, offset, eiBuffer, 0, eiBuffer.Length);
+                                        break;
+                                    case Pd0ID.Pd0Types.BottomTrack:
+                                        // Copy the buffer
+                                        byte[] btBuffer = new byte[Pd0BottomTrack.DATATYPE_SIZE];
+                                        Buffer.BlockCopy(data, offset, btBuffer, 0, btBuffer.Length);
 
-                                    // Decode the data
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.EchoIntensity))
-                                    {
-                                        GetEchoIntensity().Decode(eiBuffer);
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0EchoIntensity(eiBuffer, offset));
-                                    }
-                                    break;
-                                case Pd0ID.Pd0Types.PercentGood:
-                                    // Copy the buffer
-                                    byte[] pgBuffer = new byte[Pd0PercentGood.GetPercentGoodSize(GetFixedLeader().NumberOfCells)];
-                                    Buffer.BlockCopy(data, offset, pgBuffer, 0, pgBuffer.Length);
+                                        // Decode the data
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.BottomTrack))
+                                        {
+                                            GetBottomTrack().Decode(btBuffer, GetFixedLeader().NumberOfBeams);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0BottomTrack(btBuffer, offset, GetFixedLeader().NumberOfBeams));
+                                        }
+                                        break;
+                                    case Pd0ID.Pd0Types.Velocity:
+                                        // Copy the buffer
+                                        byte[] velBuffer = new byte[Pd0Velocity.GetVelocitySize(GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams)];
+                                        Buffer.BlockCopy(data, offset, velBuffer, 0, velBuffer.Length);
 
-                                    // Decode the data
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.PercentGood))
-                                    {
-                                        GetPercentGood().Decode(pgBuffer);
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0PercentGood(pgBuffer, offset));
-                                    }
-                                    break;
-                                case Pd0ID.Pd0Types.NmeaData:
+                                        // Decode the data
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.Velocity))
+                                        {
+                                            GetVelocity().Decode(velBuffer, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0Velocity(velBuffer, offset, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams));
+                                        }
+                                        break;
+                                    case Pd0ID.Pd0Types.Correlation:
+                                        // Copy the buffer
+                                        byte[] corrBuffer = new byte[Pd0Correlation.GetCorrelationSize(GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams)];
+                                        Buffer.BlockCopy(data, offset, corrBuffer, 0, corrBuffer.Length);
 
-                                    // Get the Dataset Size
-                                    // Get the first 6 bytes to determine the size
-                                    // Number of bytes to read for NMEA size
-                                    byte[] nmeaSize = new byte[6];
-                                    Buffer.BlockCopy(data, offset, nmeaSize, 0, 6);
-                                    int nmeaDsSize = Pd0NmeaData.GetNmeaDataSize(nmeaSize);
+                                        // Decode the data
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.Correlation))
+                                        {
+                                            GetCorrelation().Decode(corrBuffer, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0Correlation(corrBuffer, offset, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams));
+                                        }
+                                        break;
+                                    case Pd0ID.Pd0Types.EchoIntensity:
+                                        // Copy the buffer
+                                        byte[] eiBuffer = new byte[Pd0EchoIntensity.GetEchoIntensitySize(GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams)];
+                                        Buffer.BlockCopy(data, offset, eiBuffer, 0, eiBuffer.Length);
 
-                                    // Copy the buffer
-                                    byte[] nmeaBuffer = new byte[nmeaDsSize];
-                                    Buffer.BlockCopy(data, offset, nmeaBuffer, 0, nmeaBuffer.Length);
+                                        // Decode the data
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.EchoIntensity))
+                                        {
+                                            GetEchoIntensity().Decode(eiBuffer, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0EchoIntensity(eiBuffer, offset, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams));
+                                        }
+                                        break;
+                                    case Pd0ID.Pd0Types.PercentGood:
+                                        // Copy the buffer
+                                        byte[] pgBuffer = new byte[Pd0PercentGood.GetPercentGoodSize(GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams)];
+                                        Buffer.BlockCopy(data, offset, pgBuffer, 0, pgBuffer.Length);
 
-                                    // Decode the data
-                                    if (DataTypes.ContainsKey(Pd0ID.Pd0Types.NmeaData))
-                                    {
-                                        GetNmeaData().Decode(nmeaBuffer);
-                                    }
-                                    else
-                                    {
-                                        AddDataType(new Pd0NmeaData(nmeaBuffer, offset));
-                                    }
-                                    break;
-                                default:
-                                    Debug.WriteLine(string.Format("Unknown PD0 ID {0}", id.Type));
-                                    break;
+                                        // Decode the data
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.PercentGood))
+                                        {
+                                            GetPercentGood().Decode(pgBuffer, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0PercentGood(pgBuffer, offset, GetFixedLeader().NumberOfCells, GetFixedLeader().NumberOfBeams));
+                                        }
+                                        break;
+                                    case Pd0ID.Pd0Types.NmeaData:
+
+                                        // Get the Dataset Size
+                                        // Get the first 6 bytes to determine the size
+                                        // Number of bytes to read for NMEA size
+                                        byte[] nmeaSize = new byte[6];
+                                        Buffer.BlockCopy(data, offset, nmeaSize, 0, 6);
+                                        int nmeaDsSize = Pd0NmeaData.GetNmeaDataSize(nmeaSize);
+
+                                        // Copy the buffer
+                                        byte[] nmeaBuffer = new byte[nmeaDsSize];
+                                        Buffer.BlockCopy(data, offset, nmeaBuffer, 0, nmeaBuffer.Length);
+
+                                        // Decode the data
+                                        if (DataTypes.ContainsKey(Pd0ID.Pd0Types.NmeaData))
+                                        {
+                                            GetNmeaData().Decode(nmeaBuffer);
+                                        }
+                                        else
+                                        {
+                                            AddDataType(new Pd0NmeaData(nmeaBuffer, offset));
+                                        }
+                                        break;
+                                    default:
+                                        Debug.WriteLine(string.Format("Unknown PD0 ID {0}", id.Type));
+                                        break;
+                                }
                             }
+
+                            // Move the offset to the next value
+                            dtOffset += 2;
                         }
-
-                        // Move the offset to the next value
-                        dtOffset += 2;
                     }
-                }
 
+                }
+            }
+            catch(Exception ex)
+            {
+                log.Error("Error Decoding PD0 Data. ", ex);
             }
         }
 
@@ -518,7 +543,7 @@ namespace RTI
         /// <returns>Number of bytes for the data type.</returns>
         private int GetVelocitySize()
         {
-            return 2 + (SHORT_NUM_BYTE * (NumberOfDepthCells * 4));
+            return 2 + (SHORT_NUM_BYTE * (NumberOfDepthCells * NumberOfBeams));
         }
 
         /// <summary>
@@ -531,7 +556,7 @@ namespace RTI
         /// <returns>Number of bytes for the data type.</returns>
         private int GetCorrEchoPerGdSize()
         {
-            return 2 + (NumberOfDepthCells * 4);
+            return 2 + (NumberOfDepthCells * NumberOfBeams);
         }
 
         /// <summary>

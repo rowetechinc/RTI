@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 02/08/2017      RC          3.4.0      Initial coding
  * 09/29/2017      RC          3.4.4      Added original data format.
+ * 05/21/2019      RC          3.4.11     In FindCompleteEnsembles(), generate a Subsystem Config so the subsystems configurations are seperate.
  * 
  */
 
@@ -56,6 +57,11 @@ namespace RTI
         /// </summary>
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// PD0 Subsystem generator.
+        /// </summary>
+        private Pd0SubsystemGen _pd0SubsystemGen;
+
         #endregion
 
         /// <summary>
@@ -63,7 +69,8 @@ namespace RTI
         /// </summary>
         public AdcpPD0CodecReadFile()
         {
-
+            //PD0 Subsystem Generator
+            _pd0SubsystemGen = new Pd0SubsystemGen();
         }
 
         /// <summary>
@@ -158,17 +165,17 @@ namespace RTI
                 {
                     try
                     {
-                        var buffer = new byte[DataSet.Ensemble.ENSEMBLE_HEADER_LEN]; //Buffer is byte array of size 32. In Binary codec, buffer is byte array of size 32, containing 32 bytes from file
+                        var buffer = new byte[DataSet.Ensemble.ENSEMBLE_HEADER_LEN];                                //Buffer is byte array of size 32. In Binary codec, buffer is byte array of size 32, containing 32 bytes from file
 
                         // Move the start location and read in the header
                         fileStream.Seek(start, SeekOrigin.Begin);
-                        if (fileStream.Read(buffer, 0, buffer.Length) >= DataSet.Ensemble.ENSEMBLE_HEADER_LEN)// Always true, buffer always size of variable, this loads in bytes to Buffer, however
+                        if (fileStream.Read(buffer, 0, buffer.Length) >= DataSet.Ensemble.ENSEMBLE_HEADER_LEN)      // Always true, buffer always size of variable, this loads in bytes to Buffer, however
                         {
                             // Get the payload size
-                            int payloadSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE; //When referencing positions in buffer, uses "start" Which implies it is looking for the position in the actual file. (Error?)
+                            int payloadSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE;   //When referencing positions in buffer, uses "start" Which implies it is looking for the position in the actual file. (Error?)
 
                             // Get the ensemble size
-                            int ensSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE;// Same equation as payload size, but the LsbMsbInt Might change buffer itself?
+                            int ensSize = MathHelper.LsbMsbInt(buffer[2], buffer[3]) + PD0.CHECKSUM_NUM_BYTE;       // Same equation as payload size, but the LsbMsbInt Might change buffer itself?
 
                             // Sanity check
                             if (ensSize > DataSet.Ensemble.ENSEMBLE_HEADER_LEN)
@@ -182,9 +189,6 @@ namespace RTI
                                 ushort calculatedChecksum = PD0.CalculateChecksum(rawEns, ensSize- PD0.CHECKSUM_NUM_BYTE);
                                 ushort ensembleChecksum = MathHelper.LsbMsbUShort(rawEns[rawEns.Length - 2], rawEns[rawEns.Length - 1]);
 
-                                //long calculatedChecksum = DataSet.Ensemble.CalculateEnsembleChecksum(rawEns);
-                                //long ensembleChecksum = DataSet.Ensemble.RetrieveEnsembleChecksum(rawEns);
-
                                 if (calculatedChecksum == ensembleChecksum)
                                 {
                                     //Pd0Codec _pd0Codec = new Pd0Codec();
@@ -192,6 +196,14 @@ namespace RTI
                                     PD0 pd0Ensemble = new PD0(rawEns);
                                     DataSet.Ensemble ens = new DataSet.Ensemble(pd0Ensemble);
                                     ens.FileName = file;
+
+                                    // Generate a subsystem so that multiple configurations can be seprated
+                                    // PD0 does not contain the CEPO index or CEPO Configuraiton Index
+                                    if (ens.IsEnsembleAvail)
+                                    {
+                                        ens.EnsembleData.SubsystemConfig = _pd0SubsystemGen.GenSubsystem(ens);
+                                    }
+
 
                                     // Package the data
                                     var ensPak = new DataSet.EnsemblePackage();

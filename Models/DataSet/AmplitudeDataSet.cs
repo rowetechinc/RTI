@@ -250,6 +250,9 @@ namespace RTI
             /// <param name="ei">PD0 Echo Intensity.</param>
             public void DecodePd0Ensemble(Pd0EchoIntensity ei)
             {
+                NumElements = ei.NumDepthCells;
+                ElementsMultiplier = ei.NumBeams;
+
                 if (ei.EchoIntensity != null)
                 {
                     AmplitudeData = new float[ei.EchoIntensity.GetLength(0), ei.EchoIntensity.GetLength(1)];
@@ -260,22 +263,30 @@ namespace RTI
                     {
                         for (int beam = 0; beam < ei.EchoIntensity.GetLength(1); beam++)
                         {
-                            // PD0 beam order 3,2,0,1
+                            // Remap only for 4 beam systems
                             int newBeam = 0;
-                            switch (beam)
+                            if (ei.EchoIntensity.GetLength(1) >= 4)
                             {
-                                case 3:
-                                    newBeam = 0;
-                                    break;
-                                case 2:
-                                    newBeam = 1;
-                                    break;
-                                case 0:
-                                    newBeam = 2;
-                                    break;
-                                case 1:
-                                    newBeam = 3;
-                                    break;
+                                // PD0 beam order 3,2,0,1
+                                switch (beam)
+                                {
+                                    case 3:
+                                        newBeam = 0;
+                                        break;
+                                    case 2:
+                                        newBeam = 1;
+                                        break;
+                                    case 0:
+                                        newBeam = 2;
+                                        break;
+                                    case 1:
+                                        newBeam = 3;
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                newBeam = beam;
                             }
 
                             AmplitudeData[bin, beam] = ei.EchoIntensity[bin, newBeam] / 2.0f;

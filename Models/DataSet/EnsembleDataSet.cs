@@ -904,7 +904,8 @@ namespace RTI
                 s += "Serial: " + SysSerialNumber.ToString() + "\n";
                 s += "Firmware: " + SysFirmware.ToString() + "\n";
                 s += "SubSystem: " + SysFirmware.GetSubsystemCode(SysSerialNumber).ToString() + "\n";
-                s += "Subsystem Config: " + SubsystemConfig.ToString() + "\n";
+                s += "Subsystem Config CEPO Index: " + SubsystemConfig.CepoIndex.ToString() + "\n";
+                s += "Subsystem Config Index: " + SubsystemConfig.SubsystemConfigIndex.ToString() + "\n";
                 s += EnsDateTime.ToString() + "\n";
                 s += "Bins: " + NumBins + " Beams: " + NumBeams + "\n";
                 s += "Pings Desired: " + DesiredPingCount + " actual: " + ActualPingCount + "\n";
@@ -947,6 +948,10 @@ namespace RTI
                         {
                             ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_30DEG_PISTON_m);
                         }
+                        else if(fl.BeamAngle == 0.0f)
+                        {
+                            ss = new Subsystem(Subsystem.SUB_300KHZ_VERT_PISTON_C);
+                        }
                         else
                         {
                             ss = new Subsystem(Subsystem.SUB_300KHZ_4BEAM_20DEG_PISTON_4);
@@ -957,6 +962,10 @@ namespace RTI
                         {
                             ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_30DEG_PISTON_l);
                         }
+                        else if (fl.BeamAngle == 0.0f)
+                        {
+                            ss = new Subsystem(Subsystem.SUB_600KHZ_VERT_PISTON_B);
+                        }
                         else
                         {
                             ss = new Subsystem(Subsystem.SUB_600KHZ_4BEAM_20DEG_PISTON_3);
@@ -966,6 +975,10 @@ namespace RTI
                         if (fl.BeamAngle == 30.0f)
                         {
                             ss = new Subsystem(Subsystem.SUB_1_2MHZ_4BEAM_30DEG_PISTON_k);
+                        }
+                        else if (fl.BeamAngle == 0.0f)
+                        {
+                            ss = new Subsystem(Subsystem.SUB_1_2MHZ_VERT_PISTON_A);
                         }
                         else
                         {

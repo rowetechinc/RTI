@@ -110,11 +110,6 @@ namespace RTI
         /// </summary>
         public const int CHECKSUM_NUM_BYTE = 2;
 
-        /// <summary>
-        /// Number of beams.
-        /// </summary>
-        public const int NUM_BEAMS = 4;
-
         #endregion
 
         #region Properties
@@ -207,6 +202,38 @@ namespace RTI
         #endregion
 
         #region Data Type Exist
+
+        /// <summary>
+        /// Check if the Fixed Leader Data Type exist.
+        /// </summary>
+        public bool IsFixedLeaderExist
+        {
+            get
+            {
+                if (Header.DataTypes.ContainsKey(Pd0ID.Pd0Types.FixedLeader) && FixedLeader != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if the Variable Leader Data Type exist.
+        /// </summary>
+        public bool IsVariableLeaderExist
+        {
+            get
+            {
+                if (Header.DataTypes.ContainsKey(Pd0ID.Pd0Types.VariableLeader) && VariableLeader != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
 
         /// <summary>
         /// Check if the Bottom Track Data Type exist.
@@ -446,7 +473,7 @@ namespace RTI
                     // Fixed Leader sets number of beams to 0
                     // But Bottom Track contains data, and it is assumed to be a 4 beam system
                     // So this will set the number of beams in the Fixed Leader to 4 beams
-                    if(IsBottomTrackExist && !IsVelocityExist)
+                    if(IsFixedLeaderExist && IsBottomTrackExist && !IsVelocityExist)
                     {
                         FixedLeader.NumberOfBeams = 4;
                     }

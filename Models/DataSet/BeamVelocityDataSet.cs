@@ -247,6 +247,9 @@ namespace RTI
             /// <param name="vel">PD0 Velocity.</param>
             public void DecodePd0Ensemble(Pd0Velocity vel)
             {
+                NumElements = vel.NumDepthCells;
+                ElementsMultiplier = vel.NumBeams;
+
                 if (vel.Velocities != null)
                 {
                     BeamVelocityData = new float[vel.Velocities.GetLength(0), vel.Velocities.GetLength(1)];
@@ -255,24 +258,32 @@ namespace RTI
                     {
                         for (int beam = 0; beam < vel.Velocities.GetLength(1); beam++)
                         {
-                            // PD0 beam order 3,2,0,1; PD0 XYZ order 1,0,-2,3, PD0 ENU order 0,1,2,3
+                            // Remap only for 4 beam systems
                             int newBeam = 0;
-                            switch (beam)
+                            if (vel.Velocities.GetLength(1) >= 4)
                             {
-                                case 3:
-                                    newBeam = 0;
-                                    break;
-                                case 2:
-                                    newBeam = 1;
-                                    break;
-                                case 0:
-                                    newBeam = 2;
-                                    break;
-                                case 1:
-                                    newBeam = 3;
-                                    break;
-                                default:
-                                    break;
+                                // PD0 beam order 3,2,0,1; PD0 XYZ order 1,0,-2,3, PD0 ENU order 0,1,2,3
+                                switch (beam)
+                                {
+                                    case 3:
+                                        newBeam = 0;
+                                        break;
+                                    case 2:
+                                        newBeam = 1;
+                                        break;
+                                    case 0:
+                                        newBeam = 2;
+                                        break;
+                                    case 1:
+                                        newBeam = 3;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                newBeam = beam;
                             }
 
                             // Check for bad velocity

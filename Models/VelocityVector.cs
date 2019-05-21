@@ -120,14 +120,17 @@ namespace RTI
             /// <returns>VelocityVector created.</returns>
             public static bool CreateVelocityVector(ref DataSet.Ensemble ensemble)
             {
-                // Generate the Earth Velocity Vectors
-                GenerateEarthVectors(ref ensemble);
+                if (ensemble != null && ensemble.IsEnsembleAvail && ensemble.EnsembleData.NumBeams >= 3)
+                {
+                    // Generate the Earth Velocity Vectors
+                    GenerateEarthVectors(ref ensemble);
 
-                // Generate the Instrument Velocity Vectors
-                GenerateInstrumentVectors(ref ensemble);
+                    // Generate the Instrument Velocity Vectors
+                    GenerateInstrumentVectors(ref ensemble);
 
-                // Generate the Instrument Velocity Vectors
-                GenerateShipVectors(ref ensemble);
+                    // Generate the Instrument Velocity Vectors
+                    GenerateShipVectors(ref ensemble);
+                }
 
                 return true;
             }

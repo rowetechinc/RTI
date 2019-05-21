@@ -35,6 +35,7 @@
  * 03/12/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
  * 07/24/2014      RC          2.23.0     Fixed bug in DecodeRtiEnsemble() if numCodeRepeats is 0 or N is 0.
+ * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams
  * 
  * 
  * 
@@ -65,13 +66,6 @@ namespace RTI
         public const byte ID_MSB = 0x02;
 
         /// <summary>
-        /// Number of bytes in a depth cell.
-        /// 4 Beams per depth cell.
-        /// 1 Bytes per beam.
-        /// </summary>
-        public const int BYTES_PER_DEPTHCELL = 4;
-
-        /// <summary>
         /// Number of bytes for the header.
         /// The LSB and MSB.
         /// </summary>
@@ -98,17 +92,23 @@ namespace RTI
         public Pd0Correlation()
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Correlation)
         {
-
+            NumDepthCells = 0;
+            NumBeams = 4;
         }
 
         /// <summary>
         /// Initialize the object.
         /// </summary>
         /// <param name="data">Data to decode for the object.</param>
-        public Pd0Correlation(byte[] data)
+        /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0Correlation(byte[] data, int numDepthCells, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Correlation)
         {
-            Decode(data);
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Decode(data, numDepthCells, numBeams);
         }
 
         /// <summary>
@@ -116,20 +116,29 @@ namespace RTI
         /// </summary>
         /// <param name="data">Data to decode for the object.</param>
         /// <param name="offset">Offset in the binary data.</param>
-        public Pd0Correlation(byte[] data, ushort offset)
+        /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0Correlation(byte[] data, ushort offset, int numDepthCells, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Correlation)
         {
             this.Offset = offset;
-            Decode(data);
+
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Decode(data, numDepthCells, numBeams);
         }
 
         /// <summary>
         /// Initialize the object.
         /// </summary>
-        public Pd0Correlation(int numDepthCells)
+        public Pd0Correlation(int numDepthCells, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Correlation)
         {
-            Correlation = new byte[numDepthCells, 4];
+            NumDepthCells = numDepthCells;
+            NumBeams = numBeams;
+
+            Correlation = new byte[numDepthCells, numBeams];
         }
 
         /// <summary>
@@ -140,6 +149,9 @@ namespace RTI
         public Pd0Correlation(DataSet.CorrelationDataSet corr, float numCodeRepeats)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.Correlation)
         {
+            NumDepthCells = corr.NumElements;
+            NumBeams = corr.ElementsMultiplier;
+
             DecodeRtiEnsemble(corr, numCodeRepeats);
         }
 
@@ -152,7 +164,7 @@ namespace RTI
             // Start with the first 2 bytes for the header
             // Then determine how many depth cells exist
             int numBytes = BYTES_PER_HEADER;
-            numBytes += (Correlation.GetLength(0) * BYTES_PER_DEPTHCELL);
+            numBytes += (Correlation.GetLength(0) * BytesPerDepthCell());
 
             byte[] data = new byte[numBytes];
 
@@ -165,11 +177,11 @@ namespace RTI
 
             for (int x = 0; x < Correlation.GetLength(0); x++)
             {
-                // Add the data to the array
-                data[loc++] = Correlation[x, 0];
-                data[loc++] = Correlation[x, 1];
-                data[loc++] = Correlation[x, 2];
-                data[loc++] = Correlation[x, 3];
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    // Add the data to the array
+                    data[loc++] = Correlation[x, beam];
+                }
             }
 
             return data;
@@ -179,26 +191,40 @@ namespace RTI
         /// Decode the given binary PD0 data in the object.
         /// </summary>
         /// <param name="data">Binary PD0 data.</param>
-        public override void Decode(byte[] data)
+        /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public void Decode(byte[] data, int numDepthCells, int numBeams = 4)
         {
             // Remove the first 2 bytes for the header
             // Divide by 8, because there are 8 bytes per depth cell
             // 2 bytes per beam in a depth cell.
             // 4 beams per depth cells
-            int numDepthCells = (int)Math.Round(((double)(data.Length - BYTES_PER_HEADER) / BYTES_PER_DEPTHCELL));
+            //int numDepthCells = (int)Math.Round(((double)(data.Length - BYTES_PER_HEADER) / BytesPerDepthCell()));
+
+            NumBeams = numBeams;
+            NumDepthCells = numDepthCells;
 
             // Create the array to hold all the depth cells
-            Correlation = new byte[numDepthCells, 4];
+            Correlation = new byte[numDepthCells, numBeams];
 
             // Start after the header
-            for (int x = 2; x < data.Length; x += BYTES_PER_DEPTHCELL)
-            {
-                int depthCell = (int)Math.Round((double)(x / BYTES_PER_DEPTHCELL));
+            //for (int x = 2; x < data.Length; x += BytesPerDepthCell())
+            //{
+            //int depthCell = (int)Math.Round((double)(x / BytesPerDepthCell()));
 
-                Correlation[depthCell, 0] = data[x + 0];
-                Correlation[depthCell, 1] = data[x + 1];
-                Correlation[depthCell, 2] = data[x + 2];
-                Correlation[depthCell, 3] = data[x + 3];
+            // Start the index after the first 2 bytes
+            // The first 2 bytes are the ID
+            int x = 2;
+
+            for (int depthCell = 0; depthCell < NumDepthCells; depthCell++)
+            {
+                for (int beam = 0; beam < numBeams; beam++)
+                {
+                    Correlation[depthCell, beam] = data[x];
+
+                    // Increment the index for the data
+                    x++;
+                }
             }
         }
 
@@ -234,7 +260,7 @@ namespace RTI
             // Start with the first 2 bytes for the header
             // Then determine how many depth cells exist
             int numBytes = BYTES_PER_HEADER;
-            numBytes += (Correlation.GetLength(0) * BYTES_PER_DEPTHCELL);
+            numBytes += (Correlation.GetLength(0) * BytesPerDepthCell());
 
             return numBytes;
         }
@@ -244,10 +270,11 @@ namespace RTI
         /// off the number of depth cells.
         /// </summary>
         /// <param name="numDepthCells">Number of depth cells.</param>
+        /// <param name="numBeams">Number of beams.</param>
         /// <returns>Number of byte in a Correlation Data Type.</returns>
-        public static int GetCorrelationSize(int numDepthCells)
+        public static int GetCorrelationSize(int numDepthCells, int numBeams=4)
         {
-            return 2 + (4 * numDepthCells);
+            return 2 + (numBeams * numDepthCells);
         }
 
         #region RTI Ensemble
@@ -262,7 +289,8 @@ namespace RTI
             if (corr.CorrelationData != null)
             {
                 //Correlation = new byte[corr.CorrelationData.GetLength(0), corr.CorrelationData.GetLength(1)];
-                Correlation = new byte[corr.CorrelationData.GetLength(0), PD0.NUM_BEAMS];
+                //Correlation = new byte[corr.CorrelationData.GetLength(0), NumBeams];
+                Correlation = new byte[corr.NumElements, corr.ElementsMultiplier];
 
                 // The value has to be converted from percentage to 0-255
                 // Scale 0%-100% to 0-255
@@ -273,7 +301,7 @@ namespace RTI
                 for (int bin = 0; bin < corr.CorrelationData.GetLength(0); bin++)
                 {
                     // 4 Beam system
-                    if (corr.CorrelationData.GetLength(1) >= PD0.NUM_BEAMS)
+                    if (corr.CorrelationData.GetLength(1) >= NumBeams)
                     {
                         for (int beam = 0; beam < corr.CorrelationData.GetLength(1); beam++)
                         {
@@ -301,7 +329,10 @@ namespace RTI
                             float n = ((numRepeats - 1.0f) / numRepeats);
                                 
                             // Check if n = 0    
-                            if (n == 0) { n = 1.0f; }
+                            if (n == 0)
+                            {
+                                n = 1.0f;
+                            }
                             
                             float val = corr.CorrelationData[bin, newBeam] * 128.0f;
                             Correlation[bin, beam] = (byte)(Math.Round(val / n));

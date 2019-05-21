@@ -680,18 +680,26 @@ namespace RTI
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.BottomTrack)
         {
             Initialize();
+
+            NumDepthCells = 0;
+            NumBeams = 4;
         }
 
         /// <summary>
         /// Initialize and decode the given data.
         /// </summary>
         /// <param name="data">PD0 Binary data.</param>
-        public Pd0BottomTrack(byte[] data)
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0BottomTrack(byte[] data, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.BottomTrack)
         {
             // Initialize and decode the data
             Initialize();
-            Decode(data);
+
+            NumDepthCells = 0;
+            NumBeams = numBeams;
+
+            Decode(data, numBeams);
         }
 
         /// <summary>
@@ -699,13 +707,18 @@ namespace RTI
         /// </summary>
         /// <param name="data">PD0 Binary data.</param>
         /// <param name="offset">Offset in the binary data.</param>
-        public Pd0BottomTrack(byte[] data, ushort offset)
+        /// <param name="numBeams">Number of beams.</param>
+        public Pd0BottomTrack(byte[] data, ushort offset, int numBeams = 4)
             : base(ID_LSB, ID_MSB, Pd0ID.Pd0Types.BottomTrack)
         {
             // Initialize and decode the data
             this.Offset = offset;
             Initialize();
-            Decode(data);
+
+            NumDepthCells = 0;
+            NumBeams = numBeams;
+
+            Decode(data, numBeams);
         }
 
         /// <summary>
@@ -718,6 +731,10 @@ namespace RTI
         {
             // Initialize and decode the data
             Initialize();
+
+            NumDepthCells = 0;
+            NumBeams = (int)bt.NumBeams;
+
             DecodeRtiEnsemble(bt, xform);
         }
 
@@ -1000,69 +1017,265 @@ namespace RTI
         #region Decode
 
         /// <summary>
-        /// Decode the binary data to the a Variable Leader.
+        /// Decode the binary data to the a Bottom Track.
         /// </summary>
         /// <param name="data">Data to decode.</param>
-        public override void Decode(byte[] data)
+        /// <param name="numBeams">Number of beams.</param>
+        public void Decode(byte[] data, int numBeams=4)
         {
-            BtPingsPerEnsemble = MathHelper.LsbMsbUShort(data[2], data[3]);                 // Pings per Ensemble
-            BtDelayBeforeReacquire = MathHelper.LsbMsbUShort(data[4], data[5]);             // Delay Before Reacquire
-            BtCorrMagMin = data[6];                                                         // Corrlation Maginitude Minimum
-            BtEvalAmpMin = data[7];                                                         // Evaluation Amplitude Minimum
-            BtPercentGoodMin = data[8];                                                     // Percent Good Minimum
-            BtMode = data[9];                                                               // Bottom Track Mode
-            BtErrVelMax = MathHelper.LsbMsbUShort(data[10], data[11]);                      // Error Velocity Maximum
-            Reserved13_16 = BitConverter.ToInt32(data, 12);                                 // Reserved
-            BtRangeLsbBeam0 = MathHelper.LsbMsbUShort(data[16], data[17]);                  // Range LSB Beam 0
-            BtRangeLsbBeam1 = MathHelper.LsbMsbUShort(data[18], data[19]);                  // Range LSB Beam 1
-            BtRangeLsbBeam2 = MathHelper.LsbMsbUShort(data[20], data[21]);                  // Range LSB Beam 2
-            BtRangeLsbBeam3 = MathHelper.LsbMsbUShort(data[22], data[23]);                  // Range LSB Beam 3
-            BtVelocityBeam0 = MathHelper.LsbMsbShort(data[24], data[25]);                   // Velocity Beam 0
-            BtVelocityBeam1 = MathHelper.LsbMsbShort(data[26], data[27]);                   // Velocity Beam 1
-            BtVelocityBeam2 = MathHelper.LsbMsbShort(data[28], data[29]);                   // Velocity Beam 2
-            BtVelocityBeam3 = MathHelper.LsbMsbShort(data[30], data[31]);                   // Velocity Beam 3
-            BtCorrelationMagnitudeBeam0 = data[32];                                         // Correlation Magnitude Beam 0
-            BtCorrelationMagnitudeBeam1 = data[33];                                         // Correlation Magnitude Beam 1
-            BtCorrelationMagnitudeBeam2 = data[34];                                         // Correlation Magnitude Beam 2
-            BtCorrelationMagnitudeBeam3 = data[35];                                         // Correlation Magnitude Beam 3
-            BtAmplitudeBeam0 = data[36];                                                    // Amplitude Beam 0
-            BtAmplitudeBeam1 = data[37];                                                    // Amplitude Beam 1
-            BtAmplitudeBeam2 = data[38];                                                    // Amplitude Beam 2
-            BtAmplitudeBeam3 = data[39];                                                    // Amplitude Beam 3
-            BtPercentGoodBeam0 = data[40];                                                  // Percent Good Beam 0
-            BtPercentGoodBeam1 = data[41];                                                  // Percent Good Beam 1
-            BtPercentGoodBeam2 = data[42];                                                  // Percent Good Beam 2
-            BtPercentGoodBeam3 = data[43];                                                  // Percent Good Beam 3
-            BtRefLayerMin = MathHelper.LsbMsbUShort(data[44], data[45]);                    // Reference Layer Minimum
-            BtRefLayerNear = MathHelper.LsbMsbUShort(data[46], data[47]);                   // Reference Layer Near
-            BtRefLayerFar = MathHelper.LsbMsbUShort(data[48], data[49]);                    // Reference Layer Far
-            BtRefLayerVelocityBeam0 = MathHelper.LsbMsbShort(data[50], data[51]);           // Reference Layer Velocity Beam 0    
-            BtRefLayerVelocityBeam1 = MathHelper.LsbMsbShort(data[52], data[53]);           // Reference Layer Velocity Beam 1    
-            BtRefLayerVelocityBeam2 = MathHelper.LsbMsbShort(data[54], data[55]);           // Reference Layer Velocity Beam 2    
-            BtRefLayerVelocityBeam3 = MathHelper.LsbMsbShort(data[56], data[57]);           // Reference Layer Velocity Beam 3    
-            BtRefLayerCorrBeam0 = data[58];                                                 // Reference Layer Correlation Beam 0
-            BtRefLayerCorrBeam1 = data[59];                                                 // Reference Layer Correlation Beam 1
-            BtRefLayerCorrBeam2 = data[60];                                                 // Reference Layer Correlation Beam 2
-            BtRefLayerCorrBeam3 = data[61];                                                 // Reference Layer Correlation Beam 3
-            BtRefLayerEchoIntensityBeam0 = data[62];                                        // Reference Layer Echo Intensity Beam 0
-            BtRefLayerEchoIntensityBeam1 = data[63];                                        // Reference Layer Echo Intensity Beam 1
-            BtRefLayerEchoIntensityBeam2 = data[64];                                        // Reference Layer Echo Intensity Beam 2
-            BtRefLayerEchoIntensityBeam3 = data[65];                                        // Reference Layer Echo Intensity Beam 3
-            BtRefLayerPercentGoodBeam0 = data[66];                                          // Reference Layer Percent Good Beam 0
-            BtRefLayerPercentGoodBeam1 = data[67];                                          // Reference Layer Percent Good Beam 1
-            BtRefLayerPercentGoodBeam2 = data[68];                                          // Reference Layer Percent Good Beam 2
-            BtRefLayerPercentGoodBeam3 = data[69];                                          // Reference Layer Percent Good Beam 3
-            BtMaxDepth = MathHelper.LsbMsbUShort(data[70], data[71]);                       // Max Depth
-            BtRssiBeam0 = data[72] * 0.45f;                                                 // RSSI Beam 0
-            BtRssiBeam1 = data[73] * 0.45f;                                                 // RSSI Beam 1
-            BtRssiBeam2 = data[74] * 0.45f;                                                 // RSSI Beam 2
-            BtRssiBeam3 = data[75] * 0.45f;                                                 // RSSI Beam 3
-            BtGain = data[76];                                                                // Gain
-            BtRangeMsbBeam0 = data[77];                                                     // Range MSB Beam 0
-            BtRangeMsbBeam1 = data[78];                                                     // Range MSB Beam 1
-            BtRangeMsbBeam2 = data[79];                                                     // Range MSB Beam 2
-            BtRangeMsbBeam3 = data[80];                                                     // Range MSB Beam 3
-            Reserved82_85 = BitConverter.ToInt32(data, 81);                                 // Reserved
+            BtPingsPerEnsemble = MathHelper.LsbMsbUShort(data[2], data[3]);                 // Pings per Ensemble [2,3]
+            BtDelayBeforeReacquire = MathHelper.LsbMsbUShort(data[4], data[5]);             // Delay Before Reacquire [4,5]
+            BtCorrMagMin = data[6];                                                         // Corrlation Maginitude Minimum [6]
+            BtEvalAmpMin = data[7];                                                         // Evaluation Amplitude Minimum [7]
+            BtPercentGoodMin = data[8];                                                     // Percent Good Minimum [8]
+            BtMode = data[9];                                                               // Bottom Track Mode [9]
+            BtErrVelMax = MathHelper.LsbMsbUShort(data[10], data[11]);                      // Error Velocity Maximum [10,11]
+            Reserved13_16 = BitConverter.ToInt32(data, 12);                                 // Reserved [12,15]
+
+            int index = 16;
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRangeLsbBeam0 = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                  // Range LSB Beam 0 [16,17]
+                }
+                if (beam == 1)
+                {
+                    BtRangeLsbBeam1 = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                  // Range LSB Beam 1 [18,19]
+                }
+                if (beam == 2)
+                {
+                    BtRangeLsbBeam2 = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                  // Range LSB Beam 2 [20,21]
+                }
+                if (beam == 3)
+                {
+                    BtRangeLsbBeam3 = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                  // Range LSB Beam 3 [22,23]
+                }
+
+                index += 2;
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtVelocityBeam0 = MathHelper.LsbMsbShort(data[index], data[index + 1]);                   // Velocity Beam 0 [24,25]
+                }
+                if (beam == 1)
+                {
+                    BtVelocityBeam1 = MathHelper.LsbMsbShort(data[index], data[index + 1]);                   // Velocity Beam 1 [26,27]
+                }
+                if (beam == 2)
+                {
+                    BtVelocityBeam2 = MathHelper.LsbMsbShort(data[index], data[index + 1]);                   // Velocity Beam 2 [28,29]
+                }
+                if (beam == 3)
+                {
+                    BtVelocityBeam3 = MathHelper.LsbMsbShort(data[index], data[index + 1]);                   // Velocity Beam 3 [30,31]
+                }
+
+                index += 2;
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtCorrelationMagnitudeBeam0 = data[index++];                                         // Correlation Magnitude Beam 0 [32]
+                }
+                if (beam == 1)
+                {
+                    BtCorrelationMagnitudeBeam1 = data[index++];                                         // Correlation Magnitude Beam 1 [33]
+                }
+                if (beam == 2)
+                {
+                    BtCorrelationMagnitudeBeam2 = data[index++];                                         // Correlation Magnitude Beam 2 [34]
+                }
+                if (beam == 3)
+                {
+                    BtCorrelationMagnitudeBeam3 = data[index++];                                         // Correlation Magnitude Beam 3 [35]
+                }
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtAmplitudeBeam0 = data[index++];                                                    // Amplitude Beam 0 [36]
+                }
+                if (beam == 1)
+                {
+                    BtAmplitudeBeam1 = data[index++];                                                    // Amplitude Beam 1 [37]
+                }
+                if (beam == 2)
+                {
+                    BtAmplitudeBeam2 = data[index++];                                                    // Amplitude Beam 2 [38]
+                }
+                if (beam == 3)
+                {
+                    BtAmplitudeBeam3 = data[index++];                                                    // Amplitude Beam 3 [39]
+                }
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtPercentGoodBeam0 = data[index++];                                                  // Percent Good Beam 0 [40]
+                }
+                if (beam == 1)
+                {
+                    BtPercentGoodBeam1 = data[index++];                                                  // Percent Good Beam 1 [41]
+                }
+                if (beam == 2)
+                {
+                    BtPercentGoodBeam2 = data[index++];                                                  // Percent Good Beam 2 [42]
+                }
+                if (beam == 3)
+                {
+                    BtPercentGoodBeam3 = data[index++];                                                  // Percent Good Beam 3 [43]
+                }
+            }
+
+            BtRefLayerMin = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                    // Reference Layer Minimum [44,45]
+            index += 2;
+
+            BtRefLayerNear = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                   // Reference Layer Near [46,47]
+            index += 2;
+
+            BtRefLayerFar = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                    // Reference Layer Far [48,49]
+            index += 2;
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRefLayerVelocityBeam0 = MathHelper.LsbMsbShort(data[index], data[index + 1]);           // Reference Layer Velocity Beam 0     [50,51]
+                }
+                if (beam == 1)
+                {
+                    BtRefLayerVelocityBeam1 = MathHelper.LsbMsbShort(data[index], data[index + 1]);           // Reference Layer Velocity Beam 1     [52,53]
+                }
+                if (beam == 2)
+                {
+                    BtRefLayerVelocityBeam2 = MathHelper.LsbMsbShort(data[index], data[index + 1]);           // Reference Layer Velocity Beam 2    [54,55] 
+                }
+                if (beam == 3)
+                {
+                    BtRefLayerVelocityBeam3 = MathHelper.LsbMsbShort(data[index], data[index + 1]);           // Reference Layer Velocity Beam 3     [56,57]
+                }
+
+                index += 2;
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRefLayerCorrBeam0 = data[index++];                                                 // Reference Layer Correlation Beam 0 [58]
+                }
+                if (beam == 1)
+                {
+                    BtRefLayerCorrBeam1 = data[index++];                                                 // Reference Layer Correlation Beam 1 [59]
+                }
+                if (beam == 2)
+                {
+                    BtRefLayerCorrBeam2 = data[index++];                                                 // Reference Layer Correlation Beam 2 [60]
+                }
+                if (beam == 3)
+                {
+                    BtRefLayerCorrBeam3 = data[index++];                                                 // Reference Layer Correlation Beam 3 [61]
+                }
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRefLayerEchoIntensityBeam0 = data[index++];                                        // Reference Layer Echo Intensity Beam 0 [62]
+                }
+                if (beam == 1)
+                {
+                    BtRefLayerEchoIntensityBeam1 = data[index++];                                        // Reference Layer Echo Intensity Beam 1 [63]
+                }
+                if (beam == 2)
+                {
+                    BtRefLayerEchoIntensityBeam2 = data[index++];                                        // Reference Layer Echo Intensity Beam 2 [64]
+                }
+                if (beam == 3)
+                {
+                    BtRefLayerEchoIntensityBeam3 = data[index++];                                        // Reference Layer Echo Intensity Beam 3 [65]
+                }
+            }
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRefLayerPercentGoodBeam0 = data[index++];                                          // Reference Layer Percent Good Beam 0 [66]
+                }
+                if (beam == 1)
+                {
+                    BtRefLayerPercentGoodBeam1 = data[index++];                                          // Reference Layer Percent Good Beam 1 [67]
+                }
+                if (beam == 2)
+                {
+                    BtRefLayerPercentGoodBeam2 = data[index++];                                          // Reference Layer Percent Good Beam 2 [68]
+                }
+                if (beam == 3)
+                {
+                    BtRefLayerPercentGoodBeam3 = data[index++];                                          // Reference Layer Percent Good Beam 3 [69]
+                }
+            }
+
+
+            BtMaxDepth = MathHelper.LsbMsbUShort(data[index], data[index + 1]);                       // Max Depth [70,71]
+            index += 2;
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRssiBeam0 = data[index++] * 0.45f;                                                 // RSSI Beam 0 [72]
+                }
+                if (beam == 1)
+                {
+                    BtRssiBeam1 = data[index++] * 0.45f;                                                 // RSSI Beam 1 [73]
+                }
+                if (beam == 2)
+                {
+                    BtRssiBeam2 = data[index++] * 0.45f;                                                 // RSSI Beam 2 [74]
+                }
+                if (beam == 3)
+                {
+                    BtRssiBeam3 = data[index++] * 0.45f;                                                 // RSSI Beam 3 [75]
+                }
+            }
+
+
+            BtGain = data[index++];                                                                // Gain [76]
+
+            for (int beam = 0; beam < NumBeams; beam++)
+            {
+                if (beam == 0)
+                {
+                    BtRangeMsbBeam0 = data[index++];                                                     // Range MSB Beam 0 [77]
+                }
+                if (beam == 1)
+                {
+                    BtRangeMsbBeam1 = data[index++];                                                     // Range MSB Beam 1 [78]
+                }
+                if (beam == 2)
+                {
+                    BtRangeMsbBeam2 = data[index++];                                                     // Range MSB Beam 2 [79]
+                }
+                if (beam == 3)
+                {
+                    BtRangeMsbBeam3 = data[index++];                                                     // Range MSB Beam 3 [80]
+                }
+            }
+
+            Reserved82_85 = BitConverter.ToInt32(data, index);                                 // Reserved [81,85]
         }
 
         #endregion
@@ -1126,6 +1339,10 @@ namespace RTI
 
         /// <summary>
         /// Convert the RTI Bottom Track data set to the PD0 Bottom Tarack data type.
+        /// 
+        /// Earth and Instrument Velocity will always have 4 beams worth of data.  No matter if it is a 1, 3 or 4 beam systems.
+        /// The transform will mark the missing values bad.
+        /// 
         /// </summary>
         /// <param name="bt">RTI Bottom Track data set.</param>
         /// <param name="xform">Coordinate Transform.</param>
@@ -1143,10 +1360,10 @@ namespace RTI
             #region Range
 
             // 4 Beam system
-            if (bt.NumBeams >= PD0.NUM_BEAMS)
+            if (bt.NumBeams >= 3)
             {
                 int beam = 0;
-                for (beam = 0; beam < PD0.NUM_BEAMS; beam++)
+                for (beam = 0; beam < NumBeams; beam++)
                 {
                     ushort lsb = 0;
                     byte msb = 0;
@@ -1198,76 +1415,10 @@ namespace RTI
 
             switch(xform)
             {
-                // Earth Coordinate Transform
-                case PD0.CoordinateTransforms.Coord_Earth:
-                    // 4 Beam System
-                    if (bt.NumBeams >= PD0.NUM_BEAMS)
-                    {
-                        // Earth Beam 0
-                        if (bt.EarthVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
-                        {
-                            BtVelocityBeam0 = (short)(Math.Round(bt.EarthVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
-                        }
-                        else
-                        {
-                            // Bad velocity
-                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
-                        }
-
-                        // Earth Beam 1
-                        if (bt.EarthVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
-                        {
-                            BtVelocityBeam1 = (short)(Math.Round(bt.EarthVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
-                        }
-                        else
-                        {
-                            // Bad velocity
-                            BtVelocityBeam1 = PD0.BAD_VELOCITY;
-                        }
-
-                        // Earth Beam 2
-                        if (bt.EarthVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
-                        {
-                            BtVelocityBeam2 = (short)(Math.Round(bt.EarthVelocity[2] * 1000.0f * -1.0f));   // mm/s to m/s 
-                        }
-                        else
-                        {
-                            // Bad velocity
-                            BtVelocityBeam2 = PD0.BAD_VELOCITY;
-                        }
-
-                        // Earth Beam 3
-                        if (bt.EarthVelocity[3] != DataSet.Ensemble.BAD_VELOCITY)
-                        {
-                            BtVelocityBeam3 = (short)(Math.Round(bt.EarthVelocity[3] * 1000.0f * -1.0f));   // mm/s to m/s 
-                        }
-                        else
-                        {
-                            // Bad velocity
-                            BtVelocityBeam3 = PD0.BAD_VELOCITY;
-                        }
-                    }
-                    // Vertical Beam
-                    else if (bt.NumBeams == 1)
-                    {
-                        // Earth Beam 0
-                        if (bt.EarthVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
-                        {
-                            BtVelocityBeam0 = (short)(Math.Round(bt.EarthVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
-                        }
-                        else
-                        {
-                            // Bad velocity
-                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
-                        }
-                    }
-                    
-                    break;
-
                 // Beam Coordinate Transform
                 case PD0.CoordinateTransforms.Coord_Beam:
                     // 4 Beam System
-                    if (bt.NumBeams >= PD0.NUM_BEAMS)
+                    if (bt.NumBeams >= 4)
                     {
                         // Beam Beam 3
                         if (bt.BeamVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
@@ -1313,6 +1464,52 @@ namespace RTI
                             BtVelocityBeam1 = PD0.BAD_VELOCITY;
                         }
                     }
+                    // 3 Beam system
+                    else if (bt.NumBeams == 3)
+                    {
+                        for(int beam = 0; beam < NumBeams; beam++)
+                        {
+                            if (beam == 0)
+                            {
+                                // Beam Beam 0
+                                if (bt.BeamVelocity[beam] != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    BtVelocityBeam0 = (short)(Math.Round(bt.BeamVelocity[beam] * 1000.0f * -1.0f));   // mm/s to m/s 
+                                }
+                                else
+                                {
+                                    // Bad velocity
+                                    BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                                }
+                            }
+                            if (beam == 1)
+                            {
+                                // Beam Beam 1
+                                if (bt.BeamVelocity[beam] != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    BtVelocityBeam1 = (short)(Math.Round(bt.BeamVelocity[beam] * 1000.0f * -1.0f));   // mm/s to m/s 
+                                }
+                                else
+                                {
+                                    // Bad velocity
+                                    BtVelocityBeam1 = PD0.BAD_VELOCITY;
+                                }
+                            }
+                            if (beam == 2)
+                            {
+                                // Beam Beam 2
+                                if (bt.BeamVelocity[beam] != DataSet.Ensemble.BAD_VELOCITY)
+                                {
+                                    BtVelocityBeam2 = (short)(Math.Round(bt.BeamVelocity[beam] * 1000.0f * -1.0f));   // mm/s to m/s 
+                                }
+                                else
+                                {
+                                    // Bad velocity
+                                    BtVelocityBeam2 = PD0.BAD_VELOCITY;
+                                }
+                            }
+                        }
+                    }
                     // Vertical Beam
                     else if (bt.NumBeams == 1)
                     {
@@ -1329,10 +1526,88 @@ namespace RTI
                     }
                     break;
 
+                // Earth Coordinate Transform
+                case PD0.CoordinateTransforms.Coord_Earth:
+                    // 4 Beam System
+                    if (bt.NumBeams >= 3)
+                    {
+                        if (bt.NumBeams > 0)
+                        {
+                            // Earth Beam 0
+                            if (bt.EarthVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam0 = (short)(Math.Round(bt.EarthVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                            }
+                        }
+
+                        if (bt.NumBeams > 1)
+                        {
+                            // Earth Beam 1
+                            if (bt.EarthVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam1 = (short)(Math.Round(bt.EarthVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam1 = PD0.BAD_VELOCITY;
+                            }
+                        }
+
+                        if (bt.NumBeams > 2)
+                        {
+                            // Earth Beam 2
+                            if (bt.EarthVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam2 = (short)(Math.Round(bt.EarthVelocity[2] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam2 = PD0.BAD_VELOCITY;
+                            }
+                        }
+
+                        if (bt.NumBeams > 3)
+                        {
+                            // Earth Beam 3
+                            if (bt.EarthVelocity[3] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam3 = (short)(Math.Round(bt.EarthVelocity[3] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam3 = PD0.BAD_VELOCITY;
+                            }
+                        }
+                    }
+                    // Vertical Beam
+                    else if (bt.NumBeams == 1)
+                    {
+                        // Earth Beam 0
+                        if (bt.EarthVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam0 = (short)(Math.Round(bt.EarthVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                        }
+                    }
+                    
+                    break;
+
                 // Instrument Coordinate Transform
                 case PD0.CoordinateTransforms.Coord_Instrument:
                     // 4 Beam System
-                    if (bt.NumBeams >= PD0.NUM_BEAMS)
+                    if (bt.NumBeams >= 4)
                     {
                         // Instrument Beam 1
                         if (bt.BeamVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
@@ -1378,6 +1653,43 @@ namespace RTI
                             BtVelocityBeam3 = PD0.BAD_VELOCITY;
                         }
                     }
+                    // 4 Beam System
+                    else if (bt.NumBeams >= 3)
+                    {
+                        
+                        // Instrument Beam 0
+                        if (bt.BeamVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam0 = (short)(Math.Round(bt.BeamVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Instrument Beam 1
+                        if (bt.BeamVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam1 = (short)(Math.Round(bt.BeamVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam1 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Instrument Beam -2
+                        if (bt.BeamVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam2 = (short)(Math.Round(bt.BeamVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam2 = PD0.BAD_VELOCITY;
+                        }
+                    }
                     // Vertical Beam
                     else if (bt.NumBeams == 1)
                     {
@@ -1402,7 +1714,7 @@ namespace RTI
             #region Correlation
 
             // 4 Beam System
-            if (bt.NumBeams >= PD0.NUM_BEAMS)
+            if (bt.NumBeams >= 4)
             {
                 // beam order 3,2,0,1
 
@@ -1410,6 +1722,14 @@ namespace RTI
                 BtCorrelationMagnitudeBeam1 = (byte)(Math.Round(bt.Correlation[2] * 255.0f));
                 BtCorrelationMagnitudeBeam2 = (byte)(Math.Round(bt.Correlation[0] * 255.0f));
                 BtCorrelationMagnitudeBeam3 = (byte)(Math.Round(bt.Correlation[1] * 255.0f));
+            }
+            else if (bt.NumBeams >= 3)
+            {
+                // beam order 3,2,0,1
+
+                BtCorrelationMagnitudeBeam0 = (byte)(Math.Round(bt.Correlation[0] * 255.0f));
+                BtCorrelationMagnitudeBeam1 = (byte)(Math.Round(bt.Correlation[1] * 255.0f));
+                BtCorrelationMagnitudeBeam2 = (byte)(Math.Round(bt.Correlation[2] * 255.0f));
             }
             // Vertical Beam
             else if (bt.NumBeams == 1)
@@ -1422,7 +1742,7 @@ namespace RTI
             #region Evaluation Amplitude
 
             // 4 Beam System
-            if (bt.NumBeams >= PD0.NUM_BEAMS)
+            if (bt.NumBeams >= 4)
             {
                 // beam order 3,2,0,1
 
@@ -1450,6 +1770,27 @@ namespace RTI
                     BtAmplitudeBeam3 = PD0.BAD_AMPLITUDE;
                 }
             }
+            // 3 Beam System
+            else if (bt.NumBeams >= 3)
+            {
+                BtAmplitudeBeam0 = (byte)(Math.Round(bt.SNR[0] * 2.0f)); //0.5 counts per dB
+                if (BtAmplitudeBeam0 > PD0.BAD_AMPLITUDE)
+                {
+                    BtAmplitudeBeam0 = PD0.BAD_AMPLITUDE;
+                }
+
+                BtAmplitudeBeam1 = (byte)(Math.Round(bt.SNR[1] * 2.0f)); //0.5 counts per dB
+                if (BtAmplitudeBeam1 > PD0.BAD_AMPLITUDE)
+                {
+                    BtAmplitudeBeam1 = PD0.BAD_AMPLITUDE;
+                }
+
+                BtAmplitudeBeam2 = (byte)(Math.Round(bt.SNR[2] * 2.0f)); //0.5 counts per dB
+                if (BtAmplitudeBeam2 > PD0.BAD_AMPLITUDE)
+                {
+                    BtAmplitudeBeam2 = PD0.BAD_AMPLITUDE;
+                }
+            }
             // Vertical Beam
             else if (bt.NumBeams == 1)
             {
@@ -1465,7 +1806,7 @@ namespace RTI
             #region Percent Good
 
             // 4 Beam System
-            if (bt.NumBeams >= PD0.NUM_BEAMS)
+            if (bt.NumBeams >= 4)
             {
                 // beam order 3,2,0,1
 
@@ -1491,6 +1832,27 @@ namespace RTI
                 if (BtPercentGoodBeam3 > PD0.BAD_PERCENT_GOOD)
                 {
                     BtPercentGoodBeam3 = PD0.BAD_PERCENT_GOOD;
+                }
+            }
+            // 4 Beam System
+            else if (bt.NumBeams >= 3)
+            {
+                BtPercentGoodBeam0 = (byte)(Math.Round((bt.EarthGood[0] * 100.0f) / BtPingsPerEnsemble));
+                if (BtPercentGoodBeam0 > PD0.BAD_PERCENT_GOOD)
+                {
+                    BtPercentGoodBeam0 = PD0.BAD_PERCENT_GOOD;
+                }
+
+                BtPercentGoodBeam1 = (byte)(Math.Round((bt.EarthGood[1] * 100.0f) / BtPingsPerEnsemble));
+                if (BtPercentGoodBeam1 > PD0.BAD_PERCENT_GOOD)
+                {
+                    BtPercentGoodBeam1 = PD0.BAD_PERCENT_GOOD;
+                }
+
+                BtPercentGoodBeam2 = (byte)(Math.Round((bt.EarthGood[2] * 100.0f) / BtPingsPerEnsemble));
+                if (BtPercentGoodBeam2 > PD0.BAD_PERCENT_GOOD)
+                {
+                    BtPercentGoodBeam2 = PD0.BAD_PERCENT_GOOD;
                 }
             }
             // Vertical Beam
@@ -1534,7 +1896,7 @@ namespace RTI
             #region RSSI
 
             // 4 Beam System
-            if (bt.NumBeams >= PD0.NUM_BEAMS)
+            if (bt.NumBeams >= 4)
             {
                 // beam order 3,2,0,1
 
@@ -1560,6 +1922,26 @@ namespace RTI
                 if (BtRssiBeam3 > PD0.BAD_AMPLITUDE)
                 {
                     BtRssiBeam3 = PD0.BAD_AMPLITUDE;
+                }
+            }
+            else if (bt.NumBeams >= 3)
+            {
+                BtRssiBeam0 = bt.Amplitude[0] * 2.0f; //0.5 counts per dB
+                if (BtRssiBeam0 > PD0.BAD_AMPLITUDE)
+                {
+                    BtRssiBeam0 = PD0.BAD_AMPLITUDE;
+                }
+
+                BtRssiBeam1 = bt.Amplitude[1] * 2.0f; //0.5 counts per dB
+                if (BtRssiBeam1 > PD0.BAD_AMPLITUDE)
+                {
+                    BtRssiBeam1 = PD0.BAD_AMPLITUDE;
+                }
+
+                BtRssiBeam2 = bt.Amplitude[2] * 2.0f; //0.5 counts per dB
+                if (BtRssiBeam2 > PD0.BAD_AMPLITUDE)
+                {
+                    BtRssiBeam2 = PD0.BAD_AMPLITUDE;
                 }
             }
             // Vertical Beam

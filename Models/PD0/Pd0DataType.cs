@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 03/03/2014      RC          2.21.4     Initial coding
+ * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams
  * 
  * 
  * 
@@ -65,6 +66,16 @@ namespace RTI
         /// </summary>
         public ushort Offset { get; set; }
 
+        /// <summary>
+        /// Number of beams.
+        /// </summary>
+        public int NumBeams { get; set; }
+
+        /// <summary>
+        /// Number of depth cells.
+        /// </summary>
+        public int NumDepthCells { get; set; }
+
         #endregion
 
         /// <summary>
@@ -87,15 +98,26 @@ namespace RTI
         public abstract byte[] Encode();
 
         /// <summary>
-        /// Decode the binary PD0 data to the data type.
-        /// </summary>
-        /// <param name="data">Binary data of the data type.</param>
-        public abstract void Decode(byte[] data);
-
-        /// <summary>
         /// Get the data type size.
         /// </summary>
         /// <returns>Size of the data type.</returns>
         public abstract int GetDataTypeSize();
+
+        /// <summary>
+        /// Number of bytes in a depth cell.
+        /// n Beams per depth cell.
+        /// 1 or 2 Bytes per beam.
+        /// </summary>
+        /// <returns></returns>
+        public int BytesPerDepthCell()
+        {
+            switch (ID.Type)
+            {
+                case Pd0ID.Pd0Types.Velocity:
+                    return 2 * NumBeams;                    // 2 Bytes per beam
+                default:
+                    return 1 * NumBeams;                    // 1 Byte per beam
+            }
+        }
     }
 }

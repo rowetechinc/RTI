@@ -440,7 +440,7 @@ namespace RTI
                     catch (System.IO.IOException io_ex)
                     {
                         // The Serial port does not exist
-                        log.Warn(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port), io_ex);
+                        log.Debug(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port), io_ex);
                         Debug.WriteLine(string.Format("Error COM Port: {0} does not exist.", _serialOptions.Port));
                         Disconnect();
                         return false;

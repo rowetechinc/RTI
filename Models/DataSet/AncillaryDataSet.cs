@@ -532,7 +532,7 @@ namespace RTI
                 this.Salinity = vl.Salinity;
                 this.Pressure = vl.Pressure / 0.0001f;
                 this.TransducerDepth = vl.DepthOfTransducer / 10.0f;
-                this.SpeedOfSound = 0.0f;
+                this.SpeedOfSound = vl.SpeedOfSound;
             }
 
             #endregion

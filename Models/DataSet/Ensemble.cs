@@ -85,6 +85,8 @@
  * 08/25/2017      RC          3.4.2      Added ShipVelocityDataSet.
  * 04/30/2018      RC          3.4.5      Added FileName to ensemble dataset.
  * 08/17/2018      RC          3.4.9      Added SyncRoot to lock the ensemble if modifying.
+ * 06/18/2019      RC          3.4.11     Added Ship Water Track from PD0 data.  
+ *                                        Fix the scale of the water track values in PD0
  * 
  */
 
@@ -3313,7 +3315,7 @@ namespace RTI
                             }
                             else
                             {
-                                this.EarthWaterMassData.VelocityEast = ensemble.BottomTrack.BtRefLayerVelocityBeam0;
+                                this.EarthWaterMassData.VelocityEast = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
                             }
 
                             if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
@@ -3322,7 +3324,7 @@ namespace RTI
                             }
                             else
                             {
-                                this.EarthWaterMassData.VelocityNorth = ensemble.BottomTrack.BtRefLayerVelocityBeam1;
+                                this.EarthWaterMassData.VelocityNorth = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
                             }
 
                             if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
@@ -3331,11 +3333,44 @@ namespace RTI
                             }
                             else
                             {
-                                this.EarthWaterMassData.VelocityVertical = ensemble.BottomTrack.BtRefLayerVelocityBeam2;
+                                this.EarthWaterMassData.VelocityVertical = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
                             }
                             break;
-                        case RTI.PD0.CoordinateTransforms.Coord_Instrument:
                         case RTI.PD0.CoordinateTransforms.Coord_Ship:
+                            this.ShipWaterMassData = new DataSet.ShipWaterMassDataSet();
+                            this.IsShipWaterMassAvail = true;
+                            this.ShipWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
+
+                            // Set velocities and check for bad velocities
+                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
+                            {
+                                this.ShipWaterMassData.VelocityTransverse = BAD_VELOCITY;
+                            }
+                            else
+                            {
+                                this.ShipWaterMassData.VelocityTransverse = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
+                            }
+
+                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
+                            {
+                                this.ShipWaterMassData.VelocityLongitudinal = BAD_VELOCITY;
+                            }
+                            else
+                            {
+                                this.ShipWaterMassData.VelocityLongitudinal = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
+                            }
+
+                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
+                            {
+                                this.ShipWaterMassData.VelocityNormal = BAD_VELOCITY;
+                            }
+                            else
+                            {
+                                this.ShipWaterMassData.VelocityNormal = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
+                            }
+                            break;
+
+                        case RTI.PD0.CoordinateTransforms.Coord_Instrument:
                         case RTI.PD0.CoordinateTransforms.Coord_Beam:
                             this.InstrumentWaterMassData = new DataSet.InstrumentWaterMassDataSet();
                             this.IsInstrumentWaterMassAvail = true;
@@ -3348,7 +3383,7 @@ namespace RTI
                             }
                             else
                             {
-                                this.InstrumentWaterMassData.VelocityX = ensemble.BottomTrack.BtRefLayerVelocityBeam0;
+                                this.InstrumentWaterMassData.VelocityX = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
                             }
 
                             if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
@@ -3357,7 +3392,7 @@ namespace RTI
                             }
                             else
                             {
-                                this.InstrumentWaterMassData.VelocityY = ensemble.BottomTrack.BtRefLayerVelocityBeam1;
+                                this.InstrumentWaterMassData.VelocityY = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
                             }
 
                             if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
@@ -3366,7 +3401,7 @@ namespace RTI
                             }
                             else
                             {
-                                this.InstrumentWaterMassData.VelocityZ = ensemble.BottomTrack.BtRefLayerVelocityBeam2;
+                                this.InstrumentWaterMassData.VelocityZ = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
                             }
 
                             if (ensemble.BottomTrack.BtRefLayerVelocityBeam3 == PD0.BAD_VELOCITY)
@@ -3375,7 +3410,7 @@ namespace RTI
                             }
                             else
                             {
-                                this.InstrumentWaterMassData.VelocityQ = ensemble.BottomTrack.BtRefLayerVelocityBeam3;
+                                this.InstrumentWaterMassData.VelocityQ = ensemble.BottomTrack.BtRefLayerVelocityBeam3 / 1000.0f;
                             }
                             break;
                         default:

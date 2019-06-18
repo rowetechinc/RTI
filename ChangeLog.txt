@@ -15,10 +15,12 @@ RTI-3.4.11
  * In FilePlayback, if the ensemble number is the same, then use datetime ticks for the key for the ensemble.
  - IN SystemSetupDataSet, updated all values to Rev AK User guide.
  * In MATLAB ReadRTI.m, check if all the data is available when decoding the data.
- - Update PD0 data types to handle 3 beam systems.
+ - Update PD0 data types to handle any number of beams including 3 beam systems.
  - Added Pd0SubsystemGen.
  - In AdcpPd0CodecReadFile, in FindCompleteEnsembles(), generate a Subsystem Config so the subsystems configurations are seperate.
  - In AdcpCodec, in FindCompleteEnsembles(), generate a Subsystem Config so the subsystems configurations are seperate.
+ - In Ensemble, Added Ship Water Track from PD0 data.  
+ - In Ensemble, Fix the scale of the water track values in PD0
 
 RTI-3.4.10
  * In RemoveShipSpeed, in RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 

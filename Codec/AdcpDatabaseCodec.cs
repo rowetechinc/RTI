@@ -58,6 +58,7 @@
  * 01/30/2014      RC          2.21.3     Read in GPS1, GPS2, NMEA1 and NMEA2 data.
  * 01/31/2014      RC          2.21.3     Check if the column exist when parsing the data in ParseDataTables().
  * 10/31/2014      RC          3.0.2      Added Range Tracking DataSet.
+ * 06/26/2019      RC          3.4.12     Added ShipVelocity and ShipWaterMass to ParseDataTables().
  * 
  */
 
@@ -331,6 +332,20 @@ namespace RTI
                 }
                 catch (Exception e) { log.Error("Error parsing the Earth Velocity data from the database.", e); }
 
+                try
+                {
+                    // Ship Velocity
+                    if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_SHIPVELOCITY_DS))
+                    {
+                        ensemble.ShipVelocityData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.ShipVelocityDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_SHIPVELOCITY_DS]));
+                    }
+                    if (ensemble.ShipVelocityData != null)
+                    {
+                        ensemble.IsShipVelocityAvail = true;
+                    }
+                }
+                catch (Exception e) { log.Error("Error parsing the Ship Velocity data from the database.", e); }
+
                 try { 
                 // Good Beam
                 if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_GOODBEAM_DS))
@@ -408,6 +423,20 @@ namespace RTI
                 }
                 }
                 catch (Exception e) { log.Error("Error parsing the Instrument Water Mass Velocity data from the database.", e); }
+
+                try
+                {
+                    // Ship Water Mass Velocity
+                    if (ensembleDataRow.Table.Columns.Contains(DbCommon.COL_SHIPWATERMASS_DS))
+                    {
+                        ensemble.ShipWaterMassData = Newtonsoft.Json.JsonConvert.DeserializeObject<DataSet.ShipWaterMassDataSet>(Convert.ToString(ensembleDataRow[DbCommon.COL_SHIPWATERMASS_DS]));
+                    }
+                    if (ensemble.ShipWaterMassData != null)
+                    {
+                        ensemble.IsShipWaterMassAvail = true;
+                    }
+                }
+                catch (Exception e) { log.Error("Error parsing the Ship Water Mass Velocity data from the database.", e); }
 
                 try { 
                 // Profile Engineering

@@ -36,6 +36,7 @@
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
  * 08/14/2018      RC          3.4.9      Inverted the sign of the Bottom Track Velocity when converting from RTI to PD0.
  * 03/06/2019      RC          3.4.11     Remove screening the correlation data for PD0.
+ * 06/26/2019      RC          3.4.12     Added ShipVelocity and Fixed Instrument Velocity in DecodeRtiEnsemble.
  * 
  * 
  */
@@ -1529,7 +1530,7 @@ namespace RTI
                 // Earth Coordinate Transform
                 case PD0.CoordinateTransforms.Coord_Earth:
                     // 4 Beam System
-                    if (bt.NumBeams >= 3)
+                    if (bt.NumBeams >= 4)
                     {
                         if (bt.NumBeams > 0)
                         {
@@ -1587,6 +1588,52 @@ namespace RTI
                             }
                         }
                     }
+                    // 3 Beam System
+                    else if (bt.NumBeams >= 3)
+                    {
+                        if (bt.NumBeams > 0)
+                        {
+                            // Earth Beam 0
+                            if (bt.EarthVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam0 = (short)(Math.Round(bt.EarthVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                            }
+                        }
+
+                        if (bt.NumBeams > 1)
+                        {
+                            // Earth Beam 1
+                            if (bt.EarthVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam1 = (short)(Math.Round(bt.EarthVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam1 = PD0.BAD_VELOCITY;
+                            }
+                        }
+
+                        if (bt.NumBeams > 2)
+                        {
+                            // Earth Beam 2
+                            if (bt.EarthVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                            {
+                                BtVelocityBeam2 = (short)(Math.Round(bt.EarthVelocity[2] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            }
+                            else
+                            {
+                                // Bad velocity
+                                BtVelocityBeam2 = PD0.BAD_VELOCITY;
+                            }
+                        }
+
+                    }
                     // Vertical Beam
                     else if (bt.NumBeams == 1)
                     {
@@ -1601,7 +1648,6 @@ namespace RTI
                             BtVelocityBeam0 = PD0.BAD_VELOCITY;
                         }
                     }
-                    
                     break;
 
                 // Instrument Coordinate Transform
@@ -1610,9 +1656,9 @@ namespace RTI
                     if (bt.NumBeams >= 4)
                     {
                         // Instrument Beam 1
-                        if (bt.BeamVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam1 = (short)(Math.Round(bt.BeamVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            BtVelocityBeam1 = (short)(Math.Round(bt.InstrumentVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1621,9 +1667,9 @@ namespace RTI
                         }
 
                         // Instrument Beam 0
-                        if (bt.BeamVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam0 = (short)(Math.Round(bt.BeamVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            BtVelocityBeam0 = (short)(Math.Round(bt.InstrumentVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1632,9 +1678,9 @@ namespace RTI
                         }
 
                         // Instrument Beam -2
-                        if (bt.BeamVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam2 = (short)(Math.Round(bt.BeamVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
+                            BtVelocityBeam2 = (short)(Math.Round(bt.InstrumentVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1643,9 +1689,9 @@ namespace RTI
                         }
 
                         // Instrument Beam 3
-                        if (bt.BeamVelocity[3] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[3] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam3 = (short)(Math.Round(bt.BeamVelocity[3] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            BtVelocityBeam3 = (short)(Math.Round(bt.InstrumentVelocity[3] * 1000.0f * -1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1653,14 +1699,14 @@ namespace RTI
                             BtVelocityBeam3 = PD0.BAD_VELOCITY;
                         }
                     }
-                    // 4 Beam System
+                    // 3 Beam System
                     else if (bt.NumBeams >= 3)
                     {
                         
                         // Instrument Beam 0
-                        if (bt.BeamVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam0 = (short)(Math.Round(bt.BeamVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            BtVelocityBeam0 = (short)(Math.Round(bt.InstrumentVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1669,9 +1715,9 @@ namespace RTI
                         }
 
                         // Instrument Beam 1
-                        if (bt.BeamVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam1 = (short)(Math.Round(bt.BeamVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            BtVelocityBeam1 = (short)(Math.Round(bt.InstrumentVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1680,9 +1726,9 @@ namespace RTI
                         }
 
                         // Instrument Beam -2
-                        if (bt.BeamVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam2 = (short)(Math.Round(bt.BeamVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
+                            BtVelocityBeam2 = (short)(Math.Round(bt.InstrumentVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1694,9 +1740,9 @@ namespace RTI
                     else if (bt.NumBeams == 1)
                     {
                         // Instrument Beam 1
-                        if (bt.BeamVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        if (bt.InstrumentVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
                         {
-                            BtVelocityBeam0 = (short)(Math.Round(bt.BeamVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                            BtVelocityBeam0 = (short)(Math.Round(bt.InstrumentVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
                         }
                         else
                         {
@@ -1705,6 +1751,109 @@ namespace RTI
                         }
                     }
                     break;
+
+                // Instrument Coordinate Transform
+                case PD0.CoordinateTransforms.Coord_Ship:
+                    // 4 Beam System
+                    if (bt.NumBeams >= 4)
+                    {
+                        // Ship Beam 1
+                        if (bt.ShipVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam1 = (short)(Math.Round(bt.ShipVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam1 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Ship Beam 0
+                        if (bt.ShipVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam0 = (short)(Math.Round(bt.ShipVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Ship Beam -2
+                        if (bt.ShipVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam2 = (short)(Math.Round(bt.ShipVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam2 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Ship Beam 3
+                        if (bt.ShipVelocity[3] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam3 = (short)(Math.Round(bt.ShipVelocity[3] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam3 = PD0.BAD_VELOCITY;
+                        }
+                    }
+                    // 3 Beam System
+                    else if (bt.NumBeams >= 3)
+                    {
+
+                        // Ship Beam 0
+                        if (bt.ShipVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam0 = (short)(Math.Round(bt.ShipVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Ship Beam 1
+                        if (bt.ShipVelocity[1] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam1 = (short)(Math.Round(bt.ShipVelocity[1] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam1 = PD0.BAD_VELOCITY;
+                        }
+
+                        // Ship Beam -2
+                        if (bt.ShipVelocity[2] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam2 = (short)(Math.Round(bt.ShipVelocity[2] * 1000.0f * 1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam2 = PD0.BAD_VELOCITY;
+                        }
+                    }
+                    // Vertical Beam
+                    else if (bt.NumBeams == 1)
+                    {
+                        // Ship Beam 1
+                        if (bt.ShipVelocity[0] != DataSet.Ensemble.BAD_VELOCITY)
+                        {
+                            BtVelocityBeam0 = (short)(Math.Round(bt.ShipVelocity[0] * 1000.0f * -1.0f));   // mm/s to m/s 
+                        }
+                        else
+                        {
+                            // Bad velocity
+                            BtVelocityBeam0 = PD0.BAD_VELOCITY;
+                        }
+                    }
+                    break;
+
                 default:
                     break;
             }

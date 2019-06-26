@@ -63,6 +63,7 @@
  * 09/02/2014      RC          3.0.1      Removed DataTransaction from GetDataTableFromProjectDb(cnn,...) and RunQueryOnProjectDb(cnn,...) and RunQueryOnProjectDb().
  * 10/31/2014      RC          3.0.2      Added COL_RangeTracking_DS and RangeTracking.
  * 04/30/2018      RC          3.4.5      Added COL_ENS_SUBSYSTEM, COL_ENS_CEPO_INDEX, and COL_ENS_FILE.
+ * 06/26/2019      RC          3.4.12     Added COL_SHIPVELOCITY_DS and COL_SHIPWATERMASS_DS.
  * 
  */
 
@@ -222,6 +223,13 @@ namespace RTI
 
         /// <summary>
         /// Ensemble Table:
+        /// Ship Velocity DataSet
+        /// TEXT
+        /// </summary>
+        public const string COL_SHIPVELOCITY_DS = "ShipVelocityDS";
+
+        /// <summary>
+        /// Ensemble Table:
         /// Bottom Track DataSet
         /// TEXT
         /// </summary>
@@ -261,6 +269,13 @@ namespace RTI
         /// TEXT
         /// </summary>
         public const string COL_INSTRUMENTWATERMASS_DS = "InstrumentWaterMassDS";
+
+        /// <summary>
+        /// Ensemble Table:
+        /// Ship Water Mass DataSet
+        /// TEXT
+        /// </summary>
+        public const string COL_SHIPWATERMASS_DS = "ShipWaterMassDS";
 
         /// <summary>
         /// Ensemble Table:

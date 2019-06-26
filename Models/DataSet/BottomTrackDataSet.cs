@@ -2509,14 +2509,17 @@ namespace RTI
 
                     // ShipVelocity
                     jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_SHIPVELOCITY];
-                    data.ShipVelocity = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jArray != null)
                     {
-                        // Add all the values to the array
-                        data.ShipVelocity[x] = (float)jArray[x];
-                    }
+                        data.ShipVelocity = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.ShipVelocity[x] = (float)jArray[x];
+                        }
 
-                    return data;
+                        return data;
+                    }
                 }
 
                 return null;

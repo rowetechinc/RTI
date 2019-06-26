@@ -4,7 +4,12 @@ RTI-3.4.12
  * Added decoding ShipVelocity in BottomTrackDataSet::Decode().
  * Added setting the Ship Velocity in BottomTrackDataSet::DecodePd0Ensemble().
  * In BottomTrackDataSet, Added ShipVelocity to JSON decoding.
- * In BaseDataSet, Added JSON_STR_BT_SHIPVELOCITY.
+ * In BaseDataSet, added JSON_STR_BT_SHIPVELOCITY.
+ * In Pd0BottomTrack, added ShipVelocity and Fixed Instrument Velocity in DecodeRtiEnsemble.
+ * In DbCommon, added COL_SHIPVELOCITY_DS and COL_SHIPWATERMASS_DS.
+ * In AdcpDatabaseWrite, Added Ship Velocity and Ship Water Mass to WriteEnsembleDataToDatabase().
+ * In AdcpDatabaseCodec, Added ShipVelocity and ShipWaterMass to ParseDataTables().
+ * In Projects, Added ShipVelocity and ShipWaterMass columns to CreateProjectTables().  Bump rev to F.
 
 RTI-3.4.11
  * In PD0ExporterWriter, fixed bug in PD0 Exporter with multiple configurations.

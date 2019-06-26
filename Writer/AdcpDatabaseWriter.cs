@@ -83,6 +83,7 @@
  * 07/12/2018      RC          3.4.7      Since no one uses the Ensemble ID in AddEnsembleToDatabase(), when adding an ensemble to the database, made it no ExecuteNonQuery.
  * 08/01/2018      RC          3.4.8      Put a try/catch in Dispose if the writer is closed while still writing.
  * 08/14/2018      RC          3.4.9      Verify _eventWaitData is safe to use before setting.
+ * 06/26/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass to WriteEnsembleDataToDatabase().
  * 
  */
 
@@ -846,6 +847,8 @@ namespace RTI
 
         /// <summary>
         /// Write the Ensemble to the project database.
+        /// 
+        /// The tables for tblEsemble are created in Project::CreateProjectTables().
         /// </summary>
         /// <param name="ensemble">Data to write to the database.</param>
         /// <param name="cnn">Connection to the database.</param>
@@ -877,12 +880,14 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_BEAMVELOCITY_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_EARTHVELOCITY_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_INSTRUMENTVELOCITY_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_SHIPVELOCITY_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_BOTTOMTRACK_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_GOODBEAM_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_GOODEARTH_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_NMEA_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_EARTHWATERMASS_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_INSTRUMENTWATERMASS_DS));
+                    builder.Append(string.Format("{0},", DbCommon.COL_SHIPWATERMASS_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_PROFILEENGINEERING_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_BOTTOMTRACKENGINEERING_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_SYSTEMSETUP_DS));
@@ -909,12 +914,14 @@ namespace RTI
                     builder.Append("@beamVelDS, ");
                     builder.Append("@earthVelDS, ");
                     builder.Append("@instrVelDS, ");
+                    builder.Append("@shipVelDS, ");
                     builder.Append("@bottomTrackDS, ");
                     builder.Append("@goodBeamDS, ");
                     builder.Append("@goodEarthDS, ");
                     builder.Append("@nmeaDS, ");
                     builder.Append("@earthWaterMassDS, ");
                     builder.Append("@instrumentWaterMassDS, ");
+                    builder.Append("@shipWaterMassDS, ");
                     builder.Append("@profileEngineeringDS, ");
                     builder.Append("@bottomTrackEngineeringDS, ");
                     builder.Append("@systemSetupDS, ");
@@ -1010,6 +1017,16 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@instrVelDS", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
+                    // Ship Velocity
+                    if (ensemble.IsShipVelocityAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@shipVelDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ShipVelocityData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@shipVelDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
                     // Bottom Track
                     if (ensemble.IsBottomTrackAvail)
                     {
@@ -1092,6 +1109,16 @@ namespace RTI
                     else
                     {
                         cmd.Parameters.Add(new SQLiteParameter("@instrumentWaterMassDS", System.Data.DbType.String) { Value = DBNull.Value });
+                    }
+
+                    // Ship Water Mass Velocity
+                    if (ensemble.IsShipWaterMassAvail)
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@shipWaterMassDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.ShipWaterMassData) });
+                    }
+                    else
+                    {
+                        cmd.Parameters.Add(new SQLiteParameter("@shipWaterMassDS", System.Data.DbType.String) { Value = DBNull.Value });
                     }
 
                     // Profile Engineering

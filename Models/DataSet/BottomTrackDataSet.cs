@@ -683,6 +683,12 @@ namespace RTI
                     EarthGood[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
                 }
 
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    ShipVelocity[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                }
+
+
                 //CreateBindingList();
             }
 
@@ -1465,6 +1471,10 @@ namespace RTI
                 for (i = 0; i < NumBeams; i++)
                     s += EarthGood[i].ToString("0") + " ";
                 s += "\n";
+                s += "ShipVelocity Vel ";
+                for (i = 0; i < NumBeams; i++)
+                    s += ShipVelocity[i].ToString("0.000") + " ";
+                s += "\n";
                 s += "SNR\t\t\t";
                 for (i = 0; i < NumBeams; i++)
                     s += SNR[i].ToString("0") + "\t";
@@ -1953,6 +1963,91 @@ namespace RTI
                         else
                         {
                             EarthVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                        }
+                        break;
+
+                    case PD0.CoordinateTransforms.Coord_Ship:
+
+                        if (bt.NumBeams >= 4)
+                        {
+                            // PD0 Beam 1, RTI Beam 0
+                            if (bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[0] = bt.BtVelocityBeam1 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            // PD0 Beam 0, RTI Beam 1
+                            if (bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[1] = bt.BtVelocityBeam0 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            // PD0 Beam -2, RTI Beam 2
+                            if (bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[2] = (bt.BtVelocityBeam2 * -1) / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            // PD0 Beam 3, RTI Beam 3
+                            if (bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[3] = bt.BtVelocityBeam3 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+                        }
+                        else
+                        {
+                            // DO NOT REMAP
+                            if (bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[0] = bt.BtVelocityBeam0 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            if (bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[1] = bt.BtVelocityBeam1 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            if (bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[2] = bt.BtVelocityBeam2 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
+
+                            if (bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
+                            {
+                                ShipVelocity[3] = bt.BtVelocityBeam3 / 1000.0f;
+                            }
+                            else
+                            {
+                                ShipVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                            }
                         }
                         break;
                 }

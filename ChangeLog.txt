@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-3.4.12
+ * Added decoding ShipVelocity in BottomTrackDataSet::Decode().
+ * Added setting the Ship Velocity in BottomTrackDataSet::DecodePd0Ensemble().
+
 RTI-3.4.11
  * In PD0ExporterWriter, fixed bug in PD0 Exporter with multiple configurations.
  - Added ExportWriter to handle writing a configuration in exporter.

@@ -52,6 +52,7 @@
  * 03/09/2015      RC          3.0.3      Added Gage Height.
  * 07/22/2016      RC          3.3.2      Added additional Range Tracking values.
  * 04/22/2019      RC          3.4.11     Added SystemSetup Boost Pos and Neg Voltage.
+ * 06/26/2019      RC          3.4.12     Added JSON_STR_BT_SHIPVELOCITY.
  * 
  */
 
@@ -538,6 +539,11 @@ namespace RTI
             /// String for EarthGood.
             /// </summary>
             public const string JSON_STR_BT_EARTHGOOD = "EarthGood";
+
+            /// <summary>
+            /// String for ShipVelocity.
+            /// </summary>
+            public const string JSON_STR_BT_SHIPVELOCITY = "ShipVelocity";
 
             #endregion
 

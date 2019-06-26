@@ -72,6 +72,9 @@
  * 02/07/2018      RC          3.4.5      Added IsUpwardFacing() to know the direction the ADCP is facing.
  * 11/27/2018      RC          3.4.11     Fixed the sign for PD0 data in DecodePd0Ensemble() Earth Velocity.
  * 03/06/2019      RC          3.4.11     Remove screening the correlation data for PD0.
+ * 06/26/2019      RC          3.4.12     Added decoding ShipVelocity in BottomTrackDataSet::Decode().
+ *                                        Added setting the Ship Velocity in BottomTrackDataSet::DecodePd0Ensemble().
+ *                                        Added ShipVelocity to JSON decoding.
  * 
  */
 
@@ -2332,6 +2335,15 @@ namespace RTI
                 }
                 writer.WriteEndArray();
 
+                // Ship Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_SHIPVELOCITY);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.ShipVelocity[beam]);
+                }
+                writer.WriteEndArray();
+
                 // End the object
                 writer.WriteEndObject();
             }
@@ -2493,6 +2505,15 @@ namespace RTI
                     {
                         // Add all the values to the array
                         data.EarthGood[x] = (float)jArray[x];
+                    }
+
+                    // ShipVelocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_SHIPVELOCITY];
+                    data.ShipVelocity = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.ShipVelocity[x] = (float)jArray[x];
                     }
 
                     return data;

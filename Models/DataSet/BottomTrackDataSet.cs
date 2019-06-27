@@ -75,6 +75,7 @@
  * 06/26/2019      RC          3.4.12     Added decoding ShipVelocity in BottomTrackDataSet::Decode().
  *                                        Added setting the Ship Velocity in BottomTrackDataSet::DecodePd0Ensemble().
  *                                        Added ShipVelocity to JSON decoding.
+ *                                        Updated GetVelocityMagnitude() and GetVelocityDirection() to handle bad values of 0.0 and ShipVelocity.
  * 
  */
 
@@ -1365,19 +1366,25 @@ namespace RTI
             /// <returns>Magnitude of Velocity.  If any velocities were bad, return 0.</returns>
             public double GetVelocityMagnitude()
             {
-                if (EarthVelocity.Length >= 3)
+                // Ensure the velocities are good
+                // They could be set to bad velocity or 0.0.  So check for both for bad values.
+                if (EarthVelocity.Length >= 3 &&
+                    ((EarthVelocity[0] != Ensemble.BAD_VELOCITY) && (EarthVelocity[1] != Ensemble.BAD_VELOCITY) && (EarthVelocity[2] != Ensemble.BAD_VELOCITY)) &&
+                    ((EarthVelocity[0] != 0.0) && (EarthVelocity[1] != 0.0) && (EarthVelocity[2] != 0.0)))
                 {
-                    // Ensure the velocities are good
-                    if ((EarthVelocity[0] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocity[1] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocity[2] != Ensemble.BAD_VELOCITY))
-                    {
-                        return Math.Sqrt((EarthVelocity[0] * EarthVelocity[0]) + (EarthVelocity[1] * EarthVelocity[1]) + (EarthVelocity[2] * EarthVelocity[2]));
-                    }
-                    else
-                    {
-                        return 0.0;
-                    }
+                    return Math.Sqrt((EarthVelocity[0] * EarthVelocity[0]) + (EarthVelocity[1] * EarthVelocity[1]) + (EarthVelocity[2] * EarthVelocity[2]));
+                }
+                else if (InstrumentVelocity.Length >= 3 &&
+                    ((InstrumentVelocity[0] != Ensemble.BAD_VELOCITY) && (InstrumentVelocity[1] != Ensemble.BAD_VELOCITY) && (InstrumentVelocity[2] != Ensemble.BAD_VELOCITY)) &&
+                    ((InstrumentVelocity[0] != 0.0) && (InstrumentVelocity[1] != 0.0) && (InstrumentVelocity[2] != 0.0)))
+                {
+                    return Math.Sqrt((InstrumentVelocity[0] * InstrumentVelocity[0]) + (InstrumentVelocity[1] * InstrumentVelocity[1]) + (InstrumentVelocity[2] * InstrumentVelocity[2]));
+                }
+                else if (ShipVelocity.Length >= 3 &&
+                    ((ShipVelocity[0] != Ensemble.BAD_VELOCITY) && (ShipVelocity[1] != Ensemble.BAD_VELOCITY) && (ShipVelocity[2] != Ensemble.BAD_VELOCITY)) &&
+                    ((ShipVelocity[0] != 0.0) && (ShipVelocity[1] != 0.0) && (ShipVelocity[2] != 0.0)))
+                {
+                    return Math.Sqrt((ShipVelocity[0] * ShipVelocity[0]) + (ShipVelocity[1] * ShipVelocity[1]) + (ShipVelocity[2] * ShipVelocity[2]));
                 }
                 else
                 {
@@ -1393,28 +1400,53 @@ namespace RTI
             /// <returns>Direction of the velocity in degrees.  If any velocities were bad, return -1.</returns>
             public double GetVelocityDirection(bool isYNorth)
             {
-                if (EarthVelocity.Length >= 3)
+                // Ensure the velocities are good
+                // They could be set to bad velocity or 0.0.  So check for both for bad values.
+                if (EarthVelocity.Length >= 3 &&
+                    ((EarthVelocity[0] != Ensemble.BAD_VELOCITY) && (EarthVelocity[1] != Ensemble.BAD_VELOCITY) && (EarthVelocity[2] != Ensemble.BAD_VELOCITY)) &&
+                    ((EarthVelocity[0] != 0.0) && (EarthVelocity[1] != 0.0) && (EarthVelocity[2] != 0.0)))
                 {
-                    // Ensure the velocities are good
-                    if ((EarthVelocity[0] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocity[1] != Ensemble.BAD_VELOCITY) &&
-                        (EarthVelocity[2] != Ensemble.BAD_VELOCITY))
+                    if (isYNorth)
                     {
-                        if (isYNorth)
-                        {
-                            return (Math.Atan2(EarthVelocity[1], EarthVelocity[0])) * (180 / Math.PI);
-                        }
-                        else
-                        {
-                            return (Math.Atan2(EarthVelocity[0], EarthVelocity[1])) * (180 / Math.PI);
-                        }
+                        return (Math.Atan2(EarthVelocity[1], EarthVelocity[0])) * (180 / Math.PI);
                     }
                     else
                     {
-                        return -1;
+                        return (Math.Atan2(EarthVelocity[0], EarthVelocity[1])) * (180 / Math.PI);
                     }
                 }
-                return -1;
+                // Ensure the velocities are good
+                else if (InstrumentVelocity.Length >= 3 &&
+                    ((InstrumentVelocity[0] != Ensemble.BAD_VELOCITY) && (InstrumentVelocity[1] != Ensemble.BAD_VELOCITY) && (InstrumentVelocity[2] != Ensemble.BAD_VELOCITY)) &&
+                    ((InstrumentVelocity[0] != 0.0) && (InstrumentVelocity[1] != 0.0) && (InstrumentVelocity[2] != 0.0)))
+                {
+                    if (isYNorth)
+                    {
+                        return (Math.Atan2(InstrumentVelocity[1], InstrumentVelocity[0])) * (180 / Math.PI);
+                    }
+                    else
+                    {
+                        return (Math.Atan2(InstrumentVelocity[0], InstrumentVelocity[1])) * (180 / Math.PI);
+                    }
+                }
+                // Ensure the velocities are good
+                else if (ShipVelocity.Length >= 3 &&
+                    ((ShipVelocity[0] != Ensemble.BAD_VELOCITY) && (ShipVelocity[1] != Ensemble.BAD_VELOCITY) && (ShipVelocity[2] != Ensemble.BAD_VELOCITY)) &&
+                    ((ShipVelocity[0] != 0.0) && (ShipVelocity[1] != 0.0) && (ShipVelocity[2] != 0.0)))
+                {
+                    if (isYNorth)
+                    {
+                        return (Math.Atan2(ShipVelocity[1], ShipVelocity[0])) * (180 / Math.PI);
+                    }
+                    else
+                    {
+                        return (Math.Atan2(ShipVelocity[0], ShipVelocity[1])) * (180 / Math.PI);
+                    }
+                }
+                else
+                {
+                    return -1;
+                }
             }
 
             /// <summary>

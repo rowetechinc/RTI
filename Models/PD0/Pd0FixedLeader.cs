@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 02/25/2014      RC          2.21.4     Initial coding
  * 07/16/2014      RC          2.23.0     Check if the values are given in DecodeRtiEnsemble().
+ * 06/26/2019      RC          3.4.12     In Decode, add a check if number of beams is 0, then set to 4.
  * 
  * 
  * 
@@ -971,7 +972,9 @@ namespace RTI
             RealSimFlag = Convert.ToBoolean(data[6]);                                       // Real Sim Flag
             LagLength = data[7];                                                            // Lag Length
             NumberOfBeams = data[8];                                                        // Number of Beams
+            NumBeams = NumberOfBeams;
             NumberOfCells = data[9];                                                        // Number of Cells
+            NumDepthCells = NumberOfCells;
             PingsPerEnsemble = MathHelper.LsbMsbUShort(data[10], data[11]);                 // Pings Per Ensemble
             DepthCellLength = MathHelper.LsbMsbUShort(data[12], data[13]);                  // Depth Cell Length
             BlankAfterTransmit = MathHelper.LsbMsbUShort(data[14], data[15]);               // Blank After Transmit
@@ -1011,6 +1014,16 @@ namespace RTI
             BaseFrequencyIndex = data[53];                                                  // Base Frequency
             InstrumentSerialNumber = System.Text.Encoding.Default.GetString(data, 54, 4);   // Instrument Serial Number, 4 bytes long
             BeamAngle = data[58];                                                           // Beam Angle
+
+            // When WP is turned off, the number of beams is set to 0
+            // This will set it to a default value of 4 to have a value other than 0
+            // 0 Causes other datasets to assume no data like BottomTrack.
+            // There should be no subsystem with 0 beams
+            if (NumberOfBeams == 0)
+            {
+                NumberOfBeams = 4;                                                        // Number of Beams
+                NumBeams = 4;
+            }
         }
 
         #endregion

@@ -76,6 +76,7 @@
  *                                        Added setting the Ship Velocity in BottomTrackDataSet::DecodePd0Ensemble().
  *                                        Added ShipVelocity to JSON decoding.
  *                                        Updated GetVelocityMagnitude() and GetVelocityDirection() to handle bad values of 0.0 and ShipVelocity.
+ * 07/03/2019      RC          3.4.12     In DecodePd0Ensemble(), do not remap Instrument and Ship velocity data.
  * 
  */
 
@@ -2003,32 +2004,74 @@ namespace RTI
 
                     case PD0.CoordinateTransforms.Coord_Ship:
 
+                        //if (bt.NumBeams >= 4)
+                        //{
+                        //    // PD0 Beam 1, RTI Beam 0
+                        //    if (bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                        //    {
+                        //        ShipVelocity[0] = bt.BtVelocityBeam1 / 1000.0f;
+                        //    }
+                        //    else
+                        //    {
+                        //        ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                        //    }
+
+                        //    // PD0 Beam 0, RTI Beam 1
+                        //    if (bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                        //    {
+                        //        ShipVelocity[1] = bt.BtVelocityBeam0 / 1000.0f;
+                        //    }
+                        //    else
+                        //    {
+                        //        ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                        //    }
+
+                        //    // PD0 Beam -2, RTI Beam 2
+                        //    if (bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
+                        //    {
+                        //        ShipVelocity[2] = (bt.BtVelocityBeam2 * -1) / 1000.0f;
+                        //    }
+                        //    else
+                        //    {
+                        //        ShipVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                        //    }
+
+                        //    // PD0 Beam 3, RTI Beam 3
+                        //    if (bt.BtVelocityBeam3 != PD0.BAD_VELOCITY)
+                        //    {
+                        //        ShipVelocity[3] = bt.BtVelocityBeam3 / 1000.0f;
+                        //    }
+                        //    else
+                        //    {
+                        //        ShipVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                        //    }
+                        //}
                         if (bt.NumBeams >= 4)
                         {
-                            // PD0 Beam 1, RTI Beam 0
-                            if (bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
+                            // PD0 Beam 0, RTI Beam 0
+                            if (bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
                             {
-                                ShipVelocity[0] = bt.BtVelocityBeam1 / 1000.0f;
+                                ShipVelocity[0] = bt.BtVelocityBeam0 / 1000.0f;
                             }
                             else
                             {
                                 ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                             }
 
-                            // PD0 Beam 0, RTI Beam 1
-                            if (bt.BtVelocityBeam0 != PD0.BAD_VELOCITY)
+                            // PD0 Beam 1, RTI Beam 1
+                            if (bt.BtVelocityBeam1 != PD0.BAD_VELOCITY)
                             {
-                                ShipVelocity[1] = bt.BtVelocityBeam0 / 1000.0f;
+                                ShipVelocity[1] = bt.BtVelocityBeam1 / 1000.0f;
                             }
                             else
                             {
                                 ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                             }
 
-                            // PD0 Beam -2, RTI Beam 2
+                            // PD0 Beam 2, RTI Beam 2
                             if (bt.BtVelocityBeam2 != PD0.BAD_VELOCITY)
                             {
-                                ShipVelocity[2] = (bt.BtVelocityBeam2 * -1) / 1000.0f;
+                                ShipVelocity[2] = (bt.BtVelocityBeam2) / 1000.0f;
                             }
                             else
                             {

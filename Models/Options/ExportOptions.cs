@@ -35,6 +35,7 @@
  * 07/23/2017      RC          1.0.0      Initial coding
  * 10/06/2017      RC          1.1.0      Added screening options.
  * 11/20/2018      RC          3.4.11     Clone and screen the options.
+ * 07/02/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass Velocity.
  * 
  */
 
@@ -112,6 +113,11 @@ namespace RTI
         public bool IsEarthVelocityDataSetOn { get; set; }
 
         /// <summary>
+        /// Turn on or off the Ship Velocity dataset.
+        /// </summary>
+        public bool IsShipVelocityDataSetOn { get; set; }
+
+        /// <summary>
         /// Turn on or off the Velocity Vector dataset.
         /// </summary>
         public bool IsVelocityVectorDataSetOn { get; set; }
@@ -120,6 +126,11 @@ namespace RTI
         /// Turn on or off the Earth Water Mass dataset.
         /// </summary>
         public bool IsEarthWaterMassDataSetOn { get; set; }
+
+        /// <summary>
+        /// Turn on or off the Ship Water Mass dataset.
+        /// </summary>
+        public bool IsShipWaterMassDataSetOn { get; set; }
 
         /// <summary>
         /// Turn on or off the Ensemble dataset.
@@ -260,6 +271,16 @@ namespace RTI
         public int EarthMaxBin { get; set; }
 
         /// <summary>
+        /// Ship Velocity Bin Minimum index.
+        /// </summary>
+        public int ShipMinBin { get; set; }
+
+        /// <summary>
+        /// Ship Velcoity Bin Maximum index.
+        /// </summary>
+        public int ShipMaxBin { get; set; }
+
+        /// <summary>
         /// Velocity Velocity Bin Minimum index.
         /// </summary>
         public int VelVectorMinBin { get; set; }
@@ -335,6 +356,7 @@ namespace RTI
             IsBottomTrackDataSetOn = true;
             IsCorrelationDataSetOn = true;
             IsEarthVelocityDataSetOn = true;
+            IsShipVelocityDataSetOn = true;
             IsVelocityVectorDataSetOn = true;
             IsEarthWaterMassDataSetOn = true;
             IsEnsembleDataSetOn = true;
@@ -342,6 +364,7 @@ namespace RTI
             IsGoodEarthDataSetOn = true;
             IsInstrumentVelocityDataSetOn = true;
             IsInstrumentWaterMassDataSetOn = true;
+            IsShipWaterMassDataSetOn = true;
             IsNmeaDataSetOn = true;
             IsProfileEngineeringDataSetOn = true;
             IsBottomTrackEngineeringDataSetOn = true;
@@ -360,6 +383,8 @@ namespace RTI
             InstrumentMaxBin = 0;
             EarthMinBin = 0;
             EarthMaxBin = 0;
+            ShipMinBin = 0;
+            ShipMaxBin = 0;
             VelVectorMinBin = 0;
             VelVectorMaxBin = 0;
             CorrelationMinBin = 0;
@@ -386,6 +411,7 @@ namespace RTI
             BeamMaxBin = maxBin;
             InstrumentMaxBin = maxBin;
             EarthMaxBin = maxBin;
+            ShipMaxBin = maxBin;
             VelVectorMaxBin = maxBin;
             CorrelationMaxBin = maxBin;
             AmplitudeMaxBin = maxBin;
@@ -410,6 +436,7 @@ namespace RTI
             newOptions.IsBottomTrackDataSetOn = this.IsBottomTrackDataSetOn;
             newOptions.IsCorrelationDataSetOn = this.IsCorrelationDataSetOn;
             newOptions.IsEarthVelocityDataSetOn = this.IsEarthVelocityDataSetOn;
+            newOptions.IsShipVelocityDataSetOn = this.IsShipVelocityDataSetOn;
             newOptions.IsVelocityVectorDataSetOn = this.IsVelocityVectorDataSetOn;
             newOptions.IsEarthWaterMassDataSetOn = this.IsEarthWaterMassDataSetOn;
             newOptions.IsEnsembleDataSetOn = this.IsEnsembleDataSetOn;
@@ -417,6 +444,7 @@ namespace RTI
             newOptions.IsGoodEarthDataSetOn = this.IsGoodEarthDataSetOn;
             newOptions.IsInstrumentVelocityDataSetOn = this.IsInstrumentVelocityDataSetOn;
             newOptions.IsInstrumentWaterMassDataSetOn = this.IsInstrumentWaterMassDataSetOn;
+            newOptions.IsShipWaterMassDataSetOn = this.IsShipWaterMassDataSetOn;
             newOptions.IsNmeaDataSetOn = this.IsNmeaDataSetOn;
             newOptions.IsProfileEngineeringDataSetOn = this.IsProfileEngineeringDataSetOn;
             newOptions.IsBottomTrackEngineeringDataSetOn = this.IsBottomTrackEngineeringDataSetOn;
@@ -435,6 +463,8 @@ namespace RTI
             newOptions.InstrumentMaxBin = this.InstrumentMaxBin;
             newOptions.EarthMinBin = this.EarthMinBin;
             newOptions.EarthMaxBin = this.EarthMaxBin;
+            newOptions.ShipMinBin = this.ShipMinBin;
+            newOptions.ShipMaxBin = this.ShipMaxBin;
             newOptions.VelVectorMinBin = this.VelVectorMinBin;
             newOptions.VelVectorMaxBin = this.VelVectorMaxBin;
             newOptions.CorrelationMinBin = this.CorrelationMinBin;
@@ -490,6 +520,12 @@ namespace RTI
             {
 
                 this.EarthMaxBin = maxNumBins;
+            }
+
+            if (this.ShipMaxBin == 0 || this.ShipMaxBin > maxNumBins)
+            {
+
+                this.ShipMaxBin = maxNumBins;
             }
 
             if (this.GoodBeamMaxBin == 0 || this.GoodBeamMaxBin > maxNumBins)

@@ -43,6 +43,8 @@
  * 10/28/2015      RC          3.2.1      Fixed missing Range Tracking Header.  Fixed Correlation header.  Fixed Bottom Track extra ,.  Made it handle any number of beams in BT.
  * 09/28/2016      RC          3.3.2      Added export of Velocity Vectors in CSV.
  * 03/13/2019      RC          3.4.11     Fixed bug with exporting CSV data with a 3 beam system.
+ * 07/01/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass.
+ *                                        Removed X North from Velocity Vector.
  * 
  */
 
@@ -174,6 +176,13 @@ namespace RTI
                 sb.Append(",");
             }
 
+            // Ship Velocity
+            if (options.IsShipVelocityDataSetOn)
+            {
+                sb.Append(CreateShipVelocityHeader(options));
+                sb.Append(",");
+            }
+
             // Velocity Vector
             if (options.IsVelocityVectorDataSetOn)
             {
@@ -206,6 +215,13 @@ namespace RTI
             if (options.IsInstrumentWaterMassDataSetOn)
             {
                 sb.Append(CreateInstrumentWaterMassHeader());
+                sb.Append(",");
+            }
+
+            // Ship Water Mass DataSet
+            if (options.IsShipWaterMassDataSetOn)
+            {
+                sb.Append(CreateShipWaterMassHeader());
                 sb.Append(",");
             }
 
@@ -353,6 +369,19 @@ namespace RTI
                     }
                 }
 
+                // Ship Velocity
+                if (ensemble.IsShipVelocityAvail)
+                {
+                    if (options.ShipMinBin >= ensemble.ShipVelocityData.ShipVelocityData.GetLength(0))
+                    {
+                        options.ShipMinBin = 0;
+                    }
+                    if (options.ShipMaxBin >= ensemble.ShipVelocityData.ShipVelocityData.GetLength(0))
+                    {
+                        options.ShipMaxBin = ensemble.ShipVelocityData.ShipVelocityData.GetLength(0) - 1;
+                    }
+                }
+
                 // Amplitude
                 if (ensemble.IsAmplitudeAvail)
                 {
@@ -385,126 +414,241 @@ namespace RTI
                 // Beam Velocity
                 if (options.IsBeamVelocityDataSetOn)
                 {
-                    sb.Append(WriteBeamVelocityData(ensemble, options));
+                    string str = WriteBeamVelocityData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
+
                 }
 
                 // Instrument Velocity
                 if (options.IsInstrumentVelocityDataSetOn)
                 {
-                    sb.Append(WriteInstrumentVelocityData(ensemble, options));
+                    string str = WriteInstrumentVelocityData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Earth Velocity
                 if (options.IsEarthVelocityDataSetOn)
                 {
-                    sb.Append(WriteEarthVelocityData(ensemble, options));
+                    string str = WriteEarthVelocityData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
+                    sb.Append(",");
+                }
+
+                // Ship Velocity
+                if (options.IsShipVelocityDataSetOn)
+                {
+                    string str = WriteShipVelocityData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Velocity Vector
                 if (options.IsVelocityVectorDataSetOn)
                 {
-                    sb.Append(WriteVelocityVectorData(ensemble, options));
+                    string str = WriteVelocityVectorData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Amplitude Data
                 if (options.IsAmplitudeDataSetOn)
                 {
-                    sb.Append(WriteAmplitudeData(ensemble, options));
+                    string str = WriteAmplitudeData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Correlation Data
                 if (options.IsCorrelationDataSetOn)
                 {
-                    sb.Append(WriteCorrelationData(ensemble, options));
+                    string str = WriteCorrelationData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Earth Water Mass Data
                 if (options.IsEarthWaterMassDataSetOn)
                 {
-                    sb.Append(WriteEarthWaterMassData(ensemble));
+                    string str = WriteEarthWaterMassData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Instrument Water Mass Data
                 if (options.IsInstrumentWaterMassDataSetOn)
                 {
-                    sb.Append(WriteInstrumentWaterMassData(ensemble));
+                    string str = WriteInstrumentWaterMassData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
+                    sb.Append(",");
+                }
+
+                // Ship Water Mass Data
+                if (options.IsShipWaterMassDataSetOn)
+                {
+                    string str = WriteShipWaterMassData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Good Beam Data
                 if (options.IsGoodBeamDataSetOn)
                 {
-                    sb.Append(WriteGoodBeamData(ensemble, options));
+                    string str = WriteGoodBeamData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Good Earth Data
                 if (options.IsGoodEarthDataSetOn)
                 {
-                    sb.Append(WriteGoodEarthData(ensemble, options));
+                    string str = WriteGoodEarthData(ensemble, options);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Bottom Track Data
                 if (options.IsBottomTrackDataSetOn)
                 {
-                    sb.Append(WriteBottomTrackData(ensemble));
+                    string str = WriteBottomTrackData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Range Tracking Data
                 if (options.IsRangeTrackingDataSetOn)
                 {
-                    sb.Append(WriteRangeTrackingData(ensemble));
+                    string str = WriteRangeTrackingData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Gage Height Data
                 if (options.IsGageHeightDataSetOn)
                 {
-                    sb.Append(WriteGageHeightData(ensemble));
+                    string str = WriteGageHeightData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Bottom Track Engineering Data
                 if (options.IsBottomTrackEngineeringDataSetOn)
                 {
-                    sb.Append(WriteBottomTrackEngineeringData(ensemble));
+                    string str = WriteBottomTrackEngineeringData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Profile Engineering Data
                 if (options.IsProfileEngineeringDataSetOn)
                 {
-                    sb.Append(WriteProfileEngineeringData(ensemble));
+                    string str = WriteProfileEngineeringData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // System Setup Data
                 if (options.IsSystemSetupDataSetOn)
                 {
-                    sb.Append(WriteSystemSetupData(ensemble));
+                    string str = WriteSystemSetupData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // Range Tracking Data
                 if (options.IsRangeTrackingDataSetOn)
                 {
-                    sb.Append(WriteRangeTrackingData(ensemble));
+                    string str = WriteRangeTrackingData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
                 // NMEA Data
                 if (options.IsNmeaDataSetOn)
                 {
-                    sb.Append(WriteNmeaData(ensemble));
+                    string str = WriteNmeaData(ensemble);
+
+                    if (str.Length > 0)
+                    {
+                        sb.Append(str);
+                    }
                     sb.Append(",");
                 }
 
@@ -779,7 +923,7 @@ namespace RTI
                     }
 
                     // 3 Beam System
-                    if (ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 3)
+                    if (ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(1) <= 3)
                     {
                         sb.Append(",");                                                 // Handle the missing beam
                     }
@@ -847,7 +991,7 @@ namespace RTI
                     }
 
                     // 3 Beam System
-                    if (ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 3)
+                    if (ensemble.EarthVelocityData.EarthVelocityData.GetLength(1) <= 3)
                     {
                         sb.Append(",");                                                 // Handle the missing beam
                     }
@@ -876,6 +1020,77 @@ namespace RTI
 
         #endregion
 
+        #region Ship Velocity DataSet
+
+        /// <summary>
+        /// Create the Ship Velocity header based off the options selected.
+        /// </summary>
+        /// <param name="options">Export Options.</param>
+        /// <returns>Ship Velocity Header</returns>
+        public static string CreateShipVelocityHeader(ExportOptions options)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int bin = options.ShipMinBin; bin < options.ShipMaxBin + 1; bin++)
+            {
+                for (int beam = 0; beam < DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM; beam++)
+                {
+                    sb.Append(string.Format("ShipVel{0}_{1},", bin, beam));
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Output the Ship Velocity dataset to CSV format.
+        /// </summary>
+        /// <param name="ensemble">Data.</param>
+        /// <param name="options">Export Options.</param>
+        /// <returns>Ship Velocity DataSet data in CSV format.</returns>
+        public static string WriteShipVelocityData(Ensemble ensemble, ExportOptions options)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (ensemble.IsShipVelocityAvail)
+            {
+                for (int bin = options.ShipMinBin; bin < options.ShipMaxBin + 1; bin++)
+                {
+                    for (int beam = 0; beam < ensemble.ShipVelocityData.ShipVelocityData.GetLength(1); beam++)
+                    {
+                        sb.Append(string.Format("{0},", ensemble.ShipVelocityData.ShipVelocityData[bin, beam].ToString(new CultureInfo("en-US"))));
+                    }
+
+                    // 3 Beam System
+                    if (ensemble.ShipVelocityData.ShipVelocityData.GetLength(1) <= 3)
+                    {
+                        sb.Append(",");                                                 // Handle the missing beam
+                    }
+
+                    // If a vertical beam
+                    if (ensemble.ShipVelocityData.ShipVelocityData.GetLength(1) <= 1)
+                    {
+                        sb.Append(",,,");
+                    }
+                }
+            }
+            else
+            {
+                // Put blank data
+                for (int bin = options.ShipMinBin; bin < options.ShipMaxBin + 1; bin++)
+                {
+                    sb.Append(",,,,");
+                }
+            }
+
+            return sb.ToString();
+        }
+
+
+
+
+        #endregion
+
         #region Velocity Vector DataSet
 
         /// <summary>
@@ -890,7 +1105,7 @@ namespace RTI
             for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
             {
                 sb.Append(string.Format("VelVector{0}_{1},", bin, "Mag"));
-                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir XNorth"));
+                //sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir XNorth"));
                 sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir YNorth"));
             }
 
@@ -912,7 +1127,7 @@ namespace RTI
                 for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
                 {
                         sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude.ToString(new CultureInfo("en-US"))));
-                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
+                        //sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
                         sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth.ToString(new CultureInfo("en-US"))));
                 }
             }
@@ -921,7 +1136,7 @@ namespace RTI
                 // Put blank data
                 for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
                 {
-                    sb.Append(",,,");
+                    sb.Append(",,");
                 }
             }
 
@@ -1082,7 +1297,7 @@ namespace RTI
             sb.Append("EarthWmLayer,");
             sb.Append("EarthWmVelEast,");
             sb.Append("EarthWmVelNorth,");
-            sb.Append("EarthWmVelVertical,");
+            sb.Append("EarthWmVelVertical");
 
             return sb.ToString();
         }
@@ -1109,7 +1324,7 @@ namespace RTI
             else
             {
                 // Put blank data
-                sb.Append(",,,,");
+                sb.Append(",,,");
             }
 
             return sb.ToString();
@@ -1130,7 +1345,7 @@ namespace RTI
             sb.Append("InstrWmLayer,");
             sb.Append("InstrWmVelX,");
             sb.Append("InstrWmVelY,");
-            sb.Append("InstrWmVelZ,");
+            sb.Append("InstrWmVelZ");
 
             return sb.ToString();
         }
@@ -1157,7 +1372,55 @@ namespace RTI
             else
             {
                 // Put blank data
-                sb.Append(",,,,");
+                sb.Append(",,,");
+            }
+
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region Ship Water Mass DataSet
+
+        /// <summary>
+        /// Create the Ship Water Mass header based off the options selected.
+        /// </summary>
+        /// <returns>Ship Water Mass Header</returns>
+        public static string CreateShipWaterMassHeader()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("ShipWmLayer,");
+            sb.Append("ShipWmVelX,");
+            sb.Append("ShipWmVelY,");
+            sb.Append("ShipWmVelZ");
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Output the Ship Water Mass dataset to CSV format.
+        /// </summary>
+        /// <param name="ensemble">Data.</param>
+        /// <returns>Ship Water Mass DataSet data in CSV format.</returns>
+        public static string WriteShipWaterMassData(Ensemble ensemble)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (ensemble.IsShipWaterMassAvail)
+            {
+                sb.Append(ensemble.ShipWaterMassData.WaterMassDepthLayer.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.VelocityTransverse.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.VelocityLongitudinal.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.VelocityNormal.ToString(new CultureInfo("en-US")));
+            }
+            else
+            {
+                // Put blank data
+                sb.Append(",,,");
             }
 
             return sb.ToString();
@@ -1299,9 +1562,6 @@ namespace RTI
             return sb.ToString();
         }
 
-
-
-
         #endregion
 
         #region Bottom Track DataSet
@@ -1368,7 +1628,11 @@ namespace RTI
             sb.Append("EarthGood[0],");
             sb.Append("EarthGood[1],");
             sb.Append("EarthGood[2],");
-            sb.Append("EarthGood[3]");
+            sb.Append("EarthGood[3],");
+            sb.Append("ShipVelocity[0],");
+            sb.Append("ShipVelocity[1],");
+            sb.Append("ShipVelocity[2],");
+            sb.Append("ShipVelocity[3]");
 
             return sb.ToString();
         }
@@ -1785,18 +2049,55 @@ namespace RTI
                 if (ensemble.BottomTrackData.EarthGood.Length >= 4)
                 {
                     sb.Append(ensemble.BottomTrackData.EarthGood[3].ToString(new CultureInfo("en-US")));
-                    //sb.Append(",");
+                    sb.Append(",");
                 }
                 else
                 {
                     //sb.Append(",");
                 }
                 #endregion
-
+                #region Ship Velocity
+                if (ensemble.BottomTrackData.ShipVelocity.Length >= 1)
+                {
+                    sb.Append(ensemble.BottomTrackData.ShipVelocity[0].ToString(new CultureInfo("en-US")));
+                    sb.Append(",");
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                if (ensemble.BottomTrackData.ShipVelocity.Length >= 2)
+                {
+                    sb.Append(ensemble.BottomTrackData.ShipVelocity[1].ToString(new CultureInfo("en-US")));
+                    sb.Append(",");
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                if (ensemble.BottomTrackData.ShipVelocity.Length >= 3)
+                {
+                    sb.Append(ensemble.BottomTrackData.ShipVelocity[2].ToString(new CultureInfo("en-US")));
+                    sb.Append(",");
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                if (ensemble.BottomTrackData.ShipVelocity.Length >= 4)
+                {
+                    sb.Append(ensemble.BottomTrackData.ShipVelocity[3].ToString(new CultureInfo("en-US")));
+                    //sb.Append(",");
+                }
+                else
+                {
+                    sb.Append(",");
+                }
+                #endregion
             }
             else
             {
-                sb.Append(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+                sb.Append(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
             }
 
             return sb.ToString();

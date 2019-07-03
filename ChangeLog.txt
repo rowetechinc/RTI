@@ -12,6 +12,8 @@ RTI-3.4.12
  * In Projects, Added ShipVelocity and ShipWaterMass columns to CreateProjectTables().  Bump rev to F.
  * In BottomTrackDataSet, Updated GetVelocityMagnitude() and GetVelocityDirection() to handle bad values of 0.0 and ShipVelocity.
  * In Pd0FixedLeader, In Decode(), add a check if number of beams is 0, then set to 4.
+ - In ExportOptions, added Ship Velocity and Ship Water Mass Velocity.
+ - In CsvExporterWriter, added Ship Velocity and Ship Water Mass Velocity.
 
 RTI-3.4.11
  * In PD0ExporterWriter, fixed bug in PD0 Exporter with multiple configurations.

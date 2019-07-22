@@ -36,6 +36,7 @@
  * 05/01/2014      RC          3.2.4      Select which datasets to export to the PD0 file.
  * 11/20/2018      RC          3.4.11     Fixed bug in PD0 Exporter with multiple configurations.
  * 11/27/2018      RC          3.4.11     Removed the bin selection.
+ * 07/22/2019      RC          3.4.13     Removed the check for which datasets exist.
  * 
  * 
  * 
@@ -138,210 +139,210 @@ namespace RTI
                 return;
             }
 
-            // Check Amplitude 
-            if (!_options.IsAmplitudeDataSetOn) { ensemble.IsAmplitudeAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsAmplitudeAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsAmplitudeDataSetOn = false;
-                }
-            }
+            //// Check Amplitude 
+            //if (!_options.IsAmplitudeDataSetOn) { ensemble.IsAmplitudeAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsAmplitudeAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsAmplitudeDataSetOn = false;
+            //    }
+            //}
 
-            // Check Beam Velocity
-            if (!_options.IsBeamVelocityDataSetOn) { ensemble.IsBeamVelocityAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsBeamVelocityAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsBeamVelocityDataSetOn = false;
-                }
-            }
+            //// Check Beam Velocity
+            //if (!_options.IsBeamVelocityDataSetOn) { ensemble.IsBeamVelocityAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsBeamVelocityAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsBeamVelocityDataSetOn = false;
+            //    }
+            //}
 
-            // Check Earth Velocity 
-            if (!_options.IsEarthVelocityDataSetOn) { ensemble.IsEarthVelocityAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsEarthVelocityAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsEarthVelocityDataSetOn = false;
-                }
-            }
+            //// Check Earth Velocity 
+            //if (!_options.IsEarthVelocityDataSetOn) { ensemble.IsEarthVelocityAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsEarthVelocityAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsEarthVelocityDataSetOn = false;
+            //    }
+            //}
 
-            // Check Instrument Velocity 
-            if (!_options.IsInstrumentVelocityDataSetOn) { ensemble.IsInstrumentVelocityAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsInstrumentVelocityAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsInstrumentVelocityDataSetOn = false;
-                }
-            }
+            //// Check Instrument Velocity 
+            //if (!_options.IsInstrumentVelocityDataSetOn) { ensemble.IsInstrumentVelocityAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsInstrumentVelocityAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsInstrumentVelocityDataSetOn = false;
+            //    }
+            //}
 
-            // Check Correlation 
-            if (!_options.IsCorrelationDataSetOn) { ensemble.IsCorrelationAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsCorrelationAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsCorrelationDataSetOn = false;
-                }
-            }
+            //// Check Correlation 
+            //if (!_options.IsCorrelationDataSetOn) { ensemble.IsCorrelationAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsCorrelationAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsCorrelationDataSetOn = false;
+            //    }
+            //}
 
-            // Check Good Beam 
-            if (!_options.IsGoodBeamDataSetOn) { ensemble.IsGoodBeamAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsGoodBeamAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsGoodBeamDataSetOn = false;
-                }
-            }
+            //// Check Good Beam 
+            //if (!_options.IsGoodBeamDataSetOn) { ensemble.IsGoodBeamAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsGoodBeamAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsGoodBeamDataSetOn = false;
+            //    }
+            //}
 
-            // Check Good Earth 
-            if (!_options.IsGoodEarthDataSetOn) { ensemble.IsGoodEarthAvail = false; }
-            else
-            {
-                // Verify the dataset exist
-                if (!ensemble.IsGoodEarthAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsGoodEarthDataSetOn = false;
-                }
-            }
+            //// Check Good Earth 
+            //if (!_options.IsGoodEarthDataSetOn) { ensemble.IsGoodEarthAvail = false; }
+            //else
+            //{
+            //    // Verify the dataset exist
+            //    if (!ensemble.IsGoodEarthAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsGoodEarthDataSetOn = false;
+            //    }
+            //}
 
-            // Check Bottom Track 
-            if (!_options.IsBottomTrackDataSetOn) { ensemble.IsBottomTrackAvail = false; }
-            else
-            {
-                if (!ensemble.IsBottomTrackAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsBottomTrackDataSetOn = false;
-                }
-            }
+            //// Check Bottom Track 
+            //if (!_options.IsBottomTrackDataSetOn) { ensemble.IsBottomTrackAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsBottomTrackAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsBottomTrackDataSetOn = false;
+            //    }
+            //}
 
-            // Check Earth Water Mass 
-            if (!_options.IsEarthWaterMassDataSetOn) { ensemble.IsEarthWaterMassAvail = false; }
-            else
-            {
-                if (!ensemble.IsEarthWaterMassAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsEarthWaterMassDataSetOn = false;
-                }
-            }
+            //// Check Earth Water Mass 
+            //if (!_options.IsEarthWaterMassDataSetOn) { ensemble.IsEarthWaterMassAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsEarthWaterMassAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsEarthWaterMassDataSetOn = false;
+            //    }
+            //}
 
-            // Check Instrument Water Mass 
-            if (!_options.IsInstrumentWaterMassDataSetOn) { ensemble.IsInstrumentWaterMassAvail = false; }
-            else
-            {
-                if (!ensemble.IsInstrumentWaterMassAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsInstrumentWaterMassDataSetOn = false;
-                }
-            }
+            //// Check Instrument Water Mass 
+            //if (!_options.IsInstrumentWaterMassDataSetOn) { ensemble.IsInstrumentWaterMassAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsInstrumentWaterMassAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsInstrumentWaterMassDataSetOn = false;
+            //    }
+            //}
 
-            // Check Nmea Data 
-            if (!_options.IsNmeaDataSetOn) { ensemble.IsNmeaAvail = false; }
-            else
-            {
-                if (!ensemble.IsNmeaAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsNmeaDataSetOn = false;
-                }
-            }
+            //// Check Nmea Data 
+            //if (!_options.IsNmeaDataSetOn) { ensemble.IsNmeaAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsNmeaAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsNmeaDataSetOn = false;
+            //    }
+            //}
 
-            // Check Profile Engineering 
-            if (!_options.IsProfileEngineeringDataSetOn) { ensemble.IsProfileEngineeringAvail = false; }
-            else
-            {
-                if (!ensemble.IsProfileEngineeringAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsProfileEngineeringDataSetOn = false;
-                }
-            }
+            //// Check Profile Engineering 
+            //if (!_options.IsProfileEngineeringDataSetOn) { ensemble.IsProfileEngineeringAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsProfileEngineeringAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsProfileEngineeringDataSetOn = false;
+            //    }
+            //}
 
-            // Check System Setup 
-            if (!_options.IsSystemSetupDataSetOn) { ensemble.IsSystemSetupAvail = false; }
-            else
-            {
-                if (!ensemble.IsSystemSetupAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsSystemSetupDataSetOn = false;
-                }
-            }
+            //// Check System Setup 
+            //if (!_options.IsSystemSetupDataSetOn) { ensemble.IsSystemSetupAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsSystemSetupAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsSystemSetupDataSetOn = false;
+            //    }
+            //}
 
-            // Check ADCP GPS 
-            if (!_options.IsAdcpGpsDataSetOn) { ensemble.IsAdcpGpsDataAvail = false; }
-            else
-            {
-                if (!ensemble.IsAdcpGpsDataAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsAdcpGpsDataSetOn = false;
-                }
-            }
+            //// Check ADCP GPS 
+            //if (!_options.IsAdcpGpsDataSetOn) { ensemble.IsAdcpGpsDataAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsAdcpGpsDataAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsAdcpGpsDataSetOn = false;
+            //    }
+            //}
 
-            // Check GPS 1 
-            if (!_options.IsGps1DataSetOn) { ensemble.IsGps1DataAvail = false; }
-            else
-            {
-                if (!ensemble.IsGps1DataAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsGps1DataSetOn = false;
-                }
-            }
+            //// Check GPS 1 
+            //if (!_options.IsGps1DataSetOn) { ensemble.IsGps1DataAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsGps1DataAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsGps1DataSetOn = false;
+            //    }
+            //}
 
-            // Check GPS 2 
-            if (!_options.IsGps2DataSetOn) { ensemble.IsGps2DataAvail = false; }
-            else
-            {
-                if (!ensemble.IsGps2DataAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsGps2DataSetOn = false;
-                }
-            }
+            //// Check GPS 2 
+            //if (!_options.IsGps2DataSetOn) { ensemble.IsGps2DataAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsGps2DataAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsGps2DataSetOn = false;
+            //    }
+            //}
 
-            // Check NMEA 1 
-            if (!_options.IsNmea1DataSetOn) { ensemble.IsNmea1DataAvail = false; }
-            else
-            {
-                if (!ensemble.IsNmea1DataAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsNmea1DataSetOn = false;
-                }
-            }
+            //// Check NMEA 1 
+            //if (!_options.IsNmea1DataSetOn) { ensemble.IsNmea1DataAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsNmea1DataAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsNmea1DataSetOn = false;
+            //    }
+            //}
 
-            // Check NMEA 2 
-            if (!_options.IsNmea2DataSetOn) { ensemble.IsNmea2DataAvail = false; }
-            else
-            {
-                if (!ensemble.IsNmea2DataAvail)
-                {
-                    // Set that data set was not used
-                    _options.IsNmea2DataSetOn = false;
-                }
-            }
+            //// Check NMEA 2 
+            //if (!_options.IsNmea2DataSetOn) { ensemble.IsNmea2DataAvail = false; }
+            //else
+            //{
+            //    if (!ensemble.IsNmea2DataAvail)
+            //    {
+            //        // Set that data set was not used
+            //        _options.IsNmea2DataSetOn = false;
+            //    }
+            //}
 
             // Write the data to the file
             _writer.Write(ensemble.EncodePd0Ensemble(_options.CoordinateTransform));

@@ -45,6 +45,7 @@
  * 03/13/2019      RC          3.4.11     Fixed bug with exporting CSV data with a 3 beam system.
  * 07/01/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass.
  *                                        Removed X North from Velocity Vector.
+ * 07/22/2019      RC          3.4.13     Fixed bug writing vertical beam.
  * 
  */
 
@@ -860,7 +861,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.BeamVelocityData.BeamVelocityData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");                                               // Handle the missing 3 beams
+                        sb.Append(",,");                                               // Handle the missing 3 beams
                     }
                 }
             }
@@ -931,7 +932,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.InstrumentVelocityData.InstrumentVelocityData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }
@@ -999,7 +1000,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.EarthVelocityData.EarthVelocityData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }
@@ -1070,7 +1071,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.ShipVelocityData.ShipVelocityData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }
@@ -1198,7 +1199,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.CorrelationData.CorrelationData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }
@@ -1266,7 +1267,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.AmplitudeData.AmplitudeData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }
@@ -1478,7 +1479,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.GoodBeamData.GoodBeamData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }
@@ -1546,7 +1547,7 @@ namespace RTI
                     // If a vertical beam
                     if (ensemble.GoodEarthData.GoodEarthData.GetLength(1) <= 1)
                     {
-                        sb.Append(",,,");
+                        sb.Append(",,");
                     }
                 }
             }

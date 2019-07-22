@@ -15,6 +15,8 @@ RTI-3.4.12
  - In ExportOptions, added Ship Velocity and Ship Water Mass Velocity.
  - In CsvExporterWriter, added Ship Velocity and Ship Water Mass Velocity.
  - In BottomTrackDataSet, in DecodePd0Ensemble(), do not remap Instrument and Ship velocity data.
+ * Fixed a bug in CsvExporterWriter writing the Vertical beam.
+ * In Pd0ExporterWriter, removed the check for which datasets exist.
 
 RTI-3.4.11
  * In PD0ExporterWriter, fixed bug in PD0 Exporter with multiple configurations.

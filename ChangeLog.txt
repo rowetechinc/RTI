@@ -1,5 +1,11 @@
 RTI Changelog
 
+RTI-3.4.13
+ * In CsvExporterWriter, replaced Y North with X North for Velocity Vector.
+ - In ExportOptions, made Remove Ship Speed and Mark Bad Below Bottom default to True.
+ - In RemoveShipSpeed, Added GetPreviousShipSpeedGPS to get the good GPS speed to use as a backup.
+ - In CsvExporterWriter, added Speed to NMEA CSV data.
+
 RTI-3.4.12
  * Added decoding ShipVelocity in BottomTrackDataSet::Decode().
  * Added setting the Ship Velocity in BottomTrackDataSet::DecodePd0Ensemble().

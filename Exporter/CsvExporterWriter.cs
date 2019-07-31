@@ -46,6 +46,8 @@
  * 07/01/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass.
  *                                        Removed X North from Velocity Vector.
  * 07/22/2019      RC          3.4.13     Fixed bug writing vertical beam.
+ * 07/30/2019      RC          3.4.13     Replaced Y North with X North for Velocity Vector. 
+ * 07/31/2019      RC          3.4.13     Added Speed to NMEA CSV data.
  * 
  */
 
@@ -1128,8 +1130,8 @@ namespace RTI
                 for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
                 {
                         sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude.ToString(new CultureInfo("en-US"))));
-                        //sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
-                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth.ToString(new CultureInfo("en-US"))));
+                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
+                        //sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth.ToString(new CultureInfo("en-US"))));
                 }
             }
             else
@@ -2669,6 +2671,7 @@ namespace RTI
             sb.Append("Altitude,");
             sb.Append("UtcTime,");
             sb.Append("Heading");
+            sb.Append("Speed");
 
             return sb.ToString();
         }
@@ -2684,6 +2687,7 @@ namespace RTI
 
             if (ensemble.IsNmeaAvail)
             {
+                // Lat/Lon and Time
                 if (ensemble.NmeaData.IsGpggaAvail())
                 {
                     sb.Append(ensemble.NmeaData.GPGGA.Position.Latitude.DecimalDegrees.ToString(new CultureInfo("en-US")));
@@ -2699,6 +2703,8 @@ namespace RTI
                 {
                     sb.Append(",,,,");
                 }
+
+                // Heading
                 if(ensemble.NmeaData.IsGphdtAvail())
                 {
                     sb.Append(ensemble.NmeaData.GPHDT.Heading.DecimalDegrees.ToString(new CultureInfo("en-US")));
@@ -2708,10 +2714,21 @@ namespace RTI
                 {
                     sb.Append(",");
                 }
+
+                // Heading
+                if (ensemble.NmeaData.IsGpvtgAvail())
+                {
+                    sb.Append(ensemble.NmeaData.GPVTG.Speed.ToMetersPerSecond().Value.ToString(new CultureInfo("en-US")));
+                    sb.Append(",");
+                }
+                else
+                {
+                    sb.Append(",");
+                }
             }
             else
             {
-                sb.Append(",,,,,");
+                sb.Append(",,,,,,");
             }
 
             return sb.ToString();

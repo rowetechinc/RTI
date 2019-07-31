@@ -36,6 +36,7 @@
  * 10/06/2017      RC          1.1.0      Added screening options.
  * 11/20/2018      RC          3.4.11     Clone and screen the options.
  * 07/02/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass Velocity.
+ * 07/30/2019      RC          3.4.13     Made Remove Ship Speed and Mark Bad Below Bottom default to true.
  * 
  */
 
@@ -218,9 +219,14 @@ namespace RTI
         public bool IsMarkBadBelowBottom { get; set; }
 
         /// <summary>
-        /// Turn on or off removing the ship speed.
+        /// Turn on or off using Bottom Track to remove the Ship Speed.
         /// </summary>
-        public bool IsRemoveShipSpeed { get; set; }
+        public bool IsRemoveShipSpeedBT { get; set; }
+
+        /// <summary>
+        /// Turn on or off using GPS to remove the Ship Speed.
+        /// </summary>
+        public bool IsRemoveShipSpeedGPS { get; set; }
 
         #region Waves
 
@@ -398,8 +404,9 @@ namespace RTI
             CorrelationThreshold = 0.0f;
             PressureOffset = 0.0f;
             IsRetransformData = false;
-            IsMarkBadBelowBottom = false;
-            IsRemoveShipSpeed = false;
+            IsMarkBadBelowBottom = true;
+            IsRemoveShipSpeedGPS = true;
+            IsRemoveShipSpeedBT = true;
         }
 
         /// <summary>
@@ -479,7 +486,8 @@ namespace RTI
             newOptions.PressureOffset = this.PressureOffset;
             newOptions.IsRetransformData = this.IsRetransformData;
             newOptions.IsMarkBadBelowBottom = this.IsMarkBadBelowBottom;
-            newOptions.IsRemoveShipSpeed = this.IsRemoveShipSpeed;
+            newOptions.IsRemoveShipSpeedGPS = this.IsRemoveShipSpeedGPS;
+            newOptions.IsRemoveShipSpeedBT = this.IsRemoveShipSpeedBT;
 
             return newOptions;
         }

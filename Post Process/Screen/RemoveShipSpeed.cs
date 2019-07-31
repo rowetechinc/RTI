@@ -44,6 +44,7 @@
  * 09/05/2017      RC          3.4.3      Added GetPreviousBottomTrackVelocity() to get the previous Bottom Track velocity to store for next iteration.
  * 09/13/2017      RC          3.4.3      Check if Bottom Track has no beams.
  * 09/04/2018      RC          3.4.10     In RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 
+ * 07/31/2019      RC          3.4.12     Added GetPreviousShipSpeedGPS to get the good GPS speed to use as a backup.
  * 
  */
 
@@ -874,6 +875,67 @@ namespace RTI
 
                 return result;
             }
+
+            /// <summary>
+            /// Get the previous good GPS speed.  This will be used for back values if the data is bad in the current ensemble.
+            /// </summary>
+            /// <param name="ensemble">Ensemble.</param>
+            /// <param name="gpsHeadingOffset">GPS Heading Offset</param>
+            /// <returns>GPS Speed value as East, North and Vertical</returns>
+            public static float[] GetPreviousShipSpeedGPS(DataSet.Ensemble ensemble, float gpsHeadingOffset = 0.0f)
+            {
+                // Initialize the result
+                // [0] = East
+                // [1] = North
+                // [2] = Vertical
+                float[] result = new float[3];
+
+                if (ensemble.IsNmeaAvail)
+                {
+                    // Check if Gps Speed is good
+                    if (ensemble.NmeaData.IsGpvtgAvail())
+                    {
+                        if (ensemble.NmeaData.IsGpsSpeedGood())
+                        {
+                            double heading = 0.0;
+
+                            if (ensemble.IsAncillaryAvail)
+                            {
+                                // Heading defaults from ADCP
+                                heading = ensemble.AncillaryData.Heading + gpsHeadingOffset;
+                            }
+                            // Heading from GPS if its available
+                            else if (ensemble.NmeaData.IsGpvtgAvail())
+                            {
+                                heading = ensemble.NmeaData.GPVTG.Bearing.DecimalDegrees + gpsHeadingOffset;
+                            }
+                            else if (ensemble.NmeaData.IsGphdtAvail())
+                            {
+                                heading = ensemble.NmeaData.GPHDT.Heading.DecimalDegrees + gpsHeadingOffset;
+                            }
+
+                            if (ensemble.NmeaData.IsGpvtgAvail())
+                            {
+                                // Speed from the GPS
+                                double speed = ensemble.NmeaData.GPVTG.Speed.ToMetersPerSecond().Value;
+
+                                // Calculate the East and North component of the GPS speed
+                                result[0] = Convert.ToSingle(speed * Math.Sin(MathHelper.DegreeToRadian(heading)));
+                                result[1] = Convert.ToSingle(speed * Math.Cos(MathHelper.DegreeToRadian(heading)));
+                            }
+
+                            // We do not have a vertical velocity using GPS speed, so try to use the Bottom Track
+                            if (ensemble.IsBottomTrackAvail && ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY && ensemble.BottomTrackData.NumBeams >= 3)
+                            {
+                                result[2] = ensemble.BottomTrackData.ShipVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX];
+                            }
+                        }
+                    }
+                }
+
+                return result;
+            }
+
         }
     
     }

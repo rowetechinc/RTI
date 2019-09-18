@@ -3052,13 +3052,13 @@ namespace RTI
             {
                 if (TestSerialPortConnection(port))
                 {
-                    Task<AdcpSerialOptions> options = TestSerialBaudConnection(port);
+                    AdcpSerialOptions options = TestSerialBaudConnection(port, 115200);
                     SendBreak();
                     //AdcpSerialOptions options = TestSerialBaudConnection(port);
                     // Found a port now test the baud rate
                     if (options != null)
                     {
-                        result.Add(options.Result);
+                        result.Add(options);
                     }
                 }
             }
@@ -3147,6 +3147,9 @@ namespace RTI
                 _serialOptions.BaudRate = baud;
                 
                 bool connectResult = Connect();
+
+                // Send a Force BREAK to ensure the ADCP is talking
+                SendForceBreak();
 
                 // Wait for connection to be made
                 Thread.Sleep(AdcpSerialPort.WAIT_STATE);
@@ -3237,62 +3240,74 @@ namespace RTI
             // Test all the baud rates until one is found
             foreach (var baud in bauds)
             {
-                // Create a serial connection
-                _serialOptions = new SerialOptions();
-                _serialOptions.Port = port;
-                _serialOptions.BaudRate = baud;
+                return await Task.Run(() => TestSerialBaudConnection(port, baud));
+            }
 
-                // Connect the serial port
-                bool connectResult = Connect();
+            return null;
+        }
 
-                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 5);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="baud"></param>
+        /// <returns></returns>
+        public AdcpSerialOptions TestSerialBaudConnection(string port, int baud)
+        {
+            // Create a serial connection
+            _serialOptions = new SerialOptions();
+            _serialOptions.Port = port;
+            _serialOptions.BaudRate = baud;
 
-                // Verify the connection was created
-                if (IsOpen())
+            // Connect the serial port
+            bool connectResult = Connect();
+
+            Thread.Sleep(AdcpSerialPort.WAIT_STATE * 5);
+
+            // Verify the connection was created
+            if (IsOpen())
+            {
+                // Stop pinging just in case
+                //StopPinging();
+
+                // Clear buffer
+                ReceiveBufferString = "";
+
+                // Send a Break
+                SendBreak();
+                //await Task.Run(() => SendBreak());
+
+                // Wait for an output
+                Thread.Sleep(1000);
+
+                // Get the buffer output
+                string buffer = ReceiveBufferString;
+
+                if (!string.IsNullOrEmpty(ReceiveBufferString))
                 {
-                    // Stop pinging just in case
-                    //StopPinging();
+                    Debug.WriteLine("AdcpSerialPort.TestSerialBaudConnection(): " + ReceiveBufferString);
 
-                    // Clear buffer
-                    ReceiveBufferString = "";
-
-                    // Send a Break
-                    //SendBreak();
-                    await Task.Run(() => SendBreak());
-
-                    // Wait for an output
-                    Thread.Sleep(1000);
-
-                    // Get the buffer output
-                    string buffer = ReceiveBufferString;
-
-                    if (!string.IsNullOrEmpty(ReceiveBufferString))
+                    //Decode the data to see if the response is not garabage
+                    if (ReceiveBufferString.Contains(" Rowe Technologies Inc."))
                     {
-                        Debug.WriteLine("AdcpSerialPort.TestSerialBaudConnection(): " + ReceiveBufferString);
+                        // Decode the Break response
+                        Commands.BreakStmt breakStmt = Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
 
-                        //Decode the data to see if the response is not garabage
-                        if (ReceiveBufferString.Contains(" Rowe Technologies Inc."))
-                        {
-                            // Decode the Break response
-                            Commands.BreakStmt breakStmt = Commands.AdcpCommands.DecodeBREAK(ReceiveBufferString);
+                        // Close the connection
+                        Disconnect();
 
-                            // Close the connection
-                            Disconnect();
-
-                            // Return the options used to find the ADCP
-                            return new AdcpSerialOptions() { SerialOptions = _serialOptions, SerialNumber = breakStmt.SerialNum, Firmware = breakStmt.FirmwareVersion, Hardware = breakStmt.Hardware };
-                        }
-                        else
-                        {
-                            // Nothing found for this baud rate so shutdown the connection
-                            Disconnect();
-                        }
+                        // Return the options used to find the ADCP
+                        return new AdcpSerialOptions() { SerialOptions = _serialOptions, SerialNumber = breakStmt.SerialNum, Firmware = breakStmt.FirmwareVersion, Hardware = breakStmt.Hardware };
                     }
                     else
                     {
+                        // Nothing found for this baud rate so shutdown the connection
                         Disconnect();
                     }
-
+                }
+                else
+                {
+                    Disconnect();
                 }
             }
 

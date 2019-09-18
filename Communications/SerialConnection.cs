@@ -515,7 +515,10 @@ namespace RTI
         /// <param name="breakState">Break state.</param>
         public void SetBreakState(bool breakState)
         {
-            _serialPort.BreakState = breakState;
+            if (_serialPort != null && _serialPort.IsOpen)
+            {
+                _serialPort.BreakState = breakState;
+            }
         }
 
         /// <summary>

@@ -118,6 +118,7 @@
     <Compile Include="Models\PD0\Pd0NmeaData.cs" />
     <Compile Include="Post Process\Average\AverageBinsTogether.cs" />
     <Compile Include="Post Process\Screen\ScreenBadHeading.cs" />
+    <Compile Include="Post Process\Screen\ScreenMarkBadAboveSurface.cs" />
     <Compile Include="Post Process\Screen\ScreenScaleFactor.cs" />
     <Compile Include="Post Process\VesselMount\VmManualWaterTrack.cs" />
     <Compile Include="Utils\MemoryStreamExtensions.cs" />

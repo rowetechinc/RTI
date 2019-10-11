@@ -37,6 +37,7 @@
  * 04/26/2013      RC          2.19       Changed namespace from Screen to ScreenData.
  * 08/13/2013      RC          2.19.4     Get the AverageRange from BottomTrackDataSet.
  * 01/31/2018      RC          3.4.5      Added Previous BT Range.
+ * 10/10/2019      RC          3.4.14     Moved GetBottomBin to Ensemble.
  * 
  */
 
@@ -92,7 +93,7 @@ namespace RTI
                         }
 
                         // Get the bottom bin
-                        int bottomBin = GetBottomBin(ensemble, bottom);
+                        int bottomBin = Ensemble.GetBottomBin(ensemble, bottom);
 
                         // Check if the bottom bin is at or beyond
                         // the number of bins
@@ -119,112 +120,6 @@ namespace RTI
                 }
                 return false;
             }
-
-            /// <summary>
-            /// Get the bin number for the bottom.  This will
-            /// determine which bin is the bottom.  To find the bottom
-            /// bin, determine how many bins can fit to reach the bottom.
-            /// You must also take into account the blank.  A blank could
-            /// be larger then a bin size, so include the blank in the calculation
-            /// of finding the bottom bin.
-            /// 
-            ///             |     |
-            ///             \     /
-            ///              -----
-            ///              
-            ///              Blank
-            ///              
-            ///              -----
-            ///               Bin
-            ///              -----
-            ///               Bin
-            ///              -----
-            ///               ...
-            ///              -----
-            ///               Bin
-            ///               
-            ///        --------------------
-            ///              Bottom 
-            /// </summary>
-            /// <param name="ensemble">Ensemble to screen.</param>
-            /// <param name="bottom">Bottom Depth.</param>
-            /// <returns>Bin of the bottom.</returns>
-            private static int GetBottomBin(DataSet.Ensemble ensemble, double bottom)
-            {
-                double binSize = ensemble.AncillaryData.BinSize;
-                double blank = ensemble.AncillaryData.FirstBinRange;
-
-                // Determine the how many bins 
-                // get us to the bottom by dividing
-                // by the bin size.  If the blank
-                // is larger then a bin size, we have
-                // to take into account the blank as 
-                // 1 or more bins.
-                if (blank < binSize)
-                {
-                    return (int)(bottom / binSize);
-                }
-                else
-                {
-                    // If the blank is bigger than the bin size
-                    // Determine how many bins fit in the blank and
-                    // subtract that from the end result
-                    int binsInBlank = (int)((blank / binSize) + 0.5);
-                    return (int)(bottom / (binSize)) - binsInBlank;
-                }
-            }
-
-            ///// <summary>
-            ///// Set all velocities and Good Ping data bad
-            ///// for the given bin.  
-            ///// </summary>
-            ///// <param name="ensemble">Ensemble to modify.</param>
-            ///// <param name="bin">Bin to modify.</param>
-            //private static void SetVelocitiesBad(ref DataSet.Ensemble ensemble, int bin)
-            //{
-            //    // Beam Velocities
-            //    if (ensemble.IsBeamVelocityAvail)
-            //    {
-            //        ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_0_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_1_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_2_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.BeamVelocityData.BeamVelocityData[bin, DataSet.Ensemble.BEAM_3_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //    }
-            //    if (ensemble.IsGoodBeamAvail)
-            //    {
-            //        ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_0_INDEX] = 0;
-            //        ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_1_INDEX] = 0;
-            //        ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_2_INDEX] = 0;
-            //        ensemble.GoodBeamData.GoodBeamData[bin, DataSet.Ensemble.BEAM_3_INDEX] = 0;
-            //    }
-
-            //    // Earth Velocities
-            //    if (ensemble.IsEarthVelocityAvail)
-            //    {
-            //        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //    }
-            //    if (ensemble.IsGoodEarthAvail)
-            //    {
-            //        ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] = 0;
-            //        ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] = 0;
-            //        ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] = 0;
-            //        ensemble.GoodEarthData.GoodEarthData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = 0;
-            //    }
-
-            //    // Earth Velocities
-            //    if (ensemble.IsInstrVelocityAvail)
-            //    {
-            //        ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_X_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Y_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Z_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //        ensemble.InstrVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_Q_INDEX] = DataSet.Ensemble.BAD_VELOCITY;
-            //    }
-            //}
-
-
         }
 
     }

@@ -36,6 +36,7 @@
  * 12/19/2014      RC          3.0.2      Added NumBeams.
  * 07/22/2016      RC          3.3.2      Added Ice Tracking data.
  * 10/19/2016      RC          3.3.2      Fixed bug exporting Range Tracking Data.
+ * 10/10/2019      RC          3.4.14     Added AverageRange().
  * 
  * 
  * 
@@ -526,6 +527,38 @@ namespace RTI
                 System.Buffer.BlockCopy(payload, 0, result, header.Length, payload.Length);
 
                 return result;
+            }
+
+            #endregion
+
+            #region Average
+
+            /// <summary>
+            /// This will calculate the average range value.
+            /// If a value is bad, it will not include the value.
+            /// </summary>
+            /// <returns>Average range to the bottom.</returns>
+            public float GetAverageRange()
+            {
+                int count = 0;
+                float result = 0.0f;
+                for (int beam = 0; beam < Range.Length; beam++)
+                {
+                    if (Range[beam] > DataSet.Ensemble.BAD_RANGE)
+                    {
+                        result += Range[beam];
+                        count++;
+                    }
+                }
+
+                // If at least 2 values are bad
+                // Return a bad range
+                if (count < 2)
+                {
+                    return DataSet.Ensemble.BAD_RANGE;
+                }
+
+                return result / count;
             }
 
             #endregion

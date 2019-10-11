@@ -87,6 +87,7 @@
  * 08/17/2018      RC          3.4.9      Added SyncRoot to lock the ensemble if modifying.
  * 06/18/2019      RC          3.4.11     Added Ship Water Track from PD0 data.  
  *                                        Fix the scale of the water track values in PD0
+ * 10/10/2019      RC          3.4.14     Moved GetBottomBin() from ScreenMarkBadBelowBottom to Ensemble.
  * 
  */
 
@@ -3995,6 +3996,64 @@ namespace RTI
             }
 
             #endregion
+
+            #endregion
+
+            #region Get Bottom Bin
+
+            /// <summary>
+            /// Get the bin number for the bottom.  This will
+            /// determine which bin is the bottom.  To find the bottom
+            /// bin, determine how many bins can fit to reach the bottom.
+            /// You must also take into account the blank.  A blank could
+            /// be larger then a bin size, so include the blank in the calculation
+            /// of finding the bottom bin.
+            /// 
+            ///             |     |
+            ///             \     /
+            ///              -----
+            ///              
+            ///              Blank
+            ///              
+            ///              -----
+            ///               Bin
+            ///              -----
+            ///               Bin
+            ///              -----
+            ///               ...
+            ///              -----
+            ///               Bin
+            ///               
+            ///        --------------------
+            ///              Bottom 
+            /// </summary>
+            /// <param name="ensemble">Ensemble to screen.</param>
+            /// <param name="bottom">Bottom Depth.</param>
+            /// <returns>Bin of the bottom.</returns>
+            public static int GetBottomBin(DataSet.Ensemble ensemble, double bottom)
+            {
+                double binSize = ensemble.AncillaryData.BinSize;
+                double blank = ensemble.AncillaryData.FirstBinRange;
+
+                // Determine the how many bins 
+                // get us to the bottom by dividing
+                // by the bin size.  If the blank
+                // is larger then a bin size, we have
+                // to take into account the blank as 
+                // 1 or more bins.
+                if (blank < binSize)
+                {
+                    return (int)(bottom / binSize);
+                }
+                else
+                {
+                    // If the blank is bigger than the bin size
+                    // Determine how many bins fit in the blank and
+                    // subtract that from the end result
+                    int binsInBlank = (int)((blank / binSize) + 0.5);
+                    return (int)(bottom / (binSize)) - binsInBlank;
+                }
+            }
 
             #endregion
 

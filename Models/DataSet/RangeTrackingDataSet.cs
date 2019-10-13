@@ -561,6 +561,50 @@ namespace RTI
                 return result / count;
             }
 
+            /// <summary>
+            /// Get the bottom Track Bin.  This is based off the bin size
+            /// and the range measured in the bottom track.
+            /// Return a negative number if it is not good.
+            /// </summary>
+            /// <param name="binSize">Bins size.</param>
+            /// <param name="blank">Blank distance.</param>
+            /// <returns>Bottom Track bin.</returns>
+            public int GetRangeBin(float binSize, float blank)
+            {
+                int bin = -1;
+
+                // Get the bottom track depth
+                double depth = GetAverageRange();
+
+                // If no depth found, return 0
+                if (depth == 0)
+                {
+                    return 0;
+                }
+
+                // Range = BtDepth * cos(BeamAngle)
+                // Max Bin = (Range / binLength) - 1Bin
+                //double range = GetAverageRange() * Math.Cos(beamAngle);
+
+                //// Check for an error
+                //if (binSize != 0)
+                //{
+                //    bin = (int)Math.Round((range / binSize) - 1.0);
+                //}
+
+                // Remove the blanking distance
+                depth -= blank;
+
+                // Ensure a depth is given
+                if (depth > 0.0)
+                {
+                    double binDepth = depth / binSize;
+                    bin = (int)Math.Round(binDepth);
+                }
+
+                return bin;
+            }
+
             #endregion
 
             #region Override

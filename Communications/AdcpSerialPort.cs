@@ -83,6 +83,7 @@
  * 09/25/2013      RC          2.20.1     In TestSerialBaudConnection(), check if the serial port is open and disconnect if it is to prevent exception.  Change the timeout for the response.
  * 09/30/2013      RC          2.20.1     Fixed bug in GetAdcpConfiguration() where the serial options were not set and lost by the constructor.
  * 06/11/2014      RC          2.22.1     Check every baud rate in TestSerialBaudConnection().
+ * 10/14/2019      RC          3.4.14     In Reboot, changed SLEEP to SLEEPA and wait 11 seconds.
  * 
  */
 
@@ -640,10 +641,11 @@ namespace RTI
             if (IsAvailable())
             {
                 // Put the ADCP to Sleep
-                SendData("SLEEP");
+                SendData("SLEEPA");
 
-                // Wait for it to sleep
-                Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
+                // Wait for the ADCP to sleep
+                // SLEEPA needs 10 seconds
+                Thread.Sleep((AdcpSerialPort.WAIT_STATE * 4) * 11);
 
                 // Send the BREAK and STOP using StopPinging
                 StopPinging();

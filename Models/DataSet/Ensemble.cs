@@ -4055,6 +4055,37 @@ namespace RTI
                 }
             }
 
+            /// <summary>
+            /// Get the bottom Track Bin.  This is based off the bin size
+            /// and the range measured in the bottom track.
+            /// Return a negative number if it is not good.
+            /// </summary>
+            /// <param name="binSize">Bins size.</param>
+            /// <param name="blank">Blank distance.</param>
+            /// <returns>Bottom Track bin.</returns>
+            public static int GetRangeBin(float depth, float binSize, float blank)
+            {
+                int bin = -1;
+
+                // If no depth found, return 0
+                if (depth == 0)
+                {
+                    return 0;
+                }
+
+                // Remove the blanking distance
+                depth -= blank;
+
+                // Ensure a depth is given
+                if (depth > 0.0)
+                {
+                    double binDepth = depth / binSize;
+                    bin = (int)Math.Round(binDepth);
+                }
+
+                return bin;
+            }
+
             #endregion
 
         }

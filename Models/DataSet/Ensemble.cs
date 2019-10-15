@@ -4060,6 +4060,7 @@ namespace RTI
             /// and the range measured in the bottom track.
             /// Return a negative number if it is not good.
             /// </summary>
+            /// <param name="depth">Depth to find the bin in meters.</param>
             /// <param name="binSize">Bins size.</param>
             /// <param name="blank">Blank distance.</param>
             /// <returns>Bottom Track bin.</returns>

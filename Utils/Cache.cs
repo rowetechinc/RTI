@@ -226,5 +226,26 @@ namespace RTI
             return null;
         }
 
+        /// <summary>
+        /// Return the last value in the dictionary.  
+        /// If the dictionary is empty, then return null.
+        /// </summary>
+        /// <returns>Return the last value in the cache.</returns>
+        public TValue GetLast()
+        {
+            if(_cachedNodesDictionary.Count <= 0)
+            {
+                return null;
+            }
+
+            // Get last value
+            TValue val = null;
+            foreach (TValue value in _cachedNodesDictionary.Values)
+            {
+                val = value;
+            }
+            return val;
+        }
+
     }
 }

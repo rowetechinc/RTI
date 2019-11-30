@@ -42,6 +42,7 @@
  * 09/26/2017      RC          3.4.4      Get the correct Beam Angle based off the subsystem code.
  * 09/28/2017      RC          3.4.4      Know the original data format to know which beam matrix to use to transform the data.
  * 12/03/2018      RC          3.4.11     Set the velocity bad in ProfileTransform() and BottomTrackTransform() if not good data.
+ * 11/29/2019      RC          3.4.15     If more than 3 beams are bad set all velocity to BAD_VELOCITY and not 0.0.
  * 
  */
 
@@ -446,6 +447,8 @@ namespace RTI
                 int goodBeam = 0;                                                                               // Count the number of good beams
                 int badBeam = 0;                                                                                // Keep track of bad beam
                 float[] tempVel = new float[numBeams];                                                          // Array to temperary hold velocity values
+
+                // Get the good data for a bin
                 for (int beam = 0; beam < numBeams; beam++)
                 {
                     ensemble.GoodEarthData.GoodEarthData[bin, beam] = 0;                                        // Initialize the Good Earth data
@@ -668,8 +671,8 @@ namespace RTI
                     // Set all the Instrument and Earth and Good Earth to 0
                     for(int x = 0; x < numBeams; x++)
                     {
-                        ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, x] = 0.0f;
-                        ensemble.EarthVelocityData.EarthVelocityData[bin, x] = 0.0f;
+                        ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, x] = DataSet.Ensemble.BAD_VELOCITY;
+                        ensemble.EarthVelocityData.EarthVelocityData[bin, x] = DataSet.Ensemble.BAD_VELOCITY;
                         ensemble.GoodEarthData.GoodEarthData[bin, x] = 0;
                     }
                 }
@@ -1092,8 +1095,8 @@ namespace RTI
                 // Set all the Instrument, Earth and Good Earth to 0
                 for (int x = 0; x < numBeams; x++)
                 {
-                    ensemble.BottomTrackData.InstrumentVelocity[x] = 0.0f;
-                    ensemble.BottomTrackData.EarthVelocity[x] = 0.0f;
+                    ensemble.BottomTrackData.InstrumentVelocity[x] = DataSet.Ensemble.BAD_VELOCITY;
+                    ensemble.BottomTrackData.EarthVelocity[x] = DataSet.Ensemble.BAD_VELOCITY;
                     ensemble.BottomTrackData.EarthGood[x] = 0;
                 }
             }

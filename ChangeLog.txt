@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-3.4.15
+ - In ExportOptions, Added HeadingOffset, PitchOffset and RollOffset.
+ * In Tansform, If more than 3 beams are bad set all velocity to BAD_VELOCITY and not 0.0.
+
 RTI-3.4.14
  - In RangeTrackingDataSet, added AverageRange().
  - Added ScreenMarkBadAboveSurface.cs.

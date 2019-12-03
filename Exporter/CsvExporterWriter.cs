@@ -48,6 +48,7 @@
  * 07/22/2019      RC          3.4.13     Fixed bug writing vertical beam.
  * 07/30/2019      RC          3.4.13     Replaced Y North with X North for Velocity Vector. 
  * 07/31/2019      RC          3.4.13     Added Speed to NMEA CSV data.
+ * 11/25/2019      RC          3.4.14     Fixed the label for CSV exporter from YNorth to XNorth.
  * 
  */
 
@@ -1108,8 +1109,8 @@ namespace RTI
             for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
             {
                 sb.Append(string.Format("VelVector{0}_{1},", bin, "Mag"));
-                //sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir XNorth"));
-                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir YNorth"));
+                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir XNorth"));
+                //sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir YNorth"));
             }
 
             return sb.ToString();

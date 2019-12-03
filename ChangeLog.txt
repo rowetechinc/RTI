@@ -1,13 +1,17 @@
 RTI Changelog
 
+RTI-3.4.15
+ - In ExportOptions, Added HeadingOffset, PitchOffset and RollOffset.
+ * In Tansform, If more than 3 beams are bad set all velocity to BAD_VELOCITY and not 0.0.
+
 RTI-3.4.14
  - In RangeTrackingDataSet, added AverageRange().
  - Added ScreenMarkBadAboveSurface.cs.
  - Moved GetBottomBin() from ScreenMarkBadBelowBottom to Ensemble.
  - In AdcpSerialPort, In Reboot, changed SLEEP to SLEEPA and wait 11 seconds.
- - In EnsembleHelper, Added SetAmplitudeBad() and SetCorrelationBad().
+	* In CsvExporterWriter, Fixed the label for CSV exporter from YNorth to XNorth
+ - In EnsembleHelper, Added SetAmplitudeBad() and SetCorrelationBad(). 
  - In ScreenMarkBadBelowBottom and ScreenMarkBadAboveSurface, Mark Correlation and Amplitude bad
-
 RTI-3.4.13
  * In CsvExporterWriter, replaced Y North with X North for Velocity Vector.
  - In ExportOptions, made Remove Ship Speed and Mark Bad Below Bottom default to True.

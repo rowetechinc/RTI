@@ -37,6 +37,7 @@
  * 11/20/2018      RC          3.4.11     Clone and screen the options.
  * 07/02/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass Velocity.
  * 07/30/2019      RC          3.4.13     Made Remove Ship Speed and Mark Bad Below Bottom default to true.
+ * 11/29/2019      RC          3.4.15     Added HeadingOffset, PitchOffset and RollOffset.
  * 
  */
 
@@ -235,11 +236,6 @@ namespace RTI
         /// </summary>
         public float CorrelationThreshold { get; set; }
 
-        /// <summary>
-        /// Pressure offset.
-        /// </summary>
-        public float PressureOffset { get; set; }
-
         #endregion
 
         #endregion
@@ -338,6 +334,34 @@ namespace RTI
 
         #endregion
 
+        #region Offsets
+
+
+        /// <summary>
+        /// Pressure offset.
+        /// </summary>
+        public float PressureOffset { get; set; }
+
+
+        /// <summary>
+        /// Heading offset.
+        /// </summary>
+        public float HeadingOffset { get; set; }
+
+
+        /// <summary>
+        /// Pitch offset.
+        /// </summary>
+        public float PitchOffset { get; set; }
+
+
+        /// <summary>
+        /// Roll offset.
+        /// </summary>
+        public float RollOffset { get; set; }
+
+        #endregion
+
         #endregion
 
         /// <summary>
@@ -407,6 +431,9 @@ namespace RTI
             IsMarkBadBelowBottom = true;
             IsRemoveShipSpeedGPS = true;
             IsRemoveShipSpeedBT = true;
+            HeadingOffset = 0.0f;
+            PitchOffset = 0.0f;
+            RollOffset = 0.0f;
         }
 
         /// <summary>
@@ -488,6 +515,9 @@ namespace RTI
             newOptions.IsMarkBadBelowBottom = this.IsMarkBadBelowBottom;
             newOptions.IsRemoveShipSpeedGPS = this.IsRemoveShipSpeedGPS;
             newOptions.IsRemoveShipSpeedBT = this.IsRemoveShipSpeedBT;
+            newOptions.HeadingOffset = this.HeadingOffset;
+            newOptions.PitchOffset = this.PitchOffset;
+            newOptions.RollOffset = this.RollOffset;
 
             return newOptions;
         }

@@ -72,7 +72,7 @@ namespace RTI
             /// <param name="ensemble">Ensemble to modify the heading.</param>
             /// <param name="pitchOffset">Pitch offset value to add.</param>
             /// <param name="rollOffset">Roll offset value to add.</param>
-            private static void AddAncillaryTiltOffset(ref DataSet.Ensemble ensemble, float pitchOffset, float rollOffset)
+            public static void AddAncillaryTiltOffset(ref DataSet.Ensemble ensemble, float pitchOffset, float rollOffset)
             {
                 if (ensemble.IsAncillaryAvail)
                 {
@@ -87,7 +87,7 @@ namespace RTI
             /// <param name="ensemble">Ensemble to modify the heading.</param>
             /// <param name="pitchOffset">Pitch offset value to add.</param>
             /// <param name="rollOffset">Roll offset value to add.</param>
-            private static void AddBottomTrackTiltOffset(ref DataSet.Ensemble ensemble, float pitchOffset, float rollOffset)
+            public static void AddBottomTrackTiltOffset(ref DataSet.Ensemble ensemble, float pitchOffset, float rollOffset)
             {
                 if (ensemble.IsBottomTrackAvail)
                 {

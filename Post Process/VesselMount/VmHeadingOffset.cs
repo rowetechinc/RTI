@@ -74,7 +74,7 @@ namespace RTI
             /// </summary>
             /// <param name="ensemble">Ensemble to modify the heading.</param>
             /// <param name="offset">Offset value to add.</param>
-            private static void AddAncillaryHeadingOffset(ref DataSet.Ensemble ensemble, float offset)
+            public static void AddAncillaryHeadingOffset(ref DataSet.Ensemble ensemble, float offset)
             {
                 if (ensemble.IsAncillaryAvail)
                 {
@@ -87,7 +87,7 @@ namespace RTI
             /// </summary>
             /// <param name="ensemble">Ensemble to modify the heading.</param>
             /// <param name="offset">Offset value to add.</param>
-            private static void AddBottomTrackHeadingOffset(ref DataSet.Ensemble ensemble, float offset)
+            public static void AddBottomTrackHeadingOffset(ref DataSet.Ensemble ensemble, float offset)
             {
                 if (ensemble.IsBottomTrackAvail)
                 {

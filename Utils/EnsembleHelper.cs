@@ -41,6 +41,7 @@
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements for EnsembleDataSet and AncillaryDataSet.
  * 08/13/2015      RC          3.0.5      In SetVelocitiesBad(), check the VelocityVectors size.
  * 09/24/2015      RC          3.1.0      In SetVelocitiesBad(), work with any of number of beams.
+ * 10/31/2019      RC          3.4.14     Added SetAmplitudeBad() and SetCorrelationBad().
  * 
  */
 
@@ -551,6 +552,47 @@ namespace RTI
 
         }
 
+        /// <summary>
+        /// Set all Amplitude data bad
+        /// for the given bin.  This will also verify the
+        /// bin given is within range of the number of bins
+        /// for the ensemble.  If the bin given is too large,
+        /// nothing will be changed.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to modify.</param>
+        /// <param name="bin">Bin to modify.</param>
+        public static void SetAmplitudeBad(ref DataSet.Ensemble ensemble, int bin)
+        {
+            // Beam Velocities
+            if (ensemble.IsAmplitudeAvail && bin < ensemble.AmplitudeData.AmplitudeData.GetLength(0))
+            {
+                for (int beam = 0; beam < ensemble.AmplitudeData.AmplitudeData.GetLength(1); beam++)
+                {
+                    ensemble.AmplitudeData.AmplitudeData[bin, beam] = DataSet.Ensemble.BAD_RANGE;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Set all Correlation data bad
+        /// for the given bin.  This will also verify the
+        /// bin given is within range of the number of bins
+        /// for the ensemble.  If the bin given is too large,
+        /// nothing will be changed.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to modify.</param>
+        /// <param name="bin">Bin to modify.</param>
+        public static void SetCorelationBad(ref DataSet.Ensemble ensemble, int bin)
+        {
+            // Beam Velocities
+            if (ensemble.IsCorrelationAvail && bin < ensemble.CorrelationData.CorrelationData.GetLength(0))
+            {
+                for (int beam = 0; beam < ensemble.CorrelationData.CorrelationData.GetLength(1); beam++)
+                {
+                    ensemble.CorrelationData.CorrelationData[bin, beam] = DataSet.Ensemble.BAD_RANGE;
+                }
+            }
+        }
         #endregion
 
     }

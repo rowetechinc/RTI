@@ -38,6 +38,7 @@
  * 08/13/2013      RC          2.19.4     Get the AverageRange from BottomTrackDataSet.
  * 01/31/2018      RC          3.4.5      Added Previous BT Range.
  * 10/10/2019      RC          3.4.14     Moved GetBottomBin to Ensemble.
+ * 10/31/2019      RC          3.4.14     Mark Correlation and Amplitude bad
  * 
  */
 
@@ -107,7 +108,14 @@ namespace RTI
                         // This will also set the Good Pings bad
                         for (int bin = bottomBin; bin < ensemble.EnsembleData.NumBins; bin++)
                         {
+                            // Set the velocities bad
                             EnsembleHelper.SetVelocitiesBad(ref ensemble, bin);
+
+                            // Set the Correlation bad
+                            EnsembleHelper.SetCorelationBad(ref ensemble, bin);
+
+                            // Set the Amplitude bad
+                            EnsembleHelper.SetAmplitudeBad(ref ensemble, bin);
                         }
 
 

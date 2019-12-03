@@ -5,6 +5,8 @@ RTI-3.4.14
  - Added ScreenMarkBadAboveSurface.cs.
  - Moved GetBottomBin() from ScreenMarkBadBelowBottom to Ensemble.
  - In AdcpSerialPort, In Reboot, changed SLEEP to SLEEPA and wait 11 seconds.
+ - In EnsembleHelper, Added SetAmplitudeBad() and SetCorrelationBad().
+ - In ScreenMarkBadBelowBottom and ScreenMarkBadAboveSurface, Mark Correlation and Amplitude bad
 
 RTI-3.4.13
  * In CsvExporterWriter, replaced Y North with X North for Velocity Vector.

@@ -833,6 +833,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Y in m/s
@@ -846,6 +847,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Z in m/s
@@ -859,6 +861,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set all 4 values to the same range, then average range will also report the correct value
@@ -895,6 +898,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Y in m/s
@@ -908,6 +912,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Z in m/s
@@ -921,6 +926,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Q in m/s
@@ -934,6 +940,7 @@ namespace RTI
                     // Set Bad velocity
                     InstrumentVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
                     EarthVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[3] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set all 4 values to the same range, then average range will also report the correct value
@@ -970,6 +977,7 @@ namespace RTI
                     // Set Bad velocity
                     EarthVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                     InstrumentVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[0] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Y in m/s
@@ -983,6 +991,7 @@ namespace RTI
                     // Set Bad velocity
                     EarthVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                     InstrumentVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[1] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set the instrument velocity Z in m/s
@@ -996,6 +1005,7 @@ namespace RTI
                     // Set Bad velocity
                     EarthVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                     InstrumentVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
+                    ShipVelocity[2] = DataSet.Ensemble.BAD_VELOCITY;
                 }
 
                 // Set all 4 values to the same range, then average range will also report the correct value

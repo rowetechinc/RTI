@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 10/10/2019      RC          3.4.14     Initial coding
+ * 10/31/2019      RC          3.4.14     Mark Correlation and Amplitude bad
  * 
  */
 
@@ -102,7 +103,14 @@ namespace RTI
                         // This will also set the Good Pings bad
                         for (int bin = bottomBin; bin < ensemble.EnsembleData.NumBins; bin++)
                         {
+                            // Set the velocities bad
                             EnsembleHelper.SetVelocitiesBad(ref ensemble, bin);
+
+                            // Set the Correlation bad
+                            EnsembleHelper.SetCorelationBad(ref ensemble, bin);
+
+                            // Set the Amplitude bad
+                            EnsembleHelper.SetAmplitudeBad(ref ensemble, bin);
                         }
 
 

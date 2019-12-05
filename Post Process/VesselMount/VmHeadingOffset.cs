@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 02/11/2014      RC          2.21.3     Initial coding
  * 12/04/2019      RC          3.4.15     Add option to retransform the data after applying the offset.
+ * 12/05/2019      RC          3.4.15     Normalize the heading value.
  * 
  */
 
@@ -87,7 +88,16 @@ namespace RTI
             {
                 if (ensemble.IsAncillaryAvail)
                 {
+                    // Add the offset to the heading
                     ensemble.AncillaryData.Heading += offset;
+
+                    // Normalize the heading between 0 and 360
+                    ensemble.AncillaryData.Heading = ensemble.AncillaryData.Heading % 360.0f;
+                    if(ensemble.AncillaryData.Heading < 0)
+                    {
+                        ensemble.AncillaryData.Heading += 360;
+                    }
+
                 }
             }
 
@@ -100,7 +110,15 @@ namespace RTI
             {
                 if (ensemble.IsBottomTrackAvail)
                 {
+                    // Add the offset to the heading
                     ensemble.BottomTrackData.Heading += offset;
+
+                    // Normalize the heading between 0 and 360
+                    ensemble.BottomTrackData.Heading = ensemble.BottomTrackData.Heading % 360.0f;
+                    if (ensemble.BottomTrackData.Heading < 0)
+                    {
+                        ensemble.BottomTrackData.Heading += 360;
+                    }
                 }
             }
         }

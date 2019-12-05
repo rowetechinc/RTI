@@ -5,6 +5,7 @@ RTI-3.4.15
  * In Tansform, If more than 3 beams are bad set all velocity to BAD_VELOCITY and not 0.0.
  - In VmTiltOffset, Add option to retransform the data after applying the offset.
  - In VmHeadingOffset, Add option to retransform the data after applying the offset.
+ - In VmHeadingOffset, Normalize the heading value.
 
 RTI-3.4.14
  - In RangeTrackingDataSet, added AverageRange().

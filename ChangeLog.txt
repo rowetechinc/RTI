@@ -6,6 +6,8 @@ RTI-3.4.15
  - In VmTiltOffset, Add option to retransform the data after applying the offset.
  - In VmHeadingOffset, Add option to retransform the data after applying the offset.
  - In VmHeadingOffset, Normalize the heading value.
+ - Added Normalise to MathHelper.
+ - In VmTiltOffset, Normalize the pitch and roll value after offset added.
 
 RTI-3.4.14
  - In RangeTrackingDataSet, added AverageRange().

@@ -117,6 +117,7 @@
     <Compile Include="Models\DataSet\Adcp2InfoDataSet.cs" />
     <Compile Include="Models\PD0\Pd0NmeaData.cs" />
     <Compile Include="Post Process\Average\AverageBinsTogether.cs" />
+    <Compile Include="Post Process\Screen\ReplacePressureVerticalBeam.cs" />
     <Compile Include="Post Process\Screen\ScreenBadHeading.cs" />
     <Compile Include="Post Process\Screen\ScreenMarkBadAboveSurface.cs" />
     <Compile Include="Post Process\Screen\ScreenScaleFactor.cs" />

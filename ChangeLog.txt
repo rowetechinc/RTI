@@ -9,6 +9,8 @@ RTI-3.4.15
  - Added Normalise to MathHelper.
  - In VmTiltOffset, Normalize the pitch and roll value after offset added.
  - Added ReplacePressureVerticalBeam to replace the pressure data with vertical beam data.
+ - In EnsembleHelper, Added AddRangeTracking().
+ - In ReplacePressureVerticalBeam, fixed logic.
 
 RTI-3.4.14
  - In RangeTrackingDataSet, added AverageRange().

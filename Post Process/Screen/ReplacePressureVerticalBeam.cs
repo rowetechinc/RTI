@@ -33,6 +33,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 12/06/2019      RC          3.4.15     Initial coding
+ * 12/06/2019      RC          3.4.15     Fixed logic when TransducerDepth is bad.
  * 
  */
 
@@ -72,19 +73,21 @@ namespace RTI
                         ssCode == Subsystem.SUB_600KHZ_VERT_PISTON_B ||
                         ssCode == Subsystem.SUB_1_2MHZ_VERT_PISTON_A)
                     {
-                        // Check if there is pressure data
-                        if (ensemble.AncillaryData.TransducerDepth == 0.0f)
-                        {
-                            // No pressure data
-                            return false;
-                        }
-
                         // Get the pressure data and replace with vertical beam data
                         // This will only replace the TransducerDepth and not Pressure so you have a way to go back
                         if(ensemble.RangeTrackingData.NumBeams > 0)
                         {
-                            ensemble.AncillaryData.TransducerDepth = ensemble.RangeTrackingData.Range[RTI.DataSet.Ensemble.BEAM_0_INDEX];
-                            return true;
+                            // Verify the Range Tracking value has a good value
+                            if (ensemble.RangeTrackingData.Range[DataSet.Ensemble.BEAM_0_INDEX] != DataSet.Ensemble.BAD_RANGE || ensemble.RangeTrackingData.Range[DataSet.Ensemble.BEAM_0_INDEX] != 0.0f)
+                            {
+                                ensemble.AncillaryData.TransducerDepth = ensemble.RangeTrackingData.Range[RTI.DataSet.Ensemble.BEAM_0_INDEX];
+                                return true;
+                            }
+                            else
+                            {
+                                // No good value to replace 
+                                return false;
+                            }
                         }
 
                         // There was no range tracking data

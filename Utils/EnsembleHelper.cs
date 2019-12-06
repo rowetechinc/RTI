@@ -42,6 +42,7 @@
  * 08/13/2015      RC          3.0.5      In SetVelocitiesBad(), check the VelocityVectors size.
  * 09/24/2015      RC          3.1.0      In SetVelocitiesBad(), work with any of number of beams.
  * 10/31/2019      RC          3.4.14     Added SetAmplitudeBad() and SetCorrelationBad().
+ * 12/06/2019      RC          3.4.15     Added AddRangeTracking().
  * 
  */
 
@@ -99,6 +100,8 @@ namespace RTI
                 AddGoodEarth(ref ensemble, numBins, numBeams);
 
                 AddNmea(ref ensemble);
+
+                AddRangeTracking(ref ensemble, numBins, numBeams);
             }
             return ensemble;
         }
@@ -486,6 +489,36 @@ namespace RTI
                                             DataSet.Ensemble.DEFAULT_IMAG,                          // Image
                                             DataSet.Ensemble.DEFAULT_NAME_LENGTH,                   // Name length
                                             DataSet.Ensemble.NmeaID);                               // Name (Dataset ID)
+        }
+
+        #endregion
+
+        #region Range Tracking
+
+        /// <summary>
+        /// Add a Range Tracking data set to
+        /// the given ensemble.  This will use the number
+        /// of bins and beams given to create the Good Beam
+        /// array.  The array will be empty.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to add the dataset.</param>
+        /// <param name="numBins">Number of bins.</param>
+        /// <param name="numBeams">Number of beams.</param>
+        public static void AddRangeTracking(ref DataSet.Ensemble ensemble, int numBins, int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM)
+        {
+            // Check for null
+            if (ensemble == null)
+            {
+                return;
+            }
+
+            // Add a blank Earth Velocity Data set
+            ensemble.AddRangeTrackingData(DataSet.Ensemble.DATATYPE_FLOAT,              // Type of data stored (Float or Int)
+                                            numBins,                                    // Number of bins
+                                            numBeams,                                   // Number of beams
+                                            DataSet.Ensemble.DEFAULT_IMAG,              // Default Image
+                                            DataSet.Ensemble.DEFAULT_NAME_LENGTH,       // Default Image length
+                                            DataSet.Ensemble.RangeTrackingID);          // Dataset ID
         }
 
         #endregion

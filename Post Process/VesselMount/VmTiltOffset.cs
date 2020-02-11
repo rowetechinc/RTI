@@ -33,6 +33,8 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/12/2014      RC          2.21.3     Initial coding
+ * 12/04/2019      RC          3.4.15     Add option to retransform the data after applying the offset.
+ * 12/05/2019      RC          3.4.15     Normalize the pitch and roll value after offset added.
  * 
  */
 
@@ -57,13 +59,21 @@ namespace RTI
             /// </summary>
             /// <param name="ensemble">Ensemble to change the value.</param>
             /// <param name="options">Options to know how the change the value.</param>
-            public static void TiltOffset(ref DataSet.Ensemble ensemble, VesselMountOptions options)
+            /// <param name="retransformData">When the heading, pitch or roll is modified, the data should be retransfomed so the velocity matches</param>
+            public static void TiltOffset(ref DataSet.Ensemble ensemble, VesselMountOptions options, bool retransformData = true)
             {
                 // Add the offset to Ancillary Pitch and Roll
                 AddAncillaryTiltOffset(ref ensemble, options.PitchOffset, options.RollOffset);
 
                 // Add the offset to the Bottom Track Pitch and Roll
                 AddBottomTrackTiltOffset(ref ensemble, options.PitchOffset, options.RollOffset);
+
+                // Retransform the data so the velocties match the pitch and roll
+                if(retransformData)
+                {
+                    Transform.ProfileTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                    Transform.BottomTrackTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                }
             }
 
             /// <summary>
@@ -77,7 +87,10 @@ namespace RTI
                 if (ensemble.IsAncillaryAvail)
                 {
                     ensemble.AncillaryData.Pitch += pitchOffset;
+                    ensemble.AncillaryData.Pitch = MathHelper.Normalise(ensemble.AncillaryData.Pitch, -90.0f, 90.0f);
+                    
                     ensemble.AncillaryData.Roll += rollOffset;
+                    ensemble.AncillaryData.Roll = MathHelper.Normalise(ensemble.AncillaryData.Roll, -180.0f, 180.0f);
                 }
             }
 
@@ -91,8 +104,12 @@ namespace RTI
             {
                 if (ensemble.IsBottomTrackAvail)
                 {
+                    // Add the offset then normalize the value
                     ensemble.BottomTrackData.Pitch += pitchOffset;
+                    ensemble.BottomTrackData.Pitch = MathHelper.Normalise(ensemble.BottomTrackData.Pitch, -90.0f, 90.0f);
+
                     ensemble.BottomTrackData.Roll += rollOffset;
+                    ensemble.BottomTrackData.Roll = MathHelper.Normalise(ensemble.BottomTrackData.Roll, -180.0f, 180.0f);
                 }
             }
         }

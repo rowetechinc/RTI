@@ -1563,5 +1563,26 @@ namespace RTI
         }
 
         #endregion
-    }
+
+        #region Normalize
+
+        /// <summary>
+        /// Normalizes any number to an arbitrary range 
+        /// by assuming the range wraps around when going below min or above max 
+        /// </summary>
+        /// <param name="value">Value to inspect.</param>
+        /// <param name="start">Start Value.</param>
+        /// <param name="end">End Value.</param>
+        /// <returns>Normalize the value between the range.</returns>
+        public static float Normalise( float value, float start, float end ) 
+        {
+            float width = end - start;   // 
+            float offsetValue = value - start;   // value relative to 0
+
+            return (float)(offsetValue - (Math.Floor(offsetValue / width ) * width ) ) + start ;
+            // + start to reset back to start of original range
+        }
+
+    #endregion
+}
 }

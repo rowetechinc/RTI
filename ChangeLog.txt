@@ -3,6 +3,14 @@ RTI Changelog
 RTI-3.4.15
  - In ExportOptions, Added HeadingOffset, PitchOffset and RollOffset.
  * In Tansform, If more than 3 beams are bad set all velocity to BAD_VELOCITY and not 0.0.
+ - In VmTiltOffset, Add option to retransform the data after applying the offset.
+ - In VmHeadingOffset, Add option to retransform the data after applying the offset.
+ - In VmHeadingOffset, Normalize the heading value.
+ - Added Normalise to MathHelper.
+ - In VmTiltOffset, Normalize the pitch and roll value after offset added.
+ - Added ReplacePressureVerticalBeam to replace the pressure data with vertical beam data.
+ - In EnsembleHelper, Added AddRangeTracking().
+ - In ReplacePressureVerticalBeam, fixed logic.
 
 RTI-3.4.14
  - In RangeTrackingDataSet, added AverageRange().

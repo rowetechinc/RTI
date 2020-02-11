@@ -33,6 +33,8 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 02/11/2014      RC          2.21.3     Initial coding
+ * 12/04/2019      RC          3.4.15     Add option to retransform the data after applying the offset.
+ * 12/05/2019      RC          3.4.15     Normalize the heading value.
  * 
  */
 
@@ -58,7 +60,8 @@ namespace RTI
             /// </summary>
             /// <param name="ensemble">Ensemble to change the value.</param>
             /// <param name="options">Options to know how the change the value.</param>
-            public static void HeadingOffset(ref DataSet.Ensemble ensemble, VesselMountOptions options)
+            /// <param name="retransformData">When the heading, pitch or roll is modified, the data should be retransfomed so the velocity matches</param>
+            public static void HeadingOffset(ref DataSet.Ensemble ensemble, VesselMountOptions options, bool retransformData = true)
             {
                 // Add the magnetic to Ancillary and Bottom Track heading
                 AddAncillaryHeadingOffset(ref ensemble, options.HeadingOffsetMag);
@@ -67,6 +70,13 @@ namespace RTI
                 // Add the alignment offset to the Ancillary and Bottom Track heading
                 AddAncillaryHeadingOffset(ref ensemble, options.HeadingOffsetAlignment);
                 AddBottomTrackHeadingOffset(ref ensemble, options.HeadingOffsetAlignment);
+
+                // Retransform the data so the velocties match the heading
+                if (retransformData)
+                {
+                    Transform.ProfileTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                    Transform.BottomTrackTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                }
             }
 
             /// <summary>
@@ -78,7 +88,16 @@ namespace RTI
             {
                 if (ensemble.IsAncillaryAvail)
                 {
+                    // Add the offset to the heading
                     ensemble.AncillaryData.Heading += offset;
+
+                    // Normalize the heading between 0 and 360
+                    ensemble.AncillaryData.Heading = ensemble.AncillaryData.Heading % 360.0f;
+                    if(ensemble.AncillaryData.Heading < 0)
+                    {
+                        ensemble.AncillaryData.Heading += 360;
+                    }
+
                 }
             }
 
@@ -91,7 +110,15 @@ namespace RTI
             {
                 if (ensemble.IsBottomTrackAvail)
                 {
+                    // Add the offset to the heading
                     ensemble.BottomTrackData.Heading += offset;
+
+                    // Normalize the heading between 0 and 360
+                    ensemble.BottomTrackData.Heading = ensemble.BottomTrackData.Heading % 360.0f;
+                    if (ensemble.BottomTrackData.Heading < 0)
+                    {
+                        ensemble.BottomTrackData.Heading += 360;
+                    }
                 }
             }
         }

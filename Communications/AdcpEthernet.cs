@@ -156,6 +156,26 @@ namespace RTI
         /// </summary>
         private System.Timers.Timer _pingTimer;
 
+        /// <summary>
+        /// Buffer to hold data for upload.
+        /// </summary>
+        byte[] _dummyUploadBuffer = new byte[4096];
+
+        /// <summary>
+        /// Buffer to upload data.
+        /// </summary>
+        private byte[] _uploadBuff = new byte[1400000];
+
+        /// <summary>
+        /// IP Buffer to store the IP address.
+        /// </summary>
+        byte[] _ipBuffer = new byte[1472];
+
+        /// <summary>
+        /// EMAC Pings.
+        /// </summary>
+        int _emacPings = 0;
+
         #endregion
 
         #region Properties
@@ -1110,6 +1130,338 @@ namespace RTI
             }
 
             _isWritingDownloadedData = false;
+        }
+
+        #endregion
+
+        #region Upload
+
+
+        private int IP_Message(bool dummy, bool SendCommand, bool ShowText, string CMD, int timeout, byte[] buff, int offset)
+        {
+            _emacPings++;
+            //textBoxEMACpings.Text = _emacPings.ToString();
+            int i, j;
+            byte[] IPa = new byte[4];
+
+            string[] args = { "192.168.1.130", "123" };
+
+            args[0] = Options.IpAddrA.ToString() + "." +
+                      Options.IpAddrB.ToString() + "." +
+                      Options.IpAddrC.ToString() + "." +
+                      Options.IpAddrD.ToString();
+
+            IPa[0] = Convert.ToByte(Options.IpAddrA.ToString());
+            IPa[1] = Convert.ToByte(Options.IpAddrB.ToString());
+            IPa[2] = Convert.ToByte(Options.IpAddrC.ToString());
+            IPa[3] = Convert.ToByte(Options.IpAddrD.ToString());
+
+            int IPbytes = 0;
+
+            Ping pingSender = new Ping();
+            PingOptions options = new PingOptions();
+
+            // Use the default Ttl value which is 128,
+            // but change the fragmentation behavior.
+            options.DontFragment = true;
+
+            // Create a buffer of bytes to be transmitted.
+
+            byte[] buffer = new byte[1472 - 448];
+
+            string data;
+            if (dummy)
+                data = "ABCD";
+            else
+                data = "RTIy";
+
+            if (SendCommand)
+            {
+                data += CMD;
+            }
+
+            byte[] tbuff = Encoding.ASCII.GetBytes(data);
+
+            for (i = 0; i < tbuff.Length; i++)
+            {
+                buffer[i] = tbuff[i];
+            }
+
+            if (CMD == "x")
+            {
+                buffer[i++] = buff[0];
+                buffer[i++] = buff[1];
+                buffer[i++] = buff[2];
+                buffer[i++] = buff[3];
+                buffer[i++] = buff[4];
+                buffer[i++] = buff[5];
+                buffer[i++] = buff[6];
+                buffer[i++] = buff[7];
+            }
+            else
+            {
+                if (CMD == "u")
+                {
+                    int bytes = buff[0] << 8;
+                    bytes += buff[1];
+                    for (j = 0; j < bytes + 6 + 2; j++)
+                    {
+                        buffer[i++] = buff[j];
+                    }
+                }
+                else
+                {
+                    if (CMD == "s")
+                    {
+                        int bytes = buff[0];
+                        for (j = 0; j < bytes + 4 + 2 + 1; j++)
+                        {
+                            buffer[i++] = buff[j];
+                        }
+                    }
+                }
+            }
+
+            try
+            {
+                PingReply reply = pingSender.Send(args[0], timeout, buffer, options);
+
+                if (reply.Status == IPStatus.Success)
+                {
+                    if (ShowText)
+                    {
+                        ReceiveBufferString += "\r\nStatus:         " + reply.Status.ToString();
+                        ReceiveBufferString += "Address:        " + reply.Address.ToString();
+                        ReceiveBufferString += "RoundTrip time: " + reply.RoundtripTime.ToString();
+                        ReceiveBufferString += "Time to live:   " + reply.Options.Ttl.ToString();
+                        ReceiveBufferString += "Don't fragment: " + reply.Options.DontFragment.ToString();
+                        ReceiveBufferString += "Buffer size:    " + reply.Buffer.Length.ToString() + "\r\n";
+                    }
+                    if (reply.Buffer[0] == IPa[0] &&
+                        reply.Buffer[1] == IPa[1] &&
+                        reply.Buffer[2] == IPa[2] &&
+                        reply.Buffer[3] == IPa[3])
+                    {
+                        int bytes;
+                        bytes = reply.Buffer[4];
+                        bytes += reply.Buffer[5] << 8;
+
+                        int mbytes = reply.Buffer.Length - 6;
+
+                        if (bytes > mbytes)
+                            bytes = mbytes;
+
+                        IPbytes = bytes;
+
+                        j = 0;
+                        for (i = 6; i < bytes + 6; i++, j++)
+                        {
+                            buffer[j] = reply.Buffer[i];
+                            _ipBuffer[j] = reply.Buffer[i];
+                        }
+                        if (ShowText)
+                        {
+                            buffer[j] = 0;
+                            data = Encoding.ASCII.GetString(buffer, 0, j);
+                            ReceiveBufferString += data;
+                        }
+                        else
+                        {
+                            for (i = 0; i < IPbytes; i++)
+                            {
+                                buff[offset] = buffer[i];
+                                offset++;
+                            }
+                        }
+                    }
+                    else
+                        ReceiveBufferString += "Payload: " + reply.Buffer[0].ToString("X02") + reply.Buffer[1].ToString("X02") + reply.Buffer[2].ToString("X02") + reply.Buffer[3].ToString("X02") + "\r\n";
+                }
+                else
+                {
+                    if (ShowText)
+                    {
+                        ReceiveBufferString += "\r\n* Timeout:";
+                    }
+                    IPbytes = -1;
+                }
+            }
+            catch
+            {
+                ReceiveBufferString += "...EMAC error...";
+            }
+            return IPbytes;
+        }
+
+        void EMACupload(Stream stream, string FilePath)
+        {
+            int nBytesRead = 0;
+            int i, n;
+            int EmacPackageSize = 1000;         //must be evenly divisable by 10
+            byte[] EmacData = new byte[2000];
+            long EmacPacketLocation = 0;
+
+            nBytesRead = stream.Read(EmacData, 0, EmacPackageSize);
+
+            if (nBytesRead > 0)
+            {
+                // do it
+                EmacPacketLocation = 0;
+
+
+                int retries = 0;
+                int csum;
+                int IPbytes;
+                string message = FilePath + "\r\n";
+                ReceiveBufferString += message;
+
+                bool ok = true;
+                while (ok && nBytesRead > 0)
+                {
+                    ok = false;
+                    retries = 0;
+                    while (!ok && retries < 10)
+                    {
+                        _dummyUploadBuffer[0] = (byte)(0xFF & (nBytesRead >> 8));
+                        _dummyUploadBuffer[1] = (byte)(0xFF & (nBytesRead));
+                        _dummyUploadBuffer[2] = (byte)(0xFF & (EmacPacketLocation >> 24));
+                        _dummyUploadBuffer[3] = (byte)(0xFF & (EmacPacketLocation >> 16));
+                        _dummyUploadBuffer[4] = (byte)(0xFF & (EmacPacketLocation >> 8));
+                        _dummyUploadBuffer[5] = (byte)(0xFF & (EmacPacketLocation));
+
+                        csum = 0;
+                        n = 6;
+                        for (i = 0; i < nBytesRead; i++)
+                        {
+                            _dummyUploadBuffer[n] = EmacData[i];
+                            csum += EmacData[i];
+                            n++;
+                        }
+                        _dummyUploadBuffer[n] = (byte)(0xFF & (csum >> 8));
+                        _dummyUploadBuffer[n + 1] = (byte)(0xFF & (csum));
+
+
+                        IPbytes = IP_Message(false, true, false, "u", 10, _dummyUploadBuffer, 0);
+
+                        if (IPbytes == 1 && _dummyUploadBuffer[0] == 6)
+                        {
+                            ok = true;
+                            message = "+";
+                        }
+                        else//special case
+                        {
+                            long PacketLocation = EmacPacketLocation;
+                            message = "-";
+                            int m = 0;
+                            int nBytes = EmacPackageSize / 10;
+                            int tries = 0;
+                            for (int nn = 0; nn < EmacPackageSize; nn += nBytes)
+                            {
+                                ok = false;
+
+                                _dummyUploadBuffer[0] = (byte)(0xFF & (nBytes >> 8));
+                                _dummyUploadBuffer[1] = (byte)(0xFF & (nBytes));
+                                _dummyUploadBuffer[2] = (byte)(0xFF & (PacketLocation >> 24));
+                                _dummyUploadBuffer[3] = (byte)(0xFF & (PacketLocation >> 16));
+                                _dummyUploadBuffer[4] = (byte)(0xFF & (PacketLocation >> 8));
+                                _dummyUploadBuffer[5] = (byte)(0xFF & (PacketLocation));
+
+                                csum = 0;
+                                n = 6;
+                                for (i = m; i < nBytes + m; i++)
+                                {
+                                    _dummyUploadBuffer[n] = EmacData[i];
+                                    csum += EmacData[i];
+                                    n++;
+                                }
+                                _dummyUploadBuffer[n] = (byte)(0xFF & (csum >> 8));
+                                _dummyUploadBuffer[n + 1] = (byte)(0xFF & (csum));
+
+                                IPbytes = IP_Message(false, true, false, "u", 10, _dummyUploadBuffer, 0);
+
+                                if (IPbytes == 1 && _dummyUploadBuffer[0] == 6)
+                                {
+                                    ok = true;
+                                    message = "/";
+                                    PacketLocation += nBytes;
+                                    m += nBytes;
+                                }
+                                else
+                                {
+                                    tries++;
+                                    message = "\\";
+                                }
+                                ReceiveBufferString += message;
+
+                            }
+                            retries++;
+                        }
+                        ReceiveBufferString += message;
+
+                    }
+                    EmacPacketLocation += nBytesRead;
+                    nBytesRead = stream.Read(EmacData, 0, EmacPackageSize);
+                }
+                if (ok)
+                {
+                    try
+                    {
+                        int position = FilePath.LastIndexOf('\\');
+
+                        string filename = FilePath.Substring(position + 1);
+
+                        n = 0;
+                        byte b = (byte)(0xFF & filename.Length);
+                        csum = b;
+                        _dummyUploadBuffer[n++] = b;
+                        for (i = 0; i < filename.Length; i++)
+                        {
+                            b = (byte)(0xFF & filename[i]);
+                            csum += b;
+                            _dummyUploadBuffer[n++] = b;
+                        }
+                        b = (byte)(0xFF & (EmacPacketLocation >> 24));
+                        csum += b;
+                        _dummyUploadBuffer[n++] = b;
+                        b = (byte)(0xFF & (EmacPacketLocation >> 16));
+                        csum += b;
+                        _dummyUploadBuffer[n++] = b;
+                        b = (byte)(0xFF & (EmacPacketLocation >> 8));
+                        csum += b;
+                        _dummyUploadBuffer[n++] = b;
+                        b = (byte)(0xFF & (EmacPacketLocation));
+                        csum += b;
+                        _dummyUploadBuffer[n++] = b;
+
+                        _dummyUploadBuffer[n++] = (byte)(0xFF & (csum >> 8));
+                        _dummyUploadBuffer[n++] = (byte)(0xFF & (csum));
+
+                        IPbytes = IP_Message(false, true, false, "s", 10000, _dummyUploadBuffer, 0);
+                        if (IPbytes > 0)
+                        {
+                            if (_dummyUploadBuffer[0] == 6)
+                            {
+                                for (n = 0; n < IPbytes - 1; n++)
+                                    _uploadBuff[n] = _dummyUploadBuffer[n + 1];
+
+                                //display text data
+                                _uploadBuff[n] = 0;//just in case it is a partial string
+                                message = System.Text.ASCIIEncoding.ASCII.GetString(_uploadBuff, 0, n);
+                            }
+                            else
+                                message = "\r\nNAK\r\n";
+                        }
+                        else
+                            message = "\r\nTIMEOUT\r\n";
+                    }
+                    catch
+                    {
+                        message = "Error Writing File to SD\r\n";
+                    }
+                    ReceiveBufferString += message;
+                }
+                //exit
+            }
         }
 
         #endregion

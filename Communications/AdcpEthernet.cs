@@ -55,6 +55,7 @@ namespace RTI
     using System.ComponentModel;
     using System.Net.Sockets;
     using System.Timers;
+    using RTI.Commands;
 
     /// <summary>
     /// Send commands and receive data from the ADCP using
@@ -371,6 +372,28 @@ namespace RTI
                 _downloadDataBinWriter.Dispose();
                 _downloadDataBinWriter = null;
             }
+        }
+
+        #endregion
+
+        #region Test Connection
+
+        public bool TestEthernetConnection()
+        {
+            // Send an empty string and get a status response back from the ethernet port 
+            ReceiveBufferString = string.Empty;
+            byte[] replyBuffer = new byte[100];
+            SendData("", ref replyBuffer, true, 2000, true);
+
+            // Verify a response was given and verify it is not the
+            // No Connection message
+            if (!String.IsNullOrEmpty(ReceiveBufferString) &&
+                !ReceiveBufferString.Contains("Connection"))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
@@ -1293,7 +1316,8 @@ namespace RTI
             return IPbytes;
         }
 
-        void EMACupload(Stream stream, string FilePath)
+        //void EMACupload(Stream stream, string FilePath)
+        void EmacUpload(Stream stream, string FilePath)
         {
             int nBytesRead = 0;
             int i, n;
@@ -1461,6 +1485,146 @@ namespace RTI
                     ReceiveBufferString += message;
                 }
                 //exit
+            }
+        }
+
+        #endregion
+
+        #region AdcpConfiguration
+
+        /// <summary>
+        /// Get the ADCP Configuration.  This
+        /// will decode the BREAK statement
+        /// and also CSHOW.
+        /// </summary>
+        /// <returns></returns>
+        public AdcpConfiguration GetAdcpConfiguration()
+        {
+            // Stop pinging just in case
+            StopPinging();
+
+            // Send a BREAK to get the serial number
+            SendBreak();
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE * 5);
+
+            // Get the buffer output
+            string breakResult = ReceiveBufferString;
+            BreakStmt breakStmt = AdcpCommands.DecodeBREAK(breakResult);
+
+            // Wait for an output
+            Thread.Sleep(RTI.AdcpSerialPort.WAIT_STATE);
+
+            // Send a command for CSHOW to the ADCP
+            // Decode the CSHOW command
+            string result = "";
+            ReceiveBufferString = "";
+            bool sndReply = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_CSHOW);
+            if (sndReply)
+            {
+                result = ReceiveBufferString;
+            }
+
+            // Decode CSHOW for all the settings
+            AdcpConfiguration adcpConfig = AdcpCommands.DecodeCSHOW(result, breakStmt.SerialNum);
+
+            AdcpSerialPort.AdcpSerialOptions adcpSerialOptions = new AdcpSerialPort.AdcpSerialOptions();
+            adcpSerialOptions.Firmware = breakStmt.FirmwareVersion;
+            adcpSerialOptions.Hardware = breakStmt.Hardware;
+            adcpSerialOptions.SerialNumber = breakStmt.SerialNum;
+            //adcpSerialOptions.SerialOptions = SerialOptions;
+
+            // Set the ADCP serial options to the configuraiton
+            adcpConfig.AdcpSerialOptions = adcpSerialOptions;
+            adcpConfig.EthernetOptions = Options;
+
+            // Set the hardware configuration
+            adcpConfig.HardwareOptions = GetHardwareConfiguration();
+
+            // Get ENGPORT
+            ReceiveBufferString = "";
+            bool engPortReply = SendDataWaitReply(RTI.Commands.AdcpCommands.CMD_ENGPORT);
+            if (sndReply)
+            {
+                result = ReceiveBufferString;
+                adcpConfig.EngPort = AdcpCommands.DecodeENGPORT(result);
+            }
+
+            // Get the Directory Listing
+            RTI.Commands.AdcpDirListing listing = GetDirectoryListing();
+            adcpConfig.DeploymentOptions.InternalMemoryCardUsed = (long)Math.Round(listing.UsedSpace * MathHelper.MB_TO_BYTES);
+            adcpConfig.DeploymentOptions.InternalMemoryCardTotalSize = (long)Math.Round(listing.TotalSpace * MathHelper.MB_TO_BYTES);
+
+
+            return adcpConfig;
+        }
+
+        #endregion
+
+        #region Hardware Configuration
+
+        /// <summary>
+        /// Get the Hardware configuration from the ADCP.
+        /// </summary>
+        /// <returns>Hardware configuration.</returns>
+        public RTI.Commands.EngConf GetHardwareConfiguration()
+        {
+            string buffer = SendDataGetReply(RTI.Commands.AdcpCommands.CMD_ENGCONF);    // Send command to get ENGCONF
+            return RTI.Commands.AdcpCommands.DecodeENGCONF(buffer);
+        }
+
+        #endregion
+
+        #region Update Firmware
+
+        /// <summary>
+        /// Execute the upload process.  This should be called
+        /// from the async command.
+        /// </summary>
+        /// <param name="fileNames">File names to upload.</param>
+        public void UpdateFirmware(string[] fileNames)
+        {
+            if (fileNames != null)
+            {
+                // Verify the file name is good
+                if (IsOpen())
+                {
+                    // Stop the ADCP pinging if its pinging
+                    StopPinging();
+
+                    // Upload all the selected files
+                    foreach (var file in fileNames)
+                    {
+                        // Create a stream for the file
+                        Stream stream = new FileStream(file, FileMode.Open);
+
+                        // Upload the file to the ADCP
+                        EmacUpload(stream, file);
+
+                        // Wait for the update to complete
+                        Thread.Sleep(AdcpSerialPort.WAIT_STATE * 2);
+
+                        // Load the firmware to NAND
+                        if (file.ToLower().Contains("rtisys"))
+                        {
+                            SendDataWaitReply("FMCOPYS");
+                        }
+
+                        // Load the boot code to NAND
+                        if (file.ToLower().Contains("boot"))
+                        {
+                            SendDataWaitReply("FMCOPYB");
+                        }
+                    }
+
+
+                    // Reboot the ADCP to use the new firmware
+                    //Reboot();
+
+                    // Validate the files uploaded
+                    // By downloading it and compairing it against
+                    // the original file
+                }
             }
         }
 

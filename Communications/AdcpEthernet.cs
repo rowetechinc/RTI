@@ -38,6 +38,7 @@
  * 03/17/2014      RC          2.21.4     Sped up the download process.
  * 04/16/2015      RC          3.0.4      Added a timer to allow pinging through ethernet.
  * 10/06/2016      RC          3.3.2      Improved download speed by removing all the buffers.  Now downloading about 16mb a minute.
+ * 02/14/2020      RC          3.4.16     Added Ethernet Upload.
  * 
  */
 
@@ -378,6 +379,12 @@ namespace RTI
 
         #region Test Connection
 
+        /// <summary>
+        /// Test the ethernet connection to verify we are still
+        /// connected to the ADCP.  This will send a blank command.
+        /// It will then verify it got a response back.
+        /// </summary>
+        /// <returns>TRUE = Connection with ADCP.</returns>
         public bool TestEthernetConnection()
         {
             // Send an empty string and get a status response back from the ethernet port 
@@ -1159,7 +1166,20 @@ namespace RTI
 
         #region Upload
 
-
+        /// <summary>
+        /// IP Message.  Package to send to the ADCP to upload a file.
+        /// 
+        /// IP_Message(false, true, false, "u", 10, _dummyUploadBuffer, 0);
+        /// 
+        /// </summary>
+        /// <param name="dummy"></param>
+        /// <param name="SendCommand"></param>
+        /// <param name="ShowText"></param>
+        /// <param name="CMD"></param>
+        /// <param name="timeout"></param>
+        /// <param name="buff">Buffer of data to send.</param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
         private int IP_Message(bool dummy, bool SendCommand, bool ShowText, string CMD, int timeout, byte[] buff, int offset)
         {
             _emacPings++;
@@ -1316,8 +1336,12 @@ namespace RTI
             return IPbytes;
         }
 
-        //void EMACupload(Stream stream, string FilePath)
-        void EmacUpload(Stream stream, string FilePath)
+        /// <summary>
+        /// Upload the file to the ADCP.
+        /// </summary>
+        /// <param name="stream">File stream for the file to upload.</param>
+        /// <param name="filePath">Path to the file.</param>
+        void EmacUpload(Stream stream, string filePath)
         {
             int nBytesRead = 0;
             int i, n;
@@ -1336,7 +1360,7 @@ namespace RTI
                 int retries = 0;
                 int csum;
                 int IPbytes;
-                string message = FilePath + "\r\n";
+                string message = filePath + "\r\n";
                 ReceiveBufferString += message;
 
                 bool ok = true;
@@ -1425,14 +1449,19 @@ namespace RTI
                     }
                     EmacPacketLocation += nBytesRead;
                     nBytesRead = stream.Read(EmacData, 0, EmacPackageSize);
+
+                    if (UploadProgressEvent != null)
+                    {
+                        UploadProgressEvent(filePath, nBytesRead);
+                    }
                 }
                 if (ok)
                 {
                     try
                     {
-                        int position = FilePath.LastIndexOf('\\');
+                        int position = filePath.LastIndexOf('\\');
 
-                        string filename = FilePath.Substring(position + 1);
+                        string filename = filePath.Substring(position + 1);
 
                         n = 0;
                         byte b = (byte)(0xFF & filename.Length);
@@ -1586,8 +1615,9 @@ namespace RTI
         {
             if (fileNames != null)
             {
-                // Verify the file name is good
-                if (IsOpen())
+                // Verify the connection good
+                //if (IsOpen())
+                if(TestEthernetConnection())
                 {
                     // Stop the ADCP pinging if its pinging
                     StopPinging();
@@ -1595,6 +1625,14 @@ namespace RTI
                     // Upload all the selected files
                     foreach (var file in fileNames)
                     {
+                        // Get the file size and publish
+                        FileInfo fileInfo = new FileInfo(file);
+                        long fileSize = fileInfo.Length;
+                        if (UploadFileSizeEvent != null)
+                        {
+                            UploadFileSizeEvent(file, fileSize);
+                        }
+
                         // Create a stream for the file
                         Stream stream = new FileStream(file, FileMode.Open);
 
@@ -1615,16 +1653,46 @@ namespace RTI
                         {
                             SendDataWaitReply("FMCOPYB");
                         }
+
+                        // Send event that upload is complete
+                        if (UploadCompleteEvent != null)
+                        {
+                            UploadCompleteEvent(file, true);
+                        }
                     }
 
 
                     // Reboot the ADCP to use the new firmware
-                    //Reboot();
+                    Reboot();
 
                     // Validate the files uploaded
                     // By downloading it and compairing it against
                     // the original file
                 }
+            }
+        }
+
+        #endregion
+
+        #region Reboot
+
+        /// <summary>
+        /// Reboot the ADCP.  Give the command SLEEP, then a BREAK
+        /// then STOP.
+        /// </summary>
+        public void Reboot()
+        {
+            if (TestEthernetConnection())
+            {
+                // Put the ADCP to Sleep
+                SendData("SLEEPA");
+
+                // Wait for the ADCP to sleep
+                // SLEEPA needs 10 seconds
+                Thread.Sleep((AdcpSerialPort.WAIT_STATE * 4) * 11);
+
+                // Send the BREAK and STOP using StopPinging
+                StopPinging();
             }
         }
 
@@ -1944,6 +2012,84 @@ namespace RTI
                 DownloadCompleteEvent(_downloadFileName, goodDownload);
             }
         }
+
+        #endregion
+
+        #endregion
+
+        #region Upload Events
+
+        #region Upload File Size Event
+
+        /// <summary>
+        /// Event to get the file size for the given
+        /// file name.  The size will be in bytes.
+        /// </summary>
+        /// <param name="fileName">Name of the file.</param>
+        /// <param name="fileSize">Size of the file in bytes.</param>
+        public delegate void UploadFileSizeEventHandler(string fileName, long fileSize);
+
+        /// <summary>
+        /// Subscribe to receive the event for the size of the file in bytes.
+        /// 
+        /// To subscribe:
+        /// _adcpSerialPort.UploadFileSizeEvent += new serialConnection.UploadFileSizeEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// _adcpSerialPort.UploadFileSizeEvent -= (method to call)
+        /// </summary>
+        public event UploadFileSizeEventHandler UploadFileSizeEvent;
+
+        #endregion
+
+        #region Upload Progress Event
+
+        /// <summary>
+        /// Event to receive the progress of the upload process.
+        /// This will give the number of bytes currently written
+        /// for the current file being uploaded.
+        /// </summary>
+        /// <param name="fileName">Name of the file.</param>
+        /// <param name="bytesWritten">Current bytes written.</param>
+        public delegate void UploadProgressEventHandler(string fileName, long bytesWritten);
+
+        /// <summary>
+        /// Subscribe to receive the event for the project of the upload.  This will get the
+        /// current number of bytes written for the current file being uploaded.
+        /// 
+        /// To subscribe:
+        /// _adcpSerialPort.UploadProgressEvent += new serialConnection.UploadProgressEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// _adcpSerialPort.UploadProgressEvent -= (method to call)
+        /// </summary>
+        public event UploadProgressEventHandler UploadProgressEvent;
+
+        #endregion
+
+        #region Upload Complete Event
+
+        /// <summary>
+        /// Event to receive when the upload is complete
+        /// for the given file name.
+        /// The parameter goodUpload is used to tell the user
+        /// if the upload was completed successfully or the upload
+        /// was aborted.
+        /// </summary>
+        /// <param name="fileName">Name of the file completed the upload.</param>
+        /// <param name="goodUpload">Flag if the upload was completed successfully.</param>
+        public delegate void UploadCompleteEventHandler(string fileName, bool goodUpload);
+
+        /// <summary>
+        /// Subscribe to receive the event when the file has been completely upload.
+        /// 
+        /// To subscribe:
+        /// _adcpSerialPort.UploadCompleteEvent += new serialConnection.UploadCompleteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// _adcpSerialPort.UploadCompleteEvent -= (method to call)
+        /// </summary>
+        public event UploadCompleteEventHandler UploadCompleteEvent;
 
         #endregion
 

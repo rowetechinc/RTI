@@ -77,6 +77,7 @@
  *                                        Added ShipVelocity to JSON decoding.
  *                                        Updated GetVelocityMagnitude() and GetVelocityDirection() to handle bad values of 0.0 and ShipVelocity.
  * 07/03/2019      RC          3.4.12     In DecodePd0Ensemble(), do not remap Instrument and Ship velocity data.
+ * 03/11/2020      RC          3.4.16     Added Pulse Coherent Values.
  * 
  */
 
@@ -335,6 +336,31 @@ namespace RTI
             /// Bottom Track Ship Velocity in meters/second.  Only populated if data is retransformed.
             /// </summary>
             public float[] ShipVelocity { get; set; }
+
+            /// <summary>
+            /// Bottom Track Pulse Coherent, Short Lag, First Echo Signal to Noise in dB.
+            /// </summary>
+            public float[] PulseCohr_Snr { get; set; }
+
+            /// <summary>
+            /// Bottom Track Pulse Coherent, Short Lag, First Echo Amplitude in dB.
+            /// </summary>
+            public float[] PulseCohr_Amp { get; set; }
+
+            /// <summary>
+            /// Bottom Track Pulse Coherent, Short Lag, First Echo Velocity in m/s.
+            /// </summary>
+            public float[] PulseCohr_Vel { get; set; }
+
+            /// <summary>
+            /// Bottom Track Pulse Coherent, Short Lag, First Echo Noise in m/s.
+            /// </summary>
+            public float[] PulseCohr_Noise { get; set; }
+
+            /// <summary>
+            /// Bottom Track Pulse Coherent, Short Lag, First Echo Correlation in percent.
+            /// </summary>
+            public float[] PulseCohr_Corr { get; set; }
 
             #endregion
 
@@ -608,6 +634,11 @@ namespace RTI
                 EarthVelocity = new float[numBeams];
                 EarthGood = new float[numBeams];
                 ShipVelocity = new float[numBeams];
+                PulseCohr_Snr = new float[numBeams];
+                PulseCohr_Amp = new float[numBeams];
+                PulseCohr_Vel = new float[numBeams];
+                PulseCohr_Noise = new float[numBeams];
+                PulseCohr_Corr = new float[numBeams];
             }
 
             /// <summary>
@@ -688,9 +719,33 @@ namespace RTI
                     EarthGood[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
                 }
 
-                for (int beam = 0; beam < NumBeams; beam++)
+                // Check for additional data
+                if (data.Length >= 55)
                 {
-                    ShipVelocity[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                    for (int beam = 0; beam < NumBeams; beam++)
+                    {
+                        PulseCohr_Snr[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                    }
+
+                    for (int beam = 0; beam < NumBeams; beam++)
+                    {
+                        PulseCohr_Amp[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                    }
+
+                    for (int beam = 0; beam < NumBeams; beam++)
+                    {
+                        PulseCohr_Vel[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                    }
+
+                    for (int beam = 0; beam < NumBeams; beam++)
+                    {
+                        PulseCohr_Noise[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                    }
+
+                    for (int beam = 0; beam < NumBeams; beam++)
+                    {
+                        PulseCohr_Corr[beam] = MathHelper.ByteArrayToFloat(data, GenerateIndex(index++));
+                    }
                 }
 
 
@@ -777,6 +832,31 @@ namespace RTI
                 for (int beam = 0; beam < NumBeams; beam++)
                 {
                     System.Buffer.BlockCopy(MathHelper.FloatToByteArray(EarthGood[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(PulseCohr_Snr[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(PulseCohr_Amp[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(PulseCohr_Vel[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(PulseCohr_Noise[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
+                }
+
+                for (int beam = 0; beam < NumBeams; beam++)
+                {
+                    System.Buffer.BlockCopy(MathHelper.FloatToByteArray(PulseCohr_Corr[beam]), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 }
 
                 // Generate header for the dataset
@@ -2429,6 +2509,51 @@ namespace RTI
                 }
                 writer.WriteEndArray();
 
+                // Pulse Coherent SNR
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_PC_SNR);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.PulseCohr_Snr[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Pulse Coherent Amplitude
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_PC_AMP);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.PulseCohr_Amp[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Pulse Coherent Velocity
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_PC_VEL);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.PulseCohr_Vel[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Pulse Coherent Noise
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_PC_NOISE);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.PulseCohr_Noise[beam]);
+                }
+                writer.WriteEndArray();
+
+                // Pulse Coherent Correlation
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BT_PC_CORR);
+                writer.WriteStartArray();
+                for (int beam = 0; beam < data.NumBeams; beam++)
+                {
+                    writer.WriteValue(data.PulseCohr_Corr[beam]);
+                }
+                writer.WriteEndArray();
+
                 // End the object
                 writer.WriteEndObject();
             }
@@ -2594,15 +2719,60 @@ namespace RTI
 
                     // ShipVelocity
                     jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_SHIPVELOCITY];
+                    data.ShipVelocity = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.ShipVelocity[x] = (float)jArray[x];
+                    }
+
+                    // Pulse Coherent SNR
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_SNR];
+                    data.PulseCohr_Snr = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.PulseCohr_Snr[x] = (float)jArray[x];
+                    }
+
+                    // Pulse Coherent Amplitude
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_AMP];
+                    data.PulseCohr_Amp = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.PulseCohr_Amp[x] = (float)jArray[x];
+                    }
+
+                    // Pulse Coherent Velocity
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_VEL];
+                    data.PulseCohr_Vel = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.PulseCohr_Vel[x] = (float)jArray[x];
+                    }
+
+                    // Pulse Coherent Noise
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_NOISE];
+                    data.PulseCohr_Noise = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.PulseCohr_Noise[x] = (float)jArray[x];
+                    }
+
+                    // Pulse Coherent Correlation
+                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_CORR];
+                    data.PulseCohr_Corr = new float[jArray.Count];
+                    for (int x = 0; x < jArray.Count; x++)
+                    {
+                        // Add all the values to the array
+                        data.PulseCohr_Corr[x] = (float)jArray[x];
+                    }
+
                     if (jArray != null)
                     {
-                        data.ShipVelocity = new float[jArray.Count];
-                        for (int x = 0; x < jArray.Count; x++)
-                        {
-                            // Add all the values to the array
-                            data.ShipVelocity[x] = (float)jArray[x];
-                        }
-
                         return data;
                     }
                 }

@@ -2,6 +2,11 @@ RTI Changelog
 
 RTI-3.4.16
  - Adding Ethernet Upload.
+ - In BaseDataSet, added JSON WaterMass WT PD0 Values.
+ - In ShipWaterMassDataSet, InstrumentWaterMassDataSet and EarthWaterMassDataSet, added PD0 Missing Values and DecodePd0Ensemble().
+ - In PD0 class, fixed how Water Mass values are set.
+ - In Ensemble class, use DecodePd0Ensemble() to decode the Water Mass values.
+ - In CsvExporterWriter, added Water Track (Water Mass) values.
 
 RTI-3.4.15
  - In ExportOptions, Added HeadingOffset, PitchOffset and RollOffset.

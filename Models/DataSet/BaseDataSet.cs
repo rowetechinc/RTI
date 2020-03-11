@@ -53,6 +53,7 @@
  * 07/22/2016      RC          3.3.2      Added additional Range Tracking values.
  * 04/22/2019      RC          3.4.11     Added SystemSetup Boost Pos and Neg Voltage.
  * 06/26/2019      RC          3.4.12     Added JSON_STR_BT_SHIPVELOCITY.
+ * 03/11/2020      RC          3.4.16     Added JSON WaterMass WT PD0 Values.
  * 
  */
 
@@ -545,6 +546,31 @@ namespace RTI
             /// </summary>
             public const string JSON_STR_BT_SHIPVELOCITY = "ShipVelocity";
 
+            /// <summary>
+            /// String for Pulse Coherent SNR.
+            /// </summary>
+            public const string JSON_STR_BT_PC_SNR = "PulseCoherent_SNR";
+
+            /// <summary>
+            /// String for Pulse Coherent Amplitude.
+            /// </summary>
+            public const string JSON_STR_BT_PC_AMP = "PulseCoherent_AMP";
+
+            /// <summary>
+            /// String for Pulse Coherent Velocity.
+            /// </summary>
+            public const string JSON_STR_BT_PC_VEL = "PulseCoherent_VEL";
+
+            /// <summary>
+            /// String for Pulse Coherent Noise.
+            /// </summary>
+            public const string JSON_STR_BT_PC_NOISE = "PulseCoherent_NOISE";
+
+            /// <summary>
+            /// String for Pulse Coherent Correlation.
+            /// </summary>
+            public const string JSON_STR_BT_PC_CORR = "PulseCoherent_CORR";
+
             #endregion
 
             #region NMEA Properties
@@ -612,6 +638,81 @@ namespace RTI
             /// String for Water Mass Depth Layer property.
             /// </summary>
             public const string JSON_STR_WATERMASSDEPTHLAYER = "WaterMassDepthLayer";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Far PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_LAYER_FAR = "BtRefLayerFar";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Min PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_LAYER_MIN = "BtRefLayerMin";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Near PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_LAYER_NEAR = "BtRefLayerNear";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Correlation Beam 0 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_CORR_0 = "BtRefLayerCorrBeam0";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Correlation Beam 1 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_CORR_1 = "BtRefLayerCorrBeam1";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Correlation Beam 2 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_CORR_2 = "BtRefLayerCorrBeam2";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Correlation Beam 3 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_CORR_3 = "BtRefLayerCorrBeam3";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Echo Intensity Beam 0 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_ECHO_0 = "BtRefLayerEchoIntensityBeam0";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Echo Intensity Beam 1 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_ECHO_1 = "BtRefLayerEchoIntensityBeam1";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Echo Intensity Beam 2 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_ECHO_2 = "BtRefLayerEchoIntensityBeam2";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Echo Intensity Beam 3 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_ECHO_3 = "BtRefLayerEchoIntensityBeam3";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Percent Good Beam 0 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_PG_0 = "BtRefLayerPercentGoodBeam0";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Percent Good Beam 1 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_PG_1 = "BtRefLayerPercentGoodBeam1";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Percent Good Beam 2 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_PG_2 = "BtRefLayerPercentGoodBeam2";
+
+            /// <summary>
+            /// String for Water Mass Depth Layer Percent Good Beam 3 PD0 property.
+            /// </summary>
+            public const string JSON_STR_WM_PG_3 = "BtRefLayerPercentGoodBeam3";
 
             #endregion
 

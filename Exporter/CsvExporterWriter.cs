@@ -49,6 +49,7 @@
  * 07/30/2019      RC          3.4.13     Replaced Y North with X North for Velocity Vector. 
  * 07/31/2019      RC          3.4.13     Added Speed to NMEA CSV data.
  * 11/25/2019      RC          3.4.14     Fixed the label for CSV exporter from YNorth to XNorth.
+ * 03/11/2020      RC          3.4.16     Added Water Track (Water Mass) values.
  * 
  */
 
@@ -676,10 +677,13 @@ namespace RTI
 
             sb.Append("EnsembleNumber,");
             sb.Append("DateTime,");
+            sb.Append("Date,");
+            sb.Append("Time,");
             sb.Append("NumBins,");
             sb.Append("NumBeams,");
             sb.Append("DesiredPingCount,");
             sb.Append("ActualPingCount,");
+            sb.Append("SystemSerialNumber,");
             sb.Append("SerialNumber,");
             sb.Append("Firmware,");
             sb.Append("SubsystemCode,");
@@ -704,6 +708,10 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.EnsembleData.EnsDateTime.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
+                sb.Append(ensemble.EnsembleData.EnsDateTime.Date.ToString("d", new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.EnsDateTime.ToLongTimeString().ToString(new CultureInfo("en-US")));
+                sb.Append(",");
                 sb.Append(ensemble.EnsembleData.NumBins);
                 sb.Append(",");
                 sb.Append(ensemble.EnsembleData.NumBeams);
@@ -712,7 +720,9 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.EnsembleData.ActualPingCount);
                 sb.Append(",");
-                sb.Append(ensemble.EnsembleData.SysSerialNumber.ToString());
+                sb.Append(ensemble.EnsembleData.SysSerialNumber.SerialNumberString);
+                sb.Append(",");
+                sb.Append(ensemble.EnsembleData.SysSerialNumber.SystemSerialNumber.ToString());
                 sb.Append(",");
                 sb.Append(ensemble.EnsembleData.SysFirmware.ToString());
                 sb.Append(",");
@@ -725,7 +735,7 @@ namespace RTI
                 return sb.ToString();
             }
 
-            return ",,,,,,,,,,";
+            return ",,,,,,,,,,,,,";
         }
 
         #endregion
@@ -1301,7 +1311,23 @@ namespace RTI
             sb.Append("EarthWmLayer,");
             sb.Append("EarthWmVelEast,");
             sb.Append("EarthWmVelNorth,");
-            sb.Append("EarthWmVelVertical");
+            sb.Append("EarthWmVelVertical,");
+            sb.Append("EarthWmVelError,");
+            sb.Append("EarthRefLayerFar,");
+            sb.Append("EarthRefLayerMin,");
+            sb.Append("EarthRefLayerNear,");
+            sb.Append("EarthRefLayerCorrBeam0,");
+            sb.Append("EarthRefLayerCorrBeam1,");
+            sb.Append("EarthRefLayerCorrBeam2,");
+            sb.Append("EarthRefLayerCorrBeam3,");
+            sb.Append("EarthRefLayerEchoIntensityBeam0,");
+            sb.Append("EarthRefLayerEchoIntensityBeam1,");
+            sb.Append("EarthRefLayerEchoIntensityBeam2,");
+            sb.Append("EarthRefLayerEchoIntensityBeam3,");
+            sb.Append("EarthRefLayerPercentGoodBeam0,");
+            sb.Append("EarthRefLayerPercentGoodBeam1,");
+            sb.Append("EarthRefLayerPercentGoodBeam2,");
+            sb.Append("EarthRefLayerPercentGoodBeam3");
 
             return sb.ToString();
         }
@@ -1324,11 +1350,43 @@ namespace RTI
                 sb.Append(ensemble.EarthWaterMassData.VelocityNorth.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.EarthWaterMassData.VelocityVertical.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.VelocityQ.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerFar.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerMin.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerNear.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerCorrBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerCorrBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerCorrBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerCorrBeam3.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerEchoIntensityBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerEchoIntensityBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerEchoIntensityBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerEchoIntensityBeam3.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerPercentGoodBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerPercentGoodBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerPercentGoodBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.EarthWaterMassData.BtRefLayerPercentGoodBeam3.ToString(new CultureInfo("en-US")));
             }
             else
             {
                 // Put blank data
-                sb.Append(",,,");
+                sb.Append(",,,,,,,,,,,,,,,,,,,");
             }
 
             return sb.ToString();
@@ -1349,7 +1407,23 @@ namespace RTI
             sb.Append("InstrWmLayer,");
             sb.Append("InstrWmVelX,");
             sb.Append("InstrWmVelY,");
-            sb.Append("InstrWmVelZ");
+            sb.Append("InstrWmVelZ,");
+            sb.Append("InstrWmVelError,");
+            sb.Append("InstrRefLayerFar,");
+            sb.Append("InstrRefLayerMin,");
+            sb.Append("InstrRefLayerNear,");
+            sb.Append("InstrRefLayerCorrBeam0,");
+            sb.Append("InstrRefLayerCorrBeam1,");
+            sb.Append("InstrRefLayerCorrBeam2,");
+            sb.Append("InstrRefLayerCorrBeam3,");
+            sb.Append("InstrRefLayerEchoIntensityBeam0,");
+            sb.Append("InstrRefLayerEchoIntensityBeam1,");
+            sb.Append("InstrRefLayerEchoIntensityBeam2,");
+            sb.Append("InstrRefLayerEchoIntensityBeam3,");
+            sb.Append("InstrRefLayerPercentGoodBeam0,");
+            sb.Append("InstrRefLayerPercentGoodBeam1,");
+            sb.Append("InstrRefLayerPercentGoodBeam2,");
+            sb.Append("InstrRefLayerPercentGoodBeam3");
 
             return sb.ToString();
         }
@@ -1372,11 +1446,43 @@ namespace RTI
                 sb.Append(ensemble.InstrumentWaterMassData.VelocityY.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.InstrumentWaterMassData.VelocityZ.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.VelocityQ.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerFar.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerMin.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerNear.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerCorrBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerCorrBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerCorrBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerCorrBeam3.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerEchoIntensityBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerEchoIntensityBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerEchoIntensityBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerEchoIntensityBeam3.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerPercentGoodBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerPercentGoodBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerPercentGoodBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerPercentGoodBeam3.ToString(new CultureInfo("en-US")));
             }
             else
             {
                 // Put blank data
-                sb.Append(",,,");
+                sb.Append(",,,,,,,,,,,,,,,,,,,");
             }
 
             return sb.ToString();
@@ -1397,7 +1503,23 @@ namespace RTI
             sb.Append("ShipWmLayer,");
             sb.Append("ShipWmVelX,");
             sb.Append("ShipWmVelY,");
-            sb.Append("ShipWmVelZ");
+            sb.Append("ShipWmVelZ,");
+            sb.Append("ShipWmVelError,");
+            sb.Append("ShipRefLayerFar,");
+            sb.Append("ShipRefLayerMin,");
+            sb.Append("ShipRefLayerNear,");
+            sb.Append("ShipRefLayerCorrBeam0,");
+            sb.Append("ShipRefLayerCorrBeam1,");
+            sb.Append("ShipRefLayerCorrBeam2,");
+            sb.Append("ShipRefLayerCorrBeam3,");
+            sb.Append("ShipRefLayerEchoIntensityBeam0,");
+            sb.Append("ShipRefLayerEchoIntensityBeam1,");
+            sb.Append("ShipRefLayerEchoIntensityBeam2,");
+            sb.Append("ShipRefLayerEchoIntensityBeam3,");
+            sb.Append("ShipRefLayerPercentGoodBeam0,");
+            sb.Append("ShipRefLayerPercentGoodBeam1,");
+            sb.Append("ShipRefLayerPercentGoodBeam2,");
+            sb.Append("ShipRefLayerPercentGoodBeam3");
 
             return sb.ToString();
         }
@@ -1420,11 +1542,43 @@ namespace RTI
                 sb.Append(ensemble.ShipWaterMassData.VelocityLongitudinal.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.ShipWaterMassData.VelocityNormal.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.VelocityQ.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerFar.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerMin.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerNear.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerCorrBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerCorrBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerCorrBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerCorrBeam3.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerEchoIntensityBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerEchoIntensityBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerEchoIntensityBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerEchoIntensityBeam3.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerPercentGoodBeam0.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerPercentGoodBeam1.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerPercentGoodBeam2.ToString(new CultureInfo("en-US")));
+                sb.Append(",");
+                sb.Append(ensemble.ShipWaterMassData.BtRefLayerPercentGoodBeam3.ToString(new CultureInfo("en-US")));
             }
             else
             {
                 // Put blank data
-                sb.Append(",,,");
+                sb.Append(",,,,,,,,,,,,,,,,,,,");
             }
 
             return sb.ToString();

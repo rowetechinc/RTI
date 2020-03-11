@@ -35,6 +35,7 @@
  * 12/08/2011      RC          1.09       Initial coding
  * 02/25/2013      RC          2.18       Removed Orientation.
  *                                         Added JSON encoding and Decoding.
+ * 03/11/2020      RC          3.4.16     Added PD0 Missing Values and DecodePd0Ensemble()
  * 
  */
 
@@ -82,9 +83,194 @@ namespace RTI
             public float VelocityVertical { get; set; }
 
             /// <summary>
+            /// Water Mass Q velocity in meters per second.
+            /// </summary>
+            public float VelocityQ { get; set; }
+
+            /// <summary>
             /// Depth layer the Water Mass Velocity was taken in meters.
             /// </summary>
             public float WaterMassDepthLayer { get; set; }
+
+            #region PD0
+
+            #region Reference Layers
+
+            /// <summary>
+            /// Bottom Track Reference Layer Mininum.
+            /// 
+            /// Stores the minimum layer size, the near boundary, and the far
+            /// boundary of the BT water-reference layer (BL-command).
+            /// 
+            /// Scaling (minimum layer size): LSD = 1 dm; Range = 0-999dm
+            /// 
+            /// Scaling (near/far boundaries): LSD = 1 dm; Range = 0-9999dm
+            /// </summary>
+            public ushort BtRefLayerMin { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Near.
+            /// 
+            /// Stores the minimum layer size, the near boundary, and the far
+            /// boundary of the BT water-reference layer (BL-command).
+            /// 
+            /// Scaling (minimum layer size): LSD = 1 dm; Range = 0-999dm
+            /// 
+            /// Scaling (near/far boundaries): LSD = 1 dm; Range = 0-9999dm
+            /// </summary>
+            public ushort BtRefLayerNear { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Far.
+            /// 
+            /// Stores the minimum layer size, the near boundary, and the far
+            /// boundary of the BT water-reference layer (BL-command).
+            /// 
+            /// Scaling (minimum layer size): LSD = 1 dm; Range = 0-999dm
+            /// 
+            /// Scaling (near/far boundaries): LSD = 1 dm; Range = 0-9999dm
+            /// </summary>
+            public ushort BtRefLayerFar { get; set; }
+
+            #endregion
+
+            #region Reference Layers Correlation
+
+            /// <summary>
+            /// Bottom Track Reference Layer Correlation Beam 0.
+            /// 
+            /// Contains correlation magnitude data for the water reference
+            /// layer for each beam. Reference layer correlation magnitudes
+            /// have the same format and scale factor as water-profiling
+            /// magnitudes (Table 5).
+            /// </summary>
+            public byte BtRefLayerCorrBeam0 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Correlation Beam 1.
+            /// 
+            /// Contains correlation magnitude data for the water reference
+            /// layer for each beam. Reference layer correlation magnitudes
+            /// have the same format and scale factor as water-profiling
+            /// magnitudes (Table 5).
+            /// </summary>
+            public byte BtRefLayerCorrBeam1 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Correlation Beam 2.
+            /// 
+            /// Contains correlation magnitude data for the water reference
+            /// layer for each beam. Reference layer correlation magnitudes
+            /// have the same format and scale factor as water-profiling
+            /// magnitudes (Table 5).
+            /// </summary>
+            public byte BtRefLayerCorrBeam2 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Correlation Beam 3.
+            /// 
+            /// Contains correlation magnitude data for the water reference
+            /// layer for each beam. Reference layer correlation magnitudes
+            /// have the same format and scale factor as water-profiling
+            /// magnitudes (Table 5).
+            /// </summary>
+            public byte BtRefLayerCorrBeam3 { get; set; }
+
+            #endregion
+
+            #region Reference Layer Echo Intensity
+
+            /// <summary>
+            /// Bottom Track Reference Layer Echo Intensity Beam 0.
+            /// 
+            /// Contains echo intensity data for the reference layer for each
+            /// beam. Reference layer intensities have the same format and
+            /// scale factor as water-profiling intensities.
+            /// </summary>
+            public byte BtRefLayerEchoIntensityBeam0 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Echo Intensity Beam 1.
+            /// 
+            /// Contains echo intensity data for the reference layer for each
+            /// beam. Reference layer intensities have the same format and
+            /// scale factor as water-profiling intensities.
+            /// </summary>
+            public byte BtRefLayerEchoIntensityBeam1 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Echo Intensity Beam 2.
+            /// 
+            /// Contains echo intensity data for the reference layer for each
+            /// beam. Reference layer intensities have the same format and
+            /// scale factor as water-profiling intensities.
+            /// </summary>
+            public byte BtRefLayerEchoIntensityBeam2 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Echo Intensity Beam 3.
+            /// 
+            /// Contains echo intensity data for the reference layer for each
+            /// beam. Reference layer intensities have the same format and
+            /// scale factor as water-profiling intensities.
+            /// </summary>
+            public byte BtRefLayerEchoIntensityBeam3 { get; set; }
+
+            #endregion
+
+            #region Reference Layer Percent Good
+
+            /// <summary>
+            /// Bottom Track Reference Layer Percent Good Beam 0.
+            /// 
+            /// Contains percent-good data for the water reference layer for
+            /// each beam. They indicate the reliability of reference layer
+            /// data. It is the percentage of bottom-track pings that have
+            /// passed a reference layer validity algorithm during an ensemble.
+            /// 
+            /// Scaling: LSD = 1 percent; Range = 0 to 100 percent
+            /// </summary>
+            public byte BtRefLayerPercentGoodBeam0 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Percent Good Beam 1.
+            /// 
+            /// Contains percent-good data for the water reference layer for
+            /// each beam. They indicate the reliability of reference layer
+            /// data. It is the percentage of bottom-track pings that have
+            /// passed a reference layer validity algorithm during an ensemble.
+            /// 
+            /// Scaling: LSD = 1 percent; Range = 0 to 100 percent
+            /// </summary>
+            public byte BtRefLayerPercentGoodBeam1 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Percent Good Beam 2.
+            /// 
+            /// Contains percent-good data for the water reference layer for
+            /// each beam. They indicate the reliability of reference layer
+            /// data. It is the percentage of bottom-track pings that have
+            /// passed a reference layer validity algorithm during an ensemble.
+            /// 
+            /// Scaling: LSD = 1 percent; Range = 0 to 100 percent
+            /// </summary>
+            public byte BtRefLayerPercentGoodBeam2 { get; set; }
+
+            /// <summary>
+            /// Bottom Track Reference Layer Percent Good Beam 3.
+            /// 
+            /// Contains percent-good data for the water reference layer for
+            /// each beam. They indicate the reliability of reference layer
+            /// data. It is the percentage of bottom-track pings that have
+            /// passed a reference layer validity algorithm during an ensemble.
+            /// 
+            /// Scaling: LSD = 1 percent; Range = 0 to 100 percent
+            /// </summary>
+            public byte BtRefLayerPercentGoodBeam3 { get; set; }
+
+            #endregion
+
+            #endregion
 
             #endregion
 
@@ -104,7 +290,24 @@ namespace RTI
                 VelocityEast = Ensemble.EMPTY_VELOCITY;
                 VelocityNorth = Ensemble.EMPTY_VELOCITY;
                 VelocityVertical = Ensemble.EMPTY_VELOCITY;
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
                 WaterMassDepthLayer = 0;
+
+                BtRefLayerFar = 0;
+                BtRefLayerMin = 0;
+                BtRefLayerNear = 0;
+                BtRefLayerCorrBeam0 = 0;
+                BtRefLayerCorrBeam1 = 0;
+                BtRefLayerCorrBeam2 = 0;
+                BtRefLayerCorrBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
             }
 
             /// <summary>
@@ -117,7 +320,24 @@ namespace RTI
                 VelocityEast = Ensemble.EMPTY_VELOCITY;
                 VelocityNorth = Ensemble.EMPTY_VELOCITY;
                 VelocityVertical = Ensemble.EMPTY_VELOCITY;
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
                 WaterMassDepthLayer = 0;
+
+                BtRefLayerFar = 0;
+                BtRefLayerMin = 0;
+                BtRefLayerNear = 0;
+                BtRefLayerCorrBeam0 = 0;
+                BtRefLayerCorrBeam1 = 0;
+                BtRefLayerCorrBeam2 = 0;
+                BtRefLayerCorrBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
             }
 
             /// <summary>
@@ -133,6 +353,24 @@ namespace RTI
                 VelocityNorth = Convert.ToSingle(sentence.WaterMassVelNorth.ToMetersPerSecond().Value);
                 VelocityVertical = Convert.ToSingle(sentence.WaterMassVelUp.ToMetersPerSecond().Value);
                 WaterMassDepthLayer = Convert.ToSingle(sentence.WaterMassDepth.ToMeters().Value);
+
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
+
+                BtRefLayerFar = 0;
+                BtRefLayerMin = 0;
+                BtRefLayerNear = 0;
+                BtRefLayerCorrBeam0 = 0;
+                BtRefLayerCorrBeam1 = 0;
+                BtRefLayerCorrBeam2 = 0;
+                BtRefLayerCorrBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
             }
 
             /// <summary>
@@ -169,6 +407,93 @@ namespace RTI
                 this.VelocityNorth = VelocityNorth;
                 this.VelocityVertical = VelocityVertical;
                 this.WaterMassDepthLayer = WaterMassDepthLayer;
+
+                VelocityQ = Ensemble.EMPTY_VELOCITY;
+
+                BtRefLayerFar = 0;
+                BtRefLayerMin = 0;
+                BtRefLayerNear = 0;
+                BtRefLayerCorrBeam0 = 0;
+                BtRefLayerCorrBeam1 = 0;
+                BtRefLayerCorrBeam2 = 0;
+                BtRefLayerCorrBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
+                BtRefLayerEchoIntensityBeam0 = 0;
+                BtRefLayerEchoIntensityBeam1 = 0;
+                BtRefLayerEchoIntensityBeam2 = 0;
+                BtRefLayerEchoIntensityBeam3 = 0;
+            }
+
+            /// <summary>
+            /// Convert the PD0 Bottom Track data type to the RTI Bottom Track data set.
+            /// </summary>
+            /// <param name="bt">PD0 Bottom Track.</param>
+            /// <param name="xform">Coordinate Transform.</param>
+            /// <param name="vl">Variable Leader.</param>
+            public void DecodePd0Ensemble(Pd0BottomTrack bt, PD0.CoordinateTransforms xform, Pd0VariableLeader vl)
+            {
+                #region Velocity Data
+
+                this.WaterMassDepthLayer = ((bt.BtRefLayerNear + bt.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
+
+                // Set velocities and check for bad velocities
+                if (bt.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
+                {
+                    this.VelocityEast = Ensemble.EMPTY_VELOCITY;
+                }
+                else
+                {
+                    this.VelocityEast = bt.BtRefLayerVelocityBeam0 / 1000.0f;
+                }
+
+                if (bt.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
+                {
+                    this.VelocityNorth = Ensemble.EMPTY_VELOCITY;
+                }
+                else
+                {
+                    this.VelocityNorth = bt.BtRefLayerVelocityBeam1 / 1000.0f;
+                }
+
+                if (bt.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
+                {
+                    this.VelocityVertical = Ensemble.EMPTY_VELOCITY;
+                }
+                else
+                {
+                    this.VelocityVertical = bt.BtRefLayerVelocityBeam2 / 1000.0f;
+                }
+
+                if (bt.BtRefLayerVelocityBeam3 == PD0.BAD_VELOCITY)
+                {
+                    this.VelocityQ = Ensemble.EMPTY_VELOCITY;
+                }
+                else
+                {
+                    this.VelocityQ = bt.BtRefLayerVelocityBeam3 / 1000.0f;
+                }
+
+                #endregion
+
+                BtRefLayerFar = bt.BtRefLayerFar;
+                BtRefLayerMin = bt.BtRefLayerMin;
+                BtRefLayerNear = bt.BtRefLayerNear;
+                BtRefLayerCorrBeam0 = bt.BtRefLayerCorrBeam0;
+                BtRefLayerCorrBeam1 = bt.BtRefLayerCorrBeam1;
+                BtRefLayerCorrBeam2 = bt.BtRefLayerCorrBeam2;
+                BtRefLayerCorrBeam3 = bt.BtRefLayerCorrBeam3;
+                BtRefLayerEchoIntensityBeam0 = bt.BtRefLayerEchoIntensityBeam0;
+                BtRefLayerEchoIntensityBeam1 = bt.BtRefLayerEchoIntensityBeam1;
+                BtRefLayerEchoIntensityBeam2 = bt.BtRefLayerEchoIntensityBeam2;
+                BtRefLayerEchoIntensityBeam3 = bt.BtRefLayerEchoIntensityBeam3;
+                BtRefLayerPercentGoodBeam0 = bt.BtRefLayerPercentGoodBeam0;
+                BtRefLayerPercentGoodBeam1 = bt.BtRefLayerPercentGoodBeam1;
+                BtRefLayerPercentGoodBeam2 = bt.BtRefLayerPercentGoodBeam2;
+                BtRefLayerPercentGoodBeam3 = bt.BtRefLayerPercentGoodBeam3;
+
             }
 
             /// <summary>
@@ -242,9 +567,73 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VELVERTICAL);
                 writer.WriteValue(data.VelocityVertical);
 
+                // Velocity Error
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_VELQ);
+                writer.WriteValue(data.VelocityQ);
+
                 // Water Mass Depth Layer
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WATERMASSDEPTHLAYER);
                 writer.WriteValue(data.WaterMassDepthLayer);
+
+                // Water Mass Depth Layer Far
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_LAYER_FAR);
+                writer.WriteValue(data.BtRefLayerFar);
+
+                // Water Mass Depth Layer Min
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_LAYER_MIN);
+                writer.WriteValue(data.BtRefLayerMin);
+
+                // Water Mass Depth Layer Near
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_LAYER_NEAR);
+                writer.WriteValue(data.BtRefLayerNear);
+
+                // Water Mass Depth Layer Correlation Beam 0
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_CORR_0);
+                writer.WriteValue(data.BtRefLayerCorrBeam0);
+
+                // Water Mass Depth Layer Correlation Beam 1
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_CORR_1);
+                writer.WriteValue(data.BtRefLayerCorrBeam1);
+
+                // Water Mass Depth Layer Correlation Beam 2
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_CORR_2);
+                writer.WriteValue(data.BtRefLayerCorrBeam2);
+
+                // Water Mass Depth Layer Correlation Beam 3
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_CORR_3);
+                writer.WriteValue(data.BtRefLayerCorrBeam3);
+
+                // Water Mass Depth Layer Echo Intensity Beam 0
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_ECHO_0);
+                writer.WriteValue(data.BtRefLayerEchoIntensityBeam0);
+
+                // Water Mass Depth Layer Echo Intensity Beam 1
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_ECHO_1);
+                writer.WriteValue(data.BtRefLayerEchoIntensityBeam1);
+
+                // Water Mass Depth Layer Echo Intensity Beam 2
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_ECHO_2);
+                writer.WriteValue(data.BtRefLayerEchoIntensityBeam2);
+
+                // Water Mass Depth Layer Echo Intensity Beam 3
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_ECHO_3);
+                writer.WriteValue(data.BtRefLayerEchoIntensityBeam3);
+
+                // Water Mass Depth Layer Percent Good Beam 0
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_PG_0);
+                writer.WriteValue(data.BtRefLayerPercentGoodBeam0);
+
+                // Water Mass Depth Layer Percent Good Beam 1
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_PG_1);
+                writer.WriteValue(data.BtRefLayerPercentGoodBeam1);
+
+                // Water Mass Depth Layer Percent Good Beam 2
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_PG_2);
+                writer.WriteValue(data.BtRefLayerPercentGoodBeam2);
+
+                // Water Mass Depth Layer Percent Good Beam 3
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_WM_PG_3);
+                writer.WriteValue(data.BtRefLayerPercentGoodBeam3);
 
                 // End the object
                 writer.WriteEndObject();
@@ -287,8 +676,56 @@ namespace RTI
                     // Velocity Vertical
                     data.VelocityVertical = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_VELVERTICAL];
 
+                    // Velocity Error
+                    data.VelocityQ = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_VELQ];
+
                     // Water Mass Depth Layer
                     data.WaterMassDepthLayer = (float)jsonObject[DataSet.BaseDataSet.JSON_STR_WATERMASSDEPTHLAYER];
+
+                    // Water Mass Depth Layer Far
+                    data.BtRefLayerFar = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_LAYER_FAR];
+
+                    // Water Mass Depth Layer Min
+                    data.BtRefLayerMin = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_LAYER_MIN];
+
+                    // Water Mass Depth Layer Near
+                    data.BtRefLayerNear = (ushort)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_LAYER_NEAR];
+
+                    // Water Mass Correlation Beam 0
+                    data.BtRefLayerCorrBeam0 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_CORR_0];
+
+                    // Water Mass Correlation Beam 1
+                    data.BtRefLayerCorrBeam1 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_CORR_1];
+
+                    // Water Mass Correlation Beam 2
+                    data.BtRefLayerCorrBeam2 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_CORR_2];
+
+                    // Water Mass Correlation Beam 3
+                    data.BtRefLayerCorrBeam3 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_CORR_3];
+
+                    // Water Mass Percent Good Beam 0
+                    data.BtRefLayerPercentGoodBeam0 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_PG_0];
+
+                    // Water Mass Percent Good Beam 1
+                    data.BtRefLayerPercentGoodBeam1 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_PG_1];
+
+                    // Water Mass Percent Good Beam 2
+                    data.BtRefLayerPercentGoodBeam2 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_PG_2];
+
+                    // Water Mass Percent Good Beam 3
+                    data.BtRefLayerPercentGoodBeam3 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_PG_3];
+
+                    // Water Mass Echo Intensity Beam 0
+                    data.BtRefLayerEchoIntensityBeam0 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_ECHO_0];
+
+                    // Water Mass Echo Intensity Beam 1
+                    data.BtRefLayerEchoIntensityBeam1 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_ECHO_1];
+
+                    // Water Mass Echo Intensity Beam 2
+                    data.BtRefLayerEchoIntensityBeam2 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_ECHO_2];
+
+                    // Water Mass Echo Intensity Beam 3
+                    data.BtRefLayerEchoIntensityBeam3 = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_WM_ECHO_3];
 
                     return data;
                 }

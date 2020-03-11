@@ -88,6 +88,7 @@
  * 06/18/2019      RC          3.4.11     Added Ship Water Track from PD0 data.  
  *                                        Fix the scale of the water track values in PD0
  * 10/10/2019      RC          3.4.14     Moved GetBottomBin() from ScreenMarkBadBelowBottom to Ensemble.
+ * 03/11/2020      RC          3.4.16     Use DecodePd0Ensemble() to decode the Water Mass values.
  * 
  */
 
@@ -3305,114 +3306,118 @@ namespace RTI
                     switch (ensemble.FixedLeader.GetCoordinateTransform())
                     {
                         case RTI.PD0.CoordinateTransforms.Coord_Earth:
-                            this.EarthWaterMassData = new DataSet.EarthWaterMassDataSet();
+                            //this.EarthWaterMassData = new DataSet.EarthWaterMassDataSet();
                             this.IsEarthWaterMassAvail = true;
-                            this.EarthWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
+                            this.EarthWaterMassData = new EarthWaterMassDataSet();
+                            this.EarthWaterMassData.DecodePd0Ensemble(ensemble.BottomTrack, ensemble.FixedLeader.GetCoordinateTransform(), ensemble.VariableLeader);
+                            //this.EarthWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
 
-                            // Set velocities and check for bad velocities
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
-                            {
-                                this.EarthWaterMassData.VelocityEast = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.EarthWaterMassData.VelocityEast = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
-                            }
+                            //// Set velocities and check for bad velocities
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.EarthWaterMassData.VelocityEast = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.EarthWaterMassData.VelocityEast = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
-                            {
-                                this.EarthWaterMassData.VelocityNorth = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.EarthWaterMassData.VelocityNorth = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.EarthWaterMassData.VelocityNorth = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.EarthWaterMassData.VelocityNorth = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
-                            {
-                                this.EarthWaterMassData.VelocityVertical = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.EarthWaterMassData.VelocityVertical = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.EarthWaterMassData.VelocityVertical = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.EarthWaterMassData.VelocityVertical = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
+                            //}
                             break;
                         case RTI.PD0.CoordinateTransforms.Coord_Ship:
                             this.ShipWaterMassData = new DataSet.ShipWaterMassDataSet();
                             this.IsShipWaterMassAvail = true;
-                            this.ShipWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
+                            this.ShipWaterMassData.DecodePd0Ensemble(ensemble.BottomTrack, ensemble.FixedLeader.GetCoordinateTransform(), ensemble.VariableLeader);
+                            //this.ShipWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
 
-                            // Set velocities and check for bad velocities
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
-                            {
-                                this.ShipWaterMassData.VelocityTransverse = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.ShipWaterMassData.VelocityTransverse = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
-                            }
+                            //// Set velocities and check for bad velocities
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.ShipWaterMassData.VelocityTransverse = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.ShipWaterMassData.VelocityTransverse = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
-                            {
-                                this.ShipWaterMassData.VelocityLongitudinal = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.ShipWaterMassData.VelocityLongitudinal = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.ShipWaterMassData.VelocityLongitudinal = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.ShipWaterMassData.VelocityLongitudinal = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
-                            {
-                                this.ShipWaterMassData.VelocityNormal = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.ShipWaterMassData.VelocityNormal = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.ShipWaterMassData.VelocityNormal = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.ShipWaterMassData.VelocityNormal = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
+                            //}
                             break;
 
                         case RTI.PD0.CoordinateTransforms.Coord_Instrument:
                         case RTI.PD0.CoordinateTransforms.Coord_Beam:
                             this.InstrumentWaterMassData = new DataSet.InstrumentWaterMassDataSet();
                             this.IsInstrumentWaterMassAvail = true;
-                            this.InstrumentWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
+                            this.InstrumentWaterMassData.DecodePd0Ensemble(ensemble.BottomTrack, ensemble.FixedLeader.GetCoordinateTransform(), ensemble.VariableLeader);
+                            //this.InstrumentWaterMassData.WaterMassDepthLayer = ((ensemble.BottomTrack.BtRefLayerNear + ensemble.BottomTrack.BtRefLayerFar) / 2.0f) / 10.0f;  // Divide by 10 to convert DM to M
 
-                            // Set velocities and check for bad velocities
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
-                            {
-                                this.InstrumentWaterMassData.VelocityX = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.InstrumentWaterMassData.VelocityX = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
-                            }
+                            //// Set velocities and check for bad velocities
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam0 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityX = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityX = ensemble.BottomTrack.BtRefLayerVelocityBeam0 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
-                            {
-                                this.InstrumentWaterMassData.VelocityY = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.InstrumentWaterMassData.VelocityY = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam1 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityY = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityY = ensemble.BottomTrack.BtRefLayerVelocityBeam1 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
-                            {
-                                this.InstrumentWaterMassData.VelocityZ = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.InstrumentWaterMassData.VelocityZ = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam2 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityZ = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityZ = ensemble.BottomTrack.BtRefLayerVelocityBeam2 / 1000.0f;
+                            //}
 
-                            if (ensemble.BottomTrack.BtRefLayerVelocityBeam3 == PD0.BAD_VELOCITY)
-                            {
-                                this.InstrumentWaterMassData.VelocityQ = BAD_VELOCITY;
-                            }
-                            else
-                            {
-                                this.InstrumentWaterMassData.VelocityQ = ensemble.BottomTrack.BtRefLayerVelocityBeam3 / 1000.0f;
-                            }
+                            //if (ensemble.BottomTrack.BtRefLayerVelocityBeam3 == PD0.BAD_VELOCITY)
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityQ = BAD_VELOCITY;
+                            //}
+                            //else
+                            //{
+                            //    this.InstrumentWaterMassData.VelocityQ = ensemble.BottomTrack.BtRefLayerVelocityBeam3 / 1000.0f;
+                            //}
                             break;
                         default:
                             break;

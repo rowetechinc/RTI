@@ -2033,10 +2033,10 @@ namespace RTI
             BtRefLayerEchoIntensityBeam1 = 0;
             BtRefLayerEchoIntensityBeam2 = 0;
             BtRefLayerEchoIntensityBeam3 = 0;
-            BtRefLayerEchoIntensityBeam0 = 0;
-            BtRefLayerEchoIntensityBeam1 = 0;
-            BtRefLayerEchoIntensityBeam2 = 0;
-            BtRefLayerEchoIntensityBeam3 = 0;
+            BtRefLayerPercentGoodBeam0 = 0;
+            BtRefLayerPercentGoodBeam1 = 0;
+            BtRefLayerPercentGoodBeam2 = 0;
+            BtRefLayerPercentGoodBeam3 = 0;
 
             #endregion
 

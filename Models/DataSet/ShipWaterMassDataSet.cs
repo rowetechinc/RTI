@@ -447,11 +447,11 @@ namespace RTI
                 BtRefLayerFar = bt.BtRefLayerFar;
                 BtRefLayerMin = bt.BtRefLayerMin;
                 BtRefLayerNear = bt.BtRefLayerNear;
-                BtRefLayerCorrBeam0 = bt.BtRefLayerCorrBeam0;
+                BtRefLayerCorrBeam0 = bt.BtRefLayerCorrBeam0;                           // Should divide by 255 to match RTB correlation range
                 BtRefLayerCorrBeam1 = bt.BtRefLayerCorrBeam1;
                 BtRefLayerCorrBeam2 = bt.BtRefLayerCorrBeam2;
                 BtRefLayerCorrBeam3 = bt.BtRefLayerCorrBeam3;
-                BtRefLayerEchoIntensityBeam0 = bt.BtRefLayerEchoIntensityBeam0;
+                BtRefLayerEchoIntensityBeam0 = bt.BtRefLayerEchoIntensityBeam0;         // Should divide by 2 to match RTB amplitude db range
                 BtRefLayerEchoIntensityBeam1 = bt.BtRefLayerEchoIntensityBeam1;
                 BtRefLayerEchoIntensityBeam2 = bt.BtRefLayerEchoIntensityBeam2;
                 BtRefLayerEchoIntensityBeam3 = bt.BtRefLayerEchoIntensityBeam3;

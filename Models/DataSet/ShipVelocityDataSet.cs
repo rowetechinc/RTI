@@ -34,6 +34,7 @@
  * -----------------------------------------------------------------
  * 08/25/2017      RC          3.4.2      Initial coding
  * 09/05/2017      RC          3.4.3      Added VelocityVectors.
+ * 03/12/2020      RC          3.4.16     Remapped beams for PD0 decode to match X,Y,Z.
  * 
  */
 
@@ -265,12 +266,44 @@ namespace RTI
                     {
                         for (int beam = 0; beam < vel.Velocities.GetLength(1); beam++)
                         {
-                            // beam order 3,2,0,1; XYZ order 1,0,-2,3, ENU order 0,1,2,3
+                            // Remap only for 4 beam systems
+                            int newBeam = 0;
+                            int sign = 1;
+                            if (vel.Velocities.GetLength(1) >= 4)
+                            {
+                                // beam order 3,2,0,1; XYZ and Ship order 1,0,-2,3, ENU order 0,1,2,3
+                                switch (beam)
+                                {
+                                    case 1:
+                                        newBeam = 0;
+                                        sign = 1;
+                                        break;
+                                    case 0:
+                                        newBeam = 1;
+                                        sign = 1;
+                                        break;
+                                    case 2:
+                                        newBeam = 2;
+                                        sign = -1;
+                                        break;
+                                    case 3:
+                                        newBeam = 3;
+                                        sign = 1;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                sign = 1;
+                                newBeam = beam;
+                            }
 
                             // Check for bad velocity
-                            if (vel.Velocities[bin, beam] != PD0.BAD_VELOCITY)
+                            if (vel.Velocities[bin, newBeam] != PD0.BAD_VELOCITY)
                             {
-                                ShipVelocityData[bin, beam] = vel.Velocities[bin, beam] / 1000.0f;   // m/s to mm/s 
+                                ShipVelocityData[bin, beam] = (vel.Velocities[bin, newBeam] / 1000.0f) * sign;   // m/s to mm/s 
                             }
                             else
                             {

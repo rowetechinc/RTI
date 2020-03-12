@@ -50,6 +50,8 @@
  * 07/31/2019      RC          3.4.13     Added Speed to NMEA CSV data.
  * 11/25/2019      RC          3.4.14     Fixed the label for CSV exporter from YNorth to XNorth.
  * 03/11/2020      RC          3.4.16     Added Water Track (Water Mass) values.
+ * 03/12/2020      RC          3.4.16     Relabed RefLayer to RefLayerMidPosition
+ *                                        Divided by 10 the ReflayerMin,Far and Near.
  * 
  */
 
@@ -1308,7 +1310,7 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.Append("EarthWmLayer,");
+            sb.Append("EarthWmLayerMidPosition,");
             sb.Append("EarthWmVelEast,");
             sb.Append("EarthWmVelNorth,");
             sb.Append("EarthWmVelVertical,");
@@ -1353,11 +1355,11 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.EarthWaterMassData.VelocityQ.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.EarthWaterMassData.BtRefLayerFar.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.EarthWaterMassData.BtRefLayerFar/10).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.EarthWaterMassData.BtRefLayerMin.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.EarthWaterMassData.BtRefLayerMin/10).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.EarthWaterMassData.BtRefLayerNear.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.EarthWaterMassData.BtRefLayerNear/10).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.EarthWaterMassData.BtRefLayerCorrBeam0.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
@@ -1404,7 +1406,7 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.Append("InstrWmLayer,");
+            sb.Append("InstrWmLayerMidPosition,");
             sb.Append("InstrWmVelX,");
             sb.Append("InstrWmVelY,");
             sb.Append("InstrWmVelZ,");
@@ -1449,11 +1451,11 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.InstrumentWaterMassData.VelocityQ.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerFar.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.InstrumentWaterMassData.BtRefLayerFar/10).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerMin.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.InstrumentWaterMassData.BtRefLayerMin/10).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerNear.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.InstrumentWaterMassData.BtRefLayerNear/10).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.InstrumentWaterMassData.BtRefLayerCorrBeam0.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
@@ -1500,7 +1502,7 @@ namespace RTI
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.Append("ShipWmLayer,");
+            sb.Append("ShipWmLayerMidPosition,");
             sb.Append("ShipWmVelX,");
             sb.Append("ShipWmVelY,");
             sb.Append("ShipWmVelZ,");
@@ -1545,11 +1547,11 @@ namespace RTI
                 sb.Append(",");
                 sb.Append(ensemble.ShipWaterMassData.VelocityQ.ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ShipWaterMassData.BtRefLayerFar.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.ShipWaterMassData.BtRefLayerFar/10.0).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ShipWaterMassData.BtRefLayerMin.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.ShipWaterMassData.BtRefLayerMin/10.0).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
-                sb.Append(ensemble.ShipWaterMassData.BtRefLayerNear.ToString(new CultureInfo("en-US")));
+                sb.Append((ensemble.ShipWaterMassData.BtRefLayerNear/10.0).ToString(new CultureInfo("en-US")));
                 sb.Append(",");
                 sb.Append(ensemble.ShipWaterMassData.BtRefLayerCorrBeam0.ToString(new CultureInfo("en-US")));
                 sb.Append(",");

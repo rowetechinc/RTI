@@ -2,7 +2,8 @@ RTI Changelog
 
 RTI-3.4.17
   - In Project and AdcpDatabaseWriter, added BurstID to project table.
-  - In EnsembleDataSet, added Burst ID.
+  - In EnsembleDataSet, added BurstID and BurstIndex.
+  - In AdcpDatabaseWriter, added BurstIndex and BurstID.
 
 RTI-3.4.16
  - Adding Ethernet Upload.

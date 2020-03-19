@@ -84,6 +84,7 @@
  * 08/01/2018      RC          3.4.8      Put a try/catch in Dispose if the writer is closed while still writing.
  * 08/14/2018      RC          3.4.9      Verify _eventWaitData is safe to use before setting.
  * 06/26/2019      RC          3.4.12     Added Ship Velocity and Ship Water Mass to WriteEnsembleDataToDatabase().
+ * 03/19/2020      RC          3.4.17     Added BurstIndex and BurstID.
  * 
  */
 
@@ -873,6 +874,7 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYSTEM));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_CEPO_INDEX));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_BURST_ID));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ENS_BURST_INDEX));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_FILENAME));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENSEMBLE_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_ANCILLARY_DS));
@@ -909,6 +911,7 @@ namespace RTI
                     builder.Append("@cepoIndex, ");
                     builder.Append("@cepoIndex, ");
                     builder.Append("@burstID, ");
+                    builder.Append("@burstIndex, ");
                     builder.Append("@fileName, ");
                     builder.Append("@ensembleDS, ");
                     builder.Append("@ancillaryDS, ");
@@ -948,6 +951,7 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.String) { Value = ensemble.EnsembleData.SubsystemConfig.SubSystem.CodeToString() });
                         cmd.Parameters.Add(new SQLiteParameter("@cepoIndex", System.Data.DbType.Int16) { Value = ensemble.EnsembleData.SubsystemConfig.CepoIndex });
                         cmd.Parameters.Add(new SQLiteParameter("@burstID", System.Data.DbType.Int16) { Value = ensemble.EnsembleData.BurstID });
+                        cmd.Parameters.Add(new SQLiteParameter("@burstIndex", System.Data.DbType.Int16) { Value = ensemble.EnsembleData.BurstIndex });
                         cmd.Parameters.Add(new SQLiteParameter("@fileName", System.Data.DbType.String) { Value = Path.GetFileName(ensemble.FileName) });
                         cmd.Parameters.Add(new SQLiteParameter("@ensembleDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EnsembleData) });
                     }
@@ -957,6 +961,8 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@dateTime", System.Data.DbType.DateTime) { Value = DateTime.Now });
                         cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.String) { Value = DBNull.Value });
                         cmd.Parameters.Add(new SQLiteParameter("@cepoIndex", System.Data.DbType.Int16) { Value = DBNull.Value });
+                        cmd.Parameters.Add(new SQLiteParameter("@burstID", System.Data.DbType.String) { Value = DBNull.Value });
+                        cmd.Parameters.Add(new SQLiteParameter("@burstIndex", System.Data.DbType.Int16) { Value = DBNull.Value });
                         cmd.Parameters.Add(new SQLiteParameter("@fileName", System.Data.DbType.String) { Value = DBNull.Value });
                         cmd.Parameters.Add(new SQLiteParameter("@ensembleDS", System.Data.DbType.String) { Value = DBNull.Value });
                     }

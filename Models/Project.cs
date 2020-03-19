@@ -77,7 +77,7 @@
  * 04/30/2018      RC          3.4.5      Added Subsystem and File column.  Bump rev to E.
  * 07/05/2018      RC          3.4.7      Added RecordDbEnsemble() which takes a cache of ensembles.
  * 06/26/2019      RC          3.4.12     Added ShipVelocity and ShipWaterMass columns to CreateProjectTables().  Bump rev to F.
- * 03/05/2020      RC          3.4.17     Added BurstID to project table.  Bump rev to G.
+ * 03/05/2020      RC          3.4.17     Added BurstID and BurstIndex to project table.  Bump rev to G.
  * 
  */
 
@@ -715,7 +715,7 @@ namespace RTI
                 //"PRAGMA main.synchronous=NORMAL",
                 //"PRAGMA main.journal_mode=WAL",
                 //"PRAGMA main.cache_size=5000",
-                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, Subsystem TEXT, CepoIndex INTEGER, BurstID INTEGER, FileName TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, ShipVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ShipWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT, SystemSetupDS TEXT, RangeTrackingDS TEXT, AdcpGpsData TEXT, Gps1Data TEXT, Gps2Data TEXT, Nmea1Data TEXT, Nmea2Data TEXT, DVL TEXT)",
+                "CREATE TABLE tblEnsemble (ID INTEGER PRIMARY KEY AUTOINCREMENT, EnsembleNum INTEGER NOT NULL, DateTime DATETIME NOT NULL, Position TEXT, Subsystem TEXT, CepoIndex INTEGER, BurstID INTEGER, BurstIndex INTEGER, FileName TEXT, EnsembleDS TEXT, AncillaryDS TEXT, AmplitudeDS TEXT, CorrelationDS TEXT, BeamVelocityDS TEXT, EarthVelocityDS TEXT, InstrumentVelocityDS TEXT, ShipVelocityDS TEXT, BottomTrackDS TEXT, GoodBeamDS TEXT, GoodEarthDS TEXT, NmeaDS TEXT, EarthWaterMassDS TEXT, InstrumentWaterMassDS TEXT, ShipWaterMassDS TEXT, ProfileEngineeringDS TEXT, BottomTrackEngineeringDS TEXT, SystemSetupDS TEXT, RangeTrackingDS TEXT, AdcpGpsData TEXT, Gps1Data TEXT, Gps2Data TEXT, Nmea1Data TEXT, Nmea2Data TEXT, DVL TEXT)",
                 "CREATE TABLE tblOptions(ID INTEGER PRIMARY KEY AUTOINCREMENT, ProjectOptions TEXT, AdcpConfiguration TEXT, AppConfiguration TEXT, Revision TEXT, Misc TEXT)",
                 string.Format("INSERT INTO {0} ({1}, {2}) VALUES ({3}, \"{4}\");", DbCommon.TBL_ENS_OPTIONS, DbCommon.COL_CMD_ADCP_CONFIGURATION, DbCommon.COL_CMD_REV, "''", REV),   // Put at least 1 entry so an insert does not have to be done later
             };
@@ -860,7 +860,7 @@ namespace RTI
 
 
                 // Return the latest version of the project
-                if (version.Contains("D"))
+                if (version.Contains("G"))
                 {
                     return true;
                 }

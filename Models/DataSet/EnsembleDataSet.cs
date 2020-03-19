@@ -77,6 +77,7 @@
  * 08/13/2015      RC          3.0.5      Added Try/Catch block in Decode().
  * 11/21/2017      RC          3.4.4      Made the default beam angle for PD0 20 degree.
  * 03/05/2020      RC          3.4.17     Added Burst ID.
+ * 03/19/2020      RC          3.4.17     Changed version to AO.
  */
 
 using System;
@@ -125,9 +126,14 @@ namespace RTI
             public const int NUM_DATA_ELEMENTS_REV_H = 23;
 
             /// <summary>
+            /// Number of elements as of User Guide Rev AO.
+            /// </summary>
+            public const int NUM_DATA_ELEMENTS_REV_AO = 25;
+
+            /// <summary>
             /// Number of elements within this data set
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = NUM_DATA_ELEMENTS_REV_H;
+            public const int NUM_DATA_ELEMENTS = NUM_DATA_ELEMENTS_REV_AO;
 
             /// <summary>
             /// Number of Int32 in the serial number for 
@@ -146,9 +152,14 @@ namespace RTI
             public const int FIRMWARE_NUM_INT = 1;
 
             /// <summary>
-            /// Number of Int32 in the Subsystem Configuration.
+            /// Number of bytes in the Subsystem Configuration.
             /// </summary>
             public const int SUBSYSTEM_CONFIG_NUM_INT = 1;
+
+            /// <summary>
+            /// Number of bytes in the Burst ID.
+            /// </summary>
+            public const int BURST_ID_NUM_INT = 1;
 
             /// <summary>
             /// Status value for Hardware timeout.
@@ -212,9 +223,22 @@ namespace RTI
             public Status Status { get; set; }
 
             /// <summary>
-            /// Burst ID.
+            /// Status2 of the system.
+            /// Currently not used.
             /// </summary>
-            public int BurstID { get; set; }
+            public Status Status2 { get; set; }
+
+            /// <summary>
+            /// Burst ID.  Set in the CBI command.
+            /// </summary>
+            public byte BurstID { get; set; }
+
+            /// <summary>
+            /// Burst Index.  
+            /// Increments with each burst.  Starts with 1 as the first burst.
+            /// Resets the burst index when the START command is set.
+            /// </summary>
+            public int BurstIndex { get; set; }
 
             /// <summary>
             /// Year for ensemble.
@@ -330,9 +354,11 @@ namespace RTI
 
                 // Create a blank status
                 Status = new Status(0);
+                Status2 = new Status(0);
 
-                // Initialize the burst ID
+                // Initialize the burst ID and Index.
                 BurstID = 0;
+                BurstIndex = 0;
             }
 
             /// <summary>
@@ -373,9 +399,11 @@ namespace RTI
 
                 // Create a blank status
                 Status = new Status(0);
+                Status2 = new Status(0);
 
-                // Initialize the burst ID
+                // Initialize the burst ID and Index.
                 BurstID = 0;
+                BurstIndex = 0;
             }
 
             /// <summary>
@@ -439,12 +467,14 @@ namespace RTI
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
+                Status2 = new Status(0);
 
                 // No bin data
                 NumBins = 0;
 
-                // Initialize the burst ID
+                // Initialize the burst ID and Index.
                 BurstID = 0;
+                BurstIndex = 0;
             }
 
             /// <summary>
@@ -488,12 +518,14 @@ namespace RTI
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
+                Status2 = new Status(0);
 
                 // No bin data
                 NumBins = 0;
 
-                // Initialize the burst ID
+                // Initialize the burst ID and Index.
                 BurstID = 0;
+                BurstIndex = 0;
             }
 
             /// <summary>
@@ -537,12 +569,14 @@ namespace RTI
 
                 // Get the status from the sentence
                 Status = sentence.SystemStatus;
+                Status2 = new Status(0);
 
                 // No bin data
                 NumBins = 0;
 
-                // Initialize the burst ID
+                // Initialize the burst ID and Index.
                 BurstID = 0;
+                BurstIndex = 0;
             }
 
             /// <summary>
@@ -601,7 +635,7 @@ namespace RTI
             [JsonConstructor]
             public EnsembleDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
                                     int EnsembleNumber, int NumBins, int NumBeams, int DesiredPingCount, int ActualPingCount,
-                                    SerialNumber SysSerialNumber, Firmware SysFirmware, SubsystemConfiguration SubsystemConfig, Status Status, int BurstID,
+                                    SerialNumber SysSerialNumber, Firmware SysFirmware, SubsystemConfiguration SubsystemConfig, Status Status, Status Status2, byte BurstID, int BurstIndex,
                                     int Year, int Month, int Day, int Hour, int Minute, int Second, int HSec) :
                 base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
@@ -615,7 +649,9 @@ namespace RTI
                 this.SysFirmware = SysFirmware;
                 this.SubsystemConfig = SubsystemConfig;
                 this.Status = Status;
+                this.Status2 = Status2;
                 this.BurstID = BurstID;
+                this.BurstIndex = BurstIndex;
                 this.Year = Year;
                 this.Month = Month;
                 this.Day = Day;
@@ -659,8 +695,7 @@ namespace RTI
             /// Get all the information about the Ensemble.
             /// </summary>
             /// <param name="data">Byte array containing the Ensemble data type.</param>
-            /// <param name="burstID">If a burst ID is available, pass the ID.</param>
-            private void Decode(byte[] data, int burstID = 0)
+            private void Decode(byte[] data)
             {
                 try
                 {
@@ -677,7 +712,6 @@ namespace RTI
                     Minute = MathHelper.ByteArrayToInt32(data, GenerateIndex(10));
                     Second = MathHelper.ByteArrayToInt32(data, GenerateIndex(11));
                     HSec = MathHelper.ByteArrayToInt32(data, GenerateIndex(12));
-                    BurstID = burstID;
 
                     // Revision D additions
                     if (NumElements >= NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D * Ensemble.BYTES_IN_INT32)
@@ -742,6 +776,7 @@ namespace RTI
                     {
                         // Get the Subsystem Configuration
                         // Start at index 22
+                        // Most Significant byte is SSConfig [3]
                         byte[] subConfig = new byte[SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32];
                         System.Buffer.BlockCopy(data, GenerateIndex(22), subConfig, 0, SUBSYSTEM_CONFIG_NUM_INT * Ensemble.BYTES_IN_INT32);
                         SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), subConfig);
@@ -750,6 +785,26 @@ namespace RTI
                     {
                         // Create a default SubsystemConfig with a configuration of 0
                         SubsystemConfig = new SubsystemConfiguration(SysFirmware.GetSubsystem(SysSerialNumber), 0, 0);
+                    }
+
+                    // Revision AO additions
+                    if (NumElements >= NUM_DATA_ELEMENTS_REV_AO && data.Length >= NUM_DATA_ELEMENTS_REV_AO * Ensemble.BYTES_IN_INT32)
+                    {
+                        // Get the Burst ID
+                        // Start at index 22
+                        // Most Significant byte is SSConfig [3]
+                        // Next byte is BurstID [2]
+                        byte[] burstID = new byte[BURST_ID_NUM_INT * Ensemble.BYTES_IN_INT32];
+                        System.Buffer.BlockCopy(data, GenerateIndex(22), burstID, 0, BURST_ID_NUM_INT * Ensemble.BYTES_IN_INT32);
+                        BurstID = burstID[2];
+
+                        Status2 = new Status(MathHelper.ByteArrayToInt32(data, GenerateIndex(23)));
+
+                        BurstIndex = MathHelper.ByteArrayToInt32(data, GenerateIndex(24));
+                    }
+                    else
+                    {
+
                     }
 
                     // Set the time and date
@@ -801,7 +856,11 @@ namespace RTI
                 System.Buffer.BlockCopy(SysFirmware.Encode(), 0, payload, newIndex, Firmware.NUM_BYTES);
 
                 newIndex = GeneratePayloadIndex(index) + (SERIAL_NUM_INT * Ensemble.BYTES_IN_INT32) + (FIRMWARE_NUM_INT * Ensemble.BYTES_IN_INT32);     // Last index plus the size of the serial number and firmware
-                System.Buffer.BlockCopy(SubsystemConfig.Encode(), 0, payload, newIndex, SubsystemConfiguration.NUM_BYTES);
+                System.Buffer.BlockCopy(SubsystemConfig.Encode(BurstID), 0, payload, newIndex, SubsystemConfiguration.NUM_BYTES);
+
+                System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(Status2.Value), 0, payload, GeneratePayloadIndex(23), Ensemble.BYTES_IN_INT32);
+
+                System.Buffer.BlockCopy(MathHelper.Int32ToByteArray(BurstIndex), 0, payload, GeneratePayloadIndex(24), Ensemble.BYTES_IN_INT32);
 
                 // Generate header for the dataset
                 byte[] header = this.GenerateHeader(NUM_DATA_ELEMENTS);
@@ -1164,9 +1223,17 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_STATUS);
                 writer.WriteValue(data.Status.Value);
 
+                // Status2 Value
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_STATUS2);
+                writer.WriteValue(data.Status2.Value);
+
                 // Burst ID
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BURSTID);
                 writer.WriteValue(data.BurstID);
+
+                // Burst Index
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BURSTINDEX);
+                writer.WriteValue(data.BurstIndex);
 
                 // Year
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_YEAR);
@@ -1259,8 +1326,14 @@ namespace RTI
                     // Status
                     Status status = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS]);
 
+                    // Status2
+                    Status status2 = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS2]);
+
                     // Burst ID
-                    int burstID = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTID];
+                    byte burstID = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTID];
+
+                    // Burst Index
+                    int burstIndex = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTINDEX];
 
                     // Year
                     int Year = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_YEAR];
@@ -1288,7 +1361,7 @@ namespace RTI
                     // the correct EnsDateTime and UniqueID
                     var data = new EnsembleDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.EnsembleDataID,
                                                     EnsembleNumber, NumBins, NumBeams, DesiredPingCount, ActualPingCount,
-                                                    SysSerialNumber, SysFirmware, SubsystemConfig, status, burstID,
+                                                    SysSerialNumber, SysFirmware, SubsystemConfig, status, status2, burstID, burstIndex,
                                                     Year, Month, Day, Hour, Minute, Second, HSec);
 
                     return data;

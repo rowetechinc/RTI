@@ -168,13 +168,14 @@ namespace RTI
         /// <summary>
         /// Convert the Subsystem Configuration into a byte array.
         /// </summary>
+        /// <param name="burstID">Burst ID.</param>
         /// <returns>Byte array of the Subsystem Configuration.</returns>
-        public byte[] Encode()
+        public byte[] Encode(byte burstID=0)
         {
             byte[] result = new byte[NUM_BYTES];
             result[0] = (byte)0;
             result[1] = (byte)0;
-            result[2] = (byte)0;
+            result[2] = burstID;
             result[COMMAND_SETUP_START] = CepoIndex;
 
             return result;

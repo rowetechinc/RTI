@@ -309,6 +309,11 @@ namespace RTI
             public const string JSON_STR_STATUS = "Status";
 
             /// <summary>
+            /// String for Burst ID.
+            /// </summary>
+            public const string JSON_STR_BURSTID = "BurstID";
+
+            /// <summary>
             /// String for Year.
             /// </summary>
             public const string JSON_STR_YEAR = "Year";

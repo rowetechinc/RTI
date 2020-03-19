@@ -872,6 +872,7 @@ namespace RTI
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_POSITION));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_SUBSYSTEM));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_CEPO_INDEX));
+                    builder.Append(string.Format("{0},", DbCommon.COL_ENS_BURST_ID));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENS_FILENAME));
                     builder.Append(string.Format("{0},", DbCommon.COL_ENSEMBLE_DS));
                     builder.Append(string.Format("{0},", DbCommon.COL_ANCILLARY_DS));
@@ -906,6 +907,8 @@ namespace RTI
                     builder.Append("@position, ");
                     builder.Append("@subsystem, ");
                     builder.Append("@cepoIndex, ");
+                    builder.Append("@cepoIndex, ");
+                    builder.Append("@burstID, ");
                     builder.Append("@fileName, ");
                     builder.Append("@ensembleDS, ");
                     builder.Append("@ancillaryDS, ");
@@ -944,6 +947,7 @@ namespace RTI
                         cmd.Parameters.Add(new SQLiteParameter("@dateTime", System.Data.DbType.DateTime) { Value = ensemble.EnsembleData.EnsDateTime });
                         cmd.Parameters.Add(new SQLiteParameter("@subsystem", System.Data.DbType.String) { Value = ensemble.EnsembleData.SubsystemConfig.SubSystem.CodeToString() });
                         cmd.Parameters.Add(new SQLiteParameter("@cepoIndex", System.Data.DbType.Int16) { Value = ensemble.EnsembleData.SubsystemConfig.CepoIndex });
+                        cmd.Parameters.Add(new SQLiteParameter("@burstID", System.Data.DbType.Int16) { Value = ensemble.EnsembleData.BurstID });
                         cmd.Parameters.Add(new SQLiteParameter("@fileName", System.Data.DbType.String) { Value = Path.GetFileName(ensemble.FileName) });
                         cmd.Parameters.Add(new SQLiteParameter("@ensembleDS", System.Data.DbType.String) { Value = Newtonsoft.Json.JsonConvert.SerializeObject(ensemble.EnsembleData) });
                     }

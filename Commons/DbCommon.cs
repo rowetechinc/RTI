@@ -164,6 +164,13 @@ namespace RTI
 
         /// <summary>
         /// Ensemble Table:
+        /// Burst ID to keep track of the burst groups.
+        /// TEXT
+        /// </summary>
+        public const string COL_ENS_BURST_ID = "BurstID";
+
+        /// <summary>
+        /// Ensemble Table:
         /// File name.
         /// TEXT
         /// </summary>

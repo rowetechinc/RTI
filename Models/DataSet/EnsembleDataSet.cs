@@ -76,6 +76,7 @@
  * 07/28/2014      RC          2.23.0     Fixed a bug setting the ElementMulitplier and NumElements.
  * 08/13/2015      RC          3.0.5      Added Try/Catch block in Decode().
  * 11/21/2017      RC          3.4.4      Made the default beam angle for PD0 20 degree.
+ * 03/05/2020      RC          3.4.17     Added Burst ID.
  */
 
 using System;
@@ -211,6 +212,11 @@ namespace RTI
             public Status Status { get; set; }
 
             /// <summary>
+            /// Burst ID.
+            /// </summary>
+            public int BurstID { get; set; }
+
+            /// <summary>
             /// Year for ensemble.
             /// </summary>
             public int Year { get; set; }
@@ -324,6 +330,9 @@ namespace RTI
 
                 // Create a blank status
                 Status = new Status(0);
+
+                // Initialize the burst ID
+                BurstID = 0;
             }
 
             /// <summary>
@@ -364,6 +373,9 @@ namespace RTI
 
                 // Create a blank status
                 Status = new Status(0);
+
+                // Initialize the burst ID
+                BurstID = 0;
             }
 
             /// <summary>
@@ -430,6 +442,9 @@ namespace RTI
 
                 // No bin data
                 NumBins = 0;
+
+                // Initialize the burst ID
+                BurstID = 0;
             }
 
             /// <summary>
@@ -476,6 +491,9 @@ namespace RTI
 
                 // No bin data
                 NumBins = 0;
+
+                // Initialize the burst ID
+                BurstID = 0;
             }
 
             /// <summary>
@@ -522,6 +540,9 @@ namespace RTI
 
                 // No bin data
                 NumBins = 0;
+
+                // Initialize the burst ID
+                BurstID = 0;
             }
 
             /// <summary>
@@ -569,6 +590,7 @@ namespace RTI
             /// <param name="SysFirmware">Firmware version and configuration.</param>
             /// <param name="SubsystemConfig">Configuration for the ensemble.</param>
             /// <param name="Status">Status of the ADCP.</param>
+            /// <param name="BurstID">Burst ID</param>
             /// <param name="Year">Year of the ensemble.</param>
             /// <param name="Month">Month of the ensemble.</param>
             /// <param name="Day">Day of the ensemble.</param>
@@ -579,7 +601,7 @@ namespace RTI
             [JsonConstructor]
             public EnsembleDataSet(int ValueType, int NumElements, int ElementsMultiplier, int Imag, int NameLength, string Name,
                                     int EnsembleNumber, int NumBins, int NumBeams, int DesiredPingCount, int ActualPingCount,
-                                    SerialNumber SysSerialNumber, Firmware SysFirmware, SubsystemConfiguration SubsystemConfig, Status Status,
+                                    SerialNumber SysSerialNumber, Firmware SysFirmware, SubsystemConfiguration SubsystemConfig, Status Status, int BurstID,
                                     int Year, int Month, int Day, int Hour, int Minute, int Second, int HSec) :
                 base(ValueType, NumElements, ElementsMultiplier, Imag, NameLength, Name)
             {
@@ -593,6 +615,7 @@ namespace RTI
                 this.SysFirmware = SysFirmware;
                 this.SubsystemConfig = SubsystemConfig;
                 this.Status = Status;
+                this.BurstID = BurstID;
                 this.Year = Year;
                 this.Month = Month;
                 this.Day = Day;
@@ -636,7 +659,8 @@ namespace RTI
             /// Get all the information about the Ensemble.
             /// </summary>
             /// <param name="data">Byte array containing the Ensemble data type.</param>
-            private void Decode(byte[] data)
+            /// <param name="burstID">If a burst ID is available, pass the ID.</param>
+            private void Decode(byte[] data, int burstID = 0)
             {
                 try
                 {
@@ -653,6 +677,7 @@ namespace RTI
                     Minute = MathHelper.ByteArrayToInt32(data, GenerateIndex(10));
                     Second = MathHelper.ByteArrayToInt32(data, GenerateIndex(11));
                     HSec = MathHelper.ByteArrayToInt32(data, GenerateIndex(12));
+                    BurstID = burstID;
 
                     // Revision D additions
                     if (NumElements >= NUM_DATA_ELEMENTS_REV_D && data.Length >= NUM_DATA_ELEMENTS_REV_D * Ensemble.BYTES_IN_INT32)
@@ -910,6 +935,7 @@ namespace RTI
                 s += "Bins: " + NumBins + " Beams: " + NumBeams + "\n";
                 s += "Pings Desired: " + DesiredPingCount + " actual: " + ActualPingCount + "\n";
                 s += "Status: " + Status.ToString() + "\n";
+                s += "Burst ID: " + BurstID.ToString() + "\n";
 
                 return s;
             }
@@ -1138,6 +1164,10 @@ namespace RTI
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_STATUS);
                 writer.WriteValue(data.Status.Value);
 
+                // Burst ID
+                writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_BURSTID);
+                writer.WriteValue(data.BurstID);
+
                 // Year
                 writer.WritePropertyName(DataSet.BaseDataSet.JSON_STR_YEAR);
                 writer.WriteValue(data.Year);
@@ -1229,6 +1259,9 @@ namespace RTI
                     // Status
                     Status status = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS]);
 
+                    // Burst ID
+                    int burstID = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTID];
+
                     // Year
                     int Year = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_YEAR];
 
@@ -1255,7 +1288,7 @@ namespace RTI
                     // the correct EnsDateTime and UniqueID
                     var data = new EnsembleDataSet(DataSet.Ensemble.DATATYPE_INT, NumElements, ElementsMultiplier, DataSet.Ensemble.DEFAULT_IMAG, DataSet.Ensemble.DEFAULT_NAME_LENGTH, DataSet.Ensemble.EnsembleDataID,
                                                     EnsembleNumber, NumBins, NumBeams, DesiredPingCount, ActualPingCount,
-                                                    SysSerialNumber, SysFirmware, SubsystemConfig, status,
+                                                    SysSerialNumber, SysFirmware, SubsystemConfig, status, burstID,
                                                     Year, Month, Day, Hour, Minute, Second, HSec);
 
                     return data;

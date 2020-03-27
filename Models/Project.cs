@@ -1192,6 +1192,59 @@ namespace RTI
         }
 
         /// <summary>
+        /// Record to the database project file.
+        /// </summary>
+        /// <param name="ensemble">Ensemble to record.</param>
+        /// <param name="headingOffset">Heading offset.  Used if non-zero.</param>
+        /// <param name="pitchOffset">Pitch offset.  Used if non-zero</param>
+        /// <param name="rollOffset">Roll offset.  Used if non-zero</param>
+        /// <param name="isReplacePressure">Set flag if pressure should be replaced with vertical beam range value.</param>
+        /// <returns>True if ensemble could be recorded.</returns>
+        public bool RecordDbEnsemble(DataSet.Ensemble ensemble,
+                                     float headingOffset,
+                                     float pitchOffset,
+                                     float rollOffset,
+                                     bool isReplacePressure)
+        {
+            if (_dbWriter != null)
+            {
+                // Heading offset
+                VesselMountOptions vmOptions = new VesselMountOptions();
+                vmOptions.HeadingOffsetMag = headingOffset;
+
+                // Tilt Offset
+                vmOptions.RollOffset = rollOffset;
+                vmOptions.PitchOffset = pitchOffset;
+
+                // Create the velocity vectors for the ensemble
+                DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
+                // Screen the data
+                // Run Pitch and Roll offset before heading offset
+                if (pitchOffset != 0.0f || rollOffset != 0.0f)
+                {
+                    RTI.VesselMount.VmTiltOffset.TiltOffset(ref ensemble, vmOptions);
+                }
+
+                // Heading offset
+                if (headingOffset != 0.0f)
+                {
+                    RTI.VesselMount.VmHeadingOffset.HeadingOffset(ref ensemble, vmOptions);
+                }
+
+                if (isReplacePressure)
+                {
+                    // Replace Pressure with Vertical Beam range
+                    RTI.ScreenData.ReplacePressureVerticalBeam.Replace(ref ensemble);
+                }
+
+                _dbWriter.AddIncomingData(ensemble);
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Record the ensembles the database.  
         /// </summary>
         /// <param name="ensembles">Ensemble to record.</param>
@@ -1210,6 +1263,71 @@ namespace RTI
 
             return true;
         }
+
+
+        /// <summary>
+        /// Record the ensembles the database.  This will
+        /// apply the tilt and heading offset.
+        /// </summary>
+        /// <param name="ensembles">Ensemble to record.</param>
+        /// <param name="headingOffset">Heading offset.  Used if non-zero.</param>
+        /// <param name="pitchOffset">Pitch offset.  Used if non-zero</param>
+        /// <param name="rollOffset">Roll offset.  Used if non-zero</param>
+        /// <param name="isReplacePressure">Set flag if pressure should be replaced with vertical beam range value.</param>
+        /// <returns>True if ensemble could be recorded.</returns>
+        public bool RecordDbEnsemble(Cache<long, DataSet.Ensemble> ensembles,
+                                    float headingOffset,
+                                    float pitchOffset,
+                                    float rollOffset,
+                                    bool isReplacePressure)
+        {
+            if (_dbWriter != null)
+            {
+
+                // Heading offset
+                VesselMountOptions vmOptions = new VesselMountOptions();
+                vmOptions.HeadingOffsetMag = headingOffset;
+
+                // Tilt Offset
+                vmOptions.RollOffset = rollOffset;
+                vmOptions.PitchOffset = pitchOffset;
+
+                // Go through each ensemble
+                for (int x = 0; x < ensembles.Count(); x++)
+                {
+                    // Get the next ensemble
+                    DataSet.Ensemble ensemble = ensembles.IndexValue(x);
+
+                    // Create the velocity vectors for the ensemble
+                    DataSet.VelocityVectorHelper.CreateVelocityVector(ref ensemble);
+
+                    // Screen the data
+                    // Run Pitch and Roll offset before heading offset
+                    if (pitchOffset != 0.0f || rollOffset != 0.0f)
+                    {
+                        RTI.VesselMount.VmTiltOffset.TiltOffset(ref ensemble, vmOptions);
+                    }
+
+                    // Heading offset
+                    if (headingOffset != 0.0f)
+                    {
+                        RTI.VesselMount.VmHeadingOffset.HeadingOffset(ref ensemble, vmOptions);
+                    }
+
+                    if (isReplacePressure)
+                    {
+                        // Replace Pressure with Vertical Beam range
+                        RTI.ScreenData.ReplacePressureVerticalBeam.Replace(ref ensemble);
+                    }
+
+                    // Write the ensemble to the database
+                    _dbWriter.AddIncomingData(ensemble);
+                }
+            }
+
+            return true;
+        }
+
 
         #endregion
 

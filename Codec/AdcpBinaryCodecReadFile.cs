@@ -35,6 +35,7 @@
  * 02/08/2017      RC          3.4.0      Initial coding
  * 02/23/2017      RC          3.4.1      Changed to ReadBytes to read in from the file to improve performance.
  * 09/29/2017      RC          3.4.4      Set the original data format in the data.
+ * 03/23/2020      RC          3.4.17     Added events to monitor the process.
  * 
  */
 
@@ -75,10 +76,14 @@ namespace RTI
         /// Get a list of all the ensembles in the file.
         /// This will look for the start locations of all the ensembles.
         /// Then it will get the entire ensemble from the file.
+        /// 
+        /// IF isReturnEnsList to false, then returned list will be empty.  This will
+        /// save ram.  The user will then need to use the events to get all the data.
         /// </summary>
         /// <param name="file">File to get the ensemble.</param>
+        /// <param name="returnEnsList">Set flag whether to return a list of ensembles or let the user only use the events.</param>
         /// <returns>The list of ensembles.</returns>
-        public List<DataSet.EnsemblePackage> GetEnsembles(string file)
+        public List<DataSet.EnsemblePackage> GetEnsembles(string file, bool isReturnEnsList = true)
         {
             if (File.Exists(file))
             {
@@ -87,8 +92,17 @@ namespace RTI
                     // Get the list of all the ensemble start locations
                     var ensStart = FindEnsembleStarts(file);
 
+                    // Find all the complete ensembles in the file
+                    var ensList = FindCompleteEnsembles(ensStart, file, isReturnEnsList);
+
+                    // Send an event that processing is complete
+                    if (ProcessDataCompleteEvent != null)
+                    {
+                        ProcessDataCompleteEvent();
+                    }
+
                     // Decode the ensembles found
-                    return FindCompleteEnsembles(ensStart, file);
+                    return ensList;
                 }
                 catch(Exception e)
                 {
@@ -165,11 +179,15 @@ namespace RTI
         /// Find the entire ensemble in the file.  This will look for the start location.
         /// Decode the payload size and checksum.  If they are good, then generate an 
         /// ensemble from the data.  Add the data to the list and return it.
+        /// 
+        /// IF isReturnEnsList to false, then returned list will be empty.  This will
+        /// save ram.  The user will then need to use the events to get all the data.
         /// </summary>
         /// <param name="ensStart">List of all the ensembles.</param>
         /// <param name="file">File to look for the ensembles.</param>
+        /// <param name="isReturnEnsList">Set flag whether to return a list of ensembles or let the user only use the events.</param>
         /// <returns>List of all the ensembles in the file.</returns>
-        protected List<DataSet.EnsemblePackage> FindCompleteEnsembles(List<int> ensStart, string file)
+        protected List<DataSet.EnsemblePackage> FindCompleteEnsembles(List<int> ensStart, string file, bool isReturnEnsList=true)
         {
             var list = new List<DataSet.EnsemblePackage>(ensStart.Count);
 
@@ -223,12 +241,24 @@ namespace RTI
                                         // Set the file name
                                         ens.FileName = file;
 
-                                        // Package the data
-                                        var ensPak = new DataSet.EnsemblePackage();
-                                        ensPak.Ensemble = ens;
-                                        ensPak.RawEnsemble = rawEns;
-                                        ensPak.OrigDataFormat = AdcpCodec.CodecEnum.Binary;
-                                        list.Add(ensPak);
+                                        if (isReturnEnsList)
+                                        {
+                                            // Package the data
+                                            var ensPak = new DataSet.EnsemblePackage();
+                                            ensPak.Ensemble = ens;
+                                            ensPak.RawEnsemble = rawEns;
+                                            ensPak.OrigDataFormat = AdcpCodec.CodecEnum.Binary;
+                                            list.Add(ensPak);
+                                        }
+
+                                        // Publish the data
+                                        // Send an event that data was processed
+                                        // in this format
+                                        if (ProcessDataEvent != null)
+                                        {
+                                            ProcessDataEvent(rawEns, ens);
+                                        }
+
                                         //Debug.WriteLine("Ens: " + ens.EnsembleData.EnsembleNumber + " Count: " + count + " " + System.DateTime.Now);
                                     }
                                 }
@@ -252,6 +282,51 @@ namespace RTI
 
             return list;
         }
+
+        #region Events
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        /// <param name="ensemble">Byte array of raw ensemble data.</param>
+        /// <param name="adcpData">Ensemble data as an object.</param>
+        public delegate void ProcessDataEventHandler(byte[] ensemble, DataSet.Ensemble adcpData);
+
+        /// <summary>
+        /// Subscribe to receive event when data has been successfully
+        /// processed.  This can be used to tell if data is in this format
+        /// and is being processed or is not in this format.
+        /// Subscribe to this event.  This will hold all subscribers.
+        /// 
+        /// To subscribe:
+        /// adcpBinaryCodec.ProcessDataEvent += new adcpBinaryCodec.ProcessDataEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// adcpBinaryCodec.ProcessDataEvent -= (method to call)
+        /// </summary>
+        public event ProcessDataEventHandler ProcessDataEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void ProcessDataCompleteEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when the entire file has been processed.
+        /// This event will be fired when there is no more data in the 
+        /// buffer to decode.
+        /// 
+        /// To subscribe:
+        /// adcpBinaryCodec.ProcessDataCompleteEvent += new adcpBinaryCodec.ProcessDataCompleteEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// adcpBinaryCodec.ProcessDataCompleteEvent -= (method to call)
+        /// </summary>
+        public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
+
+        #endregion
 
     }
 }

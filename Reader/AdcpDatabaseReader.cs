@@ -53,6 +53,7 @@ namespace RTI
     using System.ComponentModel;
     using log4net;
     using System.Data.SQLite;
+    using System.Data;
 
     /// <summary>
     /// Read the data from the Project SQLite database.  This will
@@ -247,6 +248,62 @@ namespace RTI
         {
             return AdcpDatabaseCodec.GetNumberOfEnsembles(project);
         }
+
+        #region Get Burst Ensembles
+
+        /// <summary>
+        /// Get all the unique Burst Index in the project.  
+        /// From this list you can then group all the ensembles
+        /// with a burst index and burst ID.
+        /// </summary>
+        /// <param name="project">Project containing burst data.</param>
+        /// <returns>DataTable contain the unique BurstID and BurstIndex</returns>
+        public DataTable GetBurstIndexList(Project project)
+        {
+            // Create a list of burst index from project
+            DataTable dt = new DataTable();
+
+            // Use a background worker to get
+            // the ensemble.
+            if (project != null)
+            {
+                // Get the list
+                // Connection is opened and closed with this command
+                string query = String.Format("SELECT DISTINCT BurstID,BurstIndex FROM tblEnsemble ORDER BY DateTime;");
+                dt = DbCommon.GetDataTableFromProjectDb(project, query);
+            }
+
+            return dt;
+        }
+
+        /// <summary>
+        /// Get all the ensembles for the given BurstID and BurstIndex.
+        /// </summary>
+        /// <param name="project">Project containing the burst data.</param>
+        /// <param name="burstID">Burst ID.</param>
+        /// <param name="burstIndex">Burst Index</param>
+        /// <returns>All ensembles in the given burst.</returns>
+        public DataTable GetBurstEnsembles(Project project, int burstID, int burstIndex)
+        {
+            // Create a list of burst index from project
+            DataTable dt = new DataTable();
+
+            if (project != null && burstIndex != 0)
+            {
+                string query = String.Format("SELECT * FROM {0} WHERE BurstID={1} AND BurstIndex={2};", DbCommon.TBL_ENS_ENSEMBLE, burstID.ToString(), burstIndex.ToString());
+                dt = DbCommon.GetDataTableFromProjectDb(project, query);
+            }
+
+            return dt;
+        }
+
+        public DataSet.Ensemble DataTabletoEnsemble(DataRow dtEns)
+        {
+            return _adcpDbCodec.ParseDataTables(null, dtEns);
+        }
+
+
+        #endregion
 
         #region Read Ensemble
 

@@ -909,7 +909,6 @@ namespace RTI
                     builder.Append("@position, ");
                     builder.Append("@subsystem, ");
                     builder.Append("@cepoIndex, ");
-                    builder.Append("@cepoIndex, ");
                     builder.Append("@burstID, ");
                     builder.Append("@burstIndex, ");
                     builder.Append("@fileName, ");

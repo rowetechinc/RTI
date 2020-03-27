@@ -804,7 +804,10 @@ namespace RTI
                     }
                     else
                     {
-
+                        // Set default values
+                        BurstID = 0;
+                        BurstIndex = 0;
+                        Status2 = new Status(0);
                     }
 
                     // Set the time and date

@@ -5,6 +5,7 @@ RTI-3.4.17
   - In EnsembleDataSet, added BurstID and BurstIndex.
   - In AdcpDatabaseWriter, added BurstIndex and BurstID.
   - In AdcpBinaryCodecReadFile, Added events to monitor the process.
+  - In RtiWavesEncoder, Handling new firmware version with BurstID and BurstIndex.
 
 RTI-3.4.16
  - Adding Ethernet Upload.

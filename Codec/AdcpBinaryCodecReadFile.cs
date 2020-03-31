@@ -81,7 +81,7 @@ namespace RTI
         /// save ram.  The user will then need to use the events to get all the data.
         /// </summary>
         /// <param name="file">File to get the ensemble.</param>
-        /// <param name="returnEnsList">Set flag whether to return a list of ensembles or let the user only use the events.</param>
+        /// <param name="isReturnEnsList">Set flag whether to return a list of ensembles or let the user only use the events.</param>
         /// <returns>The list of ensembles.</returns>
         public List<DataSet.EnsemblePackage> GetEnsembles(string file, bool isReturnEnsList = true)
         {

@@ -297,6 +297,12 @@ namespace RTI
             return dt;
         }
 
+        /// <summary>
+        /// Convert a datatable of an ensemble and convert
+        /// it to an ensemble.
+        /// </summary>
+        /// <param name="dtEns">Datatable containing an ensemble.</param>
+        /// <returns>Ensemble object.</returns>
         public DataSet.Ensemble DataTabletoEnsemble(DataRow dtEns)
         {
             return _adcpDbCodec.ParseDataTables(null, dtEns);

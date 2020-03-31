@@ -624,7 +624,9 @@ namespace RTI
             /// <param name="SysFirmware">Firmware version and configuration.</param>
             /// <param name="SubsystemConfig">Configuration for the ensemble.</param>
             /// <param name="Status">Status of the ADCP.</param>
+            /// <param name="Status2">Status2 of the ADCP.</param>
             /// <param name="BurstID">Burst ID</param>
+            /// <param name="BurstIndex">Burst Index</param>
             /// <param name="Year">Year of the ensemble.</param>
             /// <param name="Month">Month of the ensemble.</param>
             /// <param name="Day">Day of the ensemble.</param>

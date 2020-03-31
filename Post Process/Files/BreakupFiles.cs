@@ -41,6 +41,9 @@ namespace RTI
             _adcpCodec.ProcessDataCompleteEvent += new AdcpCodec.ProcessDataCompleteEventHandler(_adcpCodec_ProcessDataCompleteEvent);
         }
 
+        /// <summary>
+        /// Dispose the object.
+        /// </summary>
         public void Dispose()
         {
             if (_adcpCodec != null)
@@ -66,6 +69,11 @@ namespace RTI
         }
 
 
+        /// <summary>
+        /// Find similar subsystems.
+        /// </summary>
+        /// <param name="files"></param>
+        /// <param name="outputDir"></param>
         public void FindSimilarSubsystems(string[] files, string outputDir)
         {
             foreach (var file in files)
@@ -74,6 +82,11 @@ namespace RTI
             }
         }
 
+        /// <summary>
+        /// Find ensemble start.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
         protected List<int> FindEnsembleStarts(string file)
         {
             var ensStartList = new List<int>();

@@ -2727,48 +2727,63 @@ namespace RTI
                     }
 
                     // Pulse Coherent SNR
-                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_SNR];
-                    data.PulseCohr_Snr = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BT_PC_SNR))
                     {
-                        // Add all the values to the array
-                        data.PulseCohr_Snr[x] = (float)jArray[x];
+                        jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_SNR];
+                        data.PulseCohr_Snr = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.PulseCohr_Snr[x] = (float)jArray[x];
+                        }
                     }
 
                     // Pulse Coherent Amplitude
-                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_AMP];
-                    data.PulseCohr_Amp = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BT_PC_AMP))
                     {
-                        // Add all the values to the array
-                        data.PulseCohr_Amp[x] = (float)jArray[x];
+                        jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_AMP];
+                        data.PulseCohr_Amp = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.PulseCohr_Amp[x] = (float)jArray[x];
+                        }
                     }
 
                     // Pulse Coherent Velocity
-                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_VEL];
-                    data.PulseCohr_Vel = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BT_PC_VEL))
                     {
-                        // Add all the values to the array
-                        data.PulseCohr_Vel[x] = (float)jArray[x];
+                        jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_VEL];
+                        data.PulseCohr_Vel = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.PulseCohr_Vel[x] = (float)jArray[x];
+                        }
                     }
 
                     // Pulse Coherent Noise
-                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_NOISE];
-                    data.PulseCohr_Noise = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BT_PC_NOISE))
                     {
-                        // Add all the values to the array
-                        data.PulseCohr_Noise[x] = (float)jArray[x];
+                        jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_NOISE];
+                        data.PulseCohr_Noise = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.PulseCohr_Noise[x] = (float)jArray[x];
+                        }
                     }
 
                     // Pulse Coherent Correlation
-                    jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_CORR];
-                    data.PulseCohr_Corr = new float[jArray.Count];
-                    for (int x = 0; x < jArray.Count; x++)
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BT_PC_CORR))
                     {
-                        // Add all the values to the array
-                        data.PulseCohr_Corr[x] = (float)jArray[x];
+                        jArray = (JArray)jsonObject[DataSet.BaseDataSet.JSON_STR_BT_PC_CORR];
+                        data.PulseCohr_Corr = new float[jArray.Count];
+                        for (int x = 0; x < jArray.Count; x++)
+                        {
+                            // Add all the values to the array
+                            data.PulseCohr_Corr[x] = (float)jArray[x];
+                        }
                     }
 
                     if (jArray != null)

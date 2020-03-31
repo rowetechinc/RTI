@@ -1332,13 +1332,25 @@ namespace RTI
                     Status status = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS]);
 
                     // Status2
-                    Status status2 = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS2]);
+                    Status status2 = new Status(0);
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_STATUS2))
+                    {
+                        status2 = new Status((int)jsonObject[DataSet.BaseDataSet.JSON_STR_STATUS2]);
+                    }
 
                     // Burst ID
-                    byte burstID = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTID];
+                    byte burstID = 0;
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BURSTID))
+                    {
+                        burstID = (byte)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTID];
+                    }
 
                     // Burst Index
-                    int burstIndex = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTINDEX];
+                    int burstIndex = 0;
+                    if (jsonObject.ContainsKey(DataSet.BaseDataSet.JSON_STR_BURSTINDEX))
+                    {
+                        burstIndex = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_BURSTINDEX];
+                    }
 
                     // Year
                     int Year = (int)jsonObject[DataSet.BaseDataSet.JSON_STR_YEAR];

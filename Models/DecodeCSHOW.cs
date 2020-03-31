@@ -1955,14 +1955,15 @@ namespace RTI
                             UInt16 cbi_InterleaveFlag = 0;
                             if (UInt16.TryParse(cbiValues[2], out cbi_InterleaveFlag))
                             {
-                                if(cbi_InterleaveFlag == 0)
-                                {
-                                    ssConfig.Commands.CBI_BurstPairFlag = false;
-                                }
-                                else
-                                {
-                                    ssConfig.Commands.CBI_BurstPairFlag = true;
-                                }
+                                //if(cbi_InterleaveFlag == 0)
+                                //{
+                                //    ssConfig.Commands.CBI_BurstPairFlag = false;
+                                //}
+                                //else
+                                //{
+                                //    ssConfig.Commands.CBI_BurstPairFlag = true;
+                                //}
+                                ssConfig.Commands.CBI_BurstPairFlag = cbi_InterleaveFlag;
                             }
 
                         }

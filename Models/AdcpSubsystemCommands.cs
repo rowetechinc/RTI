@@ -429,7 +429,7 @@ namespace RTI
             /// <summary>
             /// Default value for CBI_BurstPairFlag.
             /// </summary>
-            public const bool DEFAULT_CBI_BURST_PAIR_FLAG = false;
+            public const int DEFAULT_CBI_BURST_PAIR_FLAG = 0;
 
             #region Water Profile
 
@@ -2960,19 +2960,19 @@ namespace RTI
             }
 
             /// <summary>
-            /// Set the Burst Pair flag.  If Burst Pair is set to TRUE,
-            /// the next subsystem will be interleaved (alternating pings)
-            /// with the current subsystem during the burst.  The CBI commands
-            /// for the pair should be set to the same value(s).
+            /// Set the Burst grouping.  Set the value for the number of bursts
+            /// to group together.  If set to 0, then the subsystem will ping
+            /// alone.  If set to a number, the next N subsystem's will be
+            /// grouped together.
             /// </summary>
-            private bool _cBI_BurstPairFlag;
+            private int _cBI_BurstPairFlag;
             /// <summary>
-            /// Set the Burst Pair flag.  If Burst Pair is set to TRUE,
-            /// the next subsystem will be interleaved (alternating pings)
-            /// with the current subsystem during the burst.  The CBI commands
-            /// for the pair should be set to the same value(s).
+            /// Set the Burst grouping.  Set the value for the number of bursts
+            /// to group together.  If set to 0, then the subsystem will ping
+            /// alone.  If set to a number, the next N subsystem's will be
+            /// grouped together.
             /// </summary>
-            public bool CBI_BurstPairFlag
+            public int CBI_BurstPairFlag
             {
                 get { return _cBI_BurstPairFlag; }
                 set
@@ -2980,6 +2980,27 @@ namespace RTI
                     _cBI_BurstPairFlag = value;
                 }
             }
+
+
+
+            /// <summary>
+            /// Burst ID.
+            /// Unique value to group burst together.
+            /// </summary>
+            private int _cBI_BurstID;
+            /// <summary>
+            /// Burst ID.
+            /// Unique value to group burst together.
+            /// </summary>
+            public int CBI_BurstID
+            {
+                get { return _cBI_BurstID; }
+                set
+                {
+                    _cBI_BurstID = value;
+                }
+            }
+
 
             /// <summary>
             /// Burst Interval ON
@@ -5192,15 +5213,16 @@ namespace RTI
             public string CBI_CmdStr(int cepoIndex)
             {
                 // Determine the pair flag value
-                string pairFlag = "0";
-                if (CBI_BurstPairFlag)
-                {
-                    pairFlag = "1";
-                }
+                //string pairFlag = "0";
+                //if (CBI_BurstPairFlag > 0)
+                //{
+                //    pairFlag = "1";
+                //}
 
-                return string.Format("{0}[{1}] {2},{3},{4}", CMD_CBI, cepoIndex.ToString("X1"), CBI_BurstInterval.ToString(),
+                return string.Format("{0}[{1}] {2},{3},{4},{5}", CMD_CBI, cepoIndex.ToString("X1"), CBI_BurstInterval.ToString(),
                                                                                 CBI_NumEnsembles.ToString(CultureInfo.CreateSpecificCulture("en-US")),
-                                                                                pairFlag);
+                                                                                CBI_BurstPairFlag.ToString(CultureInfo.CreateSpecificCulture("en-US")),
+                                                                                CBI_BurstID.ToString(CultureInfo.CreateSpecificCulture("en-US")));
             }
 
             /// <summary>

@@ -6,6 +6,7 @@ RTI-3.4.17
   - In AdcpDatabaseWriter, added BurstIndex and BurstID.
   - In AdcpBinaryCodecReadFile, Added events to monitor the process.
   - In RtiWavesEncoder, Handling new firmware version with BurstID and BurstIndex.
+  * Fixed bug in AdcpUdp when UDP is not initialized.
 
 RTI-3.4.16
  - Adding Ethernet Upload.

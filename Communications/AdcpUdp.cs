@@ -34,6 +34,7 @@
  * Date            Initials    Version    Comments
  * -----------------------------------------------------------------
  * 09/13/2017      RC          3.4.3     Initial coding
+ * 05/11/2020      RC          3.4.17    Fixed bug in AdcpUdp when UDP is not initialized.     
  * 
  * 
  */
@@ -360,7 +361,7 @@ namespace RTI
         {
             try
             {
-                if (res != null)
+                if (res != null && _udpClient != null)
                 {
                     byte[] received = _udpClient.EndReceive(res, ref _endPoint);
 

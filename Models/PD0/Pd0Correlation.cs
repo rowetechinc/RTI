@@ -36,6 +36,7 @@
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
  * 07/24/2014      RC          2.23.0     Fixed bug in DecodeRtiEnsemble() if numCodeRepeats is 0 or N is 0.
  * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams
+ * 05/27/2020      RC          3.4.18     Handle converting RTI to PD0 with 3 beam (SeaSEVEN).
  * 
  * 
  * 
@@ -305,22 +306,32 @@ namespace RTI
                     {
                         for (int beam = 0; beam < corr.CorrelationData.GetLength(1); beam++)
                         {
-                            // beam order 3,2,0,1
+                            // Reorder the beams to match PD0 and RTI
                             int newBeam = 0;
-                            switch (beam)
+
+                            if (NumBeams >= 4)
                             {
-                                case 0:
-                                    newBeam = 3;
-                                    break;
-                                case 1:
-                                    newBeam = 2;
-                                    break;
-                                case 2:
-                                    newBeam = 0;
-                                    break;
-                                case 3:
-                                    newBeam = 1;
-                                    break;
+                                // beam order 3,2,0,1
+                                switch (beam)
+                                {
+                                    case 0:
+                                        newBeam = 3;
+                                        break;
+                                    case 1:
+                                        newBeam = 2;
+                                        break;
+                                    case 2:
+                                        newBeam = 0;
+                                        break;
+                                    case 3:
+                                        newBeam = 1;
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                // 3 Beam system, so do not reorder
+                                newBeam = beam;
                             }
 
                             // Check if numRepeats = 0    

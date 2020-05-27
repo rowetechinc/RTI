@@ -35,6 +35,7 @@
  * 03/12/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
  * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams.
+ * 05/27/2020      RC          3.4.18     Handle converting RTI to PD0 with 3 beam (SeaSEVEN).
  * 
  * 
  * 
@@ -294,8 +295,12 @@ namespace RTI
                         {
                             for (int beam = 0; beam < amp.AmplitudeData.GetLength(1); beam++)
                             {
-                                // beam order 3,2,0,1
+                                // Reorder the beams for PD0 to RTI
                                 int newBeam = 0;
+
+                            if (NumBeams >= 4)
+                            {
+                                // beam order 3,2,0,1
                                 switch (beam)
                                 {
                                     case 0:
@@ -311,7 +316,14 @@ namespace RTI
                                         newBeam = 1;
                                         break;
                                 }
+                            }
+                            else
+                            {
+                                // 3 Beam (SeaSEVEN) does not reorder
+                                newBeam = beam;
+                            }
 
+                                // Set the value
                                 EchoIntensity[bin, beam] = (byte)(Math.Round(amp.AmplitudeData[bin, newBeam] * 2));
                             }
                         }

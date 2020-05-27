@@ -1,5 +1,9 @@
 RTI Changelog
 
+RTI-3.4.18
+  * Only apply VM Heading or Tilt offset if value is given.
+  * In Transform, check if the ADCP has more than 3 beams (SeaSEVEN).
+
 RTI-3.4.17
   - In Project and AdcpDatabaseWriter, added BurstID to project table.
   - In EnsembleDataSet, added BurstID and BurstIndex.

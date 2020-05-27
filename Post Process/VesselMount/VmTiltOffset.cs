@@ -35,6 +35,7 @@
  * 02/12/2014      RC          2.21.3     Initial coding
  * 12/04/2019      RC          3.4.15     Add option to retransform the data after applying the offset.
  * 12/05/2019      RC          3.4.15     Normalize the pitch and roll value after offset added.
+ * 05/23/2020      RC          3.4.18     Only apply VM Heading or Tilt offset if value is given.
  * 
  */
 
@@ -62,17 +63,21 @@ namespace RTI
             /// <param name="retransformData">When the heading, pitch or roll is modified, the data should be retransfomed so the velocity matches</param>
             public static void TiltOffset(ref DataSet.Ensemble ensemble, VesselMountOptions options, bool retransformData = true)
             {
-                // Add the offset to Ancillary Pitch and Roll
-                AddAncillaryTiltOffset(ref ensemble, options.PitchOffset, options.RollOffset);
-
-                // Add the offset to the Bottom Track Pitch and Roll
-                AddBottomTrackTiltOffset(ref ensemble, options.PitchOffset, options.RollOffset);
-
-                // Retransform the data so the velocties match the pitch and roll
-                if(retransformData)
+                // Verify an offset is being used
+                if (options.PitchOffset != 0.0 || options.RollOffset != 0.0)
                 {
-                    Transform.ProfileTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
-                    Transform.BottomTrackTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                    // Add the offset to Ancillary Pitch and Roll
+                    AddAncillaryTiltOffset(ref ensemble, options.PitchOffset, options.RollOffset);
+
+                    // Add the offset to the Bottom Track Pitch and Roll
+                    AddBottomTrackTiltOffset(ref ensemble, options.PitchOffset, options.RollOffset);
+
+                    // Retransform the data so the velocties match the pitch and roll
+                    if (retransformData)
+                    {
+                        Transform.ProfileTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                        Transform.BottomTrackTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                    }
                 }
             }
 

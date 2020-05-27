@@ -43,6 +43,7 @@
  * 09/28/2017      RC          3.4.4      Know the original data format to know which beam matrix to use to transform the data.
  * 12/03/2018      RC          3.4.11     Set the velocity bad in ProfileTransform() and BottomTrackTransform() if not good data.
  * 11/29/2019      RC          3.4.15     If more than 3 beams are bad set all velocity to BAD_VELOCITY and not 0.0.
+ * 05/23/2020      RC          3.4.18     In Transform, check if the ADCP has more than 3 beams (SeaSEVEN).
  * 
  */
 
@@ -467,14 +468,14 @@ namespace RTI
 
                 // Check how many beams were good
                 // If there were at least 3 good beams, we can do a 3 beam solution
-                if (goodBeam >= 3)
+                if (goodBeam >= 3 && numBeams > 3)
                 {
                     // Check if we need to do a 3 beam solution
                     if (goodBeam == 3)
                     {
                         // Q = (tempVel[0] + tempVel[1] - tempVel[2] - tempVel[3];
                         // Set Q = 0 then solve for missing beam
-                        switch(badBeam)
+                        switch (badBeam)
                         {
                             case 0:
                                 tempVel[badBeam] = -tempVel[1] + tempVel[2] + tempVel[3];

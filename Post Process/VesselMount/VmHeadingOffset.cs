@@ -35,6 +35,7 @@
  * 02/11/2014      RC          2.21.3     Initial coding
  * 12/04/2019      RC          3.4.15     Add option to retransform the data after applying the offset.
  * 12/05/2019      RC          3.4.15     Normalize the heading value.
+ * 05/23/2020      RC          3.4.18     Only apply VM Heading or Tilt offset if value is given.
  * 
  */
 
@@ -63,19 +64,23 @@ namespace RTI
             /// <param name="retransformData">When the heading, pitch or roll is modified, the data should be retransfomed so the velocity matches</param>
             public static void HeadingOffset(ref DataSet.Ensemble ensemble, VesselMountOptions options, bool retransformData = true)
             {
-                // Add the magnetic to Ancillary and Bottom Track heading
-                AddAncillaryHeadingOffset(ref ensemble, options.HeadingOffsetMag);
-                AddBottomTrackHeadingOffset(ref ensemble, options.HeadingOffsetMag);
-
-                // Add the alignment offset to the Ancillary and Bottom Track heading
-                AddAncillaryHeadingOffset(ref ensemble, options.HeadingOffsetAlignment);
-                AddBottomTrackHeadingOffset(ref ensemble, options.HeadingOffsetAlignment);
-
-                // Retransform the data so the velocties match the heading
-                if (retransformData)
+                // Verify a heading offset is being used
+                if (options.HeadingOffsetMag != 0.0 || options.HeadingOffsetAlignment != 0.0)
                 {
-                    Transform.ProfileTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
-                    Transform.BottomTrackTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                    // Add the magnetic to Ancillary and Bottom Track heading
+                    AddAncillaryHeadingOffset(ref ensemble, options.HeadingOffsetMag);
+                    AddBottomTrackHeadingOffset(ref ensemble, options.HeadingOffsetMag);
+
+                    // Add the alignment offset to the Ancillary and Bottom Track heading
+                    AddAncillaryHeadingOffset(ref ensemble, options.HeadingOffsetAlignment);
+                    AddBottomTrackHeadingOffset(ref ensemble, options.HeadingOffsetAlignment);
+
+                    // Retransform the data so the velocties match the heading
+                    if (retransformData)
+                    {
+                        Transform.ProfileTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                        Transform.BottomTrackTransform(ref ensemble, AdcpCodec.CodecEnum.Binary);
+                    }
                 }
             }
 

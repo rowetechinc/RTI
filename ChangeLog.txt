@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.19
+  - In ScreenMarkBadBelowBottom and ScreenMarkBadAboveSurface added options to turn on or off MarkBadBelowBottom for Amplitude and Correlation.
+
 RTI-3.4.18
   * Only apply VM Heading or Tilt offset if value is given.
   * In Transform, check if the ADCP has more than 3 beams (SeaSEVEN).

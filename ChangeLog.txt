@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.4.20
+ - Check for NaN in Bottom Track velocity when removing ship speed.
+
 RTI-3.4.19
   - In ScreenMarkBadBelowBottom and ScreenMarkBadAboveSurface added options to turn on or off MarkBadBelowBottom for Amplitude and Correlation.
 

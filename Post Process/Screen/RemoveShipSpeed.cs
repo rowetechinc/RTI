@@ -45,6 +45,7 @@
  * 09/13/2017      RC          3.4.3      Check if Bottom Track has no beams.
  * 09/04/2018      RC          3.4.10     In RemoveVelocityInstrument, check if the Instrument Velocity exist instead of Earth. 
  * 07/31/2019      RC          3.4.12     Added GetPreviousShipSpeedGPS to get the good GPS speed to use as a backup.
+ * 08/26/2020      RC          3.4.20     Check for NaN when looking for bad velocities.
  * 
  */
 
@@ -185,7 +186,12 @@ namespace RTI
                         else
                         {
                             // Ensure previous is good
-                            if (btPrevEast != DataSet.Ensemble.BAD_VELOCITY && btPrevNorth != DataSet.Ensemble.BAD_VELOCITY && btPrevVertical != DataSet.Ensemble.BAD_VELOCITY)
+                            if (btPrevEast != DataSet.Ensemble.BAD_VELOCITY && 
+                                !Double.IsNaN(btPrevEast) &&
+                                btPrevNorth != DataSet.Ensemble.BAD_VELOCITY &&
+                                !Double.IsNaN(btPrevNorth) &&
+                                btPrevVertical != DataSet.Ensemble.BAD_VELOCITY &&
+                                !Double.IsNaN(btPrevVertical))
                             {
                                 btEast = btPrevEast;
                                 btNorth = btPrevNorth;
@@ -209,21 +215,24 @@ namespace RTI
                             if (ensemble.EarthVelocityData.EarthVelocityData.GetLength(1) > 0 &&
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != PD0.BAD_VELOCITY && 
-                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f)
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f &&
+                                !Double.IsNaN(btEast))
                             {
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] += btEast;
                             }
                             if (ensemble.EarthVelocityData.EarthVelocityData.GetLength(1) > 1 &&
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f)
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f &&
+                                !Double.IsNaN(btNorth))
                             {
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] += btNorth;
                             }
                             if (ensemble.EarthVelocityData.EarthVelocityData.GetLength(1) > 2 &&
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f)
+                                ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f &&
+                                !Double.IsNaN(btVertical))
                             {
                                 ensemble.EarthVelocityData.EarthVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] += btVertical;
                             }
@@ -386,19 +395,22 @@ namespace RTI
                             // Check if the velocity is good before removing the ship speed
                             if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f)
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f &&
+                                !Double.IsNaN(ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX]))
                             {
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] += btX;
                             }
                             if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f)
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f &&
+                                !Double.IsNaN(ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX]))
                             {
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] += btY;
                             }
                             if (ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f)
+                                ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f &&
+                                !Double.IsNaN(ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]))
                             {
                                 ensemble.InstrumentVelocityData.InstrumentVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] += btZ;
                             }
@@ -555,19 +567,22 @@ namespace RTI
                             // Check if the velocity is good before removing the ship speed
                             if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f)
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] != 0.0f &&
+                                !Double.IsNaN(ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX]))
                             {
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_EAST_INDEX] += btTrans;
                             }
                             if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f)
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] != 0.0f &&
+                                !Double.IsNaN(ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX]))
                             {
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_NORTH_INDEX] += btLong;
                             }
                             if (ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != DataSet.Ensemble.BAD_VELOCITY &&
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != PD0.BAD_VELOCITY &&
-                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f)
+                                ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] != 0.0f &&
+                                !Double.IsNaN(ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX]))
                             {
                                 ensemble.ShipVelocityData.ShipVelocityData[bin, DataSet.Ensemble.BEAM_VERTICAL_INDEX] += btNorm;
                             }

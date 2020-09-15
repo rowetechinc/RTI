@@ -78,6 +78,7 @@
  *                                        Updated GetVelocityMagnitude() and GetVelocityDirection() to handle bad values of 0.0 and ShipVelocity.
  * 07/03/2019      RC          3.4.12     In DecodePd0Ensemble(), do not remap Instrument and Ship velocity data.
  * 03/11/2020      RC          3.14.19    Fixed a bug with number of elements in Bottom Track dataset.
+ * 08/26/2020      RC          3.4.20     Check for NaN when looking for bad velocities.
  * 
  */
 
@@ -1147,6 +1148,15 @@ namespace RTI
 
                         return false;
                     }
+
+                    // Check for NaN
+                    if (Double.IsNaN(BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX]) ||
+                        Double.IsNaN(BeamVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX]) ||
+                        Double.IsNaN(BeamVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX]))
+                    {
+
+                        return false;
+                    }
                 }
                 // Vertical beam
                 else
@@ -1165,6 +1175,12 @@ namespace RTI
 
                     // Check for 0.0 Velocity
                     if (NumBeams >= 1 && BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == 0.0f)
+                    {
+                        return false;
+                    }
+
+                    // Check for 0.0 Velocity
+                    if (NumBeams >= 1 && Double.IsNaN(BeamVelocity[DataSet.Ensemble.BEAM_EAST_INDEX]))
                     {
                         return false;
                     }
@@ -1218,6 +1234,15 @@ namespace RTI
 
                         return false;
                     }
+
+                    // Check for NaN
+                    if (Double.IsNaN(EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX]) ||
+                        Double.IsNaN(EarthVelocity[DataSet.Ensemble.BEAM_NORTH_INDEX]) ||
+                        Double.IsNaN(EarthVelocity[DataSet.Ensemble.BEAM_VERTICAL_INDEX]))
+                    {
+
+                        return false;
+                    }
                 }
                 // If a vertical beam
                 else
@@ -1236,6 +1261,12 @@ namespace RTI
 
                     // Check for 0.0 Velocity
                     if (NumBeams >= 1 && EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX] == 0.0f)
+                    {
+                        return false;
+                    }
+
+                    // Check for NaN
+                    if (NumBeams >= 1 && Double.IsNaN(EarthVelocity[DataSet.Ensemble.BEAM_EAST_INDEX]))
                     {
                         return false;
                     }
@@ -1287,6 +1318,15 @@ namespace RTI
 
                         return false;
                     }
+
+                    // Check for NaN
+                    if (Double.IsNaN(InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX]) ||
+                        Double.IsNaN(InstrumentVelocity[DataSet.Ensemble.BEAM_Y_INDEX]) ||
+                        Double.IsNaN(InstrumentVelocity[DataSet.Ensemble.BEAM_Z_INDEX]))
+                    {
+
+                        return false;
+                    }
                 }
                 else
                 {
@@ -1304,6 +1344,12 @@ namespace RTI
 
                     // Vertical beam only for 0.0 Velocity
                     if (NumBeams >= 1 && InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX] == 0.0f)
+                    {
+                        return false;
+                    }
+
+                    // Vertical beam only for NaN
+                    if (NumBeams >= 1 && Double.IsNaN(InstrumentVelocity[DataSet.Ensemble.BEAM_X_INDEX]))
                     {
                         return false;
                     }
@@ -1354,6 +1400,15 @@ namespace RTI
 
                         return false;
                     }
+
+                    // Check for NaN
+                    if (Double.IsNaN(ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX]) ||
+                        Double.IsNaN(ShipVelocity[DataSet.Ensemble.BEAM_Y_INDEX]) ||
+                        Double.IsNaN(ShipVelocity[DataSet.Ensemble.BEAM_Z_INDEX]))
+                    {
+
+                        return false;
+                    }
                 }
                 else
                 {
@@ -1371,6 +1426,12 @@ namespace RTI
 
                     // Vertical beam only for 0.0 Velocity
                     if (NumBeams >= 1 && ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX] == 0.0f)
+                    {
+                        return false;
+                    }
+
+                    // Vertical beam only for NaN
+                    if (NumBeams >= 1 && Double.IsNaN(ShipVelocity[DataSet.Ensemble.BEAM_X_INDEX]))
                     {
                         return false;
                     }

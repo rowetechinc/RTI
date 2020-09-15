@@ -68,8 +68,11 @@ namespace RTI
             /// </summary>
             /// <param name="ensemble">Ensemble to screen.</param>
             /// <param name="prevBottom">Previous Good Bottom.</param>
+            /// <param name="isMarkVelocitiesBad">Mark the velocities data bad below the bottom.</param>
+            /// <param name="isMarkAmplitudeBad">Mark the Amplitude data bad below the bottom.</param>
+            /// <param name="isMarkCorrelationBad">Mark the correlation data bad below the bottom.</param>
             /// <returns>True = Screen could be done.</returns>
-            public static bool Screen(ref DataSet.Ensemble ensemble, double prevBottom = DataSet.Ensemble.BAD_RANGE)
+            public static bool Screen(ref DataSet.Ensemble ensemble, double prevBottom = DataSet.Ensemble.BAD_RANGE, bool isMarkVelocitiesBad = true, bool isMarkAmplitudeBad = false, bool isMarkCorrelationBad = false)
             {
                 if (ensemble != null)
                 {
@@ -108,14 +111,23 @@ namespace RTI
                         // This will also set the Good Pings bad
                         for (int bin = bottomBin; bin < ensemble.EnsembleData.NumBins; bin++)
                         {
-                            // Set the velocities bad
-                            EnsembleHelper.SetVelocitiesBad(ref ensemble, bin);
+                            if (isMarkVelocitiesBad)
+                            {
+                                // Set the velocities bad
+                                EnsembleHelper.SetVelocitiesBad(ref ensemble, bin);
+                            }
 
-                            // Set the Correlation bad
-                            EnsembleHelper.SetCorelationBad(ref ensemble, bin);
+                            if (isMarkCorrelationBad)
+                            {
+                                // Set the Correlation bad
+                                EnsembleHelper.SetCorelationBad(ref ensemble, bin);
+                            }
 
-                            // Set the Amplitude bad
-                            EnsembleHelper.SetAmplitudeBad(ref ensemble, bin);
+                            if (isMarkAmplitudeBad)
+                            {
+                                // Set the Amplitude bad
+                                EnsembleHelper.SetAmplitudeBad(ref ensemble, bin);
+                            }
                         }
 
 

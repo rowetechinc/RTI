@@ -525,6 +525,12 @@ namespace RTI
                     // Verify the checksum match
                     if (calculatedChecksum == ensembleChecksum)
                     {
+                        // Pass event that a good ensemble was found
+                        if (GoodEnsembleEvent != null)
+                        {
+                            GoodEnsembleEvent();
+                        }
+
                         // Decode the binary data
                         var pak = DecodeAdcpData(ens.RawEnsemble);
 
@@ -550,6 +556,14 @@ namespace RTI
                         _incomingDataTimeout = 0;
 
                         //Debug.WriteLine("Ens: " + ens.Ensemble.EnsembleData.EnsembleNumber);
+                    }
+                    else
+                    {
+                        // Pass event that a good ensemble was found
+                        if (BadEnsembleEvent != null)
+                        {
+                            BadEnsembleEvent();
+                        }
                     }
                 }
                 else
@@ -1124,6 +1138,40 @@ namespace RTI
         /// adcpBinaryCodec.ProcessDataCompleteEvent -= (method to call)
         /// </summary>
         public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void GoodEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a good ensemble has been found.
+        /// 
+        /// To subscribe:
+        /// codec.GoodEnsembleEvent += new codec.GoodEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.GoodEnsembleEvent -= (method to call)
+        /// </summary>
+        public event GoodEnsembleEventHandler GoodEnsembleEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void BadEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a bad ensemble has been found
+        /// 
+        /// To subscribe:
+        /// codec.BadEnsembleEvent += new codec.BadEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.BadEnsembleEvent -= (method to call)
+        /// </summary>
+        public event BadEnsembleEventHandler BadEnsembleEvent;
 
         #endregion
     }

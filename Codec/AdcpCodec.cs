@@ -186,6 +186,8 @@ namespace RTI
             _binaryCodec = new AdcpBinaryCodecNew();
             _binaryCodec.ProcessDataEvent += new AdcpBinaryCodecNew.ProcessDataEventHandler(_binaryCodec_ProcessDataEvent);
             _binaryCodec.ProcessDataCompleteEvent += binaryCodec_ProcessDataCompleteEvent;
+            _binaryCodec.GoodEnsembleEvent += ReceivedGoodEnsembleEvent;
+            _binaryCodec.BadEnsembleEvent += ReceivedBadEnsembleEvent;
 
             // DVL Codec
             _dvlCodec = new AdcpDvlCodec();
@@ -194,8 +196,10 @@ namespace RTI
 
             // PD0 Codec
             _pd0Codec = new Pd0Codec();
-            Pd0Codec.ProcessDataEvent += new Pd0Codec.ProcessDataEventHandler(_pd0Codec_ProcessDataEvent);
-            Pd0Codec.ProcessDataCompleteEvent += pd0Codec_ProcessDataCompleteEvent;
+            _pd0Codec.ProcessDataEvent += new Pd0Codec.ProcessDataEventHandler(_pd0Codec_ProcessDataEvent);
+            _pd0Codec.ProcessDataCompleteEvent += pd0Codec_ProcessDataCompleteEvent;
+            _pd0Codec.GoodEnsembleEvent += ReceivedGoodEnsembleEvent;
+            _pd0Codec.BadEnsembleEvent += ReceivedBadEnsembleEvent;
 
             // PD6 and PD13 Codec
             _pd6_13Codec = new Pd6_13Codec();
@@ -235,8 +239,8 @@ namespace RTI
             // Shutdown PD0 codec
             if (_pd0Codec != null)
             {
-                Pd0Codec.ProcessDataEvent -= _pd0Codec_ProcessDataEvent;
-                Pd0Codec.ProcessDataCompleteEvent -= pd0Codec_ProcessDataCompleteEvent;
+                _pd0Codec.ProcessDataEvent -= _pd0Codec_ProcessDataEvent;
+                _pd0Codec.ProcessDataCompleteEvent -= pd0Codec_ProcessDataCompleteEvent;
                 _pd0Codec.Dispose();
             }
 
@@ -735,6 +739,32 @@ namespace RTI
             }
         }
 
+        /// <summary>
+        /// Good Ensemble found.  This event is called before the
+        /// ensemble is parsed for all its data.  This means that 
+        /// a header and good checksum were found.
+        /// </summary>
+        private void ReceivedGoodEnsembleEvent()
+        {
+            if(GoodEnsembleEvent != null)
+            {
+                GoodEnsembleEvent();
+            }
+        }
+
+        /// <summary>
+        /// Received a Bad Ensemble event.
+        /// This typically means the header is found, but the
+        /// checksum failed.
+        /// </summary>
+        private void ReceivedBadEnsembleEvent()
+        {
+            if (BadEnsembleEvent != null)
+            {
+                BadEnsembleEvent();
+            }
+        }
+
         #endregion
 
         #region Events
@@ -780,6 +810,40 @@ namespace RTI
         /// adcpBinaryCodec.ProcessDataCompleteEvent -= (method to call)
         /// </summary>
         public event ProcessDataCompleteEventHandler ProcessDataCompleteEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void GoodEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a good ensemble has been found.
+        /// 
+        /// To subscribe:
+        /// codec.GoodEnsembleEvent += new codec.GoodEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.GoodEnsembleEvent -= (method to call)
+        /// </summary>
+        public event GoodEnsembleEventHandler GoodEnsembleEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void BadEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a bad ensemble has been found
+        /// 
+        /// To subscribe:
+        /// codec.BadEnsembleEvent += new codec.BadEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.BadEnsembleEvent -= (method to call)
+        /// </summary>
+        public event BadEnsembleEventHandler BadEnsembleEvent;
 
         #endregion
     }

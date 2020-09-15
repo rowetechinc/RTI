@@ -77,7 +77,7 @@
  *                                        Added ShipVelocity to JSON decoding.
  *                                        Updated GetVelocityMagnitude() and GetVelocityDirection() to handle bad values of 0.0 and ShipVelocity.
  * 07/03/2019      RC          3.4.12     In DecodePd0Ensemble(), do not remap Instrument and Ship velocity data.
- * 03/11/2020      RC          3.4.16     Added Pulse Coherent Values.
+ * 03/11/2020      RC          3.14.19    Fixed a bug with number of elements in Bottom Track dataset.
  * 
  */
 
@@ -103,7 +103,7 @@ namespace RTI
             /// <summary>
             /// Number of elements in this data set.
             /// </summary>
-            public const int NUM_DATA_ELEMENTS = 54;
+            public const int NUM_DATA_ELEMENTS = 74;
 
             #region Status
 
@@ -387,7 +387,7 @@ namespace RTI
             public BottomTrackDataSet(int numBeams = DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM) :
                 base(DataSet.Ensemble.DATATYPE_FLOAT,                   // Type of data stored (Float or Int)
                         NUM_DATA_ELEMENTS,                              // Number of data elements
-                        1,                                              // Multiplier
+                        DataSet.Ensemble.DEFAULT_NUM_BEAMS_BEAM,        // Multiplier
                         DataSet.Ensemble.DEFAULT_IMAG,                  // Default Image
                         DataSet.Ensemble.DEFAULT_NAME_LENGTH,           // Default Image length
                         DataSet.Ensemble.BottomTrackID)                 // Dataset ID
@@ -766,7 +766,8 @@ namespace RTI
                 int index = 0;
 
                 // Get the length
-                byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
+                //byte[] payload = new byte[NUM_DATA_ELEMENTS * Ensemble.BYTES_IN_FLOAT];
+                byte[] payload = new byte[NumElements * Ensemble.BYTES_IN_FLOAT];
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(FirstPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
                 System.Buffer.BlockCopy(MathHelper.FloatToByteArray(LastPingTime), 0, payload, GeneratePayloadIndex(index++), Ensemble.BYTES_IN_FLOAT);
 

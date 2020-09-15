@@ -212,6 +212,8 @@ namespace RTI
             _adcpCodec = new AdcpCodec();
             _adcpCodec.ProcessDataEvent += new AdcpCodec.ProcessDataEventHandler(_adcpCodec_ProcessDataEvent);
             _adcpCodec.ProcessDataCompleteEvent += _adcpCodec_ProcessDataCompleteEvent;
+            _adcpCodec.GoodEnsembleEvent += ReceivedGoodEnsembleEvent;
+            _adcpCodec.BadEnsembleEvent += ReceivedBadEnsembleEvent;
 
             // Wait for decoding to be complete
             _eventWaitDecode = new EventWaitHandle(false, EventResetMode.AutoReset);
@@ -456,6 +458,8 @@ namespace RTI
         public void FindRtbEnsembles(string file)
         {
             AdcpCodecReadFile readFile = new AdcpCodecReadFile();
+            readFile.GoodEnsembleEvent += ReceivedGoodEnsembleEvent;
+            readFile.BadEnsembleEvent += ReceivedBadEnsembleEvent;
             var list = readFile.GetEnsembles(file);
 
             // Add the ensembles to the dictionary
@@ -638,6 +642,29 @@ namespace RTI
             _eventWaitDecode.Set();
         }
 
+        /// <summary>
+        /// Pass the event along.
+        /// </summary>
+        private void ReceivedBadEnsembleEvent()
+        {
+            if(GoodEnsembleEvent != null)
+            {
+                GoodEnsembleEvent();
+            }
+        }
+
+        /// <summary>
+        /// Pass the event along.
+        /// </summary>
+        private void ReceivedGoodEnsembleEvent()
+        {
+            if(BadEnsembleEvent != null)
+            {
+                BadEnsembleEvent();
+            }
+        }
+
+
         #endregion
 
         /// <summary>
@@ -658,5 +685,39 @@ namespace RTI
         /// fpb.ProcessFileEvent -= (method to call)
         /// </summary>
         public event ProcessFileEventHandler ProcessFileEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void GoodEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a good ensemble has been found.
+        /// 
+        /// To subscribe:
+        /// codec.GoodEnsembleEvent += new codec.GoodEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.GoodEnsembleEvent -= (method to call)
+        /// </summary>
+        public event GoodEnsembleEventHandler GoodEnsembleEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void BadEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a bad ensemble has been found
+        /// 
+        /// To subscribe:
+        /// codec.BadEnsembleEvent += new codec.BadEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.BadEnsembleEvent -= (method to call)
+        /// </summary>
+        public event BadEnsembleEventHandler BadEnsembleEvent;
     }
 }

@@ -72,9 +72,38 @@ namespace RTI
         public AdcpCodecReadFile()
         {
             _binaryCodec = new AdcpBinaryCodecReadFile();
+            _binaryCodec.GoodEnsembleEvent += ReceivedGoodEnsembleEvent;
+            _binaryCodec.BadEnsembleEvent += ReceivedBadEnsembleEvent;
+
             _pd0Codec = new AdcpPD0CodecReadFile();
+            _pd0Codec.GoodEnsembleEvent += ReceivedGoodEnsembleEvent;
+            _pd0Codec.BadEnsembleEvent += ReceivedBadEnsembleEvent;
+            
+            
             _dvlCodec = new AdcpDvlCodecReadFile();
             
+        }
+
+        /// <summary>
+        /// Pass the Bad Ensemble Event.
+        /// </summary>
+        private void ReceivedBadEnsembleEvent()
+        {
+            if(BadEnsembleEvent != null)
+            {
+                BadEnsembleEvent();
+            }
+        }
+
+        /// <summary>
+        /// Pass Good Ensemble Event.
+        /// </summary>
+        private void ReceivedGoodEnsembleEvent()
+        {
+            if(GoodEnsembleEvent != null)
+            {
+                GoodEnsembleEvent();
+            }
         }
 
         /// <summary>
@@ -108,5 +137,43 @@ namespace RTI
             return new List<DataSet.EnsemblePackage>();
         }
 
+
+        #region Events
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void GoodEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a good ensemble has been found.
+        /// 
+        /// To subscribe:
+        /// codec.GoodEnsembleEvent += new codec.GoodEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.GoodEnsembleEvent -= (method to call)
+        /// </summary>
+        public event GoodEnsembleEventHandler GoodEnsembleEvent;
+
+        /// <summary>
+        /// Event To subscribe to.  This gives the paramater
+        /// that will be passed when subscribing to the event.
+        /// </summary>
+        public delegate void BadEnsembleEventHandler();
+
+        /// <summary>
+        /// Subscribe to know when a bad ensemble has been found
+        /// 
+        /// To subscribe:
+        /// codec.BadEnsembleEvent += new codec.BadEnsembleEventHandler(method to call);
+        /// 
+        /// To Unsubscribe:
+        /// codec.BadEnsembleEvent -= (method to call)
+        /// </summary>
+        public event BadEnsembleEventHandler BadEnsembleEvent;
+
+        #endregion 
     }
 }

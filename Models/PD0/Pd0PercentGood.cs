@@ -35,6 +35,7 @@
  * 03/12/2014      RC          2.21.4     Initial coding
  * 04/16/2014      RC          2.21.4     Fixed code to handle vertical beams.
  * 05/06/2019      RC          3.4.11     Fixed code to handle any number of beams
+ * 11/05/2020      RC          3.5.1      Fixed bug remapping beams GoodEarth data.
  * 
  * 
  */
@@ -381,33 +382,7 @@ namespace RTI
                         for (int beam = 0; beam < goodEarth.GoodEarthData.GetLength(1); beam++)
                         {
                             // beam order 3,2,0,1; XYZ order 1,0,-2,3, ENU order 0,1,2,3
-                            int newBeam = 0;
-                            if (goodEarth.GoodEarthData.GetLength(1) >= 4)
-                            { 
-                                switch (beam)
-                                {
-                                    case 0:
-                                        newBeam = 3;
-                                        break;
-                                    case 1:
-                                        newBeam = 2;
-                                        break;
-                                    case 2:
-                                        newBeam = 0;
-                                        break;
-                                    case 3:
-                                        newBeam = 1;
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                newBeam = beam;
-                            }
-
-                            PercentGood[bin, beam] = (byte)(Math.Round((goodEarth.GoodEarthData[bin, newBeam] * 100.0) / pingsPerEnsemble));
+                            PercentGood[bin, beam] = (byte)(Math.Round((goodEarth.GoodEarthData[bin, beam] * 100.0) / pingsPerEnsemble));
                         }
                     }
                     // Vertical Beam

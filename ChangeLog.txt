@@ -1,5 +1,8 @@
 RTI Changelog
 
+RTI-3.5.1
+  - In Pd0PercentGood, fixed bug remapping beams GoodEarth data.   
+
 RTI-3.5.0
   - When Importing data, get an event for good and bad ensembles.
 

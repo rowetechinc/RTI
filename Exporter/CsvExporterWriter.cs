@@ -52,6 +52,8 @@
  * 03/11/2020      RC          3.4.16     Added Water Track (Water Mass) values.
  * 03/12/2020      RC          3.4.16     Relabed RefLayer to RefLayerMidPosition
  *                                        Divided by 10 the ReflayerMin,Far and Near.
+ * 11/19/2020      RC          3.5.1      Replaced XNorth with YNorth.
+ *                                        
  * 
  */
 
@@ -1121,8 +1123,8 @@ namespace RTI
             for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
             {
                 sb.Append(string.Format("VelVector{0}_{1},", bin, "Mag"));
-                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir XNorth"));
-                //sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir YNorth"));
+                //sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir_XNorth"));
+                sb.Append(string.Format("VelVector{0}_{1},", bin, "Dir_YNorth"));
             }
 
             return sb.ToString();
@@ -1143,8 +1145,8 @@ namespace RTI
                 for (int bin = options.VelVectorMinBin; bin < options.VelVectorMaxBin + 1; bin++)
                 {
                         sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].Magnitude.ToString(new CultureInfo("en-US"))));
-                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
-                        //sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth.ToString(new CultureInfo("en-US"))));
+                        //sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionXNorth.ToString(new CultureInfo("en-US"))));
+                        sb.Append(string.Format("{0},", ensemble.EarthVelocityData.VelocityVectors[bin].DirectionYNorth.ToString(new CultureInfo("en-US"))));
                 }
             }
             else
@@ -1158,8 +1160,6 @@ namespace RTI
 
             return sb.ToString();
         }
-
-
 
 
         #endregion
